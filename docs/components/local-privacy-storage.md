@@ -9,23 +9,24 @@ Status: Baseline brief — detailed design pending
 ### Core Responsibility
 The Local Privacy Gate, Evidence Store, and Retention component enforces mandatory exclusions and data minimization at the desktop source, securely stores private screen and audio evidence locally, and governs retention, deletion, and conversion into shareable procedural knowledge.
 
-### Owns
-- Device-level capture consent and active exclusion policy enforcement.
+- Device-level capture consent, authoritative capture snapshot generation, and active exclusion policy enforcement.
+- Supervision interface, ephemeral visibility lease validation (100ms lease / 500ms timeout), and fail-closed capture gating.
+- Durable employee pause persistence and recovery blocker tracking across process restarts and workstation power events.
 - Local encrypted storage for private observations, raw screenshots, and transient audio evidence.
 - Redaction and data minimization pipelines (masking credentials, tokens, PII, and financial account details).
 - The employee's review-before-sharing workflow, ensuring no raw media egresses to the cloud.
-- Automatic local retention sweeps and user-initiated local evidence deletion.
+- Automatic local retention sweeps, user-initiated local evidence deletion, and supported uninstall data purges.
 
 ### Consumes
 - Raw candidate observation streams from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md).
 - Organization-wide mandatory exclusion rules and maximum retention caps from [identity-policy](identity-policy.md).
-- Employee personal retention preferences and pause/resume commands from [desktop-shell](desktop-shell.md).
+- Employee personal retention preferences, visibility lease renewals, session states, and pause/resume commands from [desktop-shell](desktop-shell.md).
 - Explicit contribution review approvals from the employee.
 
 ### Produces
 - Redacted, permitted observation events delivered to [local-context-hud](local-context-hud.md).
 - Sanitized, employee-approved workflow candidates delivered to [contribution-sync](contribution-sync.md).
-- Privacy status indicators and audit events delivered to [desktop-shell](desktop-shell.md).
+- Authoritative capture snapshots, state change streams, and audit receipts delivered to [desktop-shell](desktop-shell.md) via Contract 19.
 
 ### Does Not Own
 - Central workflow candidate clustering or procedure synthesis (owned by [workflow-discovery](workflow-discovery.md)).
@@ -33,7 +34,7 @@ The Local Privacy Gate, Evidence Store, and Retention component enforces mandato
 - Remote video/screen playback for managers or administrators (strictly prohibited by product architecture).
 
 ### Boundary Requirement
-Protected application categories (password managers, banking, personal messaging, health portals) must be excluded before capture at source. Mixed windows require strict pixel and DOM masking. Default local raw retention is strictly **7 days**, employee-selectable between **1–6 days**, with documented organization extension up to a maximum of **14 days** (per [PRODUCT.md §25.4](../../PRODUCT.md)). Discarded or expired private raw capture cannot be recovered from organizational dashboards.
+Protected application categories (password managers, banking, personal messaging, health portals) must be excluded before capture at source. Mixed windows require strict pixel and DOM masking. Default local raw retention is strictly **7 days**, employee-selectable between **1–6 days**, with documented organization extension up to a maximum of **14 days** (per [PRODUCT.md §25.4](../../PRODUCT.md)). Discarded or expired private raw capture cannot be recovered from organizational dashboards. The capture gate requires continuous 100 ms visibility lease renewals from the desktop shell supervisor; loss of renewal revokes the capture gate within 500 ms and discards in-flight post-revocation observations. Capture policy validity during offline operation is capped at an absolute maximum of 24 hours.
 
 ## Product requirements
 
@@ -52,11 +53,12 @@ Protected application categories (password managers, banking, personal messaging
 - **Contract Reference #1 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests raw candidate observations from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md).
 - **Contract Reference #2 in [Contracts Catalog](../architecture/contracts/README.md):** Emits employee-approved sanitized task contributions with consent receipts to [workflow-discovery](workflow-discovery.md) via [contribution-sync](contribution-sync.md).
 - **Local Context Feed:** Streams redacted, permitted observation records to [local-context-hud](local-context-hud.md).
+- **Contract Reference #19 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes capture commands (`PauseCapture`, `ResumeCapture`, `SetCaptureCategory`, `RecordCaptureConsent`, `PrepareUninstall`) and visibility lease renewals (`RenewVisibilityLease`) from [desktop-shell](desktop-shell.md); emits authoritative `CaptureSnapshot` updates over private inherited byte channels.
 
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries
-- **Deployment Location:** Executes as a privileged local daemon or service on employee endpoints.
+- **Deployment Location:** Executes as an unprivileged user-space child process (`oryn-privacy-helper`) spawned by the desktop shell native host, communicating exclusively over inherited byte channels (socketpair on macOS, anonymous pipes on Windows).
 - **Physical Storage:** Stores evidence in an encrypted local database (e.g., SQLite with SQLCipher or OS-native keychains). Encryption keys are protected by user credentials.
 - **Cloud Egress Prohibition:** Raw video, full-resolution screen frames, and raw audio files are strictly prohibited from network transmission to central Oryn cloud services.
 
@@ -74,7 +76,8 @@ Protected application categories (password managers, banking, personal messaging
 ### State and Persistence
 - **Persisted State:** Local encrypted evidence database, exclusion rule cache, employee privacy preferences, and review receipts.
 - **Lifecycle Transitions:** `Active Capture → Redacting & Storing → Retention Aging → Purged / Expired`.
-- **Deletion Semantics:** When an employee deletes local history, disk sectors are unlinked and overwritten; deletion is immediate and permanent.
+- **Durable State and Blockers:** Persists durable employee pauses that survive restarts and reboots. Enforces recovery blockers (`crash`, `visibility_lost`, `update`, `unclean_restart`, `policy_expired`) that prevent automated resumption following abnormal transitions until an intentional employee resume command is received.
+- **Deletion and Uninstall Semantics:** When an employee deletes local history, disk sectors are unlinked and overwritten; deletion is immediate and permanent. Supported client uninstallation verifies legal hold constraints, halts capture, and securely purges unheld private data, emitting a cryptographic purge receipt.
 
 ## Error and edge-case behavior
 
@@ -83,6 +86,8 @@ Protected application categories (password managers, banking, personal messaging
 - **Storage Quota Exceeded:** If disk space thresholds are reached, oldest non-reviewed raw captures are purged early, accompanied by a user notification.
 - **Redaction Failure:** If sensitive data detection encounters an unhandled format, the entire frame/event is dropped from candidate generation.
 
+- **Visibility Lease Expiry:** If the native desktop shell crashes, hangs, or drops its status surfaces, visibility lease renewals cease. The privacy gate automatically halts observation within 500 ms, discarding any in-flight uncommitted frames.
+- **Offline Policy Expiry:** If disconnected from the enterprise network beyond the capture policy lease expiration (maximum 24 hours), capture halts immediately and enters `policy_expired` state.
 ## Observability and audit
 
 ### Telemetry and Diagnostics

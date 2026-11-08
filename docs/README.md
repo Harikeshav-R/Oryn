@@ -44,12 +44,12 @@ The 21 components defined in [TECHNICAL.md §14.4](../TECHNICAL.md) are indexed 
 
 | Component Brief | Technical Sources | Product Sources | Brief Status | Next Design Topic |
 |---|---|---|---|---|
-| [desktop-shell](components/desktop-shell.md) | §§4.1, 4.7, 13.2 | §§7–8, 12, 24–25, 30; ORY-002–004, ORY-010 | Baseline brief — detailed design pending | Shell framework, tray/status controls, crash/quit lifecycle, host boundary |
+| [desktop-shell](components/desktop-shell.md) | §§4.1, 4.7, 13.2 | §§7–8, 12, 24–25, 30; ORY-002–004, ORY-010 | Detailed technical specification — implementation pending | Detailed specification complete (Tauri 2, Rust supervisor, React views, AppKit/Win32 status adapters, inherited IPC, ephemeral visibility lease, bounded offline policy) |
 | [os-observation](components/os-observation.md) | §4.2 | §§3.3, 3.6, 8, 25.1–3, 28.1; ORY-005 | Baseline brief — detailed design pending | Per-OS APIs, capability reporting, sampling, event normalization |
 | [browser-extension](components/browser-extension.md) | §4.3 | §§3.3, 3.6, 8, 12, 25; ORY-005, ORY-019, ORY-028 | Baseline brief — detailed design pending | Extension permissions, local bridge transport, DOM/observation correlation |
 | [meeting-intelligence](components/meeting-intelligence.md) | §§4.4, 8.7 | §§9, 25.1, 29.5–6; ORY-008, ORY-021 | Baseline brief — detailed design pending | Per-meeting consent UX, transcription pipeline, commitment extraction |
 | [local-privacy-storage](components/local-privacy-storage.md) | §§4.5, 10.1–5, 11.5 | §§8.3–4, 25, 28.1; ORY-005–010 | Baseline brief — detailed design pending | Local encryption, pre-capture suppression, redaction, retention sweeps |
-| [local-context-hud](components/local-context-hud.md) | §§4.6–7, 8.6 | §§9.4, 12, 29.1–6; ORY-011, ORY-018–021 | Baseline brief — detailed design pending | Task matcher cache, suggestion ranking, overlay rendering, step tracking |
+| [local-context-hud](components/local-context-hud.md) | §§4.6–7, 8.6 | §§9.4, 12, 29.1–6; ORY-011, ORY-018–021 | Baseline brief — detailed design pending | Task matcher cache, suggestion ranking, guidance presentation models, step tracking |
 | [contribution-sync](components/contribution-sync.md) | §§4.8, 8.1, 8.8 | §§4.4, 10, 25.5–7; ORY-007, ORY-012 | Baseline brief — detailed design pending | Review receipts, sanitization verification, sync transport, offline queue |
 | [identity-policy](components/identity-policy.md) | §§5.2, 9.2–3, 11.3 | §§6–7, 14, 16.6, 25.6–9; ORY-001, ORY-026–030, ORY-048, ORY-068–069 | Baseline brief — detailed design pending | Policy evaluation engine, scoped credentials, exact approval binding |
 | [control-plane](components/control-plane.md) | §§5.1, 7 | §§6, 16, 22, 25; ORY-001, ORY-041, ORY-060, ORY-070 | Baseline brief — detailed design pending | API modularity, session management, domain validation, event consistency |
@@ -68,8 +68,8 @@ The 21 components defined in [TECHNICAL.md §14.4](../TECHNICAL.md) are indexed 
 
 ---
 
-## Next Discussion: Desktop Shell
+## Detailed Component Specifications
 
-The first component targeted for detailed design discussion is the [Desktop Shell](components/desktop-shell.md).
+The first detailed technical specification is complete for the [Desktop Shell](components/desktop-shell.md).
 
-Prior to beginning that discussion, refer to [Desktop Shell Questions](components/desktop-shell.md#12-architecture-decisions-and-open-questions). Note that in accordance with [TECHNICAL.md §14.3](../TECHNICAL.md), cross-cutting foundation agreements (such as identity/policy schemas, version lineage, and cross-component authorization contracts) remain dependencies to be negotiated, rather than invented unilaterally within the desktop shell.
+Refer to the resolved architecture decisions and owner-scoped dependencies in [Desktop Shell Decisions](components/desktop-shell.md#architecture-decisions-and-open-questions). In accordance with [TECHNICAL.md §14.3](../TECHNICAL.md), cross-cutting foundation agreements (such as identity/policy schemas, version lineage, and cross-component authorization contracts) remain owner-scoped dependencies to be negotiated, rather than invented unilaterally within the desktop shell.

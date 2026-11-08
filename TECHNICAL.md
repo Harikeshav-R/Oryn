@@ -290,18 +290,17 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 4.1 Desktop Shell and User Experience Host
 
-**Responsibility:** The installed Windows/macOS application that exposes enrollment, visible capture state, employee controls, personal history, notifications, contextual help, and approved local execution interfaces.
+**Responsibility:** The installed Windows/macOS application that exposes enrollment, visible capture state, employee controls, personal history, notifications, contextual help, and approved local execution interfaces. Implemented using Tauri 2 (Rust native core + React/TypeScript UI in system WebView) with native platform status adapters (AppKit on macOS, Win32 on Windows) and an unprivileged child privacy helper communicating via inherited byte channels.
 
-**Owns:** Desktop-level session and UI lifecycle; the employee's visibility into local observation; user controls for starting/stopping capture; presentation of local assistance; local application configuration.
+**Owns:** Desktop-level session and UI lifecycle; native system tray and movable capture badge presentation; employee visibility into local observation across the 7 canonical states; user controls for starting/stopping capture; presentation host for guidance overlays, highlight geometries, notifications, and consequential approvals; local UI preferences and enrollment markers; ephemeral visibility lease renewals.
 
-**Consumes:** Local task state, permitted guidance, consent/exclusion settings, job/approval requests addressed to this employee, application-compatibility information.
+**Consumes:** Authoritative capture snapshots and exclusions from [local-privacy-storage](docs/components/local-privacy-storage.md), structured guidance presentation models from [local-context-hud](docs/components/local-context-hud.md), permitted guidance from [contribution-sync](docs/components/contribution-sync.md), job/approval requests from [control-plane](docs/components/control-plane.md), application-compatibility information from [os-observation](docs/components/os-observation.md), and authentication/policy state from [identity-policy](docs/components/identity-policy.md).
 
-**Produces:** User capture commands, contribution review decisions, guide interactions, supervised approvals or corrections, and local executor invocation requests.
+**Produces:** Validated employee capture commands (`PauseCapture`, `ResumeCapture`, `SetCaptureCategory`, `RecordCaptureConsent`), ephemeral visibility lease renewals (`RenewVisibilityLease`), session lifecycle transitions (`SetSessionState`), contribution review decisions (`ReviewContribution`), guide interactions (`GuidanceInteraction`), and supervised action approvals (`SubmitApproval`).
 
-**Does not own:** The authoritative organizational graph, workflow publication, organization-wide permissions, central agent versions, or final business verification.
+**Does not own:** The authoritative organizational graph, workflow publication, organization-wide permissions, central agent versions, final business verification, raw media retention/redaction (owned by local privacy storage), guidance matching/progression logic (owned by local context HUD), or central authorization token issuance.
 
-**Boundary requirement:** Closing or disconnecting the UI must not silently change user consent or cause invisible capture. The detailed design must specify expected behavior for background operation, updates, crashes, and session restarts.
-
+**Boundary requirement:** Closing or disconnecting the UI must not silently change user consent or cause invisible capture. Closing the main window continues capture only if background observation is explicitly enabled and the native status badge remains visible on an active desktop; otherwise it halts capture (`Paused by You`). Explicit quit stops capture and persists a quit pause. Workstation lock/sleep halts capture; unlock/wake automatically restores previously active screen observation only, never meeting audio. Unexpected crashes, visibility loss, or updates fail closed within 500 ms and require explicit employee resume. Local capture requires a valid capture policy lease, capped at an absolute maximum of 24 hours of disconnection.
 ### 4.2 Native OS Observation Adapters
 
 **Responsibility:** Read permitted desktop context and relevant changes across approved Windows and macOS applications using supported platform facilities.
@@ -356,7 +355,7 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 **Does not own:** Automatically publishing a playbook, creating an agent from unreviewed raw capture, or providing managers remote playback.
 
-**Boundary requirement:** Protected application categories must be excluded before capture wherever possible; mixed windows and accidental sensitive exposure require safe suppression. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`.
+**Boundary requirement:** Protected application categories must be excluded before capture wherever possible; mixed windows and accidental sensitive exposure require safe suppression. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`. The capture gate consumes an ephemeral 100 ms visibility lease from the desktop shell supervisor and immediately revokes capture within 500 ms if unrenewed.
 
 ### 4.6 Local Task Understanding, Context Matcher, and Knowledge Cache
 
@@ -376,13 +375,13 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 **Responsibility:** Provide nonintrusive contextual guidance, approved peer fixes, commitment reminders, interactive guides, supervised macros, and authorized local actions.
 
-**Owns:** Presentation and local interaction state; carrying out local assistance within a separately validated execution scope.
+**Owns:** Task segmentation hypotheses, active playbook matching, contextual suggestion ranking, guidance step progression tracking, and generating structured guidance models for presentation by the desktop shell.
 
-**Consumes:** Local context matches, published guide versions, permitted action plans, applicable policy and approval results, local application capability information.
+**Consumes:** Local context matches, published guide versions, permitted action plans, applicable policy and approval results, local application capability information, and employee guidance interactions from [desktop-shell](docs/components/desktop-shell.md).
 
-**Produces:** User acknowledgments, completed guidance steps, proposed corrections, action attempts/results, explicit escalation requests.
+**Produces:** Structured guidance cards and target highlight coordinates for [desktop-shell](docs/components/desktop-shell.md), proposed corrections, action attempts/results, explicit escalation requests.
 
-**Does not own:** User-independent scheduled work, agent generation, or permission escalation.
+**Does not own:** User-independent scheduled work, agent generation, permission escalation, or desktop window/overlay rendering (window hosting and highlight rendering are owned by [desktop-shell](docs/components/desktop-shell.md)).
 
 **Boundary requirement:** The HUD must avoid unsupported confidence claims and disruptive prompting; assisted actions obey the same action authorization principles as remote runners.
 
@@ -397,6 +396,8 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 **Produces:** Authenticated organizational contributions, delivery acknowledgments, guide cache updates, revocation/policy notifications.
 
 **Does not own:** Raw media uploads, automatic publication, or bypassing consent when offline.
+
+**Boundary requirement:** Reconnection order must process policy and revocation updates before outgoing approved contributions. Unreviewed drafts never upload automatically.
 
 **Boundary requirement:** Offline behavior must preserve privacy and fail safely. Unreviewed observations must never be auto-uploaded when connectivity returns. Revoked access invalidates affected local guidance/execution abilities according to policy.
 
@@ -685,6 +686,8 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | Correction | Knowledge/Repair | Accepted expert correction or candidate rule | Different owners approve procedures and policies |
 | Repair | Factory/Simulator | New candidate version and regression requirements | No in-place active version mutation |
 | Governance / domain owners | Command Center | Authorized read models, notifications, audit | Frontend is not an authorization authority |
+| Desktop Shell | Local Privacy Storage | Capture control, visibility lease, and state subscription | Inherited byte-channel control; visibility loss or unrenewed lease immediately stops capture; raw media never crosses control channel |
+| Local Context HUD | Desktop Shell | Guidance cards, highlight targets, and user guidance interactions | Shell hosts all presentation and windows; HUD produces structured models and tracks guide progression; stale context invalidates highlights |
 
 ### 7.3 Shared metadata requirements
 
@@ -1047,7 +1050,7 @@ Retries must be safe under the actual application's idempotency and readback cap
 
 ### 11.5 Offline/disconnect behavior
 
-- Desktop observation may continue **only within active consent and local policy**, with private local retention still enforced.
+- Desktop observation may continue **only within active consent and local policy**, with private local retention still enforced. Local capture policy validity is capped at an absolute maximum of **24 hours** from issuance while disconnected; upon expiration, capture halts until connectivity is restored and the employee explicitly resumes.
 - Local guidance can use permitted previously synced playbooks, visibly marked when stale where correctness matters.
 - New shared contributions wait for the employee's explicit review; reconnection never turns drafts into automatic uploads.
 - Privileged execution requiring current central authorization pauses when authority cannot be established.
@@ -1147,7 +1150,7 @@ This section distinguishes **decisions that should remain stable** from choices 
 
 | Future detailed design | Decisions to resolve | Must preserve |
 |---|---|---|
-| **Desktop Shell** | App framework, session lifecycle, installer/updater, accessibility UI, tray/status patterns, startup/shutdown semantics | Always-visible consent state and reliable local controls |
+| **Desktop Shell** | Resolved in [detailed technical specification](docs/components/desktop-shell.md) (Tauri 2, Rust core, React views, AppKit/Win32 native status adapters, inherited IPC, ephemeral visibility lease, durable pause, bounded offline policy). | Always-visible consent state, movable status badge, and fail-closed capture controls |
 | **Native Capture Engine** | Per-OS APIs, event normalization, sampling, OCR fallback, permission prompts, resource budgets | Exclusion-first private capture and honest capability reporting |
 | **Browser Extension / Bridge** | Extension architecture, browser permissions, DOM observation, communication with desktop, guidance rendering | Local privacy gate and authorization for actions |
 | **Meeting/Audio** | Capture pipeline, transcription/diarization, participant notice UX, local processing | Per-meeting authorization and private evidence |

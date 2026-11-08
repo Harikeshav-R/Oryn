@@ -22,7 +22,7 @@ All interactions across Oryn component boundaries fit into one of three distinct
 
 ## Conceptual Contract Inventory (TECHNICAL.md §7.2)
 
-The 18 cross-component agreements below govern data and command transfers across system boundaries:
+The 20 cross-component agreements below govern data and command transfers across system boundaries:
 
 | # | Producer Component | Consumer Component | Information / Command | Boundary Invariant |
 |---|---|---|---|---|
@@ -44,6 +44,8 @@ The 18 cross-component agreements below govern data and command transfers across
 | 16 | [incident-correction-repair](../../components/incident-correction-repair.md) | [operational-graph](../../components/operational-graph.md), [incident-correction-repair](../../components/incident-correction-repair.md) | Accepted expert correction or candidate rule change | Independent domain owners must approve procedural and policy changes |
 | 17 | [incident-correction-repair](../../components/incident-correction-repair.md) | [agent-factory-ir](../../components/agent-factory-ir.md), [flight-simulator](../../components/flight-simulator.md) | New candidate version and regression suite requirements | No in-place modification of active production agent versions |
 | 18 | [control-plane](../../components/control-plane.md), [operational-graph](../../components/operational-graph.md), [release-governance](../../components/release-governance.md) | [command-center-analytics](../../components/command-center-analytics.md) | Authorized read models, notifications, and audit records | The frontend UI is a presentation layer, never an authorization authority |
+| 19 | [desktop-shell](../../components/desktop-shell.md) | [local-privacy-storage](../../components/local-privacy-storage.md) | Capture control commands, ephemeral visibility lease, and state subscription | Inherited byte-channel control; visibility loss or unrenewed lease immediately stops capture; raw media never crosses control channel. Exact wire protocol defined in [desktop-shell specification](../../components/desktop-shell.md#parent--helper-transport-architecture). |
+| 20 | [local-context-hud](../../components/local-context-hud.md) | [desktop-shell](../../components/desktop-shell.md) | Structured guidance cards, highlight targets, and employee guidance interactions | Shell hosts all presentation and windows; HUD produces structured models and tracks guide progression; stale context invalidates highlights. Exact wire protocol defined in [desktop-shell specification](../../components/desktop-shell.md#2-hud-guidance-presentation-interface-hudpresentationport). |
 
 ---
 

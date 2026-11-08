@@ -7,13 +7,13 @@ Status: Baseline brief — detailed design pending
 **Source references:** [TECHNICAL.md §§4.6–7, 8.6](../../TECHNICAL.md) | [PRODUCT.md §§9.4, 12, 29.1–6; ORY-011, ORY-018–021](../../PRODUCT.md)
 
 ### Core Responsibility
-The Local Context HUD and Guided Assistance component interprets the employee's permitted on-screen activity into candidate task context, matches it against locally cached approved playbooks, and presents non-intrusive step-by-step guidance, peer error resolutions, and supervised local execution assistance.
+The Local Context HUD and Guided Assistance component interprets the employee's permitted on-screen activity into candidate task context, matches it against locally cached approved playbooks, and produces structured step-by-step guidance models, peer error resolutions, and supervised local execution assistance for presentation by the desktop shell.
 
 ### Owns
 - Local active-task hypothesis generation and task boundary segmentation.
 - Matching active application states and error codes against locally cached playbooks and peer resolutions.
 - Ranking contextual suggestions and suppressing intrusive or low-confidence prompts.
-- Presenting the Heads-Up Display (HUD) overlay, step checklists, and visual cues.
+- Generating structured Heads-Up Display (HUD) guidance models, step checklists, and target highlight geometries for presentation by [desktop-shell](desktop-shell.md).
 - Tracking interactive guidance step progress and executing approved, supervised local actions.
 
 ### Consumes
@@ -33,6 +33,7 @@ The Local Context HUD and Guided Assistance component interprets the employee's 
 - Approving new organizational playbooks or procedures (owned by [operational-graph](operational-graph.md)).
 - Central workflow candidate clustering across multiple users (owned by [workflow-discovery](workflow-discovery.md)).
 - Granting authorization for actions exceeding the employee's role (owned by [identity-policy](identity-policy.md)).
+- Desktop window hosting, native click-through highlight rendering, or UI presentation (owned by [desktop-shell](desktop-shell.md)).
 
 ### Boundary Requirement
 Context matching must be uncertainty-aware and respect employee snooze/dismiss preferences. An inferred task identity or matched playbook must never be treated as implicit authorization to execute business actions. Assisted local actions must obey the same rigorous policy authorization checks as remote runners.
@@ -52,14 +53,14 @@ Context matching must be uncertainty-aware and respect employee snooze/dismiss p
 
 ### Cross-Component Contracts
 - **Contract Reference #3 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes published, access-filtered playbooks and peer fixes from [operational-graph](operational-graph.md) cached via [contribution-sync](contribution-sync.md).
-- **Guidance Interaction Protocol:** Exposes step progress and user acknowledgment events to [desktop-shell](desktop-shell.md).
+- **Contract Reference #20 in [Contracts Catalog](../architecture/contracts/README.md):** Emits structured guidance cards and target highlight coordinates to [desktop-shell](desktop-shell.md), and consumes employee guidance interaction events (`confirm_step`, `back`, `skip_optional`, `stop`, `dismiss`, `snooze_1h`, `mute_category`).
 - **Local Executor Interface:** Emits structured action requests to local UI and browser adapters, requiring explicit user confirmation for Tier 2/3 actions.
 
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries
 - **Deployment Location:** Executes as a user-space helper on the employee endpoint.
-- **Overlay Window Privileges:** Uses transparent, click-through-capable window layering; strictly prevents click-jacking or obscuring OS-level security dialogs.
+- **Presentation Delegation:** Operates as a background helper process without direct windowing or overlay rendering privileges. All visual surfaces and click-through highlights are rendered strictly by the native host in [desktop-shell](desktop-shell.md).
 - **Local Action Execution:** Local actions run under the logged-in user's desktop session and permissions; the HUD cannot elevate permissions.
 
 ## Internal architecture
@@ -67,7 +68,7 @@ Context matching must be uncertainty-aware and respect employee snooze/dismiss p
 ### Logical Submodules
 - **Task Segmenter and Signature Matcher:** Identifies task boundaries from event sequences and matches signatures against cached playbooks.
 - **Suggestion Ranker and Suppression Filter:** Computes contextual relevance scores and applies snooze/fatigue throttling.
-- **HUD Overlay Renderer:** Draws high-performance, non-intrusive guide highlights and step tooltips.
+- **Guidance Model Generator:** Computes structured step cards, required actions, and native bounding-box highlight geometries for transmission to the desktop shell.
 - **Local Step Coordinator:** Verifies step prerequisites and advances guidance state only upon observed success.
 
 ## State and lifecycle
@@ -83,6 +84,7 @@ Context matching must be uncertainty-aware and respect employee snooze/dismiss p
 - **Ambiguous Match:** If multiple playbooks match the current screen with similar confidence, the HUD offers a choice menu or remains silent.
 - **Failed Step Execution:** If an assisted action fails or times out, the HUD stops progression, highlights the failure, and offers manual recovery.
 - **Cache Invalidation:** Stale playbooks are evicted immediately upon receiving revocation events from contribution sync.
+- **Presentation Host Disconnection:** If the desktop shell crashes or closes the guidance presentation channel, the HUD helper suspends active guidance sessions without interrupting task hypothesis tracking or observation processing.
 
 ## Observability and audit
 
@@ -108,24 +110,24 @@ Context matching must be uncertainty-aware and respect employee snooze/dismiss p
 ## Performance and operations
 
 ### Operational Characteristics ([TECHNICAL.md §12](../../TECHNICAL.md))
-- Overlay rendering must achieve 60 FPS without stuttering.
+- Guidance model generation and coordinate translation must execute within 50 ms of context transition to maintain sub-perceptual presentation latency.
 - Local playbook signature matching must execute within sub-second thresholds to remain contextually relevant.
 
 ## Architecture decisions and open questions
 
 ### Specific Preserved Implementation Questions
 - What local task segmentation algorithm balances responsiveness with low CPU overhead?
-- How should the HUD overlay be hosted (native OS transparent window vs. web-based overlay)?
+- How should highlight bounding-box coordinates be smoothed or clamped across complex nested application scrolling containers?
 - What heuristic best measures user fatigue to prevent over-prompting?
 - How can step completion be reliably verified across non-standard desktop UI toolkits?
 
 ### Handoff Questions ([TECHNICAL.md §14.2](../../TECHNICAL.md))
-1. *Owns exclusively:* Active task hypotheses, local playbook cache matching, HUD overlay presentation, and guidance step tracking.
+1. *Owns exclusively:* Active task hypotheses, local playbook cache matching, guidance presentation model generation, and guidance step tracking.
 2. *Data ingress/egress:* Ingests redacted observations and cached playbooks; outputs candidate task demonstrations and guidance interaction logs.
 3. *Versions/identities:* Playbook version hash, rule version IDs, and employee user identifier.
 4. *Upstream failure:* If central sync is offline, HUD operates using valid cached playbooks.
 5. *Authority:* The employee is authoritative for acknowledging or dismissing suggestions.
 6. *Testing without private details:* Tested via synthetic event streams and UI automation fixtures.
 7. *Audit and duplicate prevention:* Suggestions and step completions carry unique session IDs.
-8. *Failure blast radius:* HUD failure hides overlays; underlying business applications and observation streams remain unaffected.
+8. *Failure blast radius:* HUD helper failure clears guidance cards and target highlights in the desktop shell; underlying business applications, observation streams, and desktop shell status surfaces remain unaffected.
 9. *v1.0 criteria:* Enables ORY-011, ORY-018, ORY-019, ORY-020, and ORY-021 verified through interactive guidance tests.

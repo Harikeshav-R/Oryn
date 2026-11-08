@@ -32,8 +32,7 @@ The Contribution and Synchronization Gateway mediates the boundary between priva
 - Central identity and authorization rules (owned by [identity-policy](identity-policy.md)).
 
 ### Boundary Requirement
-Offline behavior must preserve employee privacy and fail safely. Unreviewed observations must never be queued for automatic upload upon network reconnection. Access revocation events must immediately invalidate cached guidance and execution rights on the local endpoint.
-
+Offline behavior must preserve employee privacy and fail safely. Upon network reconnection, the gateway must process policy, restriction, and access revocation updates before transmitting any queued outgoing contributions. Any previously approved item whose scope has since been revoked is dropped from the egress queue. Unreviewed observations and drafts must never be queued or automatically uploaded upon network reconnection. Raw video, screen captures, and audio files are strictly prohibited from network egress.
 ## Product requirements
 
 ### Key Product Requirements ([PRODUCT.md §§4.4, 10, 25.5–7; ORY-007, ORY-012](../../PRODUCT.md))
@@ -70,8 +69,7 @@ Offline behavior must preserve employee privacy and fail safely. Unreviewed obse
 ### State and Persistence
 - **Persisted State:** Encrypted offline queue for approved contributions, sync receipts, and versioned playbook cache.
 - **Lifecycle Transitions:** `Connected ↔ Disconnected (Offline Queueing) ↔ Syncing ↔ Sync Complete`.
-- **Offline Resumption:** Reconnection triggers synchronization of approved items only; never sweeps unapproved drafts.
-
+- **Reconnection Ordering:** Reconnection enforces strict sequencing: (1) authenticate session, (2) fetch active policy and revocation state, (3) purge newly restricted or revoked items from offline queue, and (4) transmit remaining approved contributions still authorized to leave. Reconnection never sweeps unreviewed drafts.
 ## Error and edge-case behavior
 
 ### Failure Handling

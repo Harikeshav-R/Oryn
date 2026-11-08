@@ -15,6 +15,7 @@ Identity, Organization, Access, and Approval Governance governs organizations, w
 - Policy definitions specifying action risk tiers (Tier 0 through Tier 4) and autonomy gates.
 - Human approval request routing, binding verification, and cryptographic approval records.
 - Mandatory enterprise capture exclusion policies distributed to employee endpoints.
+- Issuing signed endpoint capture-policy leases with configured validity periods (shorter than, but never exceeding, the desktop's 24-hour offline cap).
 - Organization offboarding, suspension, and permission revocation enforcement.
 
 ### Consumes
@@ -35,7 +36,7 @@ Identity, Organization, Access, and Approval Governance governs organizations, w
 - Directly executing external third-party API mutations (owned by [application-adapters](application-adapters.md)).
 
 ### Boundary Requirement
-A machine learning model may request authorization, but cannot grant it. Every consequential action (Tier 3) is intercepted and evaluated by a trusted, deterministic policy engine at the execution boundary. Tier 3 requires an item-level human approval before external commit; Tier 4 restricted actions are strictly unavailable for v1.0 agent execution regardless of prior human demonstrations.
+A machine learning model may request authorization, but cannot grant it. Every consequential action (Tier 3) is intercepted and evaluated by a trusted, deterministic policy engine at the execution boundary. Tier 3 requires an item-level human approval before external commit; Tier 4 restricted actions are strictly unavailable for v1.0 agent execution regardless of prior human demonstrations. Capture-policy leases distributed to employee desktop endpoints are bounded by an absolute maximum offline validity ceiling of 24 hours (organizations may configure shorter lease durations, but cannot extend the offline ceiling). Upon lease expiry, endpoint observation halts until network connectivity is re-established and policy refreshed.
 
 ## Product requirements
 

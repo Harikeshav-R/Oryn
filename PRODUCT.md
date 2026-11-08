@@ -376,9 +376,9 @@ The pilot owner selects one to three named workflows to discover, defines their 
 
 ### 8.1 Desktop companion requirements
 
-The companion has a persistent but non-obstructive status indicator. States are **Not Configured**, **Observing Approved Work**, **Paused by You**, **Paused by Policy**, **In Excluded Application**, **Meeting Capture Active**, and **Attention Needed**. Hovering or opening the companion explains the state. A clear pause/resume control is always accessible during observation.
+The companion has a persistent but non-obstructive status indicator provided through the OS system tray/menu-bar and a movable native capture badge whenever capture is active. States are **Not Configured**, **Observing Approved Work**, **Paused by You**, **Paused by Policy**, **In Excluded Application**, **Meeting Capture Active**, and **Attention Needed**. Hovering or opening the companion explains the state and presents independent Screen and Meeting status indicators. A clear pause/resume control is always accessible during observation.
 
-The companion must not hide recording state, simulate a different state, or resume capture automatically after a user-initiated pause. Following a system restart or sign-out, observation resumes only if prior employee consent remains valid and the employee's configured automatic-start preference permits it; the state must be visibly confirmed when the companion becomes active.
+The companion must not hide recording state, simulate a different state, or resume capture automatically after a user-initiated pause. When the main window is closed, capture continues only if background observation is explicitly enabled and the native badge remains visible on an active desktop; otherwise closing the window transitions to **Paused by You**. Explicit application quit stops capture and persists a quit pause. On workstation lock or system sleep, all capture halts immediately; on unlock or wake, previously active screen observation may automatically restore only if permitted by valid policy, consent, and healthy visibility, whereas meeting audio recording never automatically resumes. Following an unexpected helper or badge crash, visibility loss, or application update, capture remains paused behind an explicit recovery blocker and requires intentional employee action to resume. Local capture requires a valid capture policy lease, which expires after an absolute maximum of 24 hours of disconnection; upon expiry, capture halts until connectivity is restored and the employee explicitly resumes. Unseen remote revocations take effect upon reconnection or lease expiry, while received restrictions are enforced immediately. An optional employee-configured global hotkey allows quick toggling of screen observation or executing Pause All, but cannot grant meeting audio consent or acknowledge disclosure notices.
 
 ### 8.2 Work observation scope
 
@@ -490,7 +490,7 @@ The search experience supports queries such as "How do we handle a duplicate ven
 
 ### 12.1 HUD principles
 
-The HUD remains quiet by default, appears only in approved work contexts, never steals keyboard focus without user action, and never covers critical application controls. The employee can snooze it for an hour, mute a suggestion category, or disable proactive suggestions while retaining manual search and guidance.
+The HUD remains quiet by default, appears only in approved work contexts, never steals keyboard focus without user action, and never covers critical application controls. Guidance cards and click-through target highlights are hosted by the desktop shell from structured models produced by the context helper. Transparent native highlights never obscure OS security prompts or browser permission controls, and expire automatically unless continuously refreshed. The employee can snooze it for an hour, mute a suggestion category, or disable proactive suggestions while retaining manual search and guidance.
 
 ### 12.2 Trigger categories
 
@@ -1042,6 +1042,8 @@ Passwords, tokens, account credentials, payment details, and other restricted da
 
 When an employee deletes local content, Oryn explains whether already approved, anonymized organizational knowledge remains and offers the appropriate separate contribution-removal process. Discarded or expired private raw capture cannot be recovered from Oryn's organization dashboard.
 
+Supported client uninstallation presents an explicit data deletion warning, stops all observation and helper processes, verifies whether legal hold constraints apply, and permanently purges eligible local unheld private data, profile secrets, and local preferences, issuing a cryptographic purge receipt. If an active legal hold or unknown retention verdict is returned by local storage, uninstallation cleanup is aborted with an explanation directing the user to their administrator, leaving protected data intact rather than performing unauthorized deletion. Uninstallation never deletes previously published, anonymized organizational knowledge or centralized audit records.
+
 ### 25.5 Review before sharing
 
 Before a personal observation becomes a shared candidate playbook, the employee can inspect the proposed sanitized description, its referenced application context, included business variables, and any source excerpt intended for review. The employee can approve contribution, remove sensitive details, mark steps out of scope, or decline the share. An organization may limit publishing to approved work scopes but must not bypass this sharing review for individual recordings.
@@ -1053,6 +1055,8 @@ Security admins must be able to define: approved applications and excluded categ
 ### 25.7 Consent changes
 
 When consent is withdrawn, Oryn immediately stops the affected capture category. Existing pending private observations are not newly shared. Already published authorized organizational procedures are treated under the contribution and retention policy with visible options to request correction or removal. A changed organization policy that materially affects employee capture requires a new employee notice and acknowledgment before that capture category resumes.
+
+If observation stops due to capture-policy lease expiration during offline operation, receiving a renewed valid policy lease alone does not restart capture automatically; intentional employee resumption (and acknowledgment of any updated notice terms) is required.
 
 ### 25.8 Audit trail
 
@@ -1235,7 +1239,8 @@ These journeys are normative examples of v1.0 behavior. They are intentionally c
 - **A confidential value appears inside a permitted screen:** The shared workflow must use a redacted field or omit the value; if safe redaction cannot be established, sharing is blocked pending review.
 - **Audio consent is missing or withdrawn:** Meeting recording does not start or stops immediately; no transcript is generated for the unauthorized segment.
 - **A manager requests a specific employee's activity timeline:** The request is unavailable, with an explanation of the privacy boundary.
-- **The employee removes the desktop companion:** Future capture stops; shared approved playbooks remain subject to organizational policy, not live device access.
+- **The employee uninstalls the desktop companion:** Observation and helpers stop; eligible local private data, profile secrets, and local preferences are securely purged after an explicit deletion warning and confirmation that no legal holds apply; published organizational procedures and centralized audit history remain under organizational retention.
+- **The capture policy lease expires while disconnected:** Observation stops after an absolute maximum of 24 hours of disconnection (or shorter configured limit); reconnecting and receiving a renewed policy leaves capture paused until intentional employee resume.
 
 ### 28.2 Workflow-learning cases
 

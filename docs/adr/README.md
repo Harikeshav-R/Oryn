@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADRs)
 
-Status: Active guidance — no accepted decisions in baseline pass
+Status: Active guidance — accepted records present for desktop subsystem
 
 ## Canonical Location and Numbering
 
@@ -29,7 +29,7 @@ ADRs record hard-to-reverse, non-obvious engineering decisions and trade-offs. A
 2. **Surprising without context:** A future engineer or agent reading the code would wonder why an alternative was not chosen.
 3. **The result of a real trade-off:** Multiple viable options existed, and one was deliberately selected based on concrete technical criteria.
 
-Do not record ADRs for routine implementation details, obvious choices, or easily reversible file layout adjustments. In particular, this documentation foundation pass creates no accepted architecture decisions.
+Do not record ADRs for routine implementation details, obvious choices, or easily reversible file layout adjustments. Subsystem detailed specifications record accepted decisions following architecture review (see ADR-0001 and ADR-0002).
 
 ---
 
@@ -70,3 +70,12 @@ Subsystem designs may introduce internal modules or alternate libraries without 
 5. **Side-effect guarantees:** External side-effect handling, idempotency mechanisms, replay/retry rules, or simulation isolation.
 6. **Shared contracts:** Any public cross-component message, command, event, or interface used by other components.
 7. **Product-visible guarantees:** Any policy, autonomy tier, retention limit, or UX constraint specified in [PRODUCT.md](../../PRODUCT.md) (requiring both an ADR and a product specification update).
+
+---
+
+## Accepted Architecture Decisions
+
+The following architecture decision records are currently accepted:
+
+1. **[0001-desktop-runtime-and-presentation.md](0001-desktop-runtime-and-presentation.md)**: Desktop Runtime and Presentation Architecture (Tauri 2, Rust core, React/TypeScript UI, native AppKit/Win32 status adapters, and unprivileged child helper via inherited byte channels).
+2. **[0002-desktop-capture-lifecycle.md](0002-desktop-capture-lifecycle.md)**: Desktop Capture Lifecycle, Visibility Leases, and Bounded Offline Policy (100ms/500ms ephemeral visibility lease, durable employee pause, explicit recovery resume, and 24-hour maximum offline policy validity cap).
