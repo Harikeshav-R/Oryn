@@ -1,0 +1,130 @@
+# Local Privacy Gate, Evidence Store, and Retention Component Brief
+
+Status: Baseline brief — detailed design pending
+
+## Purpose and ownership
+
+**Source references:** [TECHNICAL.md §§4.5, 10.1–5, 11.5](../../TECHNICAL.md) | [PRODUCT.md §§8.3–4, 25, 28.1; ORY-005–010](../../PRODUCT.md)
+
+### Core Responsibility
+The Local Privacy Gate, Evidence Store, and Retention component enforces mandatory exclusions and data minimization at the desktop source, securely stores private screen and audio evidence locally, and governs retention, deletion, and conversion into shareable procedural knowledge.
+
+### Owns
+- Device-level capture consent and active exclusion policy enforcement.
+- Local encrypted storage for private observations, raw screenshots, and transient audio evidence.
+- Redaction and data minimization pipelines (masking credentials, tokens, PII, and financial account details).
+- The employee's review-before-sharing workflow, ensuring no raw media egresses to the cloud.
+- Automatic local retention sweeps and user-initiated local evidence deletion.
+
+### Consumes
+- Raw candidate observation streams from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md).
+- Organization-wide mandatory exclusion rules and maximum retention caps from [identity-policy](identity-policy.md).
+- Employee personal retention preferences and pause/resume commands from [desktop-shell](desktop-shell.md).
+- Explicit contribution review approvals from the employee.
+
+### Produces
+- Redacted, permitted observation events delivered to [local-context-hud](local-context-hud.md).
+- Sanitized, employee-approved workflow candidates delivered to [contribution-sync](contribution-sync.md).
+- Privacy status indicators and audit events delivered to [desktop-shell](desktop-shell.md).
+
+### Does Not Own
+- Central workflow candidate clustering or procedure synthesis (owned by [workflow-discovery](workflow-discovery.md)).
+- Publishing playbooks to the organization or authoring business rules (owned by [operational-graph](operational-graph.md)).
+- Remote video/screen playback for managers or administrators (strictly prohibited by product architecture).
+
+### Boundary Requirement
+Protected application categories (password managers, banking, personal messaging, health portals) must be excluded before capture at source. Mixed windows require strict pixel and DOM masking. Default local raw retention is strictly **7 days**, employee-selectable between **1–6 days**, with documented organization extension up to a maximum of **14 days** (per [PRODUCT.md §25.4](../../PRODUCT.md)). Discarded or expired private raw capture cannot be recovered from organizational dashboards.
+
+## Product requirements
+
+### Key Product Requirements ([PRODUCT.md §§8.3–4, 25, 28.1; ORY-005–010](../../PRODUCT.md))
+- **Mandatory Exclusions:** Mandatory protected categories (passwords, auth secrets, personal messaging, banking, private browsing, HR compensation, health portals) must never be captured or stored (ORY-005).
+- **Prohibition of Manager Surveillance:** Managers cannot view or request an employee's raw screen or audio timeline through Oryn (ORY-006).
+- **Review Before Sharing:** Every candidate workflow contribution requires explicit employee inspection and approval of sanitized steps before organizational sync (ORY-007).
+- **Retention Expiration:** Raw local capture expires automatically on the configured schedule (default 7 days, 1–6 employee choice, max 14 days) and is purged permanently (ORY-009).
+- **My Privacy Trust Center:** Exposes local retention status, active exclusion rules, and consent logs directly to the employee (ORY-010).
+
+## Upstream and downstream contracts
+
+**Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
+
+### Cross-Component Contracts
+- **Contract Reference #1 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests raw candidate observations from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md).
+- **Contract Reference #2 in [Contracts Catalog](../architecture/contracts/README.md):** Emits employee-approved sanitized task contributions with consent receipts to [workflow-discovery](workflow-discovery.md) via [contribution-sync](contribution-sync.md).
+- **Local Context Feed:** Streams redacted, permitted observation records to [local-context-hud](local-context-hud.md).
+
+## Trust and deployment boundaries
+
+### Process and Security Boundaries
+- **Deployment Location:** Executes as a privileged local daemon or service on employee endpoints.
+- **Physical Storage:** Stores evidence in an encrypted local database (e.g., SQLite with SQLCipher or OS-native keychains). Encryption keys are protected by user credentials.
+- **Cloud Egress Prohibition:** Raw video, full-resolution screen frames, and raw audio files are strictly prohibited from network transmission to central Oryn cloud services.
+
+## Internal architecture
+
+### Logical Submodules
+- **Pre-Capture Exclusion Interceptor:** Evaluates window metadata, application identifiers, and URL domains against exclusion lists before image acquisition.
+- **Sensitive Data Redaction Engine:** Performs on-device regex, NLP, and OCR masking of sensitive tokens, passwords, and PII.
+- **Local Encrypted Evidence Store:** Manages on-disk encrypted storage of raw frames, interaction logs, and local task indexes.
+- **Retention Sweeper:** Background process that enforces TTL rules and securely deletes expired media files.
+- **Sanitization Review Compiler:** Packages candidate workflow demonstrations into sanitized step narratives for employee inspection.
+
+## State and lifecycle
+
+### State and Persistence
+- **Persisted State:** Local encrypted evidence database, exclusion rule cache, employee privacy preferences, and review receipts.
+- **Lifecycle Transitions:** `Active Capture → Redacting & Storing → Retention Aging → Purged / Expired`.
+- **Deletion Semantics:** When an employee deletes local history, disk sectors are unlinked and overwritten; deletion is immediate and permanent.
+
+## Error and edge-case behavior
+
+### Failure Handling
+- **Ambiguous Window Identity:** If the application identifier or URL of a window cannot be confirmed, the gate fails safe and suppresses capture.
+- **Storage Quota Exceeded:** If disk space thresholds are reached, oldest non-reviewed raw captures are purged early, accompanied by a user notification.
+- **Redaction Failure:** If sensitive data detection encounters an unhandled format, the entire frame/event is dropped from candidate generation.
+
+## Observability and audit
+
+### Telemetry and Diagnostics
+- Generates local audit logs recording capture events, redaction counts, retention purge runs, and contribution approvals.
+- No sensitive text, window titles of excluded apps, or raw media are emitted to diagnostic telemetry.
+
+## Security and threat model
+
+### Security and Safety Considerations
+- **Local Database Tampering:** Database files are encrypted at rest using platform-backed keys to prevent extraction by unauthorized local processes.
+- **PII Leakage in Excerpts:** Candidate contribution excerpts must replace detected PII with generic field tokens (e.g., `<CUSTOMER_ID>`) rather than plausible fake values.
+- **Surveillance Resistance:** The component rejects any administrative command requesting remote extraction of raw screen frames.
+
+## Test strategy
+
+### Acceptance and Verification Scenarios
+- **Acceptance Criteria References:** [PRODUCT.md §31.1: ORY-005, ORY-006, ORY-007, ORY-008, ORY-009, ORY-010](../../PRODUCT.md).
+- **Concrete Verification Scenario:**
+  - *Input/Condition:* Local raw capture reaches day 8 under default 7-day retention setting.
+  - *Expected Observable Result:* The retention sweeper permanently purges the day 1 raw media and indexes; My Privacy displays updated retention bounds; no central API or dashboard can access the purged data.
+
+## Performance and operations
+
+### Operational Characteristics ([TECHNICAL.md §12](../../TECHNICAL.md))
+- Low I/O overhead during continuous frame and event logging.
+- Background retention sweeps run at low process priority to avoid disk contention during employee working hours.
+
+## Architecture decisions and open questions
+
+### Specific Preserved Implementation Questions
+- What local embedded storage engine (SQLite with SQLCipher, LevelDB, or OS data stores) offers the best combination of encryption speed and indexing?
+- How should on-device redaction balance OCR speed against CPU utilization?
+- What exact encryption key derivation and storage scheme (OS Keychain / DPAPI) should protect the local evidence database?
+- How should legal hold requests be handled without violating product maximum retention limits?
+
+### Handoff Questions ([TECHNICAL.md §14.2](../../TECHNICAL.md))
+1. *Owns exclusively:* Local capture consent enforcement, raw evidence storage, redaction pipeline, and retention purging.
+2. *Data ingress/egress:* Ingests raw observation streams; outputs sanitized, employee-approved workflow contributions.
+3. *Versions/identities:* Local device ID, policy version hash, and employee user identifier.
+4. *Upstream failure:* If upstream observers fail, storage maintains existing data and logs gap markers.
+5. *Authority:* The employee is authoritative for local retention choices (within 1–14 day bounds) and sharing review.
+6. *Testing without private details:* Tested via mock observation streams containing synthetic PII and excluded app IDs.
+7. *Audit and duplicate prevention:* Contribution approvals generate signed cryptographic receipts.
+8. *Failure blast radius:* Local storage failure stops local observation; fails closed to ensure privacy.
+9. *v1.0 criteria:* Enables ORY-005, ORY-006, ORY-007, ORY-009, and ORY-010 verified through retention sweeps and privacy audits.
