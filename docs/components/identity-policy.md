@@ -1,0 +1,136 @@
+# Identity, Organization, Access, and Approval Governance Component Brief
+
+Status: Baseline brief — detailed design pending
+
+## Purpose and ownership
+
+**Source references:** [TECHNICAL.md §§5.2, 9.2–3, 11.3](../../TECHNICAL.md) | [PRODUCT.md §§6–7, 14, 16.6, 25.6–9; ORY-001, ORY-026–030, ORY-048, ORY-068–069](../../PRODUCT.md)
+
+### Core Responsibility
+Identity, Organization, Access, and Approval Governance governs organizations, workspaces, teams, user and agent identities, role assignments, action risk tiers, approval policies, credential scoping, and formal human approval decisions across Oryn.
+
+### Owns
+- Authoritative tenant/organization structures, workspace boundaries, and membership rosters.
+- Role-Based Access Control (RBAC) and granular permission evaluation engines.
+- Policy definitions specifying action risk tiers (Tier 0 through Tier 4) and autonomy gates.
+- Human approval request routing, binding verification, and cryptographic approval records.
+- Mandatory enterprise capture exclusion policies distributed to employee endpoints.
+- Organization offboarding, suspension, and permission revocation enforcement.
+
+### Consumes
+- Identity claims and SSO assertions from enterprise identity providers (SAML, OIDC).
+- Administrative role assignments and permission updates from [command-center-analytics](command-center-analytics.md).
+- Real-time action authorization requests from [agent-runtime](agent-runtime.md) and local executors.
+- Approval decisions submitted by authorized human reviewers.
+
+### Produces
+- Authoritative authorization verdicts (`Allow`, `Deny`, `RequireHumanApproval`) with policy justifications.
+- Cryptographically signed approval tokens bound to specific proposed operations and parameters.
+- Policy change and access revocation events emitted across the system.
+- Audit log records documenting every role change, policy update, and consequential approval.
+
+### Does Not Own
+- Verifying whether an agent's business action was *factually correct* (owned by [outcome-verification](outcome-verification.md)).
+- Generating agent execution plans or prompt instructions (owned by [agent-factory-ir](agent-factory-ir.md)).
+- Directly executing external third-party API mutations (owned by [application-adapters](application-adapters.md)).
+
+### Boundary Requirement
+A machine learning model may request authorization, but cannot grant it. Every consequential action (Tier 3) is intercepted and evaluated by a trusted, deterministic policy engine at the execution boundary. Tier 3 requires an item-level human approval before external commit; Tier 4 restricted actions are strictly unavailable for v1.0 agent execution regardless of prior human demonstrations.
+
+## Product requirements
+
+### Key Product Requirements ([PRODUCT.md §§6–7, 14, 16.6, 25.6–9](../../PRODUCT.md))
+- **Workspace Administration:** Admins can invite users, assign roles, and revoke roles; revocations take effect immediately for future privileged actions (ORY-001).
+- **Tier 3 Human-in-the-Loop:** Consequential operations (monetary, external, irreversible) trigger item-level human approval displaying exact proposed changes (ORY-026).
+- **Tier 4 Prohibition:** Tier 4 restricted actions are completely blocked from automated execution (ORY-027).
+- **Scope Containment:** Agents cannot access applications or records outside their approved scope (ORY-028).
+- **No Silent Privilege Expansion:** Agent repairs cannot expand permissions without explicit administrator re-authorization (ORY-029).
+- **Stage Progression Gates:** Enforces minimum demonstration and evaluation gates before advancing an agent's autonomy stage (ORY-030).
+- **Separation of Duties:** Initiating an agent job does not grant the operator authority to approve consequential actions if their role lacks approval rights (ORY-048).
+- **Security Policy Enforcement:** Policy changes immediately block prohibited actions across all active capabilities (ORY-068).
+- **Controlled Offboarding:** Deactivating an organization immediately terminates all active capture and agent executions (ORY-069).
+
+## Upstream and downstream contracts
+
+**Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
+
+### Cross-Component Contracts
+- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes specific action authorization requests from [agent-runtime](agent-runtime.md) and returns authoritative allow/deny/approve decisions.
+- **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers authorized role-scoped read models and audit events to [command-center-analytics](command-center-analytics.md).
+- **Revocation Broadcasts:** Emits `policy.changed`, `access.revoked`, and `consent.revoked` domain events to invalidate distributed caches.
+
+## Trust and deployment boundaries
+
+### Process and Security Boundaries
+- **Deployment Location:** Core control-plane service running within the hardened organizational cloud environment.
+- **Security Invariant:** Serves as the primary security policy decision point (PDP). Policy evaluation code is strictly isolated from model execution containers.
+- **Credential Scoping:** Issues short-lived, least-privileged execution tokens to runners, strictly scoped to target case IDs and adapter operations.
+
+## Internal architecture
+
+### Logical Submodules
+- **RBAC and Scoping Engine:** Evaluates actor roles, resource scopes, and tenant memberships.
+- **Action Risk Classifier:** Enforces the Tier 0–4 risk taxonomy and determines approval requirements.
+- **Approval Integrity Verifier:** Cryptographically binds approvals to exact proposed mutation payloads to prevent parameter tampering.
+- **Revocation Coordinator:** Manages revocation broadcasts and coordinates immediate termination of revoked runner tokens.
+
+## State and lifecycle
+
+### State and Persistence
+- **Persisted State:** Tenant accounts, user roles, permission policies, approval audit trails, and signing keys in the central transactional database.
+- **Lifecycle Transitions:** Approvals transition through `Requested → Pending Review → Approved / Rejected / Expired → Committed`.
+- **Policy Immutability:** Policies are versioned immutably; historical executions link to the exact policy version under which they were authorized.
+
+## Error and edge-case behavior
+
+### Failure Handling
+- **Policy Engine Unreachable:** Fails closed. If a runner cannot obtain authorization, the action is blocked and held for operator review.
+- **Stale Context:** If the target entity's state changes between approval request and commit, the approval is invalidated and must be re-requested.
+- **Ambiguous Authorization:** Any evaluation resulting in an indeterminate verdict is treated as `Deny`.
+
+## Observability and audit
+
+### Telemetry and Diagnostics
+- Generates tamper-evident audit records for every authorization check, approval decision, role grant, and policy change (ORY-070).
+- Telemetry logs capture authorization latency, rejection frequencies, and approval turnaround times.
+
+## Security and threat model
+
+### Security and Safety Considerations
+- **Privilege Escalation via Prompt Injection:** Untrusted task data (e.g., invoice text) attempting to command the agent to bypass approvals is thwarted because policy checks occur in the separate deterministic policy engine.
+- **Approval Repurposing:** Approvals are cryptographically bound to payload hashes; an approved token cannot be applied to a modified transaction.
+- **Cross-Tenant Contamination:** Multi-tenant database queries enforce strict tenant ID partitioning on every lookup.
+
+## Test strategy
+
+### Acceptance and Verification Scenarios
+- **Acceptance Criteria References:** [PRODUCT.md §31.1: ORY-001; §31.3: ORY-026–030; §31.5: ORY-048; §31.7: ORY-068–069](../../PRODUCT.md).
+- **Concrete Verification Scenario:**
+  - *Input/Condition:* An agent running a PO reconciliation job attempts to submit a Tier 3 payment release without a valid human approval token.
+  - *Expected Observable Result:* The policy engine intercepts the request, returns `Deny (Approval Required)`, transitions the case to `Awaiting Approval`, and emits an approval request notification to the authorized manager.
+
+## Performance and operations
+
+### Operational Characteristics ([TECHNICAL.md §12](../../TECHNICAL.md))
+- High availability for synchronous authorization checks.
+- Low-latency evaluation of cached role and policy rules.
+- Horizontally scalable stateless evaluation engines backed by distributed caches.
+
+## Architecture decisions and open questions
+
+### Specific Preserved Implementation Questions
+- What policy specification format (e.g., Cedar, OPA/Rego, or embedded DSL) offers the best balance of expressiveness and formal verifiability?
+- How should approval tokens be cryptographically structured and signed to guarantee tamper-proof binding to action arguments?
+- What revocation distribution protocol ensures minimal latency when revoking permissions across distributed worker nodes?
+- How should fine-grained separation of duties be modeled between workflow builders, domain owners, and job operators?
+
+### Handoff Questions ([TECHNICAL.md §14.2](../../TECHNICAL.md))
+1. *Owns exclusively:* Authoritative user roles, tenant policies, approval records, and action risk classification.
+2. *Data ingress/egress:* Ingests identity assertions and authorization requests; outputs signed authorization decisions and policy events.
+3. *Versions/identities:* Organization ID, actor user ID, policy version hash, and target resource ARN/URI.
+4. *Upstream failure:* If identity provider fails, existing active sessions rely on valid cached tokens until expiration.
+5. *Authority:* The identity-policy component is the sole authority for action permissions and approval validity.
+6. *Testing without private details:* Tested via comprehensive policy test matrices with synthetic roles and scopes.
+7. *Audit and duplicate prevention:* Approval tokens include cryptographic nonces to prevent replay attacks.
+8. *Failure blast radius:* Policy engine failure causes all privileged executions to fail safe and pause.
+9. *v1.0 criteria:* Enables ORY-001, ORY-026, ORY-027, ORY-028, ORY-029, ORY-030, ORY-048, ORY-068, and ORY-069.
