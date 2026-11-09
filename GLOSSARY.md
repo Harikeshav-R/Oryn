@@ -87,3 +87,23 @@ _Avoid_: Raw screenshot, playback clip, unmasked excerpt
 **Purge Receipt**:
 A record stating the outcome and scope of completed eligible local destruction; not proof that external copies or published knowledge disappeared.
 _Avoid_: Global erasure proof, backup purge certificate
+
+**Task Instance**:
+One employee attempt to achieve a business objective, distinct from the reusable workflow describing that objective.
+_Avoid_: Workflow instance, employee activity session
+
+**Task Hypothesis**:
+An unconfirmed interpretation of which task an employee may be performing and where its boundaries lie.
+_Avoid_: Confirmed task, execution authority
+
+**Guidance Session**:
+An employee-directed traversal of one published playbook version; step acknowledgment does not establish a verified business outcome.
+_Avoid_: Agent job, automatic execution
+
+**Assist Plan**:
+An approved bounded sequence of permitted actions attached to a playbook, with declared prerequisites and stopping points.
+_Avoid_: Recorded macro, inferred permission
+
+**Assist Session**:
+One employee-initiated attempt to run an approved assist plan for a defined work item.
+_Avoid_: Background job, blanket approval

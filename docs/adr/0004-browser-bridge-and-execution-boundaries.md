@@ -36,6 +36,8 @@ We establish six foundational architectural decisions for the browser extension 
 
 *(Scope Amendment — 2026-11-10): [ADR-0006](0006-meeting-capture-and-review-boundaries.md) amends the browser extension permissions and bridge framing: adds `offscreen` and narrow audio-only `tabCapture` (`video: false`) for admitted meeting tabs, with local playback restored via `AudioContext` to prevent call muting. Upgrades the bridge protocol to `browser-bridge.v1` minor 1, negotiating capability `meeting_audio_v1`. Forwarded audio chunks (`BrowserMeetingAudioChunk`) are decoded by the shell broker into binary PCM frames and routed over a fourth inherited channel (`shell-meeting-audio.v1`) to the privacy helper, without traversing Channel 1, 2, or 3.*
 
+*(Scope Amendment — 2026-11-09): [ADR-0009](0009-local-context-guidance-and-assist-boundaries.md) amends the browser bridge execution contract: upgrades `browser-bridge.v1` from minor 1 to minor 2, adding capability `assist_execution_v1`. Generalizes execution reservations and actions from jobs only to `ExecutionContextV1` (`job` or `assist`), replaces top-level job/case fields with the closed tagged union, updates canonical `action_sha256` to bind `ExecutionContextV1` and live document/surface generations, and updates minimal execution receipts.*
+
 ## Rationale and Alternatives
 
 - **Native Messaging vs. Localhost WebSockets:** Localhost listeners expose ports to any unprivileged local process on the machine, creating port-hijacking and cross-site websocket hijacking risks. Native Messaging guarantees browser process provenance and user session binding.
