@@ -167,12 +167,18 @@ Meeting intelligence participates in four cross-component contracts:
 ### 3.4 Contract 23: Confirmed Commitment Projection
 - **Producer:** `CommitmentReviewCoordinator`.
 - **Consumer:** `local-context-hud` and `desktop-shell`.
-- **Payload:** `CommitmentReminderProjection` containing confirmed open tasks, schedule timestamps, context binding keys, and snooze states.
-- **Invariants:** Only `open` + `confirmed` obligations are projected to HUD. Unconfirmed candidates and invalidated records are excluded.
+- **Payload:** `CommitmentReminderProjection` and `CommitmentProjectionChangeV1` containing confirmed open tasks, schedule timestamps, context binding keys, and snooze states.
+- **Invariants:** Only `open` + `confirmed` obligations are projected to HUD. Unconfirmed candidates and invalidated records are excluded. `evidence_status` distinguishes `available`, `partial`, and `unavailable`. Source-only evidence expiry does not cancel saved reminders; it updates `evidence_status="unavailable"`. However, supporting transcript edits that trigger `needs_reconfirmation` immediately remove the projection until the employee reconfirms. Removals carry no obligation title.
+- **Scheduling Rules:** The meeting subsystem schedules reminders at 09:00 on the due date in the employee's selected IANA working zone unless an explicit due time was confirmed. Commitments without a due date have no invented schedule. For time zone or DST shifts, future occurrences are recomputed: nonexistent local times (spring forward) resolve to the first valid instant after the gap, and ambiguous local times (fall back) resolve to the earlier instant. Occurrences already delivered are never reissued due to a time zone change.
 
+#### `CommitmentReminderProjection` Schema
 ```json
 {
   "projection_id": "proj_5a2d7f1e-3c4b-4a8e-9d0a-2b1c3d4e5f6a",
+  "projection_revision": "1",
+  "organization_id": "org_enterprise_corp",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "deletion_generation": "4",
   "commitment_id": "cmt_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
   "commitment_revision": "3",
   "employee_actor_id": "usr_employee_42",
@@ -183,11 +189,55 @@ Meeting intelligence participates in four cross-component contracts:
   "due_date": "2026-11-13",
   "due_time": "17:00:00",
   "time_zone": "America/New_York",
-  "scheduled_at": "2026-11-13T14:00:00Z",
+  "scheduled_at": "2026-11-13T22:00:00Z",
   "reminder_occurrence_id": "rem_occ_001",
   "snooze_until": null,
   "context_binding_keys": ["jira.project.PO", "app.vendor_reconciliation"],
   "category_muted": false
+}
+```
+
+#### `CommitmentProjectionChangeV1` Schema
+Transmits incremental projection updates and removals:
+```json
+{
+  "change_id": "chg_01928374-0001",
+  "change_type": "upsert",
+  "revision": "4",
+  "commitment_id": "cmt_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "projection": {
+    "projection_id": "proj_5a2d7f1e-3c4b-4a8e-9d0a-2b1c3d4e5f6a",
+    "projection_revision": "1",
+    "organization_id": "org_enterprise_corp",
+    "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+    "deletion_generation": "4",
+    "commitment_id": "cmt_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "commitment_revision": "3",
+    "employee_actor_id": "usr_employee_42",
+    "business_state": "open",
+    "review_state": "confirmed",
+    "evidence_status": "available",
+    "obligation_title": "Send reconciled purchase order to Sarah",
+    "due_date": "2026-11-13",
+    "due_time": "17:00:00",
+    "time_zone": "America/New_York",
+    "scheduled_at": "2026-11-13T22:00:00Z",
+    "reminder_occurrence_id": "rem_occ_001",
+    "snooze_until": null,
+    "context_binding_keys": ["jira.project.PO", "app.vendor_reconciliation"],
+    "category_muted": false
+  },
+  "removal_reason": null
+}
+```
+```json
+{
+  "change_id": "chg_01928374-0002",
+  "change_type": "remove",
+  "revision": "5",
+  "commitment_id": "cmt_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "projection": null,
+  "removal_reason": "needs_reconfirmation"
 }
 ```
 ### 3.5 Contract 24: Reviewed Meeting Handoff Contribution
@@ -464,6 +514,20 @@ Executed against `oryn-privacy-helper` with bound actor profile and expected rev
     "due_time": "17:00:00",
     "time_zone": "America/New_York"
   }
+}
+```
+
+```json
+{
+  "command": "apply_reminder_interaction",
+  "command_id": "cmd_rem_01928374-0001",
+  "commitment_id": "cmt_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "projection_id": "proj_5a2d7f1e-3c4b-4a8e-9d0a-2b1c3d4e5f6a",
+  "reminder_occurrence_id": "rem_occ_001",
+  "expected_commitment_revision": 3,
+  "expected_occurrence_revision": 1,
+  "action": "snooze",
+  "snooze_until": "2026-11-13T23:00:00Z"
 }
 ```
 

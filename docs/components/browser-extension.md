@@ -133,8 +133,8 @@ If any conjunct is unknown, false, or stale, observation for that document or mo
 - **Contract 12 (Authorized External Operation):**
   - **Producer:** [agent-runtime](agent-runtime.md) / [application-adapters](application-adapters.md)
   - **Consumer:** [browser-extension](browser-extension.md)
-  - **Transport:** Routed through Privacy Helper and native broker over `browser-bridge.v1`.
-  - **Boundary Invariant:** Execution requests (`ExecuteBrowserAction`) must include cryptographic `authorization_ref`, stable `action_sha256`, target key, record key, and expected before-state. Operates strictly within a reserved execution tab.
+  - **Transport:** Routed through Privacy Helper and native broker over `browser-bridge.v1` (negotiated `protocol_major: 1`, `protocol_minor: 2` with `assist_execution_v1` capability).
+  - **Boundary Invariant:** Execution requests (`ExecuteBrowserAction`) must bind `ExecutionContextV1` (`job` or `assist`), cryptographic `authorization_ref`, stable `action_sha256`, target key, record key, live document generation, surface generation, and expected before-state. Operates strictly within an exclusive device reservation (reserved execution tab for jobs, or reserved assist tab for HUD assists).
 - **Contract 13 (Submission Records and Readback Evidence):**
   - **Producer:** [browser-extension](browser-extension.md)
   - **Consumer:** [outcome-verification](outcome-verification.md) / [agent-runtime](agent-runtime.md)
@@ -434,8 +434,8 @@ Sent immediately upon native port connection. Pre-pair message; omits paired env
   "type": "BridgeHello",
   "protocol_version": "browser-bridge.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
-  "capabilities": ["dom_observation_v1", "action_execution_v1", "target_resolution_v1", "meeting_audio_v1"],
+  "protocol_minor": 2,
+  "capabilities": ["dom_observation_v1", "action_execution_v1", "assist_execution_v1", "target_resolution_v1", "meeting_audio_v1"],
   "extension_id": "com.oryn.extension.chrome",
   "extension_version": "1.0.0",
   "browser_family": "chrome",
@@ -953,8 +953,12 @@ Requests exclusive device-wide browser execution reservation.
   "type": "ReserveBrowserExecution",
   "payload": {
     "reservation_id": "res_exec_01928374-0001",
-    "job_id": "job_batch_invoice_audit_01",
-    "case_id": "case_inv_99882",
+    "execution_context": {
+      "kind": "job",
+      "job_id": "job_batch_invoice_audit_01",
+      "case_id": "case_inv_99882",
+      "agent_version": "2026.11.08.1"
+    },
     "mode": "job",
     "document": null,
     "application_profile_id": "prof_app_finance_invoicing_v1",
@@ -1013,9 +1017,12 @@ Commands execution of a single validated action primitive.
   "payload": {
     "action_id": "act_01928374-click-approve-0001",
     "reservation_id": "res_exec_01928374-0001",
-    "job_id": "job_batch_invoice_audit_01",
-    "case_id": "case_inv_99882",
-    "agent_version": "2026.11.08.1",
+    "execution_context": {
+      "kind": "job",
+      "job_id": "job_batch_invoice_audit_01",
+      "case_id": "case_inv_99882",
+      "agent_version": "2026.11.08.1"
+    },
     "application_profile_id": "prof_app_finance_invoicing_v1",
     "application_profile_version": "1.0.0",
     "document": {
@@ -1276,9 +1283,11 @@ The subsystem exposes six validated action primitives:
 2. Re-resolve Target Handle (Must resolve uniquely within 250 ms)
 3. Validate Observable Before-Values (expected_state.fields)
 4. Verify SHA-256 Canonical Digest:
-   action_sha256 = SHA256(RFC8785_Canonical_JSON(action_id, job_id, case_id,
-     agent_version, application_profile_id, application_profile_version,
-     target_key, record_key, expected_state, environment, operation, argument))
+   action_sha256 = SHA256(RFC8785_Canonical_JSON({
+     action_id, execution_context, application_profile_id,
+     application_profile_version, document, surface_generation,
+     target_key, record_key, expected_state, environment, operation, argument
+   }))
 5. Verify Fresh Identity-Policy Authorization Token & Approval Receipt
 6. Log "dispatching" Intent to Local Audit Store
 7. Synchronously Dispatch DOM Primitive
@@ -1416,9 +1425,8 @@ To maintain zero-knowledge privacy guarantees, all telemetry and diagnostic logs
 Every authorized browser action executed by the subsystem produces an immutable local audit record stored in the execution audit log:
 - **Receipt Schema:**
   - `action_id`: UUIDv4
-  - `job_id`: UUIDv4
-  - `case_id`: UUIDv4
-  - `action_sha256`: SHA-256 digest of canonical action proposal
+  - `execution_context`: `ExecutionContextV1` (`job` or `assist`)
+  - `action_sha256`: SHA-256 digest of canonical action proposal (`sha256_` followed by 64 lowercase hex digits)
   - `authorization_ref`: Cryptographic reference of authorization token
   - `approval_ref`: Operator approval identifier (or null for Tier 1/2)
   - `timestamp_utc`: RFC 3339 UTC timestamp

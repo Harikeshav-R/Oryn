@@ -15,7 +15,7 @@ Identity, Organization, Access, and Approval Governance governs organizations, w
 - Policy definitions specifying action risk tiers (Tier 0 through Tier 4) and autonomy gates.
 - Human approval request routing, binding verification, and cryptographic approval records.
 - Mandatory enterprise capture exclusion policies distributed to employee endpoints.
-- Issuing signed endpoint capture-policy leases with configured validity periods (shorter than, but never exceeding, the desktop's 24-hour offline cap).
+- Issuing signed endpoint capture-policy leases and guidance access leases with configured validity periods (shorter than, but never exceeding, the desktop's 24-hour offline cap).
 - Authoritative inference route, purpose, budget, and consent policy governance; issuing and signing `InferenceAuthorization` tokens under Contract 22 (see [cloud-inference](../architecture/cloud-inference.md)).
 - Organization offboarding, suspension, and permission revocation enforcement.
 ### Consumes
@@ -27,7 +27,8 @@ Identity, Organization, Access, and Approval Governance governs organizations, w
 ### Produces
 - Authoritative authorization verdicts (`Allow`, `Deny`, `RequireHumanApproval`) with policy justifications.
 - Cryptographically signed approval tokens bound to specific proposed operations and parameters.
-- Signed `InferenceAuthorization` tokens scoped to tenant, purpose, operation, route, and deletion generation.
+- Signed `InferenceAuthorization` tokens scoped to tenant, purpose, operation, route, and deletion generation (including HUD purposes `hud_context_interpretation`, `hud_demonstration_summary`, `hud_step_explanation`).
+- Signed `SignedGuidanceAccessLeaseV1` artifacts authorizing offline read-only cached playbook access (max 24 hours).
 - Policy change and access revocation events emitted across the system.
 - Audit log records documenting every role change, policy update, and consequential approval.
 
@@ -56,13 +57,36 @@ A machine learning model may request authorization, but cannot grant it. Inferen
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes specific action authorization requests from [agent-runtime](agent-runtime.md) and local executors (including browser actions delegated to [browser-extension](browser-extension.md)); issues cryptographic authorization tokens bound to stable `action_sha256` proposal digests, enforcing item-level approval for Tier 3 actions and unconditional denial for Tier 4.
+- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes specific action authorization requests from [agent-runtime](agent-runtime.md) and local executors (including browser actions delegated to [browser-extension](browser-extension.md) and HUD-assisted actions coordinated by [local-context-hud](local-context-hud.md)); validates `ExecutionContextV1` (`job` or `assist`), and issues cryptographic authorization tokens bound to stable `action_sha256` proposal digests, enforcing item-level approval for Tier 3 actions and unconditional denial for Tier 4.
 - **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers authorized role-scoped read models and audit events to [command-center-analytics](command-center-analytics.md).
-- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Issues and validates signed `InferenceAuthorization` tokens for [cloud-inference](../architecture/cloud-inference.md); enforces tenant inference budgets, purpose restrictions, ZDR terms, and US geographic confinement.
-- **Local Privacy Policy Artifact Issuance:** Issues Ed25519-signed policy artifacts to [local-privacy-storage](local-privacy-storage.md) using canonical RFC 8785 JSON encoding:
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Issues and validates signed `InferenceAuthorization` tokens for [cloud-inference](../architecture/cloud-inference.md); enforces tenant inference budgets, purpose restrictions (including HUD semantic purposes), ZDR terms, and US geographic confinement.
+- **Local Policy Artifact Issuance:** Issues Ed25519-signed policy artifacts to [local-privacy-storage](local-privacy-storage.md) and [local-context-hud](local-context-hud.md) using canonical RFC 8785 JSON encoding:
   - `SignedCapturePolicyLease` (`privacy.capture-policy.v1`): Bounded capture lease (max 24 hours) specifying permitted categories, mandatory exclusion catalog revision, application exclusions, and maximum raw retention bounds.
   - `SignedRetentionVerdict` (`privacy.retention-verdict.v1`): Authoritative legal hold verdict (max 24 hours) with complete source scope; missing or incomplete coverage blocks voluntary destruction and uninstallation.
   - `SignedArtifactPolicy` (`privacy.artifact-policy.v1`): Authorizes redacted still-image excerpt sharing for approved organizational purposes, audiences, and maximum artifact lifetimes.
+  - `SignedGuidanceAccessLeaseV1` (`hud.guidance-access-lease.v1`): Bounded read-only guidance access lease (max 24 hours) specifying permitted playbook version hashes and scope for [local-context-hud](local-context-hud.md):
+
+```json
+{
+  "schema_id": "hud.guidance-access-lease.v1",
+  "key_id": "ed25519_pol_issuer_2026_01",
+  "payload": {
+    "organization_id": "org_enterprise_corp",
+    "actor_id": "usr_emp_harikeshav_r",
+    "device_id": "dev_macbook_pro_01",
+    "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+    "allowed_bundle_hashes": [
+      "sha256_e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b"
+    ],
+    "policy_revision": "1420",
+    "access_revision": "841",
+    "issued_at": "2026-11-09T10:00:00Z",
+    "not_after": "2026-11-10T10:00:00Z",
+    "read_only": true
+  },
+  "signature": "MEQCID3k8l_guidance_lease_signature_base64url_raw_ed25519"
+}
+```
 - **Revocation Broadcasts:** Emits `policy.changed`, `access.revoked`, and `consent.revoked` domain events to invalidate distributed caches and terminate active capture or execution leases upon reconnection.
 
 ### Process and Security Boundaries

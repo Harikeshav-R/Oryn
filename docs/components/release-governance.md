@@ -50,9 +50,8 @@ Automatic Stage 5 release is strictly limited to narrow, pre-authorized Tier 0/1
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Contract Reference #8 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests evaluation results, coverage metrics, and gap evidence from [flight-simulator](flight-simulator.md).
-- **Contract Reference #9 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers eligible active version and scope assignments to [job-orchestration](job-orchestration.md).
-- **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Emits release status and audit records to [command-center-analytics](command-center-analytics.md).
+- **Contract Reference #8 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests evaluation results, coverage metrics, and gap evidence bound to `EvaluationTargetV1` (`agent` or `assist_plan`) from [flight-simulator](flight-simulator.md). Validates that Stage 3 assist plans satisfy strict evaluation criteria: at least 5 distinct verified human examples, 25 passing representative scenarios including at least 5 edge/negative cases, all known branches covered, all mandatory checks passing, and owner approval.
+- **Contract Reference #9 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers eligible active version and scope assignments to [job-orchestration](job-orchestration.md) for agent jobs, and publishes signed `assist_eligibility` records to [operational-graph](operational-graph.md) for HUD assist plans.
 - **Contract Reference #22 Reference:** Candidate diff analysis may consume `text.reason` via LiteLLM under [cloud-inference](../architecture/cloud-inference.md); release promotion and policy changes strictly require human authorization.
 - **Release Event Bus:** Emits `release.approved`, `release.paused`, `release.expanded`, and `release.reverted` events.
 ## Trust and deployment boundaries

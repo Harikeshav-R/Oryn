@@ -237,48 +237,96 @@ When an employee reviews a sanitized task demonstration for potential organizati
   - If `redaction_overrides` contains non-empty modifications (e.g. newly masked fields, removed steps, or updated artifact crops), the helper produces a fresh preview, advances the candidate revision and digest, and returns `PRIVACY_PREVIEW_STALE`. The employee must inspect and confirm the updated digest; unseen transformed content cannot be approved in the same mutation.
 - **Response:** Committal receipt with signed audit hash. Only the review/storage owner (`oryn-privacy-helper`) constructs the Ed25519-signed review attestation and emits the downstream domain event `contribution.approved_for_sharing`. The desktop shell never manufactures sharing events or digital signatures.
 
-#### 2. HUD Guidance Presentation Interface (`HudPresentationPort`)
-`local-context-hud` produces structured guidance models; `desktop-shell` renders them.
+#### 2. HUD Guidance Presentation Interface (`HudPresentationPort`, Contract 20: `shell-hud.v1`)
+`local-context-hud` produces structured guidance models; `desktop-shell` renders them. The interface operates over two private, inherited bidirectional byte channels created by the shell supervisor at launch (`shell-hud.v1`, major 1, minor 0):
+1. **Control/Presentation Channel:** Max 256 KiB frame, 64 queued messages / 1 MiB. Carries content-free heartbeats every 100 ms; 500 ms silence or EOF immediately invalidates active presentation and pauses pending assists.
+2. **Data Channel:** Max 1 MiB frame, 16 queued messages / 8 MiB. Carries bulk bundle transfers, manual search queries, and interaction receipts.
+
 - **Model Ingress (`PresentGuidance`):**
   ```json
   {
+    "protocol_version": "shell-hud.v1",
+    "protocol_major": 1,
+    "protocol_minor": 0,
+    "message_id": "01928374-3001-7000-8000-000000000001",
+    "presentation_revision": "841",
     "guidance_session_id": "gsess_1092a8b",
-    "playbook_version": "sha256-e9102c3d...",
-    "context_revision": "841",
+    "task_id": "tsk_01928374-0002",
+    "context_revision": "1422",
+    "playbook_version": "sha256-e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
     "card": {
       "title": "ERP Invoice Discrepancy Fix",
       "body": "Match invoice tax code with line-item schedule before posting.",
-      "source_workflow_id": "wf_tax_matching_v2",
-      "playbook_version": "v2.1",
+      "category": "error_resolution",
+      "match_status": "exact",
+      "knowledge_status": "published",
+      "source_workflow_id": "wf_invoice_po_reconciliation",
+      "playbook_version": "sha256-e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
+      "display_revision_label": "v2.1",
       "last_verified_at": "2026-11-01T10:00:00Z",
-      "evidence_refs": ["ev_9182a"],
+      "evidence_refs": ["ev_pub_guidance_tax_01"],
       "status": "published",
-      "actions": ["confirm_step", "back", "skip_optional", "stop", "dismiss", "snooze_1h", "mute_category"]
+      "objective": "Resolve ERP invoice tax discrepancy",
+      "prerequisites": "Error code ERR_TAX_DISCREPANCY_401 present",
+      "expected_result": "Invoice tax discrepancy cleared",
+      "current_step": {
+        "step_id": "step_post_adjustment",
+        "order": 2,
+        "title": "Post Adjustment in ERP",
+        "instruction": "Click Post Adjustment in the invoice screen to reconcile batch.",
+        "state": "active",
+        "optional": false
+      },
+      "pending_queue_count": 0,
+      "actions": [
+        "confirm_step", "back", "skip_optional", "stop", "dismiss",
+        "snooze_1h", "mute_category", "start_assist", "why_step", "report_problem"
+      ],
+      "expires_at": "2026-11-09T14:33:30.120Z"
     },
     "highlight": {
       "target_application_id": "com.enterprise.erp",
       "target_window_id": "win_main_481",
       "display_id": "disp_retina_1",
-      "context_revision": "841",
-      "rect": {"left": 450, "top": 320, "width": 120, "height": 38},
+      "context_revision": "1422",
+      "rect": { "left": 450, "top": 320, "width": 120, "height": 38 },
       "ttl_ms": 150
     }
   }
   ```
-  - `card.body` is rendered strictly as plain text (no HTML/markdown injection).
-  - `highlight.rect` uses physical screen pixels; the native adapter translates coordinates using active display DPI scaling.
-  - `highlight.ttl_ms` is clamped to 1–250 ms. Highlights expire automatically unless renewed by the HUD.
-  - Highlights are dismissed immediately upon window focus change, window movement, display reconfiguration, or context revision mismatch. Highlighting OS security prompts or browser permission dialogs is prohibited.
+  - `card.body`, `card.current_step.instruction`, and all narrative fields are rendered strictly as plain text (no HTML/markdown injection).
+  - `highlight.rect` uses physical screen pixels; the native adapter translates coordinates using active display DPI scaling without applying double transforms.
+  - `highlight.ttl_ms` is clamped to 1–250 ms (default 150 ms). Highlights expire automatically unless renewed every 100 ms while visible.
+  - Highlights are dismissed immediately upon window focus change, window movement, scroll, display reconfiguration, or context revision mismatch. Highlighting OS security prompts or browser permission dialogs is prohibited.
+
+- **Clear Guidance Ingress (`ClearGuidance`):**
+  ```json
+  {
+    "protocol_version": "shell-hud.v1",
+    "protocol_major": 1,
+    "protocol_minor": 0,
+    "message_id": "01928374-3002-7000-8000-000000000002",
+    "presentation_revision": "842",
+    "guidance_session_id": "gsess_1092a8b",
+    "reason": "context_switched"
+  }
+  ```
+  - Stale or out-of-order `presentation_revision` messages cannot restore cleared highlights.
+
 - **Interaction Feedback (`GuidanceInteraction`):**
   ```json
   {
+    "command_id": "01928374-3003-7000-8000-000000000003",
     "guidance_session_id": "gsess_1092a8b",
-    "context_revision": "841",
-    "action": "confirm_step"
+    "expected_presentation_revision": "841",
+    "current_step_id": "step_post_adjustment",
+    "target_id": null,
+    "action": "confirm_step",
+    "arguments": {}
   }
   ```
-  - `action` is one of: `"confirm_step"`, `"back"`, `"skip_optional"`, `"stop"`, `"dismiss"`, `"snooze_1h"`, `"mute_category"`.
-
+  - `action` is one of: `"confirm_step"`, `"back"`, `"skip_optional"`, `"stop"`, `"dismiss"`, `"snooze_1h"`, `"mute_category"`, `"start_guide"`, `"resume_guide"`, `"restart_updated_guide"`, `"select_guide"`, `"why_step"`, `"report_ui_differs"`, `"report_problem"`, `"start_assist"`, `"review_and_submit"`, `"search_guidance"`, `"set_guidance_preferences"`.
+  - `report_problem` routes one of the defined problem categories from PRODUCT §30.7 (`"wrong_step"`, `"missing_prerequisite"`, `"ui_changed"`, `"policy_blocked"`, `"performance_issue"`) with an employee-reviewed sanitized description.
 #### 3. Consequential Action Approval Interface (`IdentityPort`)
 When a Tier 2 or Tier 3 action requires employee approval:
 - **Proposal Model Ingress:** The shell receives a cryptographically signed proposal including proposal ID, revision, digest, action category, affected system, target entity, parameter diffs (before/after values), supporting evidence references, consequence summary, and expiration UTC timestamp.

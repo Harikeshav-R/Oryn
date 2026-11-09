@@ -380,68 +380,657 @@ Operates over two dedicated inherited byte channels using 4-byte big-endian fram
 ### Contract 25: Local Context HUD Interface (`privacy-context.v1`)
 The desktop shell host creates a connected Unix domain socketpair (macOS) or anonymous pipe pair (Windows) at launch, hands one descriptor to `oryn-privacy-helper` and the other to `oryn-hud-helper`, verifies both child Authenticode / designated requirements, and closes its own descriptors. This establishes a direct, isolated helper-to-helper byte stream with zero intermediate shell broker overhead.
 
-Wire format: 4-byte big-endian length prefix followed by UTF-8 JSON. Maximum frame size: 1,048,576 bytes (1 MiB). Bounded in-flight ring buffer: 128 messages or 8 MiB maximum. If the buffer overflows, an `ObservationGap` is emitted and delivery resynchronizes.
+Wire format: 4-byte big-endian unsigned length prefix followed by UTF-8 JSON. Maximum frame size: 1,048,576 bytes (1 MiB). Bounded in-flight ring buffer: 128 messages or 8 MiB maximum, including eight reserved control slots. Frames exceeding length limit, frames with zero length, invalid UTF-8, or malformed JSON close the link immediately.
 
-#### PermittedObservationV1 Schema
+Control slots are reserved exclusively for control traffic (`ContextFence`, `ContextGap`, `ContextHello`, `ContextReady`). A privacy fence must never be dropped to admit an observation: if the control reserve cannot carry a fence, the helper closes the link, invalidating HUD state and forcing fresh resynchronization upon reconnection. Observation queue overflow emits one ordered `ContextGap` reporting the dropped sequence interval, discards intermediate deltas, and triggers a fresh permitted baseline request.
+
+Protocol negotiation mandates `protocol_version: "privacy-context.v1"`, `protocol_major: 1`, `protocol_minor: 1`. Both bundled peers require this exact minor. If either endpoint advertises an incompatible version or minor, the link is closed immediately without fallback.
+
+#### Common Wire Envelope
+Every message on Contract 25 uses a uniform envelope with typed payload:
 ```json
 {
-  "schema_id": "privacy.observation.v1",
-  "event_id": "obs_99887766-1122-3344-5566-778899aabbcc",
-  "sequence": "1042",
-  "profile_id": "prof_99a8b7c6",
-  "source_id": "native_os",
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1001-7000-8000-000000000001",
+  "correlation_id": null,
+  "sequence": "1",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
   "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
-  "surface_id": "surf_excel_main_104",
-  "surface_generation": "2",
-  "modality": "structured",
-  "policy_revision": "pol_rev_20261109_01",
-  "consent_revision": "not_rev_20261109_01",
-  "input_generation": "1",
-  "deletion_generation": "4",
-  "acquired_at": "2026-11-09T14:32:00.120Z",
-  "volatile_expires_at": "2026-11-09T14:32:30.120Z",
-  "retention_mode": "retained",
+  "type": "ContextHello",
   "payload": {
-    "application_id": "com.microsoft.Excel",
-    "window_bounds": { "x": 100, "y": 100, "width": 1280, "height": 800 },
-    "focused_role": "AXCell",
-    "focused_value": "=VLOOKUP(A2, Rates!A:B, 2, FALSE)",
-    "sanitized_tokens": [
-      { "token": "<ACCOUNT_ID>", "original_len": 10 }
-    ]
-  },
-  "gap_reference": null
+    "client_build": "2026.11.09.1",
+    "supported_modalities": ["structured", "snapshot_inferred"],
+    "client_nonce": "4a1c7e9b20d34f8a1122334455667788"
+  }
 }
 ```
 
-#### DemonstrationProposalV1 Schema (Reverse Stream)
+`sequence` is a decimal-string u64 rejecting signs, whitespace, leading zeroes except `"0"`, and overflow. All timestamps use RFC 3339 UTC with a trailing `Z`. Newly originated identifiers are UUIDv4. Upstream opaque identifiers are carried unchanged.
+
+#### 1. `ContextHello` and `ContextReady`
+Sent immediately on connection to negotiate protocol minor and session parameters:
 ```json
 {
-  "schema_id": "privacy.demonstration-proposal.v1",
-  "proposal_id": "prop_demo_77665544",
-  "profile_id": "prof_99a8b7c6",
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1002-7000-8000-000000000002",
+  "correlation_id": "01928374-1001-7000-8000-000000000001",
+  "sequence": "1",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
   "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
-  "expected_revision": "1426",
-  "referenced_evidence_ids": [
-    "evi_11223344-5566-7788-99aa-bbccddeeff00"
-  ],
-  "objective": "Reconcile daily invoice adjustments in ERP",
-  "steps": [
-    {
-      "step_index": 1,
-      "action_type": "click",
-      "target_description": "Post Adjustment button in Invoice screen",
-      "sanitized_inputs": {}
+  "type": "ContextReady",
+  "payload": {
+    "helper_build": "2026.11.09.1",
+    "privacy_revision": "1420",
+    "deletion_generation": "4",
+    "permitted_modalities": ["structured", "snapshot_inferred"],
+    "retention_mode": "retained",
+    "source_health": {
+      "native_os": "active",
+      "browser": "active"
     }
-  ],
-  "variables": [
-    {
-      "name": "invoice_total",
-      "value_label": "<DECIMAL_AMOUNT>"
+  }
+}
+```
+
+#### 2. `PermittedObservationV1` (`privacy.observation.v1`)
+Transmits privacy-screened application and browser surface facts. Opaque `record_binding_key` values are helper-minted random handles representing exact business entity bindings; they expire with supporting evidence and are null for non-business or uncertified values:
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1003-7000-8000-000000000003",
+  "correlation_id": null,
+  "sequence": "2",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "PermittedObservationV1",
+  "payload": {
+    "schema_id": "privacy.observation.v1",
+    "event_id": "obs_99887766-1122-3344-5566-778899aabbcc",
+    "source_id": "native_os",
+    "source_epoch": "src_ep_20261109_001",
+    "observation_kind": "baseline",
+    "context_revision": "1420",
+    "surface_identity": {
+      "native_window_id": "win_main_481",
+      "native_surface_id": "surf_excel_main_104",
+      "surface_generation": "2"
+    },
+    "application_id": "com.microsoft.Excel",
+    "application_profile_id": "prof_app_excel_v1",
+    "application_profile_version": "1.0.0",
+    "work_context_key": "ctx_finance_invoicing",
+    "record_binding_key": "rbk_inv_99882_a1b2c3d4",
+    "baseline_complete": true,
+    "facts": [
+      {
+        "fact_id": "fct_01928374-0001",
+        "key": "active_cell_formula",
+        "value": { "type": "string", "string_val": "=VLOOKUP(A2, Rates!A:B, 2, FALSE)" },
+        "provenance": "structured",
+        "observed_at": "2026-11-09T14:32:00.120Z",
+        "valid_until": "2026-11-09T14:32:30.120Z",
+        "evidence_id": "evi_11223344-5566-7788-99aa-bbccddeeff00"
+      },
+      {
+        "fact_id": "fct_01928374-0002",
+        "key": "error_code",
+        "value": { "type": "string", "string_val": "ERR_TAX_DISCREPANCY_401" },
+        "provenance": "structured",
+        "observed_at": "2026-11-09T14:32:00.120Z",
+        "valid_until": "2026-11-09T14:32:30.120Z",
+        "evidence_id": "evi_11223344-5566-7788-99aa-bbccddeeff00"
+      }
+    ],
+    "policy_revision": "pol_rev_20261109_01",
+    "consent_revision": "not_rev_20261109_01",
+    "input_generation": "1",
+    "deletion_generation": "4",
+    "acquired_at": "2026-11-09T14:32:00.120Z",
+    "volatile_expires_at": "2026-11-09T14:32:30.120Z",
+    "retention_expires_at": "2026-11-16T14:32:00.120Z",
+    "retention_mode": "retained",
+    "evidence_id": "evi_11223344-5566-7788-99aa-bbccddeeff00",
+    "gap_reference": null
+  }
+}
+```
+
+#### 3. `ContextFence`
+Revokes live context across profile, source, or surface boundaries due to exclusion, pause, deletion, expiration, or retention changes:
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1004-7000-8000-000000000004",
+  "correlation_id": null,
+  "sequence": "3",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "ContextFence",
+  "payload": {
+    "fence_id": "fnc_01928374-0001",
+    "scope": "surface",
+    "affected_source_id": "native_os",
+    "affected_surface_id": "surf_excel_main_104",
+    "cause": "excluded",
+    "privacy_revision": "1421",
+    "deletion_generation": "5",
+    "revoked_evidence_ids": ["evi_11223344-5566-7788-99aa-bbccddeeff00"],
+    "fenced_at": "2026-11-09T14:33:00.000Z"
+  }
+}
+```
+
+#### 4. `ContextGap`
+Notifies HUD of observation discontinuities, invalidating intermediate sequence intervals:
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1005-7000-8000-000000000005",
+  "correlation_id": null,
+  "sequence": "4",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "ContextGap",
+  "payload": {
+    "source_id": "native_os",
+    "surface_id": "surf_excel_main_104",
+    "first_lost_sequence": "5",
+    "last_lost_sequence": "12",
+    "gap_reason": "buffer_overflow",
+    "requires_baseline_reset": true
+  }
+}
+```
+
+#### 5. `RequestContextBaseline` and `ContextBaselineResponse`
+Requests fresh full baseline for a permitted surface after gap or restart:
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1006-7000-8000-000000000006",
+  "correlation_id": null,
+  "sequence": "5",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "RequestContextBaseline",
+  "payload": {
+    "request_id": "req_base_01928374-0001",
+    "source_id": "native_os",
+    "surface_id": "surf_excel_main_104"
+  }
+}
+```
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1007-7000-8000-000000000007",
+  "correlation_id": "01928374-1006-7000-8000-000000000006",
+  "sequence": "6",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "ContextBaselineResponse",
+  "payload": {
+    "request_id": "req_base_01928374-0001",
+    "status": "ready",
+    "context_revision": "1422",
+    "deletion_generation": "5",
+    "observation": {
+      "schema_id": "privacy.observation.v1",
+      "event_id": "obs_99887766-3344-5566-7788-99aabbccdde0",
+      "source_id": "native_os",
+      "source_epoch": "src_ep_20261109_001",
+      "observation_kind": "baseline",
+      "context_revision": "1422",
+      "surface_identity": {
+        "native_window_id": "win_main_481",
+        "native_surface_id": "surf_excel_main_104",
+        "surface_generation": "3"
+      },
+      "application_id": "com.microsoft.Excel",
+      "application_profile_id": "prof_app_excel_v1",
+      "application_profile_version": "1.0.0",
+      "work_context_key": "ctx_finance_invoicing",
+      "record_binding_key": "rbk_inv_99882_a1b2c3d4",
+      "baseline_complete": true,
+      "facts": [],
+      "policy_revision": "pol_rev_20261109_01",
+      "consent_revision": "not_rev_20261109_01",
+      "input_generation": "2",
+      "deletion_generation": "5",
+      "acquired_at": "2026-11-09T14:33:05.000Z",
+      "volatile_expires_at": "2026-11-09T14:33:35.000Z",
+      "retention_expires_at": "2026-11-16T14:33:05.000Z",
+      "retention_mode": "retained",
+      "evidence_id": "evi_33445566-7788-99aa-bbcc-ddeeff001122",
+      "gap_reference": null
     }
-  ],
-  "confidence": "high",
-  "gap_detected": false
+  }
+}
+```
+
+#### 6. `ResolveBrowserTarget` and `BrowserTargetResult` (Contract 21 Relay)
+Relays browser target resolution between HUD and browser extension via the privacy gate:
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1008-7000-8000-000000000008",
+  "correlation_id": null,
+  "sequence": "7",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "ResolveBrowserTarget",
+  "payload": {
+    "request_id": "req_tgt_01928374-1234",
+    "document": {
+      "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+      "browser_instance_id": "ins_12345678-abcd-ef01-2345-6789abcdef01",
+      "window_id": 1042,
+      "tab_id": 481,
+      "frame_id": 0,
+      "document_id": "doc_99887766-5544-3322-1100-aabbccddeeff",
+      "document_generation": "1"
+    },
+    "surface_generation": "1",
+    "application_profile_id": "prof_app_finance_invoicing_v1",
+    "application_profile_version": "1.0.0",
+    "target_key": "target_approve_button",
+    "context_revision": "1422"
+  }
+}
+```
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1009-7000-8000-000000000009",
+  "correlation_id": "01928374-1008-7000-8000-000000000008",
+  "sequence": "8",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "BrowserTargetResult",
+  "payload": {
+    "request_id": "req_tgt_01928374-1234",
+    "status": "resolved",
+    "target_handle": "hnd_01928374-tgt-approve-btn-250ms",
+    "document": {
+      "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+      "browser_instance_id": "ins_12345678-abcd-ef01-2345-6789abcdef01",
+      "window_id": 1042,
+      "tab_id": 481,
+      "frame_id": 0,
+      "document_id": "doc_99887766-5544-3322-1100-aabbccddeeff",
+      "document_generation": "1"
+    },
+    "surface_generation": "1",
+    "tree_version": "1",
+    "context_revision": "1422",
+    "geometry": {
+      "rect": { "x": 620, "y": 450, "width": 120, "height": 40 },
+      "display_id": "disp_dell_4k_01",
+      "affine_transform": [1.0, 0.0, 0.0, 1.0, 120.0, 80.0],
+      "display_layout_generation": "1",
+      "binding_generation": "1",
+      "ttl_ms": 250
+    },
+    "reason_code": null
+  }
+}
+```
+
+#### 7. `SubmitHudInference`, `CancelHudInference`, and `HudInferenceResult`
+Submits semantic inference requests through the privacy helper edge egress client (Contract 22):
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1010-7000-8000-000000000010",
+  "correlation_id": null,
+  "sequence": "9",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "SubmitHudInference",
+  "payload": {
+    "inference_request_id": "inf_req_01928374-0001",
+    "purpose": "hud_context_interpretation",
+    "schema_id": "hud.context-interpretation.v1",
+    "expected_context_revision": "1422",
+    "expected_deletion_generation": "5",
+    "allowed_candidate_ids": ["pb_tax_reconciliation_v2"],
+    "fact_references": ["fct_01928374-0001", "fct_01928374-0002"],
+    "deadline_ms": 5000
+  }
+}
+```
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1011-7000-8000-000000000011",
+  "correlation_id": null,
+  "sequence": "10",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "CancelHudInference",
+  "payload": {
+    "inference_request_id": "inf_req_01928374-0001",
+    "reason": "context_switched"
+  }
+}
+```
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1012-7000-8000-000000000012",
+  "correlation_id": "01928374-1010-7000-8000-000000000010",
+  "sequence": "11",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "HudInferenceResult",
+  "payload": {
+    "inference_request_id": "inf_req_01928374-0001",
+    "status": "succeeded",
+    "context_revision": "1422",
+    "deletion_generation": "5",
+    "interpretation": {
+      "objective": "Resolve ERP invoice tax discrepancy",
+      "task_boundary": "invoice_line_item_view",
+      "matched_candidate_id": "pb_tax_reconciliation_v2",
+      "uncertainty_label": "low",
+      "supporting_fact_ids": ["fct_01928374-0002"]
+    },
+    "error": null
+  }
+}
+```
+
+#### 8. `GetContextHistory` and `ContextHistoryResponse`
+Queries sanitized task history within profile retention bounds:
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1013-7000-8000-000000000013",
+  "correlation_id": null,
+  "sequence": "12",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "GetContextHistory",
+  "payload": {
+    "query_id": "qry_hist_01928374-0001",
+    "expected_deletion_generation": "5",
+    "start_time_utc": "2026-11-09T14:00:00.000Z",
+    "end_time_utc": "2026-11-09T14:35:00.000Z",
+    "cursor": null,
+    "limit": 50
+  }
+}
+```
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1014-7000-8000-000000000014",
+  "correlation_id": "01928374-1013-7000-8000-000000000013",
+  "sequence": "13",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "ContextHistoryResponse",
+  "payload": {
+    "query_id": "qry_hist_01928374-0001",
+    "status": "success",
+    "deletion_generation": "5",
+    "summaries": [
+      {
+        "task_id": "tsk_01928374-0001",
+        "task_revision": "1",
+        "completion_basis": "observed_complete",
+        "hypothesis_signature": "sig_invoice_post_tax_fix",
+        "acquired_at_utc": "2026-11-09T14:10:00.000Z",
+        "ended_at_utc": "2026-11-09T14:14:00.000Z",
+        "retention_deadline_utc": "2026-11-16T14:10:00.000Z"
+      }
+    ],
+    "next_cursor": null
+  }
+}
+```
+
+#### 9. Task Summary and Guide Checkpoint Persistence Commands
+Saves and retrieves bounded `PrivateTaskSummaryV1` and `GuideCheckpointV1` in screen partition databases:
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1015-7000-8000-000000000015",
+  "correlation_id": null,
+  "sequence": "14",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "SaveTaskSummary",
+  "payload": {
+    "command_id": "cmd_sum_01928374-0001",
+    "expected_deletion_generation": "5",
+    "task_summary": {
+      "task_id": "tsk_01928374-0002",
+      "task_revision": "1",
+      "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+      "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+      "source_epoch": "src_ep_20261109_001",
+      "completion_basis": "observed_complete",
+      "hypothesis_signature": "sig_invoice_post_tax_fix",
+      "source_provenance": "structured",
+      "observed_applications": ["com.microsoft.Excel", "com.enterprise.erp"],
+      "observed_steps": ["step_check_rate", "step_post_adjustment"],
+      "source_evidence_ids": ["evi_11223344-5566-7788-99aa-bbccddeeff00"],
+      "gaps_detected": false,
+      "acquired_at_utc": "2026-11-09T14:20:00.000Z",
+      "ended_at_utc": "2026-11-09T14:24:30.000Z",
+      "retention_deadline_utc": "2026-11-16T14:20:00.000Z",
+      "input_generation": "1",
+      "deletion_generation": "5"
+    }
+  }
+}
+```
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1016-7000-8000-000000000016",
+  "correlation_id": null,
+  "sequence": "15",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "SaveGuideCheckpoint",
+  "payload": {
+    "command_id": "cmd_chk_01928374-0001",
+    "expected_deletion_generation": "5",
+    "checkpoint": {
+      "checkpoint_id": "chk_01928374-0001",
+      "checkpoint_revision": "1",
+      "guide_session_id": "gsess_1092a8b",
+      "task_id": "tsk_01928374-0002",
+      "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+      "playbook_version": "sha256-e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
+      "step_cursor": 2,
+      "step_ledger": [
+        { "step_id": "step_1", "state": "observed_complete" },
+        { "step_id": "step_2", "state": "active" }
+      ],
+      "source_dependency_ids": ["evi_11223344-5566-7788-99aa-bbccddeeff00"],
+      "last_safe_action_ref": "act_receipt_001",
+      "last_context_binding": "rbk_inv_99882_a1b2c3d4",
+      "created_at_utc": "2026-11-09T14:22:00.000Z",
+      "updated_at_utc": "2026-11-09T14:23:00.000Z",
+      "expires_at_utc": "2026-11-10T14:22:00.000Z",
+      "deletion_generation": "5"
+    }
+  }
+}
+```
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1017-7000-8000-000000000017",
+  "correlation_id": "01928374-1016-7000-8000-000000000016",
+  "sequence": "16",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "GuideCheckpointResponse",
+  "payload": {
+    "command_id": "cmd_chk_01928374-0001",
+    "status": "saved",
+    "checkpoint_id": "chk_01928374-0001",
+    "checkpoint_revision": "1",
+    "reason_code": null
+  }
+}
+```
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1018-7000-8000-000000000018",
+  "correlation_id": null,
+  "sequence": "17",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "GetGuideCheckpoint",
+  "payload": {
+    "request_id": "req_chk_01928374-0001",
+    "expected_deletion_generation": "5"
+  }
+}
+```
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1019-7000-8000-000000000019",
+  "correlation_id": null,
+  "sequence": "18",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "DeleteGuideCheckpoint",
+  "payload": {
+    "command_id": "cmd_del_chk_01928374-0001",
+    "checkpoint_id": "chk_01928374-0001",
+    "expected_deletion_generation": "5"
+  }
+}
+```
+
+#### 10. `DemonstrationProposalV1` Schema (Reverse Stream)
+Transmits local synthesized task demonstration proposals for privacy-storage validation before contribution review:
+```json
+{
+  "protocol_version": "privacy-context.v1",
+  "protocol_major": 1,
+  "protocol_minor": 1,
+  "message_id": "01928374-1020-7000-8000-000000000020",
+  "correlation_id": null,
+  "sequence": "19",
+  "organization_id": "org_enterprise_corp",
+  "actor_id": "usr_emp_harikeshav_r",
+  "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "type": "DemonstrationProposalV1",
+  "payload": {
+    "schema_id": "privacy.demonstration-proposal.v1",
+    "proposal_id": "prop_demo_77665544",
+    "task_id": "tsk_01928374-0002",
+    "observed_completion_basis": "observed_complete",
+    "expected_privacy_revision": "1422",
+    "deletion_generation": "5",
+    "referenced_evidence_ids": [
+      "evi_11223344-5566-7788-99aa-bbccddeeff00"
+    ],
+    "proposed_retention_expiry": "2026-11-16T14:20:00.000Z",
+    "objective": "Reconcile daily invoice adjustments in ERP",
+    "steps": [
+      {
+        "step_index": 1,
+        "action_type": "click",
+        "target_description": "Post Adjustment button in Invoice screen",
+        "sanitized_inputs": {}
+      }
+    ],
+    "variables": [
+      {
+        "name": "invoice_total",
+        "value_label": "<DECIMAL_AMOUNT>"
+      }
+    ],
+    "confidence": "high",
+    "gap_detected": false
+  }
 }
 ```
 
@@ -725,6 +1314,58 @@ CREATE TABLE release_fences (
     created_at_utc TEXT NOT NULL,
     updated_at_utc TEXT NOT NULL
 );
+```
+
+#### TaskSummary Table (`task_summaries` in screen partition)
+```sql
+CREATE TABLE task_summaries (
+    task_id TEXT PRIMARY KEY,                 -- UUIDv4 task identifier
+    task_revision TEXT NOT NULL,              -- Decimal string u64
+    profile_id TEXT NOT NULL,                 -- Profile identifier
+    session_epoch TEXT NOT NULL,              -- UUIDv4 session epoch
+    source_epoch TEXT NOT NULL,               -- Source epoch
+    completion_basis TEXT NOT NULL,           -- 'observed_complete' | 'employee_reported_complete' | 'incomplete'
+    hypothesis_signature TEXT NOT NULL,       -- Deterministic signature or candidate ID
+    source_provenance TEXT NOT NULL,          -- 'structured' | 'snapshot_inferred' | 'mixed'
+    observed_applications TEXT NOT NULL,      -- JSON array of application IDs (<=128)
+    observed_steps TEXT NOT NULL,             -- JSON array of step summaries (<=128)
+    source_evidence_ids TEXT NOT NULL,        -- JSON array of referenced evidence UUIDs (<=256)
+    gaps_detected INTEGER NOT NULL DEFAULT 0, -- Boolean 0 | 1
+    acquired_at_utc TEXT NOT NULL,            -- RFC 3339 start timestamp
+    ended_at_utc TEXT NOT NULL,               -- RFC 3339 completion/end timestamp
+    retention_deadline_utc TEXT NOT NULL,     -- Earliest supporting evidence retention deadline
+    input_generation TEXT NOT NULL,           -- Decimal string u64
+    deletion_generation TEXT NOT NULL,        -- Decimal string u64
+    state TEXT NOT NULL DEFAULT 'committed'   -- 'committed' | 'tombstoned'
+);
+
+CREATE INDEX idx_task_summary_retention ON task_summaries(retention_deadline_utc, state);
+CREATE INDEX idx_task_summary_profile ON task_summaries(profile_id, acquired_at_utc DESC);
+```
+
+#### GuideCheckpoint Table (`guide_checkpoints` in screen partition)
+```sql
+CREATE TABLE guide_checkpoints (
+    checkpoint_id TEXT PRIMARY KEY,           -- UUIDv4 checkpoint identifier
+    checkpoint_revision TEXT NOT NULL,        -- Decimal string u64
+    guide_session_id TEXT NOT NULL,           -- UUIDv4 guide session identifier
+    task_id TEXT NOT NULL,                    -- UUIDv4 task identifier
+    profile_id TEXT NOT NULL,                 -- Profile identifier
+    playbook_version TEXT NOT NULL,           -- Immutable playbook version SHA-256
+    step_cursor INTEGER NOT NULL,             -- Current active step index
+    step_ledger TEXT NOT NULL,                -- JSON array of step states with ack/observed flags
+    source_dependency_ids TEXT NOT NULL,      -- JSON array of supporting evidence IDs
+    last_safe_action_ref TEXT,                -- Nullable completed action receipt ID
+    last_context_binding TEXT NOT NULL,       -- Opaque record binding key and surface tuple
+    created_at_utc TEXT NOT NULL,             -- RFC 3339 creation timestamp
+    updated_at_utc TEXT NOT NULL,             -- RFC 3339 update timestamp
+    expires_at_utc TEXT NOT NULL,             -- Earliest of 24h from start and supporting evidence expiry
+    deletion_generation TEXT NOT NULL,        -- Decimal string u64
+    state TEXT NOT NULL DEFAULT 'suspended'   -- 'suspended' | 'tombstoned'
+);
+
+CREATE INDEX idx_guide_checkpoint_expiry ON guide_checkpoints(expires_at_utc, state);
+CREATE INDEX idx_guide_checkpoint_profile ON guide_checkpoints(profile_id, updated_at_utc DESC);
 ```
 
 ### Media Blob Encryption Specification

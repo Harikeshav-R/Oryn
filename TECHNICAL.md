@@ -357,13 +357,13 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 **Boundary requirement:** Protected application categories must be excluded before capture at source; post-capture cloud OCR or vision extraction cannot authorize capture of mandatory excluded content. Mixed windows and accidental sensitive exposure require safe suppression. When `personal_history_retention=false`, live guidance operates ephemerally on volatile work buffers with a strict 30-second TTL without durable writes; if cloud inference is unavailable, AI features report unavailable without accumulating a deferred backlog. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`. The capture gate consumes an ephemeral 100 ms visibility lease from the desktop shell supervisor and immediately revokes capture within 500 ms if unrenewed. Legal holds prevent voluntary deletion within existing retention deadlines but cannot extend raw retention past expiry or grant remote manager access. No central backup, recovery key, or recovery escrow exists for private evidence; device/key loss permanently loses private history.
 ### 4.6 Local Task Understanding, Context Matcher, and Knowledge Cache
 
-**Responsibility:** Interpret the employee's currently permitted activity into candidate task context and match it against approved guidance without continuously needing a central model call.
+**Responsibility:** Interpret the employee's currently permitted activity into candidate task context and match it against approved guidance without continuously needing a central model call. Implemented within `oryn-hud-helper` alongside guidance coordination behind one deterministic reducer.
 
 **Owns:** Local active-task hypotheses, recent permitted event correlations, unresolved observation gaps, locally available approved playbook signatures, contextual suggestion state.
 
-**Consumes:** Redacted local observations, authorized published playbooks and fixes, meeting commitments, current user context.
+**Consumes:** Redacted local observations (`PermittedObservationV1` via Contract 25), authorized published playbooks and fixes (`GuidanceBundleV1` via Contract 3), signed guidance access leases (`hud.guidance-access-lease.v1`), meeting commitments (`CommitmentReminderProjection` via Contract 23), current user context.
 
-**Produces:** Candidate tasks, friction/exception signals, contextual guide suggestions, local demonstration summaries for contribution review.
+**Produces:** Candidate tasks, friction/exception signals, contextual guide suggestions, local demonstration summaries for contribution review (`DemonstrationProposalV1`).
 
 **Does not own:** Approval of new company procedures, authoritative agent policy, or unilateral cloud sharing.
 
@@ -371,17 +371,17 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 4.7 HUD, Guided Assistance, and Local Executor
 
-**Responsibility:** Provide nonintrusive contextual guidance, approved peer fixes, commitment reminders, interactive guides, supervised macros, and authorized local actions.
+**Responsibility:** Provide nonintrusive contextual guidance, approved peer fixes, commitment reminders, interactive guides, supervised macros, and authorized local actions within the unified `oryn-hud-helper` process.
 
 **Owns:** Task segmentation hypotheses, active playbook matching, contextual suggestion ranking, guidance step progression tracking, and generating structured guidance models for presentation by the desktop shell.
 
 **Consumes:** Local context matches, published guide versions, permitted action plans, applicable policy and approval results, local application capability information, and employee guidance interactions from [desktop-shell](docs/components/desktop-shell.md).
 
-**Produces:** Structured guidance cards and target highlight coordinates for [desktop-shell](docs/components/desktop-shell.md), proposed corrections, action attempts/results, explicit escalation requests.
+**Produces:** Structured guidance cards and target highlight coordinates for [desktop-shell](docs/components/desktop-shell.md) over `shell-hud.v1` (Contract 20), proposed corrections, action attempts/results, explicit escalation requests.
 
 **Does not own:** User-independent scheduled work, agent generation, permission escalation, or desktop window/overlay rendering (window hosting and highlight rendering are owned by [desktop-shell](docs/components/desktop-shell.md)).
 
-**Boundary requirement:** The HUD must avoid unsupported confidence claims and disruptive prompting; assisted actions obey the same action authorization principles as remote runners.
+**Boundary requirement:** The HUD must avoid unsupported confidence claims and disruptive prompting; assisted actions obey the same action authorization principles as remote runners, binding `ExecutionContextV1` (`assist`).
 
 ### 4.8 Contribution and Synchronization Gateway
 
@@ -874,13 +874,12 @@ sequenceDiagram
 
 1. Edge observation identifies a permitted application/task context or friction signal.
 2. Local matcher compares context against cached **published and authorized** playbook/exception signatures.
-3. If useful and within user interruption settings, the HUD offers a contextual hint, guide, or eligible supervised action.
-4. The employee accepts, dismisses, or snoozes; the guide follows available observable state and reports uncertain steps.
-5. Any proposed local action runs through normal capability and authorization checks.
-6. The local result may update **private** task history. New organizational knowledge still requires contribution review and owner approval.
+3. If useful and within user interruption settings, the HUD offers a contextual hint, guide, or eligible supervised assist plan.
+4. The employee accepts, dismisses, or snoozes; the guide tracks the active task, suspends upon switching tasks, and resumes only after explicit employee revalidation.
+5. Any proposed local assist action requires separately evaluated Stage 3 assist approval, binds `ExecutionContextV1` (`assist`), and enforces preparation stopping points before any consequential submission.
+6. The local result updates **private** task summaries and checkpoints in local screen partitions; new organizational knowledge still requires contribution review and owner approval.
 
-**Guardrails:** A suggestion is not execution; an observed error does not justify an autonomous fix. If local context is insufficient, the HUD should present a text-only explanation or no recommendation rather than hallucinating a precise UI target.
-
+**Guardrails:** A suggestion is not execution; an observed error does not justify an autonomous fix. Guidance approval does not grant action authorization. If local context is insufficient or unproven, the HUD presents text-only guidance rather than hallucinating UI targets. Consequential commits require item-level human review and submit.
 ### 8.7 Flow G — Meeting commitments and cross-team handoffs
 
 1. The employee explicitly authorizes meeting recording according to applicable organizational/participant consent requirements.
@@ -964,6 +963,21 @@ Every material change produces a new immutable version. Release approval associa
 
 An incident can be detected, triaged, contained, investigated, awaiting expert input, linked to a proposed repair, and eventually resolved/closed under an accepted disposition. A repair can be proposed, revised, evaluated, rejected, approved, released, monitored, or superseded. The exact state names and transition permissions are owned by their future component specs; the high-level separation must remain.
 
+
+### 9.7 Guidance and assist session lifecycles
+
+#### Guidance Session Lifecycle
+`Idle → Offered → Active ↔ Suspended → Completed / Stopped / Invalidated`
+- An unrelated task switch, sequence gap, or source restart suspends the active guide and clears highlights without completing or invalidating it.
+- Resuming a suspended guide requires an explicit employee command and revalidation of current access, policy, and window context.
+- Access revocation, policy conflicts, or playbook deletion invalidates the active guide immediately.
+
+#### Assist Session Lifecycle
+`Preparing → Awaiting Start → Reserved → Running → Awaiting Approval ↔ Paused ↔ Outcome Unknown → Completed / Stopped / Failed`
+- Preparation validates preconditions and stopping points without executing business side effects.
+- Starts only upon explicit employee command, binding an exclusive local device reservation.
+- Tier 2 actions require confirmed plan preview; Tier 3 actions require separate item-level signed approval displaying exact parameters and diffs.
+- Unexpected errors or dispatch ambiguities transition to `Outcome Unknown`, halting progression and blocking automatic retries.
 ---
 
 ## 10. Data Architecture and Information Boundaries

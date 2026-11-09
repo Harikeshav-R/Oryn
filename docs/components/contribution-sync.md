@@ -48,7 +48,7 @@ Offline behavior must preserve employee privacy and fail safely. The privacy hel
 
 ### Cross-Component Contracts
 - **Contract Reference #2 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests reviewed contributions from [local-privacy-storage](local-privacy-storage.md) and delivers them to [workflow-discovery](workflow-discovery.md).
-- **Contract Reference #3 in [Contracts Catalog](../architecture/contracts/README.md):** Fetches published playbooks from [operational-graph](operational-graph.md) and populates the local cache for [local-context-hud](local-context-hud.md).
+- **Contract Reference #3 in [Contracts Catalog](../architecture/contracts/README.md) (`hud.guidance-bundle.v1`):** Fetches published guidance bundles (`GuidanceBundleV1`) from [operational-graph](operational-graph.md), validates publisher signatures and content SHA-256 digests, commits complete cache generations atomically, and delivers access-filtered cache projections to [local-context-hud](local-context-hud.md). Partial chunks never become active.
 - **Contract Reference #24 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers reviewed meeting handoff proposals (`ReviewedMeetingHandoffProposal`) from [meeting-intelligence](meeting-intelligence.md) to [operational-graph](operational-graph.md); preserves review receipts and business context.
 - **Revocation Event Contract:** Receives `consent.revoked` and `access.revoked` events and triggers local cache invalidation.
 ## Trust and deployment boundaries
@@ -64,14 +64,14 @@ Offline behavior must preserve employee privacy and fail safely. The privacy hel
 - **Receipt Validator:** Verifies that outgoing payloads have valid, untampered employee review signatures.
 - **Sync Transport Client:** Manages HTTP/gRPC connections, authentication headers, and exponential backoff retries.
 - **Offline Queue Manager:** Holds approved outgoing contributions during network outages and handles safe resumption.
-- **Playbook Cache Synchronizer:** Queries delta updates for published playbooks relevant to the employee's assigned teams.
+- **Playbook Cache Synchronizer:** Queries delta updates for published guidance bundles (`GuidanceBundleV1`) relevant to the employee's assigned teams, verifies publisher signatures and content hashes, commits complete cache generations atomically, and triggers immediate cache eviction upon receiving `access.revoked` or bundle revocation events.
 
 ## State and lifecycle
 
 ### State and Persistence
 - **Persisted State:** Encrypted offline queue for approved contributions, sync receipts, and versioned playbook cache.
 - **Lifecycle Transitions:** `Connected ↔ Disconnected (Offline Queueing) ↔ Syncing ↔ Sync Complete`.
-- **Reconnection Ordering:** Reconnection enforces strict sequencing: (1) authenticate session, (2) fetch active policy and revocation state, (3) purge newly restricted or revoked items from offline queue, and (4) transmit remaining approved contributions and reviewed handoffs still authorized to leave. Reconnection never sweeps unreviewed drafts, and never automatically uploads offline meeting audio backlog (deferred meeting processing requires explicit employee command under Contract 19).
+- **Reconnection Ordering:** Reconnection enforces strict sequencing: (1) authenticate session, (2) fetch active policy and revocation state, (3) purge newly restricted, conflicted, or revoked guidance bundles from the local cache and offline queue before activating new cache generations, and (4) transmit remaining approved contributions and reviewed handoffs still authorized to leave. Reconnection never sweeps unreviewed drafts, and never automatically uploads offline meeting audio backlog (deferred meeting processing requires explicit employee command under Contract 19).
 
 ### Failure Handling
 - **Sync Server Unreachable:** Outgoing approved contributions remain queued in encrypted storage; sync retries with exponential backoff.

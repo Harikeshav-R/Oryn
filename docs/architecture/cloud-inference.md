@@ -107,7 +107,10 @@ An `InferenceRoute` represents an approved, capability-certified upstream model 
     "meeting.commitments.v1",
     "workflow.synthesis.v1",
     "agent.ir.candidate.v1",
-    "repair.patch.v1"
+    "repair.patch.v1",
+    "hud.context-interpretation.v1",
+    "hud.demonstration-summary.v1",
+    "hud.step-explanation.v1"
   ],
   "processing_geography": "US",
   "content_retention": "none_after_processing",
@@ -230,6 +233,78 @@ All errors returned by the inference gateway MUST use one of the following exact
 10. `INFERENCE_OUTPUT_INVALID`: Model output failed strict schema validation or produced hallucinated entity IDs.
 11. `INFERENCE_CANCELLED`: Operation explicitly cancelled by client, session termination, or privacy pause.
 
+
+### 3.7 Local Context HUD Semantic Contracts (`text.reason`)
+
+The Local Context HUD component consumes semantic interpretation via `text.reason` routed through the Privacy Helper edge client (Contract 22). It uses three dedicated purpose literals and schemas:
+
+1. **`hud_context_interpretation`:** Interprets ambiguous task surface context and suggests candidate playbooks. Output schema: `hud.context-interpretation.v1`.
+2. **`hud_demonstration_summary`:** Synthesizes structured demonstration proposals from observed task instances. Output schema: `hud.demonstration-summary.v1`.
+3. **`hud_step_explanation`:** Generates contextual explanations for a guidance step citing approved playbook rules. Output schema: `hud.step-explanation.v1`.
+
+#### `hud.context-interpretation.v1` Schema Example
+```json
+{
+  "request_id": "req_inf_hud_01928374-0001",
+  "objective": "Resolve ERP invoice tax discrepancy",
+  "task_boundary": "invoice_line_item_view",
+  "ranked_candidate_ids": [
+    "pb_tax_reconciliation_v2"
+  ],
+  "supporting_fact_ids": [
+    "fct_01928374-0001",
+    "fct_01928374-0002"
+  ],
+  "unknowns": [],
+  "uncertainty_label": "low"
+}
+```
+
+#### `hud.demonstration-summary.v1` Schema Example
+```json
+{
+  "request_id": "req_inf_hud_01928374-0002",
+  "task_id": "tsk_01928374-0002",
+  "objective": "Reconcile daily invoice adjustments in ERP",
+  "steps": [
+    {
+      "step_index": 1,
+      "action_type": "click",
+      "target_description": "Post Adjustment button in Invoice screen",
+      "sanitized_inputs": {}
+    }
+  ],
+  "variables": [
+    {
+      "name": "invoice_total",
+      "value_label": "<DECIMAL_AMOUNT>"
+    }
+  ],
+  "confidence": "high",
+  "gap_detected": false
+}
+```
+
+#### `hud.step-explanation.v1` Schema Example
+```json
+{
+  "request_id": "req_inf_hud_01928374-0003",
+  "step_id": "step_check_tax_code",
+  "explanation_text": "Tax code must align with invoice line items before posting to prevent GL reconciliation mismatches.",
+  "cited_rule_refs": [
+    "rule_finance_tax_matching_01"
+  ],
+  "is_interpretation": true
+}
+```
+
+#### Ingress, Egress, and Rate Limits
+- **Input Limit:** Minimized context input strictly bounded to 16 KiB, at most 8 candidate IDs, and 64 fact references.
+- **Output Limit:** Output strictly bounded to 8 KiB and at most 16 hypotheses.
+- **Timeout:** Request timeout is 5,000 ms. The effective execution deadline is the earliest of 5,000 ms, `InferenceAuthorization.not_after`, and the earliest supporting input volatile expiration.
+- **Concurrency and Rate Limits:** Exactly one in-flight HUD inference request per device; background requests require at least 500 ms debounce, at least 30 seconds cooldown between successive background requests, and at most 120 background requests per rolling hour.
+- **Explicit vs. Background:** Explicit employee requests (e.g. manual search, why step) share the one-in-flight limit but bypass the 30-second background cooldown.
+- **No Shadow Queues:** Zero prompt text, intermediate embeddings, or model completions persist on disk in the HUD. Expired or cancelled requests discard late completions without processing.
 ---
 
 ## 4. Control Plane and Gateway Interfaces
@@ -373,7 +448,7 @@ All 21 Oryn components interface with model inference according to the following
 | `3. browser-extension` | Deterministic DOM observation, offscreen tab audio capture. Consumes target queries. | No cloud networking, speech recognition, or model inference in extension. |
 | `4. meeting-intelligence` | Coordinates `meeting.transcribe.*` and `meeting.extract_commitments`. Owns local private evidence. | All STT and LLM inference routed through LiteLLM. No local Whisper or local diarization. |
 | `5. local-privacy-storage` | Operates edge `InferenceEgressClient`. Owns private encryption, retention, and local redaction. | Evaluates exclusions deterministically before any cloud egress. |
-| `6. local-context-hud` | Deterministic exact matching and guidance cache. Uses `text.reason` for semantic suggestions. | No local LLM runtime. Displays explicit offline status when disconnected. |
+| `6. local-context-hud` | Deterministic exact matching and guidance cache. Consumes `text.reason` for `hud_context_interpretation`, `hud_demonstration_summary`, and `hud_step_explanation` under schemas `hud.*.v1`. | No local LLM runtime. Displays explicit offline status when disconnected; enforces 5s deadline, 16 KiB input/8 KiB output caps, 1 in-flight limit. |
 | `7. contribution-sync` | Transmits employee-reviewed contributions to graph. | Transmits reviewed sanitized knowledge only; does not route raw inference traffic. |
 | `8. identity-policy` | Issues and cryptographically signs `InferenceAuthorization` tokens; defines route and ZDR policy. | Does not execute inference or handle model outputs directly. |
 | `9. control-plane` | Hosts `InferenceAdmission` and `InferenceSessionCoordinator`. Enforces budgets and quotas. | Does not retain private content in durable domain stores. |
@@ -409,7 +484,7 @@ This table records all document families across the Oryn repository and their re
 | `docs/components/browser-extension.md` | Reconciled | Added offscreen tab capture, toolbar gesture challenge, audio channel 4, broker minor 1. Replaced downstream local OCR claims. |
 | `docs/components/meeting-intelligence.md` | Reconciled | Full technical specification: native Core Audio/WASAPI taps, tabCapture, LiteLLM live/near-live STT, commitment review, reminders. |
 | `docs/components/local-privacy-storage.md`| Reconciled | Added InferenceEgressClient ownership, meeting worker supervision, ZDR enforcement, and retention-off 30s limits. |
-| `docs/components/local-context-hud.md` | Reconciled | Preserved deterministic cache/matching; routed semantic reasoning via LiteLLM; consumed confirmed commitment projections. |
+| `docs/components/local-context-hud.md` | Reconciled | Preserved deterministic cache/matching; routed semantic reasoning via LiteLLM (`text.reason`, `hud_*` purposes/schemas); consumed confirmed commitment projections. |
 | `docs/components/contribution-sync.md` | Reconciled | Added reviewed meeting handoffs; distinguished reviewed contributions from transient inference egress. |
 | `docs/components/identity-policy.md` | Reconciled | Added route/purpose policy, ZDR verification gates, and InferenceAuthorization signing. |
 | `docs/components/control-plane.md` | Reconciled | Added InferenceAdmission and InferenceSessionCoordinator modules. |
