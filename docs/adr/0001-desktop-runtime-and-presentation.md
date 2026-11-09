@@ -16,6 +16,8 @@ The local privacy gate, evidence store, and retention engine execute in a separa
 
 *(Scope Amendment — 2026-11-09): [ADR-0004](0004-browser-bridge-and-execution-boundaries.md) establishes a narrowly scoped rendezvous exception for browser extension attachment: the desktop shell native core hosts an authenticated OS-local endpoint (`~/Library/Application Support/Oryn/run/browser-bridge.sock` on macOS; `\\.\pipe\Oryn.BrowserBridge.<user-SID>.<logon-LUID>` on Windows) accessible strictly to the browser-launched `oryn-browser-host` executable with verified UID, PID, and publisher signatures. Communication with `oryn-privacy-helper` continues exclusively over private inherited channels, with a third inherited channel (`shell-browser.v1`) allocated for browser source traffic.*
 
+*(Scope Amendment — 2026-11-10): [ADR-0005](0005-cloud-inference-and-private-evidence.md) and [ADR-0006](0006-meeting-capture-and-review-boundaries.md) update the transport protocol to `shell-privacy.v1` minor 2, allocating a fourth inherited byte channel (`shell-meeting-audio.v1`) for decoded binary meeting audio frames. Adds distinct `PauseScreenObservation` and `PauseCapture` (Pause All) commands and typed `MeetingPort` command forwarding. Establishes cloud-only v1.0 AI inference via the LiteLLM gateway while keeping private media durably local.*
+
 ## Rationale and Alternatives
 We evaluated three primary alternatives:
 1. **Electron:** While offering unified multi-platform UI tooling, Electron's bundled Chromium instances consume 300–500 MiB idle memory, violating our resource budget. Furthermore, managing privilege boundaries within Chromium processes introduces unnecessary attack surface.

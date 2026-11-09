@@ -20,7 +20,7 @@ Workflow Discovery and Procedure Synthesis analyzes employee-approved task contr
 - Sanitized, employee-approved task contributions from [contribution-sync](contribution-sync.md).
 - Existing published playbooks and capability definitions from [operational-graph](operational-graph.md).
 - Domain expert explanations and feedback on candidate variations.
-
+- Governed cloud inference operations (`text.reason`, `text.embed`) via [cloud-inference](../architecture/cloud-inference.md).
 ### Produces
 - Candidate workflows with inferred objectives, step sequences, input/output variables, and branch logic.
 - Reviewer clarification requests highlighting unresolved procedural contradictions.
@@ -49,8 +49,8 @@ Workflow discovery operates asynchronously. Ambiguous demonstrations, conflictin
 ### Cross-Component Contracts
 - **Contract Reference #2 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests employee-approved sanitized task contributions from [local-privacy-storage](local-privacy-storage.md) via [contribution-sync](contribution-sync.md).
 - **Contract Reference #4 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers candidate workflows, observed variants, and clarifying questions to [operational-graph](operational-graph.md).
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes `text.reason` and `text.embed` via the LiteLLM gateway under [cloud-inference](../architecture/cloud-inference.md) for task clustering and procedure synthesis; inferred candidates remain unapproved drafts until human verification.
 - **Review Notification Contract:** Emits `workflow.candidate_created` domain events to alert assigned domain owners in [command-center-analytics](command-center-analytics.md).
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

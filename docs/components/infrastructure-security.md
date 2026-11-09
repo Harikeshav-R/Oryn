@@ -11,10 +11,11 @@ Infrastructure and Security Engineering establishes and operates the foundationa
 
 ### Owns
 - Physical and cloud hosting architecture, container orchestration, and serverless compute pools.
+- Operation and hardening of the Oryn LiteLLM Proxy inference gateway, provider vault credentials, mutual TLS, and memory-backed upload spooling (`tmpfs`) under Contract 22 (see [cloud-inference](../architecture/cloud-inference.md)).
 - Multi-tenant data segregation, database encryption at rest, and transport encryption in transit (TLS 1.3).
 - Enterprise secret management, API token vaults, and signing key lifecycles.
-- System-wide immutable audit trail storage and tamper-evident cryptographic log verification.
-- Disaster recovery, automated backups, and cross-region replication strategies.
+- System-wide immutable audit trail storage and tamper-evident cryptographic log verification (strictly sanitizing content and excluding prompt/completion bodies).
+- Disaster recovery, automated backups, and cross-region replication strategies (excluding private raw captures, which remain locally bounded).
 - Network segmentation between production execution, simulation sandboxes, and employee endpoints.
 
 ### Consumes
@@ -24,6 +25,7 @@ Infrastructure and Security Engineering establishes and operates the foundationa
 
 ### Produces
 - Hardened deployment environments for all control-plane and execution components.
+- Governed LiteLLM inference gateway endpoints enforcing contractual zero content retention, no model training, and US geographic confinement.
 - Scoped database connections, encryption keys, and mutual TLS certificates.
 - Immutable, tamper-evident audit storage query interfaces delivered to [command-center-analytics](command-center-analytics.md).
 - Infrastructure health, capacity, and security anomaly telemetry.
@@ -50,10 +52,10 @@ Simulation execution environments must be completely network-isolated from produ
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Infrastructure Context Reference:** Provides foundational hosting, database, and network fabrics supporting all 18 agreements in [Contracts Catalog](../architecture/contracts/README.md).
+- **Infrastructure Context Reference:** Provides foundational hosting, database, and network fabrics supporting all 24 agreements in [Contracts Catalog](../architecture/contracts/README.md).
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Deploys and manages the LiteLLM Proxy gateway; provisions vault-backed provider credentials; disables message/spend body logging and caching; enforces RAM-disk spooling and US network egress confinement (see [cloud-inference](../architecture/cloud-inference.md)).
 - **Secret Vault Protocol:** Delivers short-lived, least-privileged credentials to [application-adapters](application-adapters.md) and [agent-runtime](agent-runtime.md).
 - **Audit Logging Bus:** Ingests immutable audit events from all system services for secure long-term storage.
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries
@@ -65,10 +67,10 @@ Simulation execution environments must be completely network-isolated from produ
 
 ### Logical Submodules
 - **Tenant Isolation Coordinator:** Enforces tenant schema boundaries and database query filtering.
-- **Secret and Key Vault:** Manages hardware security modules (HSM), envelope encryption, and ephemeral token generation.
+- **LiteLLM Gateway Operator:** Deploys, configures, and monitors the LiteLLM Proxy service, enforcing `turn_off_message_logging=true`, `disable_spend_logs=true`, `disable_error_logs=true`, zero response caching, and memory-backed temp directory spooling.
+- **Secret and Key Vault:** Manages hardware security modules (HSM), envelope encryption, provider API keys, and ephemeral token generation.
 - **Immutable Audit Store:** Write-once-read-many (WORM) storage for compliance audit logs with cryptographic hash chains.
 - **Zero-Trust Network Mesh:** Implements mutual TLS (mTLS) and fine-grained network policies between all microservices.
-
 ## State and lifecycle
 
 ### State and Persistence

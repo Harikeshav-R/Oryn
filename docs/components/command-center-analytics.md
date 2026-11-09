@@ -52,9 +52,9 @@ The frontend UI is strictly a presentation and interaction layer; it is never an
 
 ### Cross-Component Contracts
 - **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes authorized read models, notifications, and audit records from [control-plane](control-plane.md), [operational-graph](operational-graph.md), and [release-governance](release-governance.md).
+- **Contract Reference #22 Reference:** Command center reporting excludes private raw captures, audio, and transcripts; any model-assisted analytical synthesis routes through LiteLLM under [cloud-inference](../architecture/cloud-inference.md).
 - **Command Dispatch Contract:** Submits user commands (job triggers, approval actions) to [control-plane](control-plane.md) using strongly typed API contracts.
 - **Notification WebSocket:** Subscribes to real-time notification streams for urgent approval requests and incident alerts.
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

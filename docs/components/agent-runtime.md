@@ -21,7 +21,7 @@ The Production Agent Runtime and Scoped Workers execute approved, immutable agen
 - Authoritative per-action authorization verdicts from [identity-policy](identity-policy.md).
 - Scoped, short-lived adapter credentials and capabilities from [application-adapters](application-adapters.md).
 - Target case data records and permitted task context.
-
+- Governed cloud reasoning operations (`text.reason`) via [cloud-inference](../architecture/cloud-inference.md).
 ### Produces
 - Action authorization requests submitted to [identity-policy](identity-policy.md) prior to executing any mutation.
 - Proposed operations and parameters dispatched to [application-adapters](application-adapters.md).
@@ -56,7 +56,7 @@ The runtime is treated as **less trusted than the authorization, verification, a
 - **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Submits action authorization requests to [identity-policy](identity-policy.md).
 - **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches authorized operations to [application-adapters](application-adapters.md), which routes local browser operations to [browser-extension](browser-extension.md) over `browser-bridge.v1` (`ExecuteBrowserAction`) with canonical `action_sha256` proposal digests.
 - **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers action submission records and UI primitive results (`BrowserActionResult`) to [outcome-verification](outcome-verification.md).
-
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Routes model-assisted step decisions (`text.reason`) through the LiteLLM gateway under [cloud-inference](../architecture/cloud-inference.md); model completions are untrusted data that must conform strictly to declared IR schema and action constraints.
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

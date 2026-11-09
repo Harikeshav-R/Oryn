@@ -33,11 +33,11 @@ Certain data categories are **mandatory exclusions** under [PRODUCT.md §25.2](.
 
 ---
 
-## The Eight Logical Data Domains (TECHNICAL.md §10.1)
+## The Nine Logical Data Domains (TECHNICAL.md §10.1)
 
 | Data Domain | Location and Owner | Authorized Audience | Allowed Egress | Governing Consent / Review | Retention and Deletion Schedule | Provenance Rules |
 |---|---|---|---|---|---|---|
-| **1. Private Raw Observation** | Employee endpoint; owned by [local-privacy-storage](../components/local-privacy-storage.md) (including transient native rasters isolated in `oryn-observation-worker` memory masked to opaque-black, and structured DOM observations extracted by [browser-extension](../components/browser-extension.md)) | Individual employee only; never accessible to managers | Zero cloud egress; strictly prohibited from central servers | Governed by employee capture consent for the relevant modality (`visual_work_observation` for snapshots/visual extraction, `contextual_work_application_recognition` for structured context) | **Default: 7 days.** Employee may select **1–6 days**. Organization may permit extension up to **14 days maximum** for documented research; expires automatically. When `personal_history_retention=false`, raw media, screenshots, and DOM text reside exclusively in volatile memory buffers with an absolute 30-second TTL for live guidance, with zero disk writes, shadow persistence, or durable evidence receipts | Captures device ID, OS window metadata, document keys, and exclusion status |
+| **1. Private Raw Observation** | Employee endpoint; owned by [local-privacy-storage](../components/local-privacy-storage.md) (including transient native rasters isolated in `oryn-observation-worker` memory masked to opaque-black, structured DOM observations extracted by [browser-extension](../components/browser-extension.md), and private meeting audio tracks) | Individual employee only; never accessible to managers | Zero durable cloud egress; purpose-authorized transient inference via LiteLLM gateway permitted; central media archiving strictly prohibited | Governed by employee capture consent for the relevant modality (`visual_work_observation`, `contextual_work_application_recognition`, and meeting opt-in) | **Default: 7 days.** Employee may select **1–6 days**. Organization may permit extension up to **14 days maximum** for documented research; expires automatically. When `personal_history_retention=false`, raw media, screenshots, and DOM text reside exclusively in volatile memory buffers with an absolute 30-second TTL for live guidance, with zero disk writes, shadow persistence, or durable evidence receipts | Captures device ID, OS window metadata, document keys, and exclusion status |
 | **2. Private Derived Work History** | Employee endpoint; owned by [local-privacy-storage](../components/local-privacy-storage.md) | Individual employee only | Local guidance and contribution review only; no cloud sync | Governed by personal history retention setting | Follows local raw retention or employee-managed deletion. Completely suppressed when `personal_history_retention=false` | Indexes task boundaries, unshared commitments, and local match scores |
 | **3. Reviewed Contribution** | Ingestion pipeline; owned by [contribution-sync](../components/contribution-sync.md) | Assigned domain reviewers and discovery engine | Transmitted to central control plane over secure TLS | Explicit employee review and approval receipt mandatory | Retained until synthesized into candidates or deleted by employee request | Carries cryptographic employee review receipt and tenant scope |
 | **4. Organizational Knowledge** | Control plane; owned by [operational-graph](../components/operational-graph.md) | Authorized teams and roles within the tenant | Distributed to authorized local HUD caches | Approved by designated domain and policy owners | Retained indefinitely while active; unapproved candidates default to **365 days** | Tracks capability ID, playbook version hash, and author/approver IDs |
@@ -45,6 +45,7 @@ Certain data categories are **mandatory exclusions** under [PRODUCT.md §25.2](.
 | **6. Production Execution Records** | Execution plane; owned by [job-orchestration](../components/job-orchestration.md) and [outcome-verification](../components/outcome-verification.md) (with local browser action receipts produced by [browser-extension](../components/browser-extension.md)) | Operators, auditors, and incident reviewers | Scoped business reports and audit views | Governed by job authorization and tenant policies | Consequential audit records default to **24 months** under approved audit schedule. Minimal execution receipts contain zero captured DOM or customer form values; they never become shadow observation history | Links Job ID, Case ID, worker container, proposal digests (`action_sha256`), and authoritative readback digests |
 | **7. Simulation Artifacts** | Simulation plane; owned by [flight-simulator](../components/flight-simulator.md) | Builders, reviewers, and evaluation engines | Stored in isolated evaluation artifact stores | Governed by scenario development policies | Retained for regression comparison across candidate versions | Scenarios, synthetic fixtures, fault injection logs, and scorecards |
 | **8. Analytics and Notifications** | Reporting layer; owned by [command-center-analytics](../components/command-center-analytics.md) | Organization members according to RBAC roles | Exportable reports with scope and uncertainty caveats | Governed by tenant analytics policies | Aggregated metrics retained according to enterprise reporting policy | Discloses data coverage, sample caveats, and estimated vs. measured metrics |
+| **9. Transient Inference Processing** | Control plane / LiteLLM Gateway / Certified US Provider; governed by [cloud-inference](cloud-inference.md) | Dedicated inference processes only; zero human audience | Transient egress through governed LiteLLM gateway only | Governed by employee capture consent, cloud notice acknowledgment, and signed `InferenceAuthorization` | Zero durable content retention after processing; memory-backed spooling wiped on completion/cancellation; strict 30-second volatile memory ceiling when personal retention is disabled | Cryptographically bound to input manifest, route ID, model revision, and deletion generation |
 
 ---
 
@@ -59,22 +60,24 @@ Certain data categories are **mandatory exclusions** under [PRODUCT.md §25.2](.
 Legal holds, compliance retention, or contractual requirements must be explicitly disclosed to users rather than silently extending private raw-capture retention beyond the 14-day product maximum. Raw media must not be sequestered into permanent shadow storage.
 
 ### Deletion and Independent State Separation
-When an employee requests deletion of local data, the system must clearly distinguish five distinct states:
+When an employee requests deletion of local data, the system must clearly distinguish six distinct states:
 1. **Private Original Capture:** Purged immediately and permanently from the local disk. Discarded raw media cannot be recovered from organizational dashboards.
-2. **Reviewed Shared Contributions:** If already submitted to workflow discovery, the employee is presented with a separate contribution-removal flow.
-3. **Published Organizational Knowledge:** Deleting a local recording does not automatically erase independently approved, anonymized company playbooks derived from it.
-4. **Execution Evidence:** Verification readbacks and transaction receipts remain intact for operational integrity.
-5. **Audit Obligations:** Consequential action audit logs cannot be truncated by individual user deletion requests.
+2. **Independently Saved Commitments:** Confirmed personal obligations survive source evidence expiration or source-only deletion with `evidence_status = "unavailable"`. Explicit full personal data purge / supported client uninstall permanently purges eligible saved commitments too.
+3. **Reviewed Shared Contributions:** If already submitted to workflow discovery, the employee is presented with a separate contribution-removal flow.
+4. **Published Organizational Knowledge:** Deleting a local recording does not automatically erase independently approved, anonymized company playbooks derived from it.
+5. **Execution Evidence:** Verification readbacks and transaction receipts remain intact for operational integrity.
+6. **Audit Obligations:** Consequential action audit logs cannot be truncated by individual user deletion requests.
 
 ---
 
 ## Model Processing and Egress Boundaries (TECHNICAL.md §10.4)
 
-Every interaction with a language model or external AI reasoning service constitutes a **data egress boundary**, whether the model is local, customer-hosted, or vendor-managed:
-- **No Automatic Access:** External AI providers do not gain implicit access to corporate data.
-- **Data Minimization:** Only the specific variables required for reasoning are submitted, scrubbed of PII and restricted credentials.
-- **Zero-Retention Guarantees:** Third-party model providers must operate under enterprise zero-data-retention agreements where customer inputs are not used for model training.
-- **Untrusted Output:** Model completions are classified as untrusted data until validated by deterministic schema parsers and policy engines.
+Every interaction with a language model, speech engine, or AI reasoning service constitutes a **governed data egress boundary**, routed exclusively through the Oryn LiteLLM gateway (see [shared cloud inference contract](cloud-inference.md)):
+- **Cloud-Only v1.0 Baseline:** All Oryn-owned transcription, diarization, vision extraction, reasoning, embeddings, and reranking use cloud-managed APIs through LiteLLM. No local-only model runtimes execute in v1.0.
+- **Zero Content Retention (ZDR):** Upstream providers must operate under enterprise zero-data-retention terms where customer content is never stored on disk after processing and never used for model training.
+- **United States Confinement:** All inference ingress, proxy routing, model computation, and content-bearing subprocessors must operate within the United States.
+- **Data Minimization & Transient Storage:** Only bounded, privacy-masked payloads are submitted. Spooling uses memory-backed temporary storage wiped immediately upon completion or cancellation.
+- **Untrusted Output:** Model completions and extracted commitments are classified as untrusted candidates until validated by deterministic schema parsers and confirmed by employees.
 
 ---
 

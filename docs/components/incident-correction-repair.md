@@ -21,7 +21,7 @@ The Incident Detection, Correction, and Repair Engine converts execution failure
 - Execution failure signals and unhandled exceptions from [agent-runtime](agent-runtime.md) and [job-orchestration](job-orchestration.md).
 - Expert human explanations and demonstrations submitted via [command-center-analytics](command-center-analytics.md).
 - Dependency relationships from [operational-graph](operational-graph.md).
-
+- Governed cloud reasoning operations (`text.reason`) via [cloud-inference](../architecture/cloud-inference.md).
 ### Produces
 - Governed incident records with observed facts and labeled diagnostic hypotheses.
 - Immediate containment instructions dispatched to [job-orchestration](job-orchestration.md) and [release-governance](release-governance.md).
@@ -57,7 +57,7 @@ Containment actions must be scoped to the actual failure blast radius (case, wor
 - **Contract Reference #15 in [Contracts Catalog](../architecture/contracts/README.md):** Formulates failure classifications and links evidence references internally.
 - **Contract Reference #16 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers accepted expert corrections or candidate rules to [operational-graph](operational-graph.md).
 - **Contract Reference #17 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers new candidate versions and regression requirements to [agent-factory-ir](agent-factory-ir.md) and [flight-simulator](flight-simulator.md).
-
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes `text.reason` via LiteLLM gateway under [cloud-inference](../architecture/cloud-inference.md) for diagnostic reasoning and patch proposal; model diagnoses remain labeled hypotheses and candidate repairs require simulator verification.
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

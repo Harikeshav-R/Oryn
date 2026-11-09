@@ -20,9 +20,10 @@ The Local Context HUD and Guided Assistance component interprets the employee's 
 - Redacted, permitted local observations from [local-privacy-storage](local-privacy-storage.md), tagged with explicit source identity (`native_os` vs `browser`), document generations, and modality provenance.
 - Target presence, physical desktop coordinates, and affine transforms from [browser-extension](browser-extension.md) via Contract 21 (`BrowserTargetResult`).
 - Published organizational playbooks, peer fixes, and rule definitions via [contribution-sync](contribution-sync.md).
-- Confirmed personal commitments from [meeting-intelligence](meeting-intelligence.md).
+- Confirmed personal commitment projections from [meeting-intelligence](meeting-intelligence.md) via Contract 23 (`CommitmentReminderProjection`), receiving strictly `open` + `confirmed` obligations.
 - User guidance preferences (snooze, mute, dismiss) from [desktop-shell](desktop-shell.md).
 - Action authorization tokens from [identity-policy](identity-policy.md).
+- Semantic inference results via the governed LiteLLM gateway (`text.reason`, see [cloud-inference](../architecture/cloud-inference.md)); no local LLM executes on-device in v1.0.
 
 ### Produces
 - Candidate task segmentations and demonstration summaries delivered to [local-privacy-storage](local-privacy-storage.md) for contribution review.
@@ -55,6 +56,7 @@ Context matching must be uncertainty-aware and respect employee snooze/dismiss p
 - **Contract Reference #3 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes published, access-filtered playbooks and peer fixes from [operational-graph](operational-graph.md) cached via [contribution-sync](contribution-sync.md).
 - **Contract Reference #20 in [Contracts Catalog](../architecture/contracts/README.md):** Emits structured guidance cards and target highlight coordinates to [desktop-shell](desktop-shell.md), and consumes employee guidance interaction events (`confirm_step`, `back`, `skip_optional`, `stop`, `dismiss`, `snooze_1h`, `mute_category`).
 - **Contract Reference #21 in [Contracts Catalog](../architecture/contracts/README.md):** Emits `ResolveBrowserTarget` queries to [browser-extension](browser-extension.md) via the privacy gate; consumes `BrowserTargetResult` containing ephemeral target handles and desktop geometry. If target geometry is unavailable or unproven, the HUD gracefully falls back to text-only step guidance without drawing coordinate highlights.
+- **Contract Reference #23 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes `CommitmentReminderProjection` from [meeting-intelligence](meeting-intelligence.md); schedules compact contextual cards at 09:00 on the due date in the employee's working zone; suppresses reminders when supporting transcript edits trigger `needs_reconfirmation`. Inaccessible or revoked business contexts produce no contextual reminders or leaked titles.
 - **Local Executor Interface:** Emits structured action requests to local UI and browser adapters, requiring explicit user confirmation for Tier 2/3 actions.
 ## Trust and deployment boundaries
 

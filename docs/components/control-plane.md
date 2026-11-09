@@ -12,9 +12,9 @@ The Control Plane API and Domain Coordination component provides a unified, secu
 ### Owns
 - API-level session authentication, request validation, and routing across organizational domain services.
 - Domain-level command orchestration, transactional boundary management, and distributed consistency.
+- Host and operation of logical modules `InferenceAdmission` and `InferenceSessionCoordinator` under Contract 22 (see [cloud-inference](../architecture/cloud-inference.md)).
 - Publishing verified domain events to the message broker once database commits succeed.
 - Webhook management and external event ingress validation.
-
 ### Consumes
 - Authenticated client requests from [command-center-analytics](command-center-analytics.md), [desktop-shell](desktop-shell.md), and [contribution-sync](contribution-sync.md).
 - Domain command execution results from [operational-graph](operational-graph.md), [job-orchestration](job-orchestration.md), and [release-governance](release-governance.md).
@@ -23,9 +23,9 @@ The Control Plane API and Domain Coordination component provides a unified, secu
 ### Produces
 - Scoped API responses and error structures delivered to frontend and desktop clients.
 - Durable domain commands routed to specific internal subsystem handlers.
+- Validated and governed inference dispatch via the LiteLLM gateway, returning typed `InferenceResult` structures.
 - Emitted asynchronous domain events (e.g., `workflow.published`, `job.completed`) broadcast to subscribers.
-- Central system audit event streams.
-
+- Central system audit event streams (strictly excluding private capture payloads and raw model prompts/completions).
 ### Does Not Own
 - Direct OS or browser observation capture (owned by employee edge components).
 - Executing application UI actions or holding production external system credentials (owned by [application-adapters](application-adapters.md)).
@@ -49,8 +49,8 @@ The Control Plane API is a structured gateway to authoritative domain owners, no
 ### Cross-Component Contracts
 - **Communication Patterns Reference in [Contracts Catalog](../architecture/contracts/README.md):** Implements synchronous request/response handling and event publishing per §7.1.
 - **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers authorized read models and notifications to [command-center-analytics](command-center-analytics.md).
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Operates `InferenceAdmission` (validating `InferenceAuthorization` tokens, route limits, schemas) and `InferenceSessionCoordinator` (managing active stream lifetimes and cancellations) via [cloud-inference](../architecture/cloud-inference.md).
 - **Domain Event Bus:** Emits organization-scoped events (`workflow.candidate_created`, `job.requested`, `incident.created`) following the event taxonomy in §7.4.
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries
@@ -63,9 +63,9 @@ The Control Plane API is a structured gateway to authoritative domain owners, no
 ### Logical Submodules
 - **API Gateway and Router:** Handles HTTP/REST and gRPC routing, request decoding, and rate limiting.
 - **Authentication and Session Interceptor:** Validates authentication tokens, extracts user/organization context, and attaches security context.
+- **InferenceAdmission & InferenceSessionCoordinator:** Evaluates incoming `InferenceRequest` envelopes against signed `InferenceAuthorization` tokens, checks route limits, manages transient sessions, dispatches calls to the LiteLLM gateway, and routes stream events without durable content persistence.
 - **Domain Command Dispatcher:** Routes commands to owning domain services with transaction boundary coordination.
 - **Outbox Event Publisher:** Transactionally records domain events in an outbox table and publishes them reliably to the message broker.
-
 ## State and lifecycle
 
 ### State and Persistence

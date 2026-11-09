@@ -35,7 +35,7 @@ It documents the assets, actors, and threat scenarios that Oryn's architecture m
 
 ---
 
-## The Nine Core Trust Boundaries (TECHNICAL.md §11.1)
+## The Ten Core Trust Boundaries (TECHNICAL.md §11.1)
 
 ```text
 [Observation Sources] ──(1)──> [Local Private Store] ──(2)──> [Organization Control Plane]
@@ -64,7 +64,7 @@ It documents the assets, actors, and threat scenarios that Oryn's architecture m
 7. **Production Execution ↔ Simulation Plane:** Boundary maintaining complete network and credential isolation between test sandboxes and production systems.
 8. **Repair Proposal → Deployed Version:** Boundary requiring independent simulation passage and governance sign-off before candidate activation.
 9. **Business Application → Verification:** Boundary querying independent authoritative readback state to confirm business outcomes.
-
+10. **Private Capture Edge → Inference Gateway → Upstream Processor:** Boundary governing transient purpose-authorized model processing, route pinning, contractual zero retention, and US confinement through LiteLLM.
 ---
 
 ## System Threat Matrix
@@ -95,6 +95,13 @@ The following matrix details concrete abuse scenarios, required safe outcomes, r
 | **6. Runner → Business** | **Ambiguous Writes / Duplicate Retries:** Network drops during a payment submission; status code is unknown. | Submission is marked `Outcome Unknown`; blind duplicate retries are blocked; held for readback verification. | [application-adapters](../components/application-adapters.md), [job-orchestration](../components/job-orchestration.md), [outcome-verification](../components/outcome-verification.md) | TECHNICAL.md §§7.6, 11.4; PRODUCT.md §17; ORY-044 |
 | **7. Prod ↔ Simulation** | **Production / Test Crossover:** A simulation test suite executes an automated action that connects to a live production ERP. | Network firewall rules and credential isolation completely block test sandboxes from reaching production endpoints. | [flight-simulator](../components/flight-simulator.md), [infrastructure-security](../components/infrastructure-security.md) | TECHNICAL.md §§6.5, 11.1; PRODUCT.md §15; ORY-031 |
 | **8. Repair → Production** | **Unauthorized Repair Release:** An automated repair engine synthesizes a patch that fixes a bug but introduces a security regression, pushing it to production. | Candidate is blocked by mandatory regression evaluation; release governance requires human sign-off for policy changes. | [incident-correction-repair](../components/incident-correction-repair.md), [flight-simulator](../components/flight-simulator.md), [release-governance](../components/release-governance.md) | TECHNICAL.md §§6.10, 11.1; PRODUCT.md §21; ORY-055, ORY-058 |
+| **10. Inference Gateway** | **Provider Override / SSRF:** Client passes arbitrary provider URLs or attempts to reach unapproved model hosts. | Rejected at admission; route references resolve strictly server-side from operator vault configurations; client-supplied URLs and master keys are rejected. | [control-plane](../components/control-plane.md), [infrastructure-security](../components/infrastructure-security.md) | [cloud-inference.md](cloud-inference.md); ORY-071 |
+| **10. Inference Gateway** | **Aggregator Routing / Regional Escape:** Upstream aggregator dynamically routes prompts or audio to an uncertified subprocessor outside the US. | Gatekeeper validates entire upstream processing chain; unverified subprocessor retention or geography blocks route with `INFERENCE_RETENTION_UNVERIFIED` or `INFERENCE_REGION_DISALLOWED`. | [identity-policy](../components/identity-policy.md), [control-plane](../components/control-plane.md) | [cloud-inference.md](cloud-inference.md); ORY-073, ORY-074 |
+| **10. Inference Gateway** | **Multipart Spooling & Body Log Leakage:** Uploaded audio chunks or screen frames are persisted in proxy debug logs, spend databases, or disk swap. | LiteLLM message and spend prompt logging disabled; temporary spooling uses RAM disk (`tmpfs`) with swap disabled; temporary files unlinked immediately on completion or failure. | [infrastructure-security](../components/infrastructure-security.md) | [cloud-inference.md](cloud-inference.md); ORY-073 |
+| **10. Inference Gateway** | **Late Result / Deleted Input Commit:** Model response arrives after an employee edited a supporting transcript span or purged local evidence. | Gateway and client check `input_revision` and `deletion_generation`; mismatched response is discarded without committing extracted commitments. | [meeting-intelligence](../components/meeting-intelligence.md), [local-privacy-storage](../components/local-privacy-storage.md) | [cloud-inference.md](cloud-inference.md); [meeting-intelligence.md](../components/meeting-intelligence.md) |
+| **1. Source → Local Store** | **Browser Audio & Mute Probe Failure:** Participant in Google Meet or Zoom is muted in software, but microphone audio is acquired. | Hardware microphone acquisition requires verified unmuted state; unverified mute disables mic and operates in remote-only mode with visible gap marker. | [meeting-intelligence](../components/meeting-intelligence.md) | [meeting-intelligence.md](../components/meeting-intelligence.md); ORY-008 |
+| **2. Local Store → Org** | **Silent Offline Backfill:** Meeting audio recorded offline is automatically uploaded upon reconnection without employee review. | Reconnection applies policy and revocation updates first; zero bytes are uploaded without explicit employee command (`AuthorizeDeferredMeetingProcessing`). | [meeting-intelligence](../components/meeting-intelligence.md), [local-privacy-storage](../components/local-privacy-storage.md) | [cloud-inference.md](cloud-inference.md); [meeting-intelligence.md](../components/meeting-intelligence.md); ORY-076 |
+| **4. Model → Actions** | **Spoken Prompt Injection:** Meeting attendee speaks instructions intended to trick LLM extraction into creating an unauthorized external task. | Transcript text is treated strictly as untrusted data; models have no tool execution or credential access during commitment extraction; unconfirmed candidates cannot trigger business actions. | [meeting-intelligence](../components/meeting-intelligence.md), [agent-runtime](../components/agent-runtime.md) | [meeting-intelligence.md](../components/meeting-intelligence.md); PRODUCT.md §25.10; ORY-021 |
 
 ---
 

@@ -61,7 +61,7 @@ Authority over capture categories resides entirely in [local-privacy-storage](lo
 |---|---|---|---|
 | `false` | `false` | **Zero Content Acquisition.** The extension queries minimal document URL origin and committed route solely to evaluate exclusion boundaries. No DOM text, control labels, field values, or screenshots are acquired. | Emits only content-free status events (`CapabilityChanged`, `DocumentLifecycleChanged`, or non-identifying `ObservationGap`). Zero task context or visual evidence is emitted. |
 | `false` | `true` | **Structured Context Only.** Queries permitted route identity and extracts settled accessibility nodes and safe labels via `DocumentBaseline` and `ElementStateChanged`. **Zero pixel acquisition.** Platform visual snapshot APIs remain inactive; no screenshots or OCR are executed. | Emits structured DOM semantic events. Downstream privacy storage validates field redaction and delivers live context. No raster images are captured or retained. |
-| `true` | `false` | **Privacy-Gated Native Snapshots Only.** The extension performs zero DOM label, value, or text extraction. It supplies only verified window identity, document generation, and protected-region coordinates to the privacy helper. Certified native snapshots are captured by the native observation worker. | Emits `SnapshotAvailable` with masked shared-memory frames captured by the native worker. Privacy storage executes safe local visual extraction and OCR. Zero structured DOM text events are emitted. |
+| `true` | `false` | **Privacy-Gated Native Snapshots Only.** The extension performs zero DOM label, value, or text extraction. It supplies only verified window identity, document generation, and protected-region coordinates to the privacy helper. Certified native snapshots are captured by the native observation worker. | Emits `SnapshotAvailable` with masked shared-memory frames captured by the native worker. Privacy storage executes safe cloud visual extraction via the LiteLLM gateway (see [cloud-inference](../architecture/cloud-inference.md)). Zero structured DOM text events are emitted. |
 | `true` | `true` | **Full Permitted Modalities.** Acquires both structured DOM semantic observations via the extension and event-triggered visual snapshots via the native observation worker for admitted documents. Maintains separate provenance for structured and visual evidence streams. | Emits both structured browser events and native `SnapshotAvailable` notifications. Downstream components correlate evidence streams using explicit document keys and sequence identifiers. |
 
 #### Personal History Retention Boundary
@@ -198,7 +198,9 @@ The extension is implemented in TypeScript, compiled to packaged JavaScript, and
    - `storage`: Required for `chrome.storage.session` to retain ephemeral instance IDs across service worker termination.
    - `scripting`: Required to inject isolated-world content scripts dynamically into explicitly permitted tabs and frames.
    - `webNavigation`: Required to detect committed navigations, document replacements, and frame lifecycles without reading page content.
-   - `declarativeNetRequest`: Required at install time to enforce main-frame and sub-frame navigation restrictions during execution. Chrome explicitly does not permit `declarativeNetRequest` as an optional permission; it is declared statically and scoped session rules are activated only during authorized execution reservations.
+   - `offscreen`: Required to create and manage an offscreen audio document for meeting tab capture without background window rendering.
+   - `tabCapture`: Narrow audio-only tab capture (`video: false`) restricted to admitted meeting sessions. Initiated strictly upon an intentional user toolbar gesture bound to a short-lived challenge issued by `oryn-privacy-helper`. Does not grant screen video capture.
+   - `declarativeNetRequest`: Required at install time to enforce main-frame and sub-frame navigation restrictions during execution. Scoped session rules are activated only during authorized execution reservations.
 2. **Optional Host Permissions:**
    - Declaring `optional_host_permissions: ["https://*/*"]` grants zero websites at installation. It establishes the capability to request exact approved work origins at runtime via `chrome.permissions.request()`.
    - Wildcards are strictly prohibited in runtime requests: the extension requests only exact enterprise-approved work origins (e.g. `https://finance.corp.example.com`).
@@ -207,7 +209,9 @@ The extension is implemented in TypeScript, compiled to packaged JavaScript, and
    - No broad static `host_permissions`.
    - Zero static all-site content scripts.
    - No sensitive `tabs` permission (lifecycle APIs operate without sensitive URL fields).
-   - No `debugger`, `cookies`, `history`, `downloads`, `webRequest`, `clipboardRead`, `desktopCapture`, or `tabCapture` permissions.
+   - No `debugger`, `cookies`, `history`, `downloads`, `webRequest`, `clipboardRead`, or `desktopCapture` permissions.
+3a. **Playback Restoration Invariant:**
+   - Because `chrome.tabCapture` silences tab audio by default, the offscreen document must connect the captured `MediaStream` to an `AudioContext` destination node to restore local audible playback to the employee's speakers/headphones.
 4. **Incognito and Private Browsing Exclusion:**
    - `incognito: "not_allowed"` ensures the extension is not enabled in private browsing windows by default.
    - The service worker additionally validates `sender.tab.incognito === false` before accepting any message. If incognito or guest mode is detected, the sender is rejected immediately.
@@ -430,7 +434,8 @@ Sent immediately upon native port connection. Pre-pair message; omits paired env
   "type": "BridgeHello",
   "protocol_version": "browser-bridge.v1",
   "protocol_major": 1,
-  "protocol_minor": 0,
+  "protocol_minor": 1,
+  "capabilities": ["dom_observation_v1", "action_execution_v1", "target_resolution_v1", "meeting_audio_v1"],
   "extension_id": "com.oryn.extension.chrome",
   "extension_version": "1.0.0",
   "browser_family": "chrome",

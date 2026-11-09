@@ -59,8 +59,8 @@ Job operations must be durable, recoverable, and idempotent. An orchestrator res
 - **Contract Reference #9 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests eligible active version and scope from [release-governance](release-governance.md).
 - **Contract Reference #10 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches bounded work assignments to [agent-runtime](agent-runtime.md).
 - **Contract Reference #14 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests verification verdicts from [outcome-verification](outcome-verification.md) to transition case states.
+- **Contract Reference #22 Reference:** Job orchestration remains deterministic; underlying worker model decisions route through LiteLLM under [cloud-inference](../architecture/cloud-inference.md).
 - **Job Status Events:** Emits `job.requested`, `job.case_state_changed`, and `job.completed` domain events.
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

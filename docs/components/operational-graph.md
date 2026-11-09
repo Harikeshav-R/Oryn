@@ -19,9 +19,9 @@ The Living Operational Graph and Knowledge Governance component maintains the au
 ### Consumes
 - Approved workflow candidates from domain reviewers via [workflow-discovery](workflow-discovery.md) and [control-plane](control-plane.md).
 - Accepted expert corrections and rule proposals from [incident-correction-repair](incident-correction-repair.md).
-- Authorized cross-team handoff commitments from [contribution-sync](contribution-sync.md).
+- Authorized cross-team handoff commitments and reviewed meeting handoffs (`ReviewedMeetingHandoffProposal`) from [contribution-sync](contribution-sync.md) via Contract 24.
 - Agent evaluation and release outcomes from [release-governance](release-governance.md).
-
+- Governed cloud embedding and reranking operations (`text.embed`, `text.rerank`) via [cloud-inference](../architecture/cloud-inference.md).
 ### Produces
 - Published playbooks and peer error resolutions delivered to [local-context-hud](local-context-hud.md) via [contribution-sync](contribution-sync.md).
 - Approved capability definitions and business postconditions delivered to [agent-factory-ir](agent-factory-ir.md).
@@ -53,8 +53,9 @@ Strictly separate observational evidence, proposed interpretations, and authorit
 - **Contract Reference #3 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers published, access-filtered playbooks and peer fixes to [local-context-hud](local-context-hud.md).
 - **Contract Reference #5 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers approved capability models, business rules, and postconditions to [agent-factory-ir](agent-factory-ir.md).
 - **Contract Reference #16 in [Contracts Catalog](../architecture/contracts/README.md):** Receives accepted expert corrections and candidate rule changes from [incident-correction-repair](incident-correction-repair.md).
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes `text.embed` and `text.rerank` via LiteLLM gateway under [cloud-inference](../architecture/cloud-inference.md) for semantic knowledge retrieval and node search.
+- **Contract Reference #24 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests `ReviewedMeetingHandoffProposal` from [contribution-sync](contribution-sync.md); manages canonical shared status, recipient authorization, and duplicate prevention.
 - **Operations Map Projections:** Serves graph queries to [command-center-analytics](command-center-analytics.md).
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

@@ -21,7 +21,7 @@ The Agent Factory and Operational Capability Compiler transforms sufficiently sp
 - Declared application action and verification capabilities from [application-adapters](application-adapters.md).
 - Risk tier limits and policy constraints from [identity-policy](identity-policy.md).
 - Candidate repair specifications from [incident-correction-repair](incident-correction-repair.md).
-
+- Governed cloud reasoning operations (`text.reason`) via [cloud-inference](../architecture/cloud-inference.md).
 ### Produces
 - Immutable, versioned candidate agent bundles containing IR definitions, declared tool contracts, and postconditions.
 - Verification requirements and suggested test coverage scenarios delivered to [flight-simulator](flight-simulator.md).
@@ -52,7 +52,7 @@ The compiler must produce a **model-independent operational representation**, no
 - **Contract Reference #6 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes supported actions, limitations, and verification support from [application-adapters](application-adapters.md).
 - **Contract Reference #7 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers fixed agent candidates and verification requirements to [flight-simulator](flight-simulator.md).
 - **Contract Reference #17 in [Contracts Catalog](../architecture/contracts/README.md):** Receives new candidate versions and regression requirements from [incident-correction-repair](incident-correction-repair.md).
-
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes `text.reason` via LiteLLM gateway under [cloud-inference](../architecture/cloud-inference.md) for candidate plan synthesis; plans are bounded by deterministic IR validation and require simulation testing before release.
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

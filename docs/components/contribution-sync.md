@@ -23,11 +23,13 @@ The Contribution and Synchronization Gateway mediates the boundary between priva
 
 ### Produces
 - Authenticated, organization-scoped contribution payloads delivered to [workflow-discovery](workflow-discovery.md).
+- Reviewed meeting handoff proposals (`ReviewedMeetingHandoffProposal`) delivered to [operational-graph](operational-graph.md) via Contract 24.
 - Updated local playbook and peer-fix caches delivered to [local-context-hud](local-context-hud.md).
 - Contribution delivery receipts and sync status indicators delivered to [desktop-shell](desktop-shell.md).
 
 ### Does Not Own
-- Direct upload of unreviewed or raw screen/audio capture files (strictly prohibited).
+- Direct upload of unreviewed or raw screen/audio capture files (strictly prohibited on the contribution path).
+- Routing transient AI inference requests (owned by [local-privacy-storage](local-privacy-storage.md) edge `InferenceEgressClient` and [control-plane](control-plane.md) `InferenceAdmission` via [cloud-inference](../architecture/cloud-inference.md); inference processing is strictly separated from organizational contribution).
 - Deciding whether a workflow candidate should be published across the company (owned by [operational-graph](operational-graph.md)).
 - Central identity and authorization rules (owned by [identity-policy](identity-policy.md)).
 
@@ -47,8 +49,8 @@ Offline behavior must preserve employee privacy and fail safely. Upon network re
 ### Cross-Component Contracts
 - **Contract Reference #2 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests reviewed contributions from [local-privacy-storage](local-privacy-storage.md) and delivers them to [workflow-discovery](workflow-discovery.md).
 - **Contract Reference #3 in [Contracts Catalog](../architecture/contracts/README.md):** Fetches published playbooks from [operational-graph](operational-graph.md) and populates the local cache for [local-context-hud](local-context-hud.md).
+- **Contract Reference #24 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers reviewed meeting handoff proposals (`ReviewedMeetingHandoffProposal`) from [meeting-intelligence](meeting-intelligence.md) to [operational-graph](operational-graph.md); preserves review receipts and business context.
 - **Revocation Event Contract:** Receives `consent.revoked` and `access.revoked` events and triggers local cache invalidation.
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries
@@ -69,8 +71,7 @@ Offline behavior must preserve employee privacy and fail safely. Upon network re
 ### State and Persistence
 - **Persisted State:** Encrypted offline queue for approved contributions, sync receipts, and versioned playbook cache.
 - **Lifecycle Transitions:** `Connected ↔ Disconnected (Offline Queueing) ↔ Syncing ↔ Sync Complete`.
-- **Reconnection Ordering:** Reconnection enforces strict sequencing: (1) authenticate session, (2) fetch active policy and revocation state, (3) purge newly restricted or revoked items from offline queue, and (4) transmit remaining approved contributions still authorized to leave. Reconnection never sweeps unreviewed drafts.
-## Error and edge-case behavior
+- **Reconnection Ordering:** Reconnection enforces strict sequencing: (1) authenticate session, (2) fetch active policy and revocation state, (3) purge newly restricted or revoked items from offline queue, and (4) transmit remaining approved contributions and reviewed handoffs still authorized to leave. Reconnection never sweeps unreviewed drafts, and never automatically uploads offline meeting audio backlog (deferred meeting processing requires explicit employee command under Contract 19).
 
 ### Failure Handling
 - **Sync Server Unreachable:** Outgoing approved contributions remain queued in encrypted storage; sync retries with exponential backoff.

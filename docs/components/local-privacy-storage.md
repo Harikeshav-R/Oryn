@@ -10,19 +10,20 @@ Status: Baseline brief — detailed design pending
 The Local Privacy Gate, Evidence Store, and Retention component enforces mandatory exclusions and data minimization at the desktop source, securely stores private screen and audio evidence locally, and governs retention, deletion, and conversion into shareable procedural knowledge.
 
 - Device-level capture consent, authoritative capture snapshot generation, and active exclusion policy enforcement.
-- Supervision and lifecycle management of the nested native observation worker (`oryn-observation-worker`), including binary signature verification, 100 ms heartbeat watchdog (500 ms timeout), and source permit issuance (`GrantObservationPermit`, `RevokeObservationPermit`, `ReleaseFrameSlot`).
+- Supervision and lifecycle management of the nested native observation worker (`oryn-observation-worker`) and meeting worker (`oryn-meeting-worker`), including binary signature verification, 100 ms heartbeat watchdog (500 ms timeout), and source permit issuance (`GrantObservationPermit`, `RevokeObservationPermit`, `GrantMeetingPermit`, `RevokeMeetingPermit`, `ReleaseFrameSlot`).
 - Source-aware operational tracking and recovery blocker isolation: maintains per-source health (`ready`, `degraded`, `unavailable`) and recovery blockers (`crash`, `hang`, `unclean_restart`) across `native_os`, `browser`, and `meeting` sources. A native-worker fault isolates to `native_os` without stopping independent healthy browser or meeting sources.
-- Admission and routing of the third inherited browser source channel (`shell-browser.v1`) negotiated via `shell-privacy.v1` major 1, minor 1: ingests candidate browser observations, evaluates conjunctive work context rules, and issues unexpired browser permits (`GrantObservationPermit`, `RevokeObservationPermit`) with 100 ms refresh and 300 ms maximum TTL.
+- Admission and routing of the third inherited browser source channel (`shell-browser.v1`) and fourth browser meeting audio channel (`shell-meeting-audio.v1`) negotiated via `shell-privacy.v1` minor 2.
+- Operation of the edge `InferenceEgressClient`: attaches signed `InferenceAuthorization` tokens and submits `InferenceRequest` envelopes over TLS 1.3 to the LiteLLM gateway with contractual zero content retention and US processing (see [cloud-inference](../architecture/cloud-inference.md)).
 - Aggregation of per-profile browser bridge health into the authoritative `browser` capture source state (`sources.browser.health = "ready" | "degraded" | "unavailable"`).
-- Execution gate coordination: `PauseCapture` from Desktop Shell immediately halts browser observation permits and pauses local browser execution at the nearest safe boundary.
+- Execution gate coordination: `PauseScreenObservation` halts screen permits; `PauseCapture` (Pause All) halts all permits including meeting audio.
 - Masked shared-memory slot admission: maps inherited 8 MiB BGRA8 frame slots, verifies declared masked regions equal opaque-black BGRA `(0,0,0,255)`, verifies SHA-256 digest, copies frames into private buffers, and releases slots.
 - Supervision interface, ephemeral visibility lease validation (100ms lease / 500ms timeout), and fail-closed capture gating.
 - Durable employee pause persistence and recovery blocker tracking across process restarts and workstation power events.
-- Local encrypted storage for private observations, raw screenshots, and transient audio evidence.
-- Redaction and data minimization pipelines (masking credentials, tokens, PII, and financial account details).
-- Ephemeral volatile processing pipeline when `personal_history_retention=false`: copies frame to volatile buffer, releases slot immediately, executes local redaction/OCR, delivers ephemeral result to live context with a strict 30-second TTL, then zeroes and discards memory without disk writes or durable evidence receipts.
-- The employee's review-before-sharing workflow, ensuring no raw media egresses to the cloud.
-- Automatic local retention sweeps, user-initiated local evidence deletion, and supported uninstall data purges.
+- Local encrypted storage for private observations, raw screenshots, and private meeting records / audio evidence (see [meeting-intelligence](meeting-intelligence.md)).
+- Redaction and data minimization pipelines (deterministic secret removal and regex/structural masking of credentials, tokens, PII, and financial account details).
+- Ephemeral volatile processing pipeline when `personal_history_retention=false`: copies frame to volatile buffer, releases slot immediately, executes local deterministic secret stripping, routes ephemeral visual extraction via LiteLLM gateway under separate cloud consent with a strict 30-second TTL, then zeroes and discards memory without disk writes or durable evidence receipts; if cloud inference is unavailable, reports unavailable without accumulating an upload backlog.
+- The employee's review-before-sharing workflow, ensuring no raw media egresses to organizational dashboards.
+- Automatic local retention sweeps, user-initiated local evidence deletion, and supported uninstall data purges. Source evidence expiry purges raw local media and unconfirmed candidates; confirmed saved commitments survive source-only deletion with `evidence_status = "unavailable"`, whereas full personal data purge removes eligible saved commitments too.
 ### Consumes
 - Raw candidate observation streams from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md).
 - Organization-wide mandatory exclusion rules and maximum retention caps from [identity-policy](identity-policy.md).
@@ -126,7 +127,7 @@ Protected application categories (password managers, banking, personal messaging
 
 ### Specific Preserved Implementation Questions
 - What local embedded storage engine (SQLite with SQLCipher, LevelDB, or OS data stores) offers the best combination of encryption speed and indexing?
-- How should on-device redaction balance OCR speed against CPU utilization?
+- How should deterministic secret removal algorithms balance pre-transfer latency against CPU utilization?
 - What exact encryption key derivation and storage scheme (OS Keychain / DPAPI) should protect the local evidence database?
 - How should legal hold requests be handled without violating product maximum retention limits?
 

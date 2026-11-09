@@ -16,8 +16,8 @@ Identity, Organization, Access, and Approval Governance governs organizations, w
 - Human approval request routing, binding verification, and cryptographic approval records.
 - Mandatory enterprise capture exclusion policies distributed to employee endpoints.
 - Issuing signed endpoint capture-policy leases with configured validity periods (shorter than, but never exceeding, the desktop's 24-hour offline cap).
+- Authoritative inference route, purpose, budget, and consent policy governance; issuing and signing `InferenceAuthorization` tokens under Contract 22 (see [cloud-inference](../architecture/cloud-inference.md)).
 - Organization offboarding, suspension, and permission revocation enforcement.
-
 ### Consumes
 - Identity claims and SSO assertions from enterprise identity providers (SAML, OIDC).
 - Administrative role assignments and permission updates from [command-center-analytics](command-center-analytics.md).
@@ -27,6 +27,7 @@ Identity, Organization, Access, and Approval Governance governs organizations, w
 ### Produces
 - Authoritative authorization verdicts (`Allow`, `Deny`, `RequireHumanApproval`) with policy justifications.
 - Cryptographically signed approval tokens bound to specific proposed operations and parameters.
+- Signed `InferenceAuthorization` tokens scoped to tenant, purpose, operation, route, and deletion generation.
 - Policy change and access revocation events emitted across the system.
 - Audit log records documenting every role change, policy update, and consequential approval.
 
@@ -36,8 +37,7 @@ Identity, Organization, Access, and Approval Governance governs organizations, w
 - Directly executing external third-party API mutations (owned by [application-adapters](application-adapters.md)).
 
 ### Boundary Requirement
-A machine learning model may request authorization, but cannot grant it. Every consequential action (Tier 3) is intercepted and evaluated by a trusted, deterministic policy engine at the execution boundary. Tier 3 requires an item-level human approval before external commit; Tier 4 restricted actions are strictly unavailable for v1.0 agent execution regardless of prior human demonstrations. Capture-policy leases distributed to employee desktop endpoints are bounded by an absolute maximum offline validity ceiling of 24 hours (organizations may configure shorter lease durations, but cannot extend the offline ceiling). Upon lease expiry, endpoint observation halts until network connectivity is re-established and policy refreshed.
-
+A machine learning model may request authorization, but cannot grant it. Inference authorization is strictly distinct from business action authorization: permission to process information through a model grants zero permission to perform external mutations or publish knowledge. Every consequential action (Tier 3) is intercepted and evaluated by a trusted, deterministic policy engine at the execution boundary. Tier 3 requires an item-level human approval before external commit; Tier 4 restricted actions are strictly unavailable for v1.0 agent execution regardless of prior human demonstrations. All inference routes must have verified contractual zero retention and US-only processing. Capture-policy leases distributed to employee desktop endpoints are bounded by an absolute maximum offline validity ceiling of 24 hours. Upon lease expiry, endpoint observation halts until network connectivity is re-established and policy refreshed.
 ## Product requirements
 
 ### Key Product Requirements ([PRODUCT.md §§6–7, 14, 16.6, 25.6–9](../../PRODUCT.md))
@@ -58,8 +58,8 @@ A machine learning model may request authorization, but cannot grant it. Every c
 ### Cross-Component Contracts
 - **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes specific action authorization requests from [agent-runtime](agent-runtime.md) and local executors (including browser actions delegated to [browser-extension](browser-extension.md)); issues cryptographic authorization tokens bound to stable `action_sha256` proposal digests, enforcing item-level approval for Tier 3 actions and unconditional denial for Tier 4.
 - **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers authorized role-scoped read models and audit events to [command-center-analytics](command-center-analytics.md).
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Issues and validates signed `InferenceAuthorization` tokens for [cloud-inference](../architecture/cloud-inference.md); enforces tenant inference budgets, purpose restrictions, ZDR terms, and US geographic confinement.
 - **Revocation Broadcasts:** Emits `policy.changed`, `access.revoked`, and `consent.revoked` domain events to invalidate distributed caches.
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

@@ -55,8 +55,8 @@ Tests must execute using the **exact behaviorally relevant agent definition** in
 - **Contract Reference #7 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests fixed candidate agent bundles and verification requirements from [agent-factory-ir](agent-factory-ir.md).
 - **Contract Reference #8 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers evaluation results, coverage metrics, and gap evidence to [release-governance](release-governance.md).
 - **Contract Reference #17 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests new candidate versions and regression requirements from [incident-correction-repair](incident-correction-repair.md).
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes `text.reason` via LiteLLM gateway under [cloud-inference](../architecture/cloud-inference.md) for synthetic scenario generation; simulated executions cannot touch production systems or bypass deterministic test oracles.
 - **Evaluation Events:** Emits `evaluation.completed` and `evaluation.regression_detected` domain events.
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

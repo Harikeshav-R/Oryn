@@ -53,8 +53,8 @@ Automatic Stage 5 release is strictly limited to narrow, pre-authorized Tier 0/1
 - **Contract Reference #8 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests evaluation results, coverage metrics, and gap evidence from [flight-simulator](flight-simulator.md).
 - **Contract Reference #9 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers eligible active version and scope assignments to [job-orchestration](job-orchestration.md).
 - **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Emits release status and audit records to [command-center-analytics](command-center-analytics.md).
+- **Contract Reference #22 Reference:** Candidate diff analysis may consume `text.reason` via LiteLLM under [cloud-inference](../architecture/cloud-inference.md); release promotion and policy changes strictly require human authorization.
 - **Release Event Bus:** Emits `release.approved`, `release.paused`, `release.expanded`, and `release.reverted` events.
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

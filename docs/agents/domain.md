@@ -7,7 +7,7 @@ How the engineering skills should consume this repo's domain documentation when 
 - **`GLOSSARY.md`** at the repo root, or
 - **`GLOSSARY-MAP.md`** at the repo root if it exists: it points at one `GLOSSARY.md` per context. Read each one relevant to the topic.
 - **`docs/adr/`**: read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
-
+- **`docs/architecture/cloud-inference.md`**: read when the task involves AI model inference, transcription, diarization, OCR/vision, reasoning, or embeddings. All v1.0 AI inference uses cloud-managed APIs through the LiteLLM gateway; local/on-device inference is post-v1.0. Future AI-related plans must name the shared inference contract, preserve local deterministic/privacy responsibilities, and keep local inference outside v1.0 unless an explicit approved product/ADR decision supersedes it.
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
 ## File structure

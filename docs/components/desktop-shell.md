@@ -76,7 +76,9 @@ The Desktop Shell directly presents or participates in verifying key product req
 | **ORY-064** | Offline Guidance Caching | Renders guidance cards seamlessly from local cache when disconnected; clearly indicates offline policy status. | [contribution-sync](contribution-sync.md) manages local cache; [identity-policy](identity-policy.md) bounds offline lease. |
 | **ORY-068** | Cross-Platform Desktop Support | Delivers feature parity across macOS (Intel and Apple Silicon) and Windows 11 (x64 and ARM64). | Native OS platform APIs (AppKit on macOS, Win32 on Windows). |
 | **ORY-069** | Resource Budget Enforcement | Enforces memory (<= 250 MiB idle tree), CPU (<= 1% core idle), launch (p95 <= 3s), and stop latency (p95 <= 100ms) limits. | Internal OS process monitoring and telemetry harnesses. |
-| **ORY-070** | Local-First Privacy Guarantees | Prohibits raw media egress; ensures all raw screen frames and audio remain strictly on local disk. | [local-privacy-storage](local-privacy-storage.md) enforces cryptographic profile boundary and zero cloud egress. |
+| **ORY-009** | Local-First Privacy Guarantees | Preserves local durable ownership of raw media; ensures raw screen frames and meeting audio remain on local disk subject to bounded retention. | [local-privacy-storage](local-privacy-storage.md) enforces cryptographic boundary and zero unauthorized cloud egress. |
+| **ORY-070** | Audit Record Generation | Ensures all employee approvals, releases, and settings mutations produce structured audit events. | Control plane and local privacy storage generate tamper-evident records. |
+| **ORY-071** | Governed Cloud Inference Gateway | Routes all v1.0 AI operations through the LiteLLM gateway with ZDR and US processing; shell/renderer contains zero provider credentials or direct cloud networking. | [cloud-inference](../architecture/cloud-inference.md) governs gateway; [identity-policy](identity-policy.md) validates tokens. |
 
 ## Upstream and downstream contracts
 
@@ -86,9 +88,9 @@ The Desktop Shell directly presents or participates in verifying key product req
 
 The Desktop Shell native host communicates with the supervised unprivileged Privacy Helper process (`oryn-privacy-helper`) via **private inherited byte channels** established at process creation. The Privacy Helper in turn launches and directly supervises the nested native observation worker (`oryn-observation-worker`) over its own private inherited channels (see [os-observation](os-observation.md)), while the desktop shell supervises the overall helper process tree. Public named pipes, localhost TCP sockets, and discoverable Unix domain filesystem sockets are strictly prohibited to prevent unauthorized local process connection or eavesdropping.
 
-As a narrowly scoped architectural exception ([ADR-0004](../adr/0004-browser-bridge-and-execution-boundaries.md)), the Desktop Shell native core hosts an authenticated OS-local endpoint (`~/Library/Application Support/Oryn/run/browser-bridge.sock` on macOS; `\\.\pipe\Oryn.BrowserBridge.<user-SID>.<logon-LUID>` on Windows) managed by `BrowserBridgeBroker` to accept connections strictly from the browser-launched `oryn-browser-host` executable with verified UID, PID, and publisher signatures. To route browser source observations into the privacy engine without crossing the capture control channel, the host allocates a third inherited byte channel at helper launch.
-- **macOS / Unix:** The host creates three connected Unix domain stream socket pairs via `socketpair(AF_UNIX, SOCK_STREAM, 0)`: control/state streaming (channel 1), bounded query responses (channel 2), and browser source streaming (channel 3, `shell-browser.v1`). The host passes the child socket descriptors across `fork`/`exec` and closes the child ends in the host. The child closes the host ends and closes all inherited descriptors other than standard descriptors and the explicit protocol channels.
-- **Windows:** The host creates three anonymous unidirectional pipe pairs (`CreatePipe`) per channel (six pipes total: control read/write, query read/write, browser read/write). The host uses `InitializeProcThreadAttributeList` with `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` in `STARTUPINFOEXW` to restrict handle inheritance strictly to the child pipe ends. Unused handle copies in both parent and child are closed immediately upon child process creation.
+As a narrowly scoped architectural exception ([ADR-0004](../adr/0004-browser-bridge-and-execution-boundaries.md)), the Desktop Shell native core hosts an authenticated OS-local endpoint (`~/Library/Application Support/Oryn/run/browser-bridge.sock` on macOS; `\\.\pipe\Oryn.BrowserBridge.<user-SID>.<logon-LUID>` on Windows) managed by `BrowserBridgeBroker` to accept connections strictly from the browser-launched `oryn-browser-host` executable with verified UID, PID, and publisher signatures. To route browser source observations and audio into the privacy engine without crossing the capture control channel, the host allocates four inherited byte channels at helper launch:
+- **macOS / Unix:** The host creates four connected Unix domain stream socket pairs via `socketpair(AF_UNIX, SOCK_STREAM, 0)`: control/state streaming (channel 1), bounded query responses (channel 2), browser source streaming (channel 3, `shell-browser.v1`), and browser meeting audio streaming (channel 4, `shell-meeting-audio.v1`). The host passes the child socket descriptors across `fork`/`exec` and closes the child ends in the host. The child closes the host ends and closes all inherited descriptors other than standard descriptors and the explicit protocol channels.
+- **Windows:** The host creates four anonymous unidirectional pipe pairs (`CreatePipe`) per channel (eight pipes total: control read/write, query read/write, browser read/write, meeting audio read/write). The host uses `InitializeProcThreadAttributeList` with `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` in `STARTUPINFOEXW` to restrict handle inheritance strictly to the child pipe ends. Unused handle copies in both parent and child are closed immediately upon child process creation.
 
 Both host and child enforce strict closure of duplicate handles/descriptors. Failure to close duplicate handles breaks EOF detection upon process crash or termination, which violates the fail-closed capture invariant.
 
@@ -109,16 +111,18 @@ The maximum message size on channels 1 and 2 is fixed at **1,048,576 bytes (1 Mi
 #### Inherited Channel 3: Browser Source Stream (`shell-browser.v1`)
 Channel 3 is allocated strictly for browser source traffic between `BrowserBridgeBroker` and `oryn-privacy-helper`. It employs 4-byte big-endian framing with a maximum payload limit of **262,144 bytes (256 KiB)**. Raw candidate DOM observations, element state mutations, and baseline trees flow exclusively across this dedicated channel and never cross the capture control channel (Contract 19). If Channel 3 experiences framing errors or transport termination, only the browser observation source is marked `degraded` or `unavailable`; the primary capture control channel (channel 1) and query channel (channel 2) remain fully operational.
 
-#### Protocol Handshake (`shell-privacy.v1`)
-Immediately following channel creation, the host and helper execute a mandatory protocol handshake. The protocol version is `shell-privacy.v1` (major 1, minor 1).
+#### Inherited Channel 4: Browser Meeting Audio Stream (`shell-meeting-audio.v1`)
+Channel 4 is allocated strictly for browser meeting tab audio bytes forwarded from `BrowserBridgeBroker` to `oryn-privacy-helper`. Base64 chunks received over Native Messaging are decoded by the shell broker into preallocated buffers and transmitted as binary frames (4-byte length prefix + 64-byte `ORYA` header + 16 kHz 16-bit mono PCM). Bulk audio never crosses Channels 1, 2, or 3, and is never exposed to UI renderer processes.
 
+#### Protocol Handshake (`shell-privacy.v1`)
+Immediately following channel creation, the host and helper execute a mandatory protocol handshake. The protocol version is `shell-privacy.v1` (major 1, minor 2).
 **Host Handshake Hello:**
 ```json
 {
   "type": "HandshakeHello",
   "protocol_version": "shell-privacy.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "shell_build": "2026.11.08.1",
   "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
   "organization_id": "org_enterprise_corp",
@@ -131,7 +135,7 @@ Immediately following channel creation, the host and helper execute a mandatory 
 {
   "type": "HandshakeAck",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "helper_build": "2026.11.08.1",
   "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
   "status": "ready"
@@ -150,16 +154,25 @@ All employee-initiated mutations carry an idempotent command envelope:
 
 #### Commands
 
-1. **`PauseCapture`**
-   - **Payload:** `{"reason": "employee" | "window_closed" | "quit" | "update" | "uninstall"}`
-   - **Semantics:** Commands immediate suspension of all active observation streams across native and browser sources, and commands immediate pause of any executing local browser actions at the nearest safe boundary. Establishes a durable pause or specific recovery blocker in local privacy storage before responding. Bypasses `expected_revision` checks: requesting a capture stop must never fail due to a revision race.
+1. **`PauseScreenObservation`**
+   - **Payload:** `{"reason": "employee" | "hotkey"}`
+   - **Semantics:** Commands immediate suspension of screen observation streams across native and browser sources, and commands immediate pause of any executing local browser actions at the nearest safe boundary. **Does not stop meeting audio capture:** an independently authorized meeting session continues recording audio with active companion badge indicators.
    - **Response:** `{"command_id": "...", "status": "acknowledged", "revision": "1421", "stopped_at": "2026-11-08T14:30:00.120Z"}`
 
-2. **`ResumeCapture`**
+2. **`PauseCapture` (Pause All)**
+   - **Payload:** `{"reason": "employee" | "window_closed" | "quit" | "update" | "uninstall"}`
+   - **Semantics:** Commands immediate suspension of all active observation streams across native, browser, and meeting audio sources, and pauses executing local browser actions. Establishes a durable pause or specific recovery blocker in local privacy storage before responding. Bypasses `expected_revision` checks: requesting a capture stop must never fail due to a revision race.
+   - **Response:** `{"command_id": "...", "status": "acknowledged", "revision": "1421", "stopped_at": "2026-11-08T14:30:00.120Z"}`
+
+3. **`ResumeCapture`**
    - **Payload:** `{"categories": ["visual_work_observation", "contextual_work_application_recognition"]}`
-   - **Semantics:** Requests resumption of consented, policy-permitted screen observation categories across all eligible sources (`native_os`, `browser`). **Never accepts audio or meeting categories.** Deliberately addresses every stopped native and browser source supporting a requested category, clears only that source's eligible recovery blocker after all gates validate, and leaves already healthy or running sources untouched. A native-fault recovery action in the UI is labeled **Resume Screen Observation** because other stopped screen sources may also resume. Local privacy storage atomically validates current policy validity, employee consent, OS permissions, physical visibility lease, and absence of global blockers. Missing authority or mismatched `expected_revision` causes immediate rejection.
+   - **Semantics:** Requests resumption of consented, policy-permitted screen observation categories across all eligible sources (`native_os`, `browser`). **Never accepts audio or meeting categories; meeting recording never resumes automatically.** Deliberately addresses every stopped native and browser source supporting a requested category, clears only that source's eligible recovery blocker after all gates validate, and leaves already healthy or running sources untouched. A native-fault recovery action in the UI is labeled **Resume Screen Observation** because other stopped screen sources may also resume. Local privacy storage atomically validates current policy validity, employee consent, OS permissions, physical visibility lease, and absence of global blockers. Missing authority or mismatched `expected_revision` causes immediate rejection.
    - **Response:** `{"command_id": "...", "status": "acknowledged", "revision": "1422", "active_categories": [...]}` or rejection with reason code.
-3. **`SetCaptureCategory`**
+
+4. **Typed Meeting Commands (`MeetingPort`)**
+   - **Commands:** `StartMeetingCapture`, `RenewMeetingConsent`, `StartMeetingSegment`, `StopMeetingCapture`, `AuthorizeDeferredMeetingProcessing`.
+   - **Semantics:** Typed command forwarding to `MeetingSessionCoordinator` under Contract 19 (see [meeting-intelligence specification](meeting-intelligence.md#32-contract-19-desktop-shell-capture-control-meetingport)).
+5. **`SetCaptureCategory`**
    - **Payload:** `{"category": "<CategoryIdentifier>", "enabled": boolean}`
    - **Semantics:** Toggles employee preference for a single category. Enabling a category cannot bypass missing employee notice consent, cannot start meeting recording, and cannot override an organizational policy prohibition.
    - **Response:** `{"command_id": "...", "status": "acknowledged", "revision": "1423"}`
@@ -465,6 +478,7 @@ export interface CaptureSnapshot {
   revision: string;                // Authoritative decimal string representation of u64
   sequence: string;                // Stream monotonic decimal string representation of u64
   enrollment: "not_enrolled" | "notice_required" | "permissions_required" | "ready";
+  meeting: MeetingCaptureSummary | null; // Nullable meeting capture projection
   categories: CategoryState[];
   sources: CaptureSourceState[];   // Per-source operational health and category activity
   employee_paused: boolean;        // Durable employee pause flag
@@ -488,8 +502,16 @@ export interface CategoryState {
   activity: "active" | "stopped" | "unknown";
 }
 
+export interface MeetingCaptureSummary {
+  meeting_session_id: string;
+  recording_mode: "online" | "offline";
+  processing_state: "none" | "live" | "near_live" | "pending_authorization" | "finalizing" | "extracting" | "review_ready" | "failed" | "cancelled";
+  meeting_title: string | null;
+  started_at: string;
+  duration_ms: number;
+}
+
 export interface CaptureSourceState {
-  source_id: "native_os" | "browser" | "meeting";
   health: "ready" | "degraded" | "unavailable";
   activities: SourceCategoryActivity[];
   recovery_blocker: null | "crash" | "hang" | "unclean_restart";
@@ -520,7 +542,7 @@ In accordance with [PRODUCT.md §8.1](../../PRODUCT.md), the desktop shell prese
 |---|---|---|---|
 | **1 (Highest)** | **Attention Needed** | Unknown capture state, failed helper, broken IPC, lost visibility lease, unverified crash restart, or native worker failure (while independent indicators show actual continued capture for other sources). | Warning badge; explainer states exact subsystem failure (e.g. "Native observation stopped; other active sources shown below"); offers Retry Connection or Restart. |
 | **2** | **Not Configured** | `enrollment != "ready"` (notice unacknowledged, consent missing, or mandatory OS permissions denied). | Informational badge; provides direct link to Enrollment or OS Settings guide. |
-| **3** | **Meeting Capture Active** | Audio transcription category `activity == "active"`. | Distinct high-visibility recording indicator; displays meeting title/duration and Stop Meeting button. |
+| **3** | **Meeting Capture Active** | Audio transcription category `activity == "active"` (online subline: `Online transcription active`; offline subline: exactly `Recording only — offline`). | Distinct high-visibility recording indicator; displays meeting title/duration and Stop Meeting button. Independent Screen and Meeting status indicators remain visible even under Attention Needed. |
 | **4** | **Paused by You** | `employee_paused == true`. | Amber paused badge; indicates manual pause; displays Resume button. Surpasses background/policy states. |
 | **5** | **Paused by Policy** | `policy_state != "valid"`, `suspension != null`, or administrative policy blocks capture. | Blue restriction badge; explains policy reason (e.g. "Workstation locked", "Policy lease expired", "Offline > 24h"). |
 | **6** | **In Excluded Application** | Foreground window belongs to an organizationally or personally excluded application/domain AND no approved screen surface remains visible/admitted. | Shield badge; displays "Excluded window active — observation suspended"; zero frames captured. |

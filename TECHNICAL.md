@@ -69,7 +69,7 @@ Terms **must/required** denote constraints inherited from the v1.0 product or es
 
 ### 0.4 Product baseline
 
-Oryn is a local-first enterprise platform that observes **consented and permitted work**, discovers repeatable business processes, creates reviewable procedures, compiles approved procedures into constrained agents, evaluates those agents against expected business outcomes, runs approved jobs, and learns from failures and authorized human corrections.
+Oryn is an enterprise platform combining local-first deterministic observation and privacy enforcement with purpose-authorized transient cloud inference through an Oryn-managed LiteLLM gateway. It observes **consented and permitted work**, discovers repeatable business processes, creates reviewable procedures, compiles approved procedures into constrained agents, evaluates those agents against expected business outcomes, runs approved jobs, and learns from failures and authorized human corrections. All Oryn-owned AI inference in v1.0 uses cloud-managed APIs through the LiteLLM gateway; local-only model inference is post-v1.0.
 
 Its continuous lifecycle is:
 
@@ -83,7 +83,7 @@ The key unit of value is a **verified operational capability**, not a screen rec
 - Meeting audio is a distinct, **per-meeting opt-in** feature.
 - Human guidance, supervised automations, and narrowly scoped autonomous automations are supported; capabilities are reported per application and workflow.
 - Three synthetic reference workflows: invoice/PO reconciliation, customer/order status reconciliation, support exception triage. At least one demonstrates the entire repair loop.
-- No Linux desktop, unrestricted arbitrary-app automation, universal software-to-API product, autonomous Tier 4 actions, blanket agent autonomy, or company-wide predictive digital twin in v1.0.
+- No Linux desktop, unrestricted arbitrary-app automation, universal software-to-API product, autonomous Tier 4 actions, blanket agent autonomy, on-device model inference, or company-wide predictive digital twin in v1.0.
 - No employee surveillance analytics or manager-accessible raw local activity playback.
 
 ---
@@ -94,7 +94,7 @@ These rules must hold regardless of how the underlying components are implemente
 
 | ID | Principle | System consequence |
 |---|---|---|
-| A-01 | **Local-first observation** | Raw employee screen/audio capture is stored on that employee's device; organizational services receive only permitted, reviewed, sanitized contributions and authorized business artifacts. |
+| A-01 | **Local-first observation & durable ownership** | Raw employee screen/audio capture is stored durably on that employee's device; transient cloud inference via the governed LiteLLM gateway is purpose-authorized with zero content retention; organizational services receive only permitted, reviewed, sanitized contributions and authorized business artifacts. |
 | A-02 | **Privacy before capture and before sharing** | Exclusions and consent are enforced at source; a separate review gate governs promotion of private observations into organizational knowledge. |
 | A-03 | **Business outcome over UI completion** | A click or success banner does not mark a case verified. Verification is a separately governed capability. |
 | A-04 | **Knowledge is not authority** | An observed human behavior or model inference does not create an approved business policy or authorize an action. |
@@ -123,8 +123,8 @@ Oryn spans several environments with different privacy and privilege levels.
 
 | Environment | Purpose | Primary responsibilities | Must not do |
 |---|---|---|---|
-| **Employee edge** | Understand permitted human work and assist locally | Desktop companion, OS observers, browser extension link, private media/evidence store, privacy gating, local task context, HUD, authorized local execution | Automatically transmit raw screen/audio or bypass employee capture controls |
-| **Organizational control plane** | Coordinate shared knowledge and governed automation | Identity, permissions, workflow discovery, graph, agent definitions, job lifecycle, approvals, incidents, repairs, releases, web management | Directly assume access to excluded raw employee activity or silently approve policy changes |
+| **Employee edge** | Understand permitted human work and assist locally | Desktop companion, OS observers, browser extension link, private media/evidence store, privacy gating, local task context, HUD, authorized local execution, edge `InferenceEgressClient` | Automatically transmit raw screen/audio, bypass employee capture controls, or invoke uncertified cloud routes |
+| **Organizational control plane** | Coordinate shared knowledge and governed automation | Identity, permissions, workflow discovery, graph, agent definitions, job lifecycle, approvals, incidents, repairs, releases, web management, `InferenceAdmission`, `InferenceSessionCoordinator` | Directly assume access to excluded raw employee activity, silently approve policy changes, or store private captures centrally |
 | **Production execution plane** | Carry out authorized business work | Scoped agent workers, application adapters, per-action checks, action results and evidence | Choose its own security scope or self-certify outcomes |
 | **Simulation execution plane** | Evaluate candidate behavior safely | Test environments, scenarios, isolated runs, failure injection, replay, result collection | Use production write authority or represent incomplete mocks as complete production fidelity |
 | **External business systems** | Authoritative business state | ERPs, CRMs, mail, document tools, support platforms, other approved applications | Be assumed transactional, reversible, or consistently automatable without qualification |
@@ -290,20 +290,20 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 4.1 Desktop Shell and User Experience Host
 
-**Responsibility:** The installed Windows/macOS application that exposes enrollment, visible capture state, employee controls, personal history, notifications, contextual help, and approved local execution interfaces. Implemented using Tauri 2 (Rust native core + React/TypeScript UI in system WebView) with native platform status adapters (AppKit on macOS, Win32 on Windows) and an unprivileged child privacy helper communicating via inherited byte channels. Host native core also owns the restricted OS-local endpoint broker (`BrowserBridgeBroker`) and content-free `BrowserGeometryProbe` for connecting the browser extension native host (`oryn-browser-host`).
+**Responsibility:** The installed Windows/macOS application that exposes enrollment, visible capture state, employee controls, personal history, notifications, contextual help, and approved local execution interfaces. Implemented using Tauri 2 (Rust native core + React/TypeScript UI in system WebView) with native platform status adapters (AppKit on macOS, Win32 on Windows) and an unprivileged child privacy helper communicating via four inherited byte channels (Channel 1 control/lifecycle, Channel 2 bounded queries, Channel 3 `shell-browser.v1`, Channel 4 `shell-meeting-audio.v1`, negotiated at `shell-privacy.v1` minor 2). Host native core also owns the restricted OS-local endpoint broker (`BrowserBridgeBroker`, version 1.1) and content-free `BrowserGeometryProbe` for connecting the browser extension native host (`oryn-browser-host`).
 
 **Owns:** Desktop-level session and UI lifecycle; native system tray and movable capture badge presentation; employee visibility into local observation across the 7 canonical states; user controls for starting/stopping capture; presentation host for guidance overlays, highlight geometries, notifications, and consequential approvals; local UI preferences and enrollment markers; ephemeral visibility lease renewals; restricted OS-local IPC broker for browser extension attachment; content-free window geometry and display layout tracking.
 
 **Consumes:** Authoritative capture snapshots and exclusions from [local-privacy-storage](docs/components/local-privacy-storage.md), structured guidance presentation models from [local-context-hud](docs/components/local-context-hud.md), permitted guidance from [contribution-sync](docs/components/contribution-sync.md), job/approval requests from [control-plane](docs/components/control-plane.md), application-compatibility information from [os-observation](docs/components/os-observation.md), and authentication/policy state from [identity-policy](docs/components/identity-policy.md).
 
-**Produces:** Validated employee capture commands (`PauseCapture`, `ResumeCapture`, `SetCaptureCategory`, `RecordCaptureConsent`), ephemeral visibility lease renewals (`RenewVisibilityLease`), session lifecycle transitions (`SetSessionState`), contribution review decisions (`ReviewContribution`), guide interactions (`GuidanceInteraction`), and supervised action approvals (`SubmitApproval`).
+**Produces:** Validated employee capture commands (`PauseScreenObservation`, `PauseCapture`, `ResumeCapture`, `SetCaptureCategory`, `RecordCaptureConsent`, and Contract 19 `MeetingPort` commands), ephemeral visibility lease renewals (`RenewVisibilityLease`), session lifecycle transitions (`SetSessionState`), contribution review decisions (`ReviewContribution`), guide interactions (`GuidanceInteraction`), and supervised action approvals (`SubmitApproval`).
 
-**Does not own:** The authoritative organizational graph, workflow publication, organization-wide permissions, central agent versions, final business verification, raw media retention/redaction (owned by local privacy storage), guidance matching/progression logic (owned by local context HUD), or central authorization token issuance.
+**Does not own:** The authoritative organizational graph, workflow publication, organization-wide permissions, central agent versions, final business verification, raw media retention/redaction (owned by local privacy storage), guidance matching/progression logic (owned by local context HUD), direct provider credentials, provider networking, or central authorization token issuance.
 
-**Boundary requirement:** Closing or disconnecting the UI must not silently change user consent or cause invisible capture. Closing the main window continues capture only if background observation is explicitly enabled and the native status badge remains visible on an active desktop; otherwise it halts capture (`Paused by You`). Explicit quit stops capture and persists a quit pause. Workstation lock/sleep halts capture; unlock/wake automatically restores previously active screen observation only, never meeting audio. Unexpected crashes, visibility loss, or updates fail closed within 500 ms and require explicit employee resume. Local capture requires a valid capture policy lease, capped at an absolute maximum of 24 hours of disconnection.
+**Boundary requirement:** Closing or disconnecting the UI must not silently change user consent or cause invisible capture. Closing the main window continues capture only if background observation is explicitly enabled and the native status badge remains visible on an active desktop; otherwise it halts capture (`Paused by You`). Explicit quit stops capture and persists a quit pause. Workstation lock/sleep halts capture; unlock/wake automatically restores previously active screen observation only, never meeting audio. User screen pause (`PauseScreenObservation`) stops screen capture and halts local browser actions at a safe boundary while preserving authorized meeting capture; Pause All (`PauseCapture`) immediately stops all capture. When meeting capture is active offline, the headline displays **Meeting Capture Active** with the subline `Recording only — offline`. Unexpected crashes, visibility loss, or updates fail closed within 500 ms and require explicit employee resume. Local capture requires a valid capture policy lease, capped at an absolute maximum of 24 hours of disconnection.
 ### 4.2 Native OS Observation Adapters
 
-**Responsibility:** Read permitted desktop context and relevant changes across approved Windows and macOS applications using supported platform facilities. Implemented via a dedicated unprivileged child worker (`oryn-observation-worker`) supervised by `oryn-privacy-helper` over private inherited byte channels and shared memory (see [detailed technical specification](docs/components/os-observation.md)).
+**Responsibility:** Read permitted desktop context and relevant changes across approved Windows and macOS applications using supported platform facilities. Implemented via a dedicated unprivileged child worker (`oryn-observation-worker`) supervised by `oryn-privacy-helper` over private inherited byte channels and shared memory (see [detailed technical specification](docs/components/os-observation.md)). Downstream visual extraction and OCR are performed via the Privacy-Helper-governed `InferenceEgressClient` routing through the cloud LiteLLM gateway (`vision.extract`); no model inference or OCR runs within the native observation worker.
 
 **Owns:** OS-specific observation capabilities, window inventory, z-order occlusion calculation, settled accessibility tree extraction, event-triggered snapshots, pre-transfer black-pixel masking, fair multi-window scheduling, and a standardized stream of observations to the local privacy and task pipeline.
 
@@ -311,49 +311,50 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 **Produces:** Typed local observations (`ObservationEvent`), masked shared-memory snapshots, explicit `ObservationGap` records, and capability declarations with confidence/availability labels.
 
-**Does not own:** Whether observations are safe to share, workflow intent inference, business rule approval, or downstream OCR/retention.
+**Does not own:** Whether observations are safe to share, workflow intent inference, business rule approval, model inference, or downstream retention.
 
 **Boundary requirement:** Supported capabilities must be declared per operating system and application; inaccessible controls and gaps are reported rather than guessed. Multi-window observation covers all permitted visible windows across displays, acquiring uncovered-only regions with conservative occlusion subtraction. When an excluded window takes focus, safe background windows continue observation. A native worker crash isolates to the `native_os` source and fails closed, leaving healthy browser and meeting capture active while the companion shows Attention Needed. Certified native browser fallback is strictly limited to enterprise-managed profiles with verifiably disabled private browsing (effective `IncognitoModeAvailability=1` or `InPrivateModeAvailability=1` and empty URL exception allowlists). Detailed architecture and wire protocols are resolved in [docs/components/os-observation.md](docs/components/os-observation.md).
 ### 4.3 Browser Extension and Local Browser Bridge
 
-**Responsibility:** Obtain high-fidelity, permissioned browser context for supported Chrome/Edge business applications; coordinate local browser bridge over native messaging and restricted shell broker; enable context-aware guidance and approved browser actions where supported. Implemented in TypeScript under Manifest V3 and Rust native messaging host `oryn-browser-host` (see [detailed technical specification](docs/components/browser-extension.md)).
+**Responsibility:** Obtain high-fidelity, permissioned browser context for supported Chrome/Edge business applications; coordinate local browser bridge over native messaging and restricted shell broker; support offscreen audio-only meeting tab capture; enable context-aware guidance and approved browser actions where supported. Implemented in TypeScript under Manifest V3 and Rust native messaging host `oryn-browser-host` (see [detailed technical specification](docs/components/browser-extension.md)).
 
-**Owns:** TypeScript `BrowserCoordinator` in MV3 service worker, `DocumentObserver` content script, `TargetResolver`, `DomExecutor`, packaged `ApplicationProfileRegistry`, native host `oryn-browser-host` (`com.oryn.browser_bridge`), and tab-scoped navigation guard (`declarativeNetRequest`).
+**Owns:** TypeScript `BrowserCoordinator` in MV3 service worker, `DocumentObserver` content script, offscreen meeting audio capture module, `TargetResolver`, `DomExecutor`, packaged `ApplicationProfileRegistry`, native host `oryn-browser-host` (`com.oryn.browser_bridge`, bridge version 1.1), and tab-scoped navigation guard (`declarativeNetRequest`).
 
-**Consumes:** Authoritative browser permits, policy, exclusions, capture consent from [local-privacy-storage](docs/components/local-privacy-storage.md) via privacy helper over inherited channel 3 (`shell-browser.v1`), guidance target queries from [local-context-hud](docs/components/local-context-hud.md) via Contract 21, and authorized action commands from [agent-runtime](docs/components/agent-runtime.md) and [application-adapters](docs/components/application-adapters.md).
+**Consumes:** Authoritative browser permits, policy, exclusions, capture consent from [local-privacy-storage](docs/components/local-privacy-storage.md) via privacy helper over inherited channel 3 (`shell-browser.v1`) and meeting audio forwarding over channel 4 (`shell-meeting-audio.v1`), guidance target queries from [local-context-hud](docs/components/local-context-hud.md) via Contract 21, and authorized action commands from [agent-runtime](docs/components/agent-runtime.md) and [application-adapters](docs/components/application-adapters.md).
 
-**Produces:** Structured browser observations (`browser-observation.event.v1`), target presence/geometry (`BrowserTargetResult`), and action execution receipts (`BrowserActionResult`).
+**Produces:** Structured browser observations (`browser-observation.event.v1`), target presence/geometry (`BrowserTargetResult`), meeting audio chunks (`BrowserMeetingAudioChunk`), and action execution receipts (`BrowserActionResult`).
 
-**Does not own:** Organizational sharing policy, raw cloud upload, independent autonomous job scheduling, action authorization issuance, business outcome verification, or in-browser overlay rendering (shell hosts all presentation windows).
+**Does not own:** Organizational sharing policy, direct cloud networking, speech-to-text processing, independent autonomous job scheduling, action authorization issuance, business outcome verification, or in-browser overlay rendering (shell hosts all presentation windows).
 
-**Boundary requirement:** Browser and OS observations are arbitrated per modality. When connected, the extension is authoritative for web semantics while native OS observation provides window geometry, lifecycle, and optional extension-bound masked snapshots. Native fallback requires certified enterprise-managed browser profiles with verified disabled private browsing. User screen-observation pause immediately stops local browser actions at a safe boundary. Local execution requires exclusive device-wide reservation and `declarativeNetRequest` session navigation guard.
+**Boundary requirement:** Browser and OS observations are arbitrated per modality. When connected, the extension is authoritative for web semantics while native OS observation provides window geometry, lifecycle, and optional extension-bound masked snapshots. Downstream visual extraction routes through the governed cloud inference gateway; the extension maintains zero direct cloud connectivity. Tab audio capture is strictly audio-only (`video: false`) via an offscreen document, initiated by an explicit user toolbar gesture bound to a helper-issued challenge, and restores audible local playback. Native fallback requires certified enterprise-managed browser profiles with verified disabled private browsing. User screen-observation pause immediately stops local browser actions at a safe boundary. Local execution requires exclusive device-wide reservation and `declarativeNetRequest` session navigation guard.
+
 ### 4.4 Meeting and Audio Intelligence
 
-**Responsibility:** Support separately authorized meeting transcription, candidate commitments, and later contextual reminders.
+**Responsibility:** Support separately authorized meeting transcription, candidate commitments, and later contextual reminders (see [detailed technical specification](docs/components/meeting-intelligence.md) and [shared cloud inference contract](docs/architecture/cloud-inference.md)).
 
-**Owns:** Per-meeting capture session state, audio-derived private evidence, speaker/context uncertainty, candidate commitment extraction for employee review.
+**Owns:** `MeetingSessionCoordinator` (meeting/segment state, consent evidence, online/offline lifecycle), `MeetingCaptureSupervisor` (supervision of signed unprivileged `oryn-meeting-worker`), `NativeMeetingSource` (Core Audio process-tap on macOS, WASAPI application-loopback on Windows), `MeetingAudioCapture` (browser offscreen tab capture), `TranscriptAssembler` (text assembly and gap bookkeeping), and `CommitmentReviewCoordinator` (extraction validation, candidate review, saved commitments).
 
-**Consumes:** Organizational meeting policy, participant consent/notice status, employee per-meeting opt-in, local audio availability.
+**Consumes:** Organizational meeting policy, participant consent/notice evidence, employee per-meeting opt-in, cloud inference routes (`meeting.transcribe.*`, `meeting.extract_commitments`), and local audio availability.
 
-**Produces:** Private transcript-derived insights and employee-reviewed commitments; only separately approved sanitized contributions may become shared knowledge.
+**Produces:** Private transcript records, speaker labels, unconfirmed commitment candidates, confirmed commitment projections to HUD (Contract 23), and reviewed meeting handoff proposals to Operational Graph (Contract 24).
 
-**Does not own:** Default always-on audio capture, authority to send customer follow-ups, or organizational policy based solely on what somebody said.
+**Does not own:** Default always-on audio capture, direct speech provider networking (uses LiteLLM gateway), authority to perform business actions or update CRMs automatically, or central transcript storage.
 
-**Boundary requirement:** Screen observation consent does not imply meeting recording consent. If consent requirements are unmet or unclear, recording does not begin.
+**Boundary requirement:** Screen observation consent does not imply meeting recording consent. If consent requirements are unmet or unclear, recording does not begin. Offline recording mode acquires local audio without AI processing and requires fresh authorization before any deferred processing. All cloud inference enforces contractual zero content retention, no model training, and US processing.
 
 ### 4.5 Local Privacy Gate, Evidence Store, and Retention
 
-**Responsibility:** Enforce exclusions and data minimization at source; store private screen/audio evidence locally; govern its retention, export, and deliberate conversion into shareable procedural information. Executes as unprivileged `oryn-privacy-helper`, supervising the native worker and issuing unexpired source permits.
+**Responsibility:** Enforce exclusions and data minimization at source; store private screen/audio evidence locally; operate edge `InferenceEgressClient`; govern retention, export, and deliberate conversion into shareable procedural information. Executes as unprivileged `oryn-privacy-helper`, supervising native observation and meeting workers and issuing unexpired source permits.
 
-**Owns:** Consent state and exclusion enforcement on the device, native worker supervision and watchdog monitoring, source-aware recovery blocker tracking, private capture retention, sensitive-data classification/redaction, volatile ephemeral pipelines when personal retention is off, the employee's review-before-sharing workflow, and local evidence deletion.
+**Owns:** Consent state and exclusion enforcement on the device, native worker and meeting worker supervision, source permits, private capture retention, private meeting records and saved commitment transactions, transcript edits and deletion propagation, `InferenceEgressClient` token attachment and transmission, volatile ephemeral pipelines when personal retention is off, employee review-before-sharing workflow, and local evidence deletion.
 
-**Consumes:** All observation streams, organization restrictions, employee preferences, explicit contribution approvals, and visibility lease renewals from the desktop shell.
+**Consumes:** All observation streams, organization restrictions, employee preferences, explicit contribution approvals, visibility lease renewals from desktop shell, and signed `InferenceAuthorization` tokens from `identity-policy`.
 
-**Produces:** Permitted private evidence for local use; sanitized candidate contributions after explicit review; privacy-status events and authoritative `CaptureSnapshot` updates without leaking excluded content.
+**Produces:** Permitted private evidence for local use; sanitized candidate contributions after explicit review; privacy-status events, authoritative `CaptureSnapshot` updates, and authorized `InferenceRequest` envelopes without leaking excluded content.
 
-**Does not own:** Automatically publishing a playbook, creating an agent from unreviewed raw capture, or providing managers remote playback.
+**Does not own:** Automatically publishing a playbook, creating an agent from unreviewed raw capture, central model routing (owned by control plane / LiteLLM), or providing managers remote playback.
 
-**Boundary requirement:** Protected application categories must be excluded before capture at source; post-capture OCR or classification cannot authorize capture of mandatory excluded content. Mixed windows and accidental sensitive exposure require safe suppression. When `personal_history_retention=false`, live guidance operates ephemerally on volatile work buffers with a strict 30-second TTL without durable writes. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`. The capture gate consumes an ephemeral 100 ms visibility lease from the desktop shell supervisor and immediately revokes capture within 500 ms if unrenewed.
+**Boundary requirement:** Protected application categories must be excluded before capture at source; post-capture cloud OCR or vision extraction cannot authorize capture of mandatory excluded content. Mixed windows and accidental sensitive exposure require safe suppression. When `personal_history_retention=false`, live guidance operates ephemerally on volatile work buffers with a strict 30-second TTL without durable writes; if cloud inference is unavailable, AI features report unavailable without accumulating a deferred backlog. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`. The capture gate consumes an ephemeral 100 ms visibility lease from the desktop shell supervisor and immediately revokes capture within 500 ms if unrenewed.
 ### 4.6 Local Task Understanding, Context Matcher, and Knowledge Cache
 
 **Responsibility:** Interpret the employee's currently permitted activity into candidate task context and match it against approved guidance without continuously needing a central model call.
@@ -665,7 +666,7 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 
 | Producer | Consumer | Information / command | Boundary rule |
 |---|---|---|---|
-| OS/browser/audio observers | Privacy + local evidence | Raw candidate observations and reverse source permits | Filter at source; reverse privacy-to-worker permits and streaming over inherited channels; masked shared-memory frames; no direct cloud pathway |
+| OS/browser/meeting observers | Privacy + local evidence | Raw candidate observations and reverse source permits | Filter at source; reverse privacy-to-worker permits (`GrantObservationPermit`, `RevokeObservationPermit`, `GrantMeetingPermit`, `RevokeMeetingPermit`) and streaming over inherited channels (`os-observation.v1`, `shell-browser.v1`, and channel 4 `shell-meeting-audio.v1`); masked shared-memory frames; native meeting taps and offscreen tab capture; no direct cloud pathway |
 | Local privacy/contribution | Discovery | Employee-approved sanitized task contribution | Preserve consent receipt, provenance, sensitivity and scope |
 | Knowledge Governance | Edge context | Published, access-filtered playbook/peer fix | May be cached only for currently authorized scope |
 | Discovery | Knowledge Governance | Candidate workflow, observed variants, questions | Candidate cannot be auto-published |
@@ -683,9 +684,12 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | Correction | Knowledge/Repair | Accepted expert correction or candidate rule | Different owners approve procedures and policies |
 | Repair | Factory/Simulator | New candidate version and regression requirements | No in-place active version mutation |
 | Governance / domain owners | Command Center | Authorized read models, notifications, audit | Frontend is not an authorization authority |
-| Desktop Shell | Local Privacy Storage | Capture control, visibility lease, and state subscription | Inherited byte-channel control; visibility loss or unrenewed lease immediately stops capture; raw media never crosses control channel |
+| Desktop Shell | Local Privacy Storage | Capture control, visibility lease, and state subscription | Inherited byte-channel control; visibility loss or unrenewed lease immediately stops capture; raw media never crosses control channel; `shell-privacy.v1` minor 2 allocates channel 4 `shell-meeting-audio.v1`; distinct `PauseScreenObservation` and `PauseCapture` controls; typed `MeetingPort` commands |
 | Local Context HUD | Desktop Shell | Guidance cards, highlight targets, and user guidance interactions | Shell hosts all presentation and windows; HUD produces structured models and tracks guide progression; stale context invalidates highlights |
 | Local Context HUD | Browser Extension | Target presence and geometry query | HUD queries target resolution; extension resolves packaged deterministic locators against live DOM and returns desktop coordinates and affine transform; fallback to text-only guidance if geometry unproven |
+| All components / Privacy Helper | Control Plane / LiteLLM Gateway | Governed cloud inference request and authorization | Strict US processing, contractual zero content retention, no model training, route pinning; no local model execution; memory-backed upload spooling only |
+| Local Privacy Storage / Meeting Intelligence | Local Context HUD / Desktop Shell | Confirmed personal commitment projections and review commands | Private-local records only; HUD receives only `open` + `confirmed` commitments; 09:00 default working-zone occurrence; source edits require reconfirmation and suspend reminders |
+| Meeting Intelligence / Contribution Sync | Operational Graph | Reviewed meeting handoff contribution | Sanitized, employee-reviewed handoff proposal; no raw audio or full transcript upload; Operational Graph owns canonical shared status, deduplication, and recipient authorization |
 
 ### 7.3 Shared metadata requirements
 
@@ -762,7 +766,7 @@ sequenceDiagram
     K-->>U: Published guide available (if authorized)
 ```
 
-**Guardrails:** No initial capture without consent. Excluded private material never becomes a shareable observation. Unreviewed local data never enters central discovery. Discovery cannot independently certify a procedure. Publishing does not generate production execution authority.
+**Guardrails:** No initial capture without consent. Excluded private material never becomes a shareable observation. Transient cloud inference via the governed LiteLLM gateway is purpose-authorized with zero retention and does not constitute publication or sharing. Unreviewed local data never enters central discovery. Discovery cannot independently certify a procedure. Publishing does not generate production execution authority.
 
 **Important states:** Private Observation → Shareable Candidate → Contributor Approved → Workflow Candidate → Owner Review → Published / Rejected / Needs Clarification.
 
@@ -977,6 +981,7 @@ An incident can be detected, triaged, contained, investigated, awaiting expert i
 | **Agent and release definitions** | Control plane | Fixed agent versions, scopes, tests, approvals | Immutable lineage; auditable release history |
 | **Production execution records** | Control plane / bounded runner evidence | Jobs, actions, approval decisions, postconditions, incidents | Minimal necessary business audit, scoped access |
 | **Simulation artifacts** | Isolated test environment and permitted artifact store | Synthetic fixtures, test traces, expected outcomes, results | Separated from production; evidence sensitivity tracked |
+| **Transient inference processing** | Control plane / LiteLLM Gateway / Certified US Provider | Ephemeral audio chunks, vision frames, prompt/completion context | Zero content retention after processing; no durable cloud copies; memory-backed spooling only; strict US processing |
 | **Analytics and notifications** | Derived and scoped | Aggregates, issues, reminders, estimates | No forbidden individual activity/surveillance views |
 
 ### 10.2 Storage responsibilities, not vendor commitments
@@ -999,11 +1004,12 @@ A practical starting design may use a local embedded database, a central relatio
 - **Unapproved sanitized organizational workflow candidates:** default retention 365 days, subject to organization policy.
 - **Approved change history and consequential business audit:** default 24 months subject to approved audit schedule and applicable obligations.
 - Deletion/revocation must distinguish **private original capture**, **already approved shared contribution**, **published organizational knowledge**, **execution evidence**, and **legal/audit obligations**.
+- Source evidence expiry/deletion purges raw local media and unconfirmed candidates; an independently saved commitment survives source deletion with `evidence_status = "unavailable"`, whereas explicit full personal data purge removes eligible saved commitments too.
 - A local deletion does not imply that independently approved organizational knowledge automatically disappears, and the interface must explain the distinction and provide the applicable removal/correction process.
 
 ### 10.4 Model/data sensitivity
 
-Model requests are **data egress boundaries**, whether the model is local, customer-controlled, or hosted by an external provider. Each model-bound operation needs an allowlisted sensitivity level, data minimization, customer approval where required, and clear treatment of external provider processing. Model output is untrusted until validated and cannot independently approve policies or actions.
+Model requests are **data egress boundaries**, routed exclusively through the Oryn-managed LiteLLM gateway with contractual zero content retention (ZDR), no training on customer content, and strict United States geographic confinement (see [shared cloud inference contract](docs/architecture/cloud-inference.md)). Each model-bound operation needs an allowlisted sensitivity level, data minimization, customer approval where required, and clear treatment of external provider processing. No on-device model inference executes in v1.0. Model output is untrusted until validated and cannot independently approve policies or actions.
 
 ### 10.5 Cross-tenant separation
 
@@ -1143,6 +1149,7 @@ This section distinguishes **decisions that should remain stable** from choices 
 | Human corrections create proposals and test cases, not instant policy changes | Supports learning without inventing business authority |
 | Compatibility is declared per application and ability | Avoids promising arbitrary software execution |
 | Logical modularity before premature service proliferation | Makes component ownership clear without needless deployment complexity |
+| Cloud-only v1.0 AI inference via LiteLLM gateway with ZDR and US processing | Ensures enterprise data protection, zero content retention, and auditability without maintaining uncertified local inference runtimes |
 
 ### 13.2 Deferred design decisions by subsystem
 
@@ -1151,7 +1158,7 @@ This section distinguishes **decisions that should remain stable** from choices 
 | **Desktop Shell** | Resolved in [detailed technical specification](docs/components/desktop-shell.md) (Tauri 2, Rust core, React views, AppKit/Win32 native status adapters, inherited IPC, ephemeral visibility lease, durable pause, bounded offline policy). | Always-visible consent state, movable status badge, and fail-closed capture controls |
 | **Native Capture Engine** | Resolved in [detailed technical specification](docs/components/os-observation.md) (Rust core + Swift/Win32 bridges, child worker supervised by privacy helper, inherited byte channels, 8 MiB shared-memory snapshots with pre-transfer masking, all-visible multi-window scope, source-specific crash containment, certified managed browser fallback). | Exclusion-first private capture, honest capability reporting, and zero unmasked pixel leakage |
 | **Browser Extension / Bridge** | Resolved in [detailed technical specification](docs/components/browser-extension.md) (Manifest V3, TypeScript service worker + isolated content scripts, Native Messaging host `oryn-browser-host`, shell broker endpoint, P-256 WebCrypto mutual authentication, `declarativeNetRequest` session navigation guard, deterministic multi-tier locators, safe action primitives, local-action pause). | Local privacy gate, explicit pairing, origin-specific grants, single-job reservation, and authorization for actions |
-| **Meeting/Audio** | Capture pipeline, transcription/diarization, participant notice UX, local processing | Per-meeting authorization and private evidence |
+| **Meeting/Audio** | Resolved in [detailed technical specification](docs/components/meeting-intelligence.md) and [shared cloud inference contract](docs/architecture/cloud-inference.md) (Core Audio/WASAPI taps, tabCapture, LiteLLM live/near-live STT, commitment review, reminders). | Per-meeting authorization, private evidence, and zero-retention US cloud inference |
 | **Local Storage and Privacy** | Local schema, encryption, redaction stages, retention cleanup, evidence references, offline behavior | Raw local-only and review-before-sharing |
 | **Local Context + HUD** | Task segmentation, signature matching, cache layout, suggestion ranking, overlay rendering | No inferred authority, nonintrusive guidance |
 | **Control Plane / APIs** | Language/framework, module boundaries, auth/session mechanisms, endpoints, internal protocols | Domain ownership, tenant scoping, consistent validation |
