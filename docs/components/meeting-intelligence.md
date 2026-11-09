@@ -426,8 +426,7 @@ Transmitted over Native Messaging between offscreen document and shell broker (m
 
 ### 5.5 Logical Private Storage Records
 
-Owned transactionally by `local-privacy-storage` on the employee device. Content never leaves the endpoint without explicit authorization:
-
+Owned transactionally by `local-privacy-storage` on the employee device within a dedicated, unified meeting SQLCipher 4 database partition (`meet_<session_id>.db`) and sibling encrypted audio file (`meet_<session_id>-audio.opus`). Encrypted under an independent 256-bit partition key managed by the privacy helper's key catalog. Content never leaves the endpoint without explicit authorization. Storing all session records in one partition enables single-transaction ACID commits across transcript edits, dependent candidate invalidations, and saved commitment updates:
 1. **`MeetingSessionRecord`:** `session_id: UUID`, `organization_id: string`, `actor_id: string`, `meeting_key: string`, `application_profile_id: string`, `recording_mode: "online" | "offline"`, `created_at: Timestamp`, `ended_at: Timestamp | null`, `retention_expires_at: Timestamp`, `status: "recording" | "ended" | "purged"`.
 2. **`CaptureSegment`:** `segment_id: UUID`, `meeting_session_id: UUID`, `segment_index: u32`, `start_sample: u64`, `end_sample: u64`, `start_monotonic_ms: u64`, `end_monotonic_ms: u64`, `permit_generation: u32`, `interruption_reason: string | null`.
 3. **`AudioTrackManifest`:** `manifest_id: UUID`, `meeting_session_id: UUID`, `segment_id: UUID`, `track_id: u32` (0 = remote, 1 = microphone), `sample_rate: 16000`, `channels: 1`, `total_samples: u64`, `sha256: string`, `storage_key: string`.
@@ -577,8 +576,7 @@ stateDiagram-v2
 
 1. **English Certification:** Initial certified speech operations are strictly English. Non-English speech is not assumed to be silence; where language confidence is low or unsupported, the span is labeled `Unable to Transcribe Reliably`.
 2. **Near-Live Chunking:** If `meeting.transcribe.live` is not certified for the configured provider, the system operates in `near_live` mode with 10-second audio chunks and a 1-second boundary overlap. Deduplication at chunk boundaries requires exact monotonic sample alignment and deterministic token agreement; unresolvable boundary text is retained with an explicit uncertainty flag.
-3. **Session Duration and Size Caps:** Continuous meeting sessions are hard-capped at 4 hours or 128 MiB of encoded audio. When the limit is reached, acquisition halts cleanly, records a boundary receipt, and offers review for the captured portion.
-4. **Timeouts:** Flush timeout for live streams is 10 seconds. Outer timeout for final transcription and LLM extraction is 120 seconds. If timeouts expire, local audio evidence is preserved for manual retry and partial unfinalized spans are marked uncertain.
+3. **Session Duration and Size Caps:** Continuous meeting sessions are hard-capped at 4 hours or 128 MiB of encoded audio, and 8 MiB of structured database content in `meet_<session_id>.db`. When either limit is reached, acquisition halts cleanly and visibly, records a boundary receipt, and offers review for the captured portion without silent truncation or false success.
 
 ### 7.2 Offline Recording and Deferred Processing
 

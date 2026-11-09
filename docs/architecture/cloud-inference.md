@@ -354,11 +354,12 @@ Before any payload leaves the employee device:
 ### 6.4 Zero-Retention Personal History Mode
 
 When `personal_history_retention = false`:
-- Screen-derived visual inference operates ephemerally with a strict 30-second volatile lifetime.
-- Results are held in volatile memory only and discarded immediately after real-time guidance matching.
-- No inputs, intermediate representations, embeddings, or results are written to disk.
-- If cloud inference is unavailable or interrupted, AI-backed features display an explicit unavailable state; no offline deferred backlog is accumulated.
-
+- Applies strictly to new automatic screen observation history; existing previously acquired screen evidence remains readable and deletable until its original unchanged deadline.
+- Separately authorized per-meeting audio recordings and transcripts continue storing under their explicit session-level retention bounds.
+- Screen-derived visual inference operates strictly ephemerally with a 30-second volatile memory ceiling from original frame acquisition.
+- Buffers are held in locked, non-swappable memory and zeroed immediately after real-time guidance matching or visual extraction.
+- Zero inputs, intermediate representations, visual embeddings, candidate drafts, or model completions are persisted to disk.
+- If cloud inference is unavailable, rate-limited, or paused, AI-backed features immediately report unavailable without accumulating a deferred upload queue or backlog.
 ---
 
 ## 7. Component Operation Map
@@ -398,7 +399,7 @@ This table records all document families across the Oryn repository and their re
 | Document Family | Reconciliation Status | Notes and Scope |
 |---|---|---|
 | `PRODUCT.md` | Reconciled | Replaced absolute zero-egress/local-AI claims with local durable ownership + authorized transient cloud processing. Added §31.9 (ORY-071–076), §32.1 blockers, §33 roadmap. |
-| `TECHNICAL.md` | Reconciled | Updated baseline (§0.4), invariants (§1), deployment (§2), edge (§4), contracts (§7), data domains (§10), decisions (§13–14). Established 24 total contracts. |
+| `TECHNICAL.md` | Reconciled | Updated baseline (§0.4), invariants (§1), deployment (§2), edge (§4), contracts (§7), data domains (§10), decisions (§13–14). Established 25 total contracts. |
 | `docs/architecture/cloud-inference.md` | Authoritative | Canonical shared specification for all cloud inference and gateway governance. |
 | `docs/architecture/contracts/README.md` | Reconciled | Added Contracts 22 (Governed Cloud Inference), 23 (Confirmed Commitment Projection), 24 (Reviewed Meeting Handoff). Updated Contracts 1 and 19. |
 | `docs/architecture/data-classification.md` | Reconciled | Added transient inference processing data flow; clarified local raw retention and ZDR guarantees. |

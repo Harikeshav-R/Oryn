@@ -52,11 +52,11 @@ Simulation execution environments must be completely network-isolated from produ
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Infrastructure Context Reference:** Provides foundational hosting, database, and network fabrics supporting all 24 agreements in [Contracts Catalog](../architecture/contracts/README.md).
+- **Infrastructure Context Reference:** Provides foundational hosting, database, and network fabrics supporting all 25 agreements in [Contracts Catalog](../architecture/contracts/README.md).
 - **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Deploys and manages the LiteLLM Proxy gateway; provisions vault-backed provider credentials; disables message/spend body logging and caching; enforces RAM-disk spooling and US network egress confinement (see [cloud-inference](../architecture/cloud-inference.md)).
 - **Secret Vault Protocol:** Delivers short-lived, least-privileged credentials to [application-adapters](application-adapters.md) and [agent-runtime](agent-runtime.md).
 - **Audit Logging Bus:** Ingests immutable audit events from all system services for secure long-term storage.
-## Trust and deployment boundaries
+- **Private Evidence Boundary:** Central infrastructure explicitly maintains zero backup infrastructure, recovery key escrow, or administrative override keys for employee private evidence. Device-local encrypted storage and key management are governed strictly by [local-privacy-storage](local-privacy-storage.md).
 
 ### Process and Security Boundaries
 - **Deployment Location:** Multi-cloud or customer-dedicated infrastructure (Kubernetes, managed PostgreSQL, KMS, object storage).

@@ -59,8 +59,11 @@ A machine learning model may request authorization, but cannot grant it. Inferen
 - **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes specific action authorization requests from [agent-runtime](agent-runtime.md) and local executors (including browser actions delegated to [browser-extension](browser-extension.md)); issues cryptographic authorization tokens bound to stable `action_sha256` proposal digests, enforcing item-level approval for Tier 3 actions and unconditional denial for Tier 4.
 - **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers authorized role-scoped read models and audit events to [command-center-analytics](command-center-analytics.md).
 - **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Issues and validates signed `InferenceAuthorization` tokens for [cloud-inference](../architecture/cloud-inference.md); enforces tenant inference budgets, purpose restrictions, ZDR terms, and US geographic confinement.
-- **Revocation Broadcasts:** Emits `policy.changed`, `access.revoked`, and `consent.revoked` domain events to invalidate distributed caches.
-## Trust and deployment boundaries
+- **Local Privacy Policy Artifact Issuance:** Issues Ed25519-signed policy artifacts to [local-privacy-storage](local-privacy-storage.md) using canonical RFC 8785 JSON encoding:
+  - `SignedCapturePolicyLease` (`privacy.capture-policy.v1`): Bounded capture lease (max 24 hours) specifying permitted categories, mandatory exclusion catalog revision, application exclusions, and maximum raw retention bounds.
+  - `SignedRetentionVerdict` (`privacy.retention-verdict.v1`): Authoritative legal hold verdict (max 24 hours) with complete source scope; missing or incomplete coverage blocks voluntary destruction and uninstallation.
+  - `SignedArtifactPolicy` (`privacy.artifact-policy.v1`): Authorizes redacted still-image excerpt sharing for approved organizational purposes, audiences, and maximum artifact lifetimes.
+- **Revocation Broadcasts:** Emits `policy.changed`, `access.revoked`, and `consent.revoked` domain events to invalidate distributed caches and terminate active capture or execution leases upon reconnection.
 
 ### Process and Security Boundaries
 - **Deployment Location:** Core control-plane service running within the hardened organizational cloud environment.

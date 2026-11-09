@@ -114,6 +114,9 @@ Channel 3 is allocated strictly for browser source traffic between `BrowserBridg
 #### Inherited Channel 4: Browser Meeting Audio Stream (`shell-meeting-audio.v1`)
 Channel 4 is allocated strictly for browser meeting tab audio bytes forwarded from `BrowserBridgeBroker` to `oryn-privacy-helper`. Base64 chunks received over Native Messaging are decoded by the shell broker into preallocated buffers and transmitted as binary frames (4-byte length prefix + 64-byte `ORYA` header + 16 kHz 16-bit mono PCM). Bulk audio never crosses Channels 1, 2, or 3, and is never exposed to UI renderer processes.
 
+#### Direct Helper-to-Helper Link: Privacy-Context Stream (`privacy-context.v1`, Contract 25)
+When spawning `oryn-privacy-helper` and `oryn-hud-helper`, the host creates a dedicated connected Unix domain stream socket pair (`socketpair`) on macOS or an anonymous pipe pair (`CreatePipe`) on Windows. The host passes one end to `oryn-privacy-helper` and the counterpart end to `oryn-hud-helper`, verifies the digital signatures of both child binaries, and immediately closes its own copies of both descriptors. This establishes a direct, peer-to-peer helper channel for Contract 25 (`privacy-context.v1`), allowing sanitized observations and demonstration proposals to flow directly between privacy and HUD engines without multiplexing onto the shell control channel (Contract 19) or routing through the shell broker.
+
 #### Protocol Handshake (`shell-privacy.v1`)
 Immediately following channel creation, the host and helper execute a mandatory protocol handshake. The protocol version is `shell-privacy.v1` (major 1, minor 2).
 **Host Handshake Hello:**
@@ -222,15 +225,17 @@ When an employee reviews a sanitized task demonstration for potential organizati
   {
     "contribution_id": "contrib_8f7a1c9e",
     "revision": "4",
-    "content_digest": "sha256-4b2a8f9c1e7a...",
-    "decision": "approve" | "decline",
+    "content_digest": "sha256-4b2a8f9c1e7a00112233445566778899aabbccddeeff00112233445566778899",
+    "decision": "approve",
     "redaction_overrides": {
-      "mask_field_ids": ["field_account_num"],
-      "remove_step_indices": [3]
+      "mask_field_ids": [],
+      "remove_step_indices": []
     }
   }
   ```
-- **Response:** committal receipt with signed audit hash. Only the review/storage owner emits the downstream domain event `contribution.approved_for_sharing`. The desktop shell never manufactures sharing events or digital signatures.
+  - `decision` must be `"approve"` or `"decline"`.
+  - If `redaction_overrides` contains non-empty modifications (e.g. newly masked fields, removed steps, or updated artifact crops), the helper produces a fresh preview, advances the candidate revision and digest, and returns `PRIVACY_PREVIEW_STALE`. The employee must inspect and confirm the updated digest; unseen transformed content cannot be approved in the same mutation.
+- **Response:** Committal receipt with signed audit hash. Only the review/storage owner (`oryn-privacy-helper`) constructs the Ed25519-signed review attestation and emits the downstream domain event `contribution.approved_for_sharing`. The desktop shell never manufactures sharing events or digital signatures.
 
 #### 2. HUD Guidance Presentation Interface (`HudPresentationPort`)
 `local-context-hud` produces structured guidance models; `desktop-shell` renders them.
@@ -269,9 +274,10 @@ When an employee reviews a sanitized task demonstration for potential organizati
   {
     "guidance_session_id": "gsess_1092a8b",
     "context_revision": "841",
-    "action": "confirm_step" | "back" | "skip_optional" | "stop" | "dismiss" | "snooze_1h" | "mute_category"
+    "action": "confirm_step"
   }
   ```
+  - `action` is one of: `"confirm_step"`, `"back"`, `"skip_optional"`, `"stop"`, `"dismiss"`, `"snooze_1h"`, `"mute_category"`.
 
 #### 3. Consequential Action Approval Interface (`IdentityPort`)
 When a Tier 2 or Tier 3 action requires employee approval:
@@ -282,10 +288,11 @@ When a Tier 2 or Tier 3 action requires employee approval:
     "command_id": "cmd_91a02b3c",
     "proposal_id": "prop_conseq_7812",
     "proposal_revision": "2",
-    "proposal_digest": "sha256-8a71b2c4...",
-    "decision": "approve" | "reject"
+    "proposal_digest": "sha256-8a71b2c400112233445566778899aabbccddeeff00112233445566778899aabb",
+    "decision": "approve"
   }
   ```
+  - `decision` must be `"approve"` or `"reject"`.
 - **Responses:** Distinguishes `accepted`, `rejected`, `expired`, `stale`, `forbidden`, and `unknown_delivery`. If `unknown_delivery` occurs, the UI displays an ambiguous status and refuses to repeat writes without reconciliation.
 
 #### 4. Local History and Privacy Reads
@@ -512,6 +519,7 @@ export interface MeetingCaptureSummary {
 }
 
 export interface CaptureSourceState {
+  source_id: "native_os" | "browser" | "meeting";
   health: "ready" | "degraded" | "unavailable";
   activities: SourceCategoryActivity[];
   recovery_blocker: null | "crash" | "hang" | "unclean_restart";

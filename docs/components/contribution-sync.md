@@ -10,11 +10,11 @@ Status: Baseline brief — detailed design pending
 The Contribution and Synchronization Gateway mediates the boundary between private device knowledge and organization-shared knowledge, securely transmitting employee-approved sanitized contributions to the control plane and delivering published guidance back to the endpoint.
 
 ### Owns
-- Validation and transmission of employee-approved workflow contributions.
-- Generating and recording cryptographic contribution review receipts.
-- Tracking local-to-cloud connectivity state, offline sync queues, and retry policies.
+- Secure transport, queueing, and network transmission of employee-approved workflow contributions and reviewed meeting handoffs.
+- Verification and preservation of employee Ed25519 review attestations generated and signed by [local-privacy-storage](local-privacy-storage.md).
+- Generating and recording network synchronization and central delivery receipts (`delivery_receipt_id`).
+- Tracking local-to-cloud connectivity state, encrypted offline sync queues, retry policies, and delivery status projections.
 - Secure retrieval, caching, and cache invalidation of published organizational playbooks and peer fixes.
-
 ### Consumes
 - Sanitized, reviewed task contributions from [local-privacy-storage](local-privacy-storage.md).
 - Centrally published playbooks, rules, and policy updates from [operational-graph](operational-graph.md) and [control-plane](control-plane.md).
@@ -34,7 +34,7 @@ The Contribution and Synchronization Gateway mediates the boundary between priva
 - Central identity and authorization rules (owned by [identity-policy](identity-policy.md)).
 
 ### Boundary Requirement
-Offline behavior must preserve employee privacy and fail safely. Upon network reconnection, the gateway must process policy, restriction, and access revocation updates before transmitting any queued outgoing contributions. Any previously approved item whose scope has since been revoked is dropped from the egress queue. Unreviewed observations and drafts must never be queued or automatically uploaded upon network reconnection. Raw video, screen captures, and audio files are strictly prohibited from network egress.
+Offline behavior must preserve employee privacy and fail safely. The privacy helper (`oryn-privacy-helper`) constructs and signs the authoritative employee review attestation (`ReviewedContributionV1`) and manages the release fence; the contribution gateway cannot manufacture employee approval. If an employee deletes underlying private source evidence while a contribution is queued, the privacy helper's local release fence immediately transitions to `cancelled`, and the sync gateway drops the queued upload idempotently. If an upload is already in-flight when deletion occurs, the delivery projection transitions to `delivery_unknown`, local deletion finishes independently, and the status reconciles without re-uploading source data. Upon network reconnection, the gateway must process policy, restriction, and access revocation updates before transmitting any queued outgoing contributions. Any previously approved item whose scope has since been revoked is dropped from the egress queue. Unreviewed observations and drafts must never be queued or automatically uploaded upon network reconnection. Raw video, screen captures, full transcripts, and audio files are strictly prohibited from network egress; only sanitized text and purpose-bound redacted still images (<= 1920x1080, <= 1 MiB, max 4 per contribution) under a valid artifact policy may be transmitted.
 ## Product requirements
 
 ### Key Product Requirements ([PRODUCT.md §§4.4, 10, 25.5–7; ORY-007, ORY-012](../../PRODUCT.md))

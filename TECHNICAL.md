@@ -344,17 +344,17 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 4.5 Local Privacy Gate, Evidence Store, and Retention
 
-**Responsibility:** Enforce exclusions and data minimization at source; store private screen/audio evidence locally; operate edge `InferenceEgressClient`; govern retention, export, and deliberate conversion into shareable procedural information. Executes as unprivileged `oryn-privacy-helper`, supervising native observation and meeting workers and issuing unexpired source permits.
+**Responsibility:** Enforce exclusions and data minimization at source; store private screen/audio evidence locally in bounded SQLCipher 4 partitions and encrypted media blobs; operate edge `InferenceEgressClient`; govern retention, export, and deliberate conversion into shareable procedural information; stream sanitized observation feeds to the local context HUD over Contract 25 (`privacy-context.v1`). Executes as unprivileged `oryn-privacy-helper`, supervising native observation and meeting workers and issuing unexpired source permits (100 ms renewal / 300 ms expiry).
 
-**Owns:** Consent state and exclusion enforcement on the device, native worker and meeting worker supervision, source permits, private capture retention, private meeting records and saved commitment transactions, transcript edits and deletion propagation, `InferenceEgressClient` token attachment and transmission, volatile ephemeral pipelines when personal retention is off, employee review-before-sharing workflow, and local evidence deletion.
+**Owns:** Consent state and exclusion enforcement on the device, native worker and meeting worker supervision, source permits, private capture retention in bounded SQLCipher 4 partitions, private meeting records and saved commitment transactions in unified meeting databases, transcript edits and deletion propagation, `InferenceEgressClient` token attachment and transmission, volatile ephemeral pipelines when personal retention is off (strict 30-second TTL), employee review-before-sharing workflow with Ed25519-signed review attestations, redacted still-image excerpt derivation, crash-safe selective purge via independent key destruction and catalog generation commits, and local evidence deletion.
 
-**Consumes:** All observation streams, organization restrictions, employee preferences, explicit contribution approvals, visibility lease renewals from desktop shell, and signed `InferenceAuthorization` tokens from `identity-policy`.
+**Consumes:** All observation streams over Contract 1 (`os-observation.v1`, `shell-browser.v1`, `shell-meeting-audio.v1`, native meeting audio pipes), signed capture policy leases, signed retention verdicts, and signed artifact policies from `identity-policy`, employee preferences and capture commands over Contract 19 (`shell-privacy.v1` minor 2), explicit contribution review decisions from desktop shell, ephemeral visibility lease renewals from desktop shell supervisor (100 ms lease / 500 ms cutoff), reverse demonstration proposals from local context HUD over Contract 25 (`privacy-context.v1`), and signed `InferenceAuthorization` tokens from `identity-policy`.
 
-**Produces:** Permitted private evidence for local use; sanitized candidate contributions after explicit review; privacy-status events, authoritative `CaptureSnapshot` updates, and authorized `InferenceRequest` envelopes without leaking excluded content.
+**Produces:** Permitted private evidence for local use; sanitized candidate contributions after explicit review (`ReviewedContributionV1`) delivered via `contribution-sync` over Contract 2; privacy-status events, authoritative `CaptureSnapshot` updates, and purge receipts over Contract 19; sanitized observation streams (`PermittedObservationV1`) to `local-context-hud` over Contract 25; and authorized `InferenceRequest` envelopes to the LiteLLM gateway over Contract 22 without leaking excluded content.
 
-**Does not own:** Automatically publishing a playbook, creating an agent from unreviewed raw capture, central model routing (owned by control plane / LiteLLM), or providing managers remote playback.
+**Does not own:** Automatically publishing a playbook, creating an agent from unreviewed raw capture, central model routing (owned by control plane / LiteLLM), providing managers remote playback, network queue transport (owned by `contribution-sync`), or task segmentation/ranking in the HUD.
 
-**Boundary requirement:** Protected application categories must be excluded before capture at source; post-capture cloud OCR or vision extraction cannot authorize capture of mandatory excluded content. Mixed windows and accidental sensitive exposure require safe suppression. When `personal_history_retention=false`, live guidance operates ephemerally on volatile work buffers with a strict 30-second TTL without durable writes; if cloud inference is unavailable, AI features report unavailable without accumulating a deferred backlog. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`. The capture gate consumes an ephemeral 100 ms visibility lease from the desktop shell supervisor and immediately revokes capture within 500 ms if unrenewed.
+**Boundary requirement:** Protected application categories must be excluded before capture at source; post-capture cloud OCR or vision extraction cannot authorize capture of mandatory excluded content. Mixed windows and accidental sensitive exposure require safe suppression. When `personal_history_retention=false`, live guidance operates ephemerally on volatile work buffers with a strict 30-second TTL without durable writes; if cloud inference is unavailable, AI features report unavailable without accumulating a deferred backlog. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`. The capture gate consumes an ephemeral 100 ms visibility lease from the desktop shell supervisor and immediately revokes capture within 500 ms if unrenewed. Legal holds prevent voluntary deletion within existing retention deadlines but cannot extend raw retention past expiry or grant remote manager access. No central backup, recovery key, or recovery escrow exists for private evidence; device/key loss permanently loses private history.
 ### 4.6 Local Task Understanding, Context Matcher, and Knowledge Cache
 
 **Responsibility:** Interpret the employee's currently permitted activity into candidate task context and match it against approved guidance without continuously needing a central model call.
@@ -387,18 +387,15 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 **Responsibility:** Mediate the boundary between private device knowledge and organization-shared knowledge; deliver approved playbooks/context back to the device.
 
-**Owns:** Eligibility of outgoing contributions, review status, synchronization receipts, connectivity state, and authorized retrieval of published guidance.
+**Owns:** Transport, encrypted queueing, and delivery of employee-approved workflow contributions (`ReviewedContributionV1`) and reviewed meeting handoffs (`ReviewedMeetingHandoffProposal`); delivery receipts; connectivity state; and authorized retrieval of published guidance.
 
-**Consumes:** Employee-approved sanitized contributions, centrally published organizational knowledge, access-policy changes, local connectivity state.
+**Consumes:** Employee-reviewed contributions with Ed25519 review attestations signed by [local-privacy-storage](docs/components/local-privacy-storage.md), centrally published playbooks and rules from [operational-graph](docs/components/operational-graph.md), access-policy changes from [identity-policy](docs/components/identity-policy.md), and local connectivity state.
 
-**Produces:** Authenticated organizational contributions, delivery acknowledgments, guide cache updates, revocation/policy notifications.
+**Produces:** Authenticated organizational contributions to [workflow-discovery](docs/components/workflow-discovery.md), delivery acknowledgments, guide cache updates, and revocation notifications.
 
-**Does not own:** Raw media uploads, automatic publication, or bypassing consent when offline.
+**Does not own:** Generating or signing employee review approvals (owned by [local-privacy-storage](docs/components/local-privacy-storage.md)), raw media uploads, or automatic publication.
 
-**Boundary requirement:** Reconnection order must process policy and revocation updates before outgoing approved contributions. Unreviewed drafts never upload automatically.
-
-**Boundary requirement:** Offline behavior must preserve privacy and fail safely. Unreviewed observations must never be auto-uploaded when connectivity returns. Revoked access invalidates affected local guidance/execution abilities according to policy.
-
+**Boundary requirement:** Reconnection order must process policy and revocation updates before outgoing approved contributions. Unreviewed drafts never upload automatically. If underlying source evidence is deleted locally while queued, the privacy helper's authoritative release fence cancels the release, and the sync gateway drops the queued upload idempotently. Transmitted artifacts are limited strictly to sanitized text narratives and purpose-bound redacted still images (<= 1920x1080, <= 1 MiB, max 4 per contribution) under a valid artifact policy; no audio/video clips, raw screenshots, or full transcripts may cross the boundary.
 ---
 
 ## 5. Organizational Control Plane and Knowledge Services
@@ -667,7 +664,7 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | Producer | Consumer | Information / command | Boundary rule |
 |---|---|---|---|
 | OS/browser/meeting observers | Privacy + local evidence | Raw candidate observations and reverse source permits | Filter at source; reverse privacy-to-worker permits (`GrantObservationPermit`, `RevokeObservationPermit`, `GrantMeetingPermit`, `RevokeMeetingPermit`) and streaming over inherited channels (`os-observation.v1`, `shell-browser.v1`, and channel 4 `shell-meeting-audio.v1`); masked shared-memory frames; native meeting taps and offscreen tab capture; no direct cloud pathway |
-| Local privacy/contribution | Discovery | Employee-approved sanitized task contribution | Preserve consent receipt, provenance, sensitivity and scope |
+| Local privacy / Contribution sync | Discovery | Employee-approved sanitized task contribution | Privacy helper generates and signs Ed25519 review attestation (`ReviewedContributionV1`); contribution-sync verifies attestations and manages encrypted queue and delivery receipts; sanitized text and purpose-bound redacted still images only under valid artifact policy; no raw media or private evidence IDs cross boundary |
 | Knowledge Governance | Edge context | Published, access-filtered playbook/peer fix | May be cached only for currently authorized scope |
 | Discovery | Knowledge Governance | Candidate workflow, observed variants, questions | Candidate cannot be auto-published |
 | Knowledge Governance | Agent Factory | Approved capability, rules, postconditions | Immutable/versioned references |
@@ -690,6 +687,7 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | All components / Privacy Helper | Control Plane / LiteLLM Gateway | Governed cloud inference request and authorization | Strict US processing, contractual zero content retention, no model training, route pinning; no local model execution; memory-backed upload spooling only |
 | Local Privacy Storage / Meeting Intelligence | Local Context HUD / Desktop Shell | Confirmed personal commitment projections and review commands | Private-local records only; HUD receives only `open` + `confirmed` commitments; 09:00 default working-zone occurrence; source edits require reconfirmation and suspend reminders |
 | Meeting Intelligence / Contribution Sync | Operational Graph | Reviewed meeting handoff contribution | Sanitized, employee-reviewed handoff proposal; no raw audio or full transcript upload; Operational Graph owns canonical shared status, deduplication, and recipient authorization |
+| Local Privacy Storage | Local Context HUD | Sanitized observation feed and reverse demonstration proposals | Direct helper-to-helper socketpair/anonymous pipe link passed at launch; length-prefixed protocol `privacy-context.v1`; bounded 128-message / 8 MiB buffer; no raw media or DOM trees; reverse demonstration proposals validated before local storage or contribution review |
 
 ### 7.3 Shared metadata requirements
 
@@ -1000,13 +998,15 @@ A practical starting design may use a local embedded database, a central relatio
 
 ### 10.3 Retention and deletion
 
-- **Private raw media:** product default 7 days; employee may select 1–6 days; explicitly permitted extension up to a 14-day maximum.
+- **Private raw media:** product default 7 days; employee may select 1–6 days; explicitly permitted extension up to a 14-day maximum. Retention deadlines are fixed at acquisition time; extensions apply future-only, whereas shortening restricts existing eligible evidence immediately.
+- **Encrypted storage architecture:** Stored locally in profile-bound SQLCipher 4 encrypted database partitions and independently encrypted media files (AES-256-GCM, 1 MiB chunking, 256-bit random keys). Governed by an encrypted key catalog anchored to an OS-protected master credential in macOS Keychain or Windows Credential Manager. No central backup, no recovery key, and no recovery escrow; key loss permanently loses private history.
 - **Unapproved sanitized organizational workflow candidates:** default retention 365 days, subject to organization policy.
 - **Approved change history and consequential business audit:** default 24 months subject to approved audit schedule and applicable obligations.
-- Deletion/revocation must distinguish **private original capture**, **already approved shared contribution**, **published organizational knowledge**, **execution evidence**, and **legal/audit obligations**.
-- Source evidence expiry/deletion purges raw local media and unconfirmed candidates; an independently saved commitment survives source deletion with `evidence_status = "unavailable"`, whereas explicit full personal data purge removes eligible saved commitments too.
-- A local deletion does not imply that independently approved organizational knowledge automatically disappears, and the interface must explain the distinction and provide the applicable removal/correction process.
-
+- **Legal holds and compliance:** A valid, signed retention verdict blocks voluntary employee deletion of eligible records strictly within their existing retention deadline. Holds cannot authorize new capture, cannot provide manager or administrative browsing access to raw timelines, and cannot extend retention beyond the original raw retention deadline. Expired records are permanently purged regardless of hold status. Offline operation without a verified hold verdict blocks voluntary deletion.
+- **Deletion/revocation must distinguish:** **private original capture**, **already approved shared contribution**, **published organizational knowledge**, **execution evidence**, and **legal/audit obligations**.
+- **Source evidence expiry/deletion:** purges raw local media, source transcripts, and unconfirmed candidates; an independently saved commitment survives source deletion with `evidence_status = "unavailable"`, whereas explicit full personal data purge removes eligible saved commitments too. A transcript edit invalidates dependent candidates and marks saved commitments `needs_reconfirmation` in a single SQLite transaction.
+- **Selective deletion crash-safety:** Executed via control store deny fences, independent partition rebuilds under fresh encryption keys from surviving rows only, and an atomic OS credential update as the generation commit point.
+- **A local deletion does not imply:** that independently approved organizational knowledge automatically disappears, and the interface must explain the distinction and provide the applicable removal/correction process. Supported client uninstallation verifies legal holds, halts all capture, securely purges unheld private data, and emits a cryptographic purge receipt.
 ### 10.4 Model/data sensitivity
 
 Model requests are **data egress boundaries**, routed exclusively through the Oryn-managed LiteLLM gateway with contractual zero content retention (ZDR), no training on customer content, and strict United States geographic confinement (see [shared cloud inference contract](docs/architecture/cloud-inference.md)). Each model-bound operation needs an allowlisted sensitivity level, data minimization, customer approval where required, and clear treatment of external provider processing. No on-device model inference executes in v1.0. Model output is untrusted until validated and cannot independently approve policies or actions.
@@ -1055,12 +1055,14 @@ Retries must be safe under the actual application's idempotency and readback cap
 ### 11.5 Offline/disconnect behavior
 
 - Desktop observation may continue **only within active consent and local policy**, with private local retention still enforced. Local capture policy validity is capped at an absolute maximum of **24 hours** from issuance while disconnected; upon expiration, capture halts until connectivity is restored and the employee explicitly resumes.
+- **Trusted-time enforcement:** Boot-monotonic deadlines govern in-flight timeouts. Cross-boot retention requires signed trusted-time anchors and a persisted high-water mark. System clock rollback or uncertainty yields `untrusted_clock`, halting capture and denying history reads.
 - Local guidance can use permitted previously synced playbooks, visibly marked when stale where correctness matters.
 - New shared contributions wait for the employee's explicit review; reconnection never turns drafts into automatic uploads.
+- **Deletion racing upload:** If an employee deletes private evidence while an approved contribution is in-flight or queued, an authoritative local release fence cancels queued unsent items immediately. Dispatched network uploads mark delivery state `delivery_unknown`, allow local purge to complete, and reconcile via ID without retransmitting deleted source data.
+- **Storage capacity limits:** When storage quota (10 GiB) or low disk floor (1 GiB) is reached, expired records are purged first. If space remains exhausted, affected capture sources halt cleanly and prompt user action; unexpired records are never evicted early, and capture never silently drops to unencrypted ephemeral mode.
 - Privileged execution requiring current central authorization pauses when authority cannot be established.
 - Running jobs retain durable state, and cannot assume an incomplete external action did not happen.
 - Revoked policies must stop new restricted behavior; detailed revocation latency/reconnection mechanics belong to component specs.
-
 ### 11.6 Failure ownership matrix
 
 | Failure | Detecting component | Owning response | Default safe behavior |
@@ -1159,7 +1161,7 @@ This section distinguishes **decisions that should remain stable** from choices 
 | **Native Capture Engine** | Resolved in [detailed technical specification](docs/components/os-observation.md) (Rust core + Swift/Win32 bridges, child worker supervised by privacy helper, inherited byte channels, 8 MiB shared-memory snapshots with pre-transfer masking, all-visible multi-window scope, source-specific crash containment, certified managed browser fallback). | Exclusion-first private capture, honest capability reporting, and zero unmasked pixel leakage |
 | **Browser Extension / Bridge** | Resolved in [detailed technical specification](docs/components/browser-extension.md) (Manifest V3, TypeScript service worker + isolated content scripts, Native Messaging host `oryn-browser-host`, shell broker endpoint, P-256 WebCrypto mutual authentication, `declarativeNetRequest` session navigation guard, deterministic multi-tier locators, safe action primitives, local-action pause). | Local privacy gate, explicit pairing, origin-specific grants, single-job reservation, and authorization for actions |
 | **Meeting/Audio** | Resolved in [detailed technical specification](docs/components/meeting-intelligence.md) and [shared cloud inference contract](docs/architecture/cloud-inference.md) (Core Audio/WASAPI taps, tabCapture, LiteLLM live/near-live STT, commitment review, reminders). | Per-meeting authorization, private evidence, and zero-retention US cloud inference |
-| **Local Storage and Privacy** | Local schema, encryption, redaction stages, retention cleanup, evidence references, offline behavior | Raw local-only and review-before-sharing |
+| **Local Storage and Privacy** | Resolved in [detailed technical specification](docs/components/local-privacy-storage.md) and [ADR-0007](docs/adr/0007-private-evidence-storage-and-retention.md) / [ADR-0008](docs/adr/0008-reviewed-still-image-sharing.md) (Rust `oryn-privacy-helper`, SQLCipher 4 partitioned stores, AES-256-GCM chunked media, generation catalog anchored in OS credential manager, crash-safe selective purge, 30s volatile memory ceiling when retention disabled, Contract 25 `privacy-context.v1`, signed review attestations, and bounded offline leases). | Raw local-only, review-before-sharing, and zero unconsented/held retention expansion |
 | **Local Context + HUD** | Task segmentation, signature matching, cache layout, suggestion ranking, overlay rendering | No inferred authority, nonintrusive guidance |
 | **Control Plane / APIs** | Language/framework, module boundaries, auth/session mechanisms, endpoints, internal protocols | Domain ownership, tenant scoping, consistent validation |
 | **Messaging + Durable Workflows** | Event contracts, broker, outbox, ordering, job engine, idempotency handling | Durable state and duplicate-safe business effects |

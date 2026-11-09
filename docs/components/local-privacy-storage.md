@@ -1,143 +1,1078 @@
-# Local Privacy Gate, Evidence Store, and Retention Component Brief
+# Local Privacy Gate, Evidence Store, and Retention Specification
 
-Status: Baseline brief — detailed design pending
+Status: Detailed technical specification — implementation pending  
+Component Number: 5  
+Runtime Process: `oryn-privacy-helper` (unprivileged user-space child process)  
+Authority: Technical Architecture, Security Engineering, Product Engineering  
+
+---
 
 ## Purpose and ownership
 
-**Source references:** [TECHNICAL.md §§4.5, 10.1–5, 11.5](../../TECHNICAL.md) | [PRODUCT.md §§8.3–4, 25, 28.1; ORY-005–010](../../PRODUCT.md)
+### Source References
+- [TECHNICAL.md §§4.5, 7.2, 10.1–5, 11.5, 13.2, 14.2](../../TECHNICAL.md)
+- [PRODUCT.md §§4.1, 8.3–4, 25.1–11, 28.1, 31.1, 31.9; ORY-002–010, ORY-021, ORY-068–076](../../PRODUCT.md)
+- [Cross-Component Contracts Catalog](../architecture/contracts/README.md): Contracts 1, 2, 19, 22, 23, 24, 25
+- [Data Classification Policy](../architecture/data-classification.md)
+- [System Threat Model](../architecture/threat-model.md)
+- [Shared Cloud Inference Specification](../architecture/cloud-inference.md)
+- Architecture Decision Records: [ADR-0001](../adr/0001-desktop-runtime-and-presentation.md), [ADR-0002](../adr/0002-desktop-capture-lifecycle.md), [ADR-0003](../adr/0003-native-observation-admission-and-isolation.md), [ADR-0004](../adr/0004-browser-bridge-and-execution-boundaries.md), [ADR-0005](../adr/0005-cloud-inference-and-private-evidence.md), [ADR-0006](../adr/0006-meeting-capture-and-review-boundaries.md), [ADR-0007](../adr/0007-private-evidence-storage-and-retention.md), [ADR-0008](../adr/0008-reviewed-still-image-sharing.md)
 
 ### Core Responsibility
-The Local Privacy Gate, Evidence Store, and Retention component enforces mandatory exclusions and data minimization at the desktop source, securely stores private screen and audio evidence locally, and governs retention, deletion, and conversion into shareable procedural knowledge.
+The Local Privacy Gate, Evidence Store, and Retention component (`oryn-privacy-helper`) is the single authoritative guardian of employee privacy, device-level capture admission, private evidence durability, and voluntary sharing boundaries on the employee workstation. It executes as an unprivileged user-space child process spawned by the native desktop shell supervisor.
 
-- Device-level capture consent, authoritative capture snapshot generation, and active exclusion policy enforcement.
-- Supervision and lifecycle management of the nested native observation worker (`oryn-observation-worker`) and meeting worker (`oryn-meeting-worker`), including binary signature verification, 100 ms heartbeat watchdog (500 ms timeout), and source permit issuance (`GrantObservationPermit`, `RevokeObservationPermit`, `GrantMeetingPermit`, `RevokeMeetingPermit`, `ReleaseFrameSlot`).
-- Source-aware operational tracking and recovery blocker isolation: maintains per-source health (`ready`, `degraded`, `unavailable`) and recovery blockers (`crash`, `hang`, `unclean_restart`) across `native_os`, `browser`, and `meeting` sources. A native-worker fault isolates to `native_os` without stopping independent healthy browser or meeting sources.
-- Admission and routing of the third inherited browser source channel (`shell-browser.v1`) and fourth browser meeting audio channel (`shell-meeting-audio.v1`) negotiated via `shell-privacy.v1` minor 2.
-- Operation of the edge `InferenceEgressClient`: attaches signed `InferenceAuthorization` tokens and submits `InferenceRequest` envelopes over TLS 1.3 to the LiteLLM gateway with contractual zero content retention and US processing (see [cloud-inference](../architecture/cloud-inference.md)).
-- Aggregation of per-profile browser bridge health into the authoritative `browser` capture source state (`sources.browser.health = "ready" | "degraded" | "unavailable"`).
-- Execution gate coordination: `PauseScreenObservation` halts screen permits; `PauseCapture` (Pause All) halts all permits including meeting audio.
-- Masked shared-memory slot admission: maps inherited 8 MiB BGRA8 frame slots, verifies declared masked regions equal opaque-black BGRA `(0,0,0,255)`, verifies SHA-256 digest, copies frames into private buffers, and releases slots.
-- Supervision interface, ephemeral visibility lease validation (100ms lease / 500ms timeout), and fail-closed capture gating.
-- Durable employee pause persistence and recovery blocker tracking across process restarts and workstation power events.
-- Local encrypted storage for private observations, raw screenshots, and private meeting records / audio evidence (see [meeting-intelligence](meeting-intelligence.md)).
-- Redaction and data minimization pipelines (deterministic secret removal and regex/structural masking of credentials, tokens, PII, and financial account details).
-- Ephemeral volatile processing pipeline when `personal_history_retention=false`: copies frame to volatile buffer, releases slot immediately, executes local deterministic secret stripping, routes ephemeral visual extraction via LiteLLM gateway under separate cloud consent with a strict 30-second TTL, then zeroes and discards memory without disk writes or durable evidence receipts; if cloud inference is unavailable, reports unavailable without accumulating an upload backlog.
-- The employee's review-before-sharing workflow, ensuring no raw media egresses to organizational dashboards.
-- Automatic local retention sweeps, user-initiated local evidence deletion, and supported uninstall data purges. Source evidence expiry purges raw local media and unconfirmed candidates; confirmed saved commitments survive source-only deletion with `evidence_status = "unavailable"`, whereas full personal data purge removes eligible saved commitments too.
+The component governs:
+1. **Authoritative Capture Gating:** Evaluates employee consent, category states, organizational restrictions, application profiles, window identities, and signed capture policy leases before admitting any screen, DOM, or audio observation.
+2. **Worker Supervision & Permit Issuance:** Spawns, monitors, and terminates the native observation worker (`oryn-observation-worker`) and meeting worker (`oryn-meeting-worker`); runs a 100 ms watchdog timer; and issues time-bounded source permits that renew every 100 ms and expire within 300 ms.
+3. **Shared-Memory Frame Admission:** Maps inherited 8 MiB BGRA8 shared-memory frame slots, validates descriptor bounds and epochs, copies pixel data into private buffers, verifies that declared masked regions equal opaque-black BGRA `(0,0,0,255)`, verifies frame SHA-256 digests, and promptly releases slots back to worker pools.
+4. **Encrypted Evidence Storage:** Manages local, profile-bound SQLCipher 4 encrypted structured database partitions and independently encrypted media files (AES-256-GCM) with no central raw backup, no recovery escrow, and no device-signing key reuse.
+5. **Retention & Crash-Safe Erasure:** Enforces fixed raw retention deadlines (default 7 days, 1–6 employee choice, documented extension up to 14 days), evaluates signed legal hold verdicts, stages cryptographic deletion fences, and executes verified database rebuilding and key destruction.
+6. **Volatile Processing Mode:** Enforces a strict 30-second volatile memory lifetime from original acquisition when `personal_history_retention` is disabled, with zero disk writes, locked memory buffers, and no deferred upload backlog.
+7. **Employee Review Before Sharing:** Compiles candidate workflows, derives purpose-bound redacted still images, enforces strict image size and count limits, binds final review attestations with Ed25519 device signatures, and emits approved contributions.
+8. **Governed Inference Egress:** Operates the edge `InferenceEgressClient`, attaching signed `InferenceAuthorization` tokens and dispatching transient model inference requests over TLS 1.3 to the LiteLLM gateway with contractual zero content retention, no model training, and strict US geographic confinement.
+9. **Private HUD Context Stream:** Streams sanitized observation events and ingests reverse demonstration proposals over a direct, length-prefixed socketpair/pipe link (`privacy-context.v1`, Contract 25) with `local-context-hud`.
+
+### Internal Modules and Responsibilities
+`oryn-privacy-helper` is structured into seven decoupled Rust modules:
+- `CaptureGate`: Authoritative consent validation, category state derivation, window and URL admission, ephemeral visibility lease tracking (100 ms lease / 500 ms cutoff), and signed capture policy lease verification. Runs on a high-priority, non-blocking control thread.
+- `SourceSupervisor`: Spawns and supervises `oryn-observation-worker` and `oryn-meeting-worker`; verifies binary Authenticode / code signatures; enforces 100 ms watchdog heartbeats; tracks per-source health (`ready`, `degraded`, `unavailable`); manages shared-memory slot admission; aggregates browser bridge health; and maintains source-specific recovery blockers. Meeting session coordination logic remains owned by Component 4 inside the helper.
+- `EvidenceStore`: Manages SQLCipher 4 database partitions, independently encrypted media blobs, FTS5 indexes, versioned writes, transactional commits, and keyset-paginated read queries.
+- `RetentionCoordinator`: Tracks retention deadlines, enforces trusted-time constraints across boots, evaluates signed retention/hold verdicts, computes deletion previews, and executes crash-safe selective purge workflows.
+- `SanitizationReviewCoordinator`: Deterministic minimization, PII/credential masking, candidate review management, redacted still-image derivation, review attestation signing, and authoritative release cancellation fences.
+- `InferenceEgressClient`: Attaches signed `InferenceAuthorization` tokens to minimized payloads, routes requests to the LiteLLM gateway, tracks request/response generations, and cancels remote work upon capture stop or consent revocation.
+- `PrivacyContextPort`: Implements the `privacy-context.v1` interface, managing length-prefixed streaming of permitted observations to `local-context-hud` and validating reverse demonstration proposals.
+- `PolicyVerifier`: Cryptographic verification of identity-policy signed artifacts (`SignedCapturePolicyLease`, `SignedRetentionVerdict`, `SignedArtifactPolicy`) using pinned Ed25519 issuer public keys.
+
+### Priority Timer and Control Path Isolation
+To guarantee responsiveness and fail-closed privacy:
+- The `CaptureGate` timer loop, visibility lease watchdog, and Channel 1 control processor run on a dedicated, high-priority thread.
+- **Blocking operations are strictly prohibited on the control path:** No synchronous SQL queries, no media compression or re-encoding, no OS Keychain or Credential Manager I/O, no filesystem syncs (`fsync`), and no network requests.
+- Storage writes and background sweeps execute on bounded worker pools with strict queues. If storage writes encounter backpressure, the affected source is throttled or paused; the control gate never blocks.
+- **Immediate Pause Invariant:** Receiving `PauseScreenObservation` or `PauseCapture` immediately closes affected source admission in memory on the control thread, halting permit issuance within 1 ms. The durable pause state is then written to the control partition before a success response is returned. If durable persistence fails, capture remains stopped, an error is returned, and storage failure is exposed; the helper never falsely acknowledges an unsaved pause.
+
+### Exclusion Hierarchy and Precedence
+Exclusion evaluation follows a strict, non-overridable waterfall where denial always wins:
+1. **Mandatory Protected Categories:** Passwords, authentication secrets, password managers, personal messaging, personal banking, private/incognito browsing windows, personal webmail, HR compensation portals, and protected health portals.
+2. **Organizational Exclusions:** Administrative restrictions, blacklisted executable IDs, restricted URL domains, and excluded window patterns declared in the signed capture policy lease.
+3. **Employee Exclusions:** User-configured excluded applications, window titles, and web domains configured in My Privacy.
+4. **Explicit Certified Work Admission:** Active window matches an approved application profile, certified executable identity, or verified enterprise-managed browser route with disabled incognito modes.
+
+**Denial Invariant:** Neither employee configuration nor an AI model can relax or override mandatory exclusions. If window identity is ambiguous, process identity is recycled, private browsing status is uncertain, active work account cannot be verified, or window geometry is stale, the gate fails closed and suppresses capture for that surface.
+
 ### Consumes
-- Raw candidate observation streams from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md).
-- Organization-wide mandatory exclusion rules and maximum retention caps from [identity-policy](identity-policy.md).
-- Employee personal retention preferences, visibility lease renewals, session states, and pause/resume commands from [desktop-shell](desktop-shell.md).
-- Explicit contribution review approvals from the employee.
+- Raw candidate observation streams from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md) over Contract 1.
+- Capture commands, visibility lease renewals, session power states, and review actions from [desktop-shell](desktop-shell.md) over Contract 19.
+- Signed capture policy leases, signed retention verdicts, and signed artifact policies from [identity-policy](identity-policy.md).
+- Signed inference authorization tokens from [identity-policy](identity-policy.md) for Contract 22.
+- Reverse demonstration proposals from [local-context-hud](local-context-hud.md) over Contract 25.
 
 ### Produces
-- Redacted, permitted observation events delivered to [local-context-hud](local-context-hud.md).
-- Sanitized, employee-approved workflow candidates delivered to [contribution-sync](contribution-sync.md).
-- Authoritative capture snapshots, state change streams, and audit receipts delivered to [desktop-shell](desktop-shell.md) via Contract 19.
+- Authoritative `CaptureSnapshot` updates, query responses, and purge receipts to [desktop-shell](desktop-shell.md) over Contract 19.
+- Redacted, permitted observation events to [local-context-hud](local-context-hud.md) over Contract 25 (`privacy-context.v1`).
+- Employee-reviewed, signed task contributions (`ReviewedContributionV1`) to [contribution-sync](contribution-sync.md) over Contract 2.
+- Authorized inference requests (`InferenceRequest`) to the LiteLLM gateway over Contract 22.
+- Confirmed commitment projections to [local-context-hud](local-context-hud.md) and [desktop-shell](desktop-shell.md) over Contract 23.
+- Reviewed meeting handoffs to [operational-graph](operational-graph.md) via [contribution-sync](contribution-sync.md) over Contract 24.
 
 ### Does Not Own
-- Central workflow candidate clustering or procedure synthesis (owned by [workflow-discovery](workflow-discovery.md)).
-- Publishing playbooks to the organization or authoring business rules (owned by [operational-graph](operational-graph.md)).
-- Remote video/screen playback for managers or administrators (strictly prohibited by product architecture).
+- Desktop shell presentation, badge rendering, or native window management (owned by [desktop-shell](desktop-shell.md)).
+- Central workflow clustering or procedure synthesis (owned by [workflow-discovery](workflow-discovery.md)).
+- Playbook authoring, canonical graph publishing, or cross-team access control (owned by [operational-graph](operational-graph.md)).
+- Network queue retry, offline cache sync, or remote delivery receipts (owned by [contribution-sync](contribution-sync.md)).
+- Remote screen or audio playback for managers or administrators (strictly prohibited across Oryn).
+- On-device local AI models or speech recognizers (all Oryn AI inference routes through cloud LiteLLM gateway).
 
 ### Boundary Requirement
-Protected application categories (password managers, banking, personal messaging, health portals) must be excluded before capture at source; post-capture OCR or classification cannot authorize capture of mandatory excluded content. Mixed windows require strict pixel and DOM masking. Default local raw retention is strictly **7 days**, employee-selectable between **1–6 days**, with documented organization extension up to a maximum of **14 days** (per [PRODUCT.md §25.4](../../PRODUCT.md)). Discarded or expired private raw capture cannot be recovered from organizational dashboards. The capture gate requires continuous 100 ms visibility lease renewals from the desktop shell supervisor; loss of renewal revokes the capture gate within 500 ms and discards in-flight post-revocation observations. Capture policy validity during offline operation is capped at an absolute maximum of 24 hours.
+Default local raw retention is strictly **7 days**, employee-selectable between **1 and 6 days**, with documented organizational extension up to a maximum of **14 days**. Discarded or expired private raw capture cannot be recovered from organizational dashboards. Capture requires continuous 100 ms visibility lease renewals from the desktop shell; loss of renewal halts capture within 500 ms.
+
+---
 
 ## Product requirements
 
-### Key Product Requirements ([PRODUCT.md §§8.3–4, 25, 28.1; ORY-005–010](../../PRODUCT.md))
-- **Mandatory Exclusions:** Mandatory protected categories (passwords, auth secrets, personal messaging, banking, private browsing, HR compensation, health portals) must never be captured or stored (ORY-005).
-- **Prohibition of Manager Surveillance:** Managers cannot view or request an employee's raw screen or audio timeline through Oryn (ORY-006).
-- **Review Before Sharing:** Every candidate workflow contribution requires explicit employee inspection and approval of sanitized steps before organizational sync (ORY-007).
-- **Retention Expiration:** Raw local capture expires automatically on the configured schedule (default 7 days, 1–6 employee choice, max 14 days) and is purged permanently (ORY-009).
-- **My Privacy Trust Center:** Exposes local retention status, active exclusion rules, and consent logs directly to the employee (ORY-010).
+### Traceability to Product Acceptance Criteria
+- **Mandatory Exclusions (ORY-005):** Passwords, auth secrets, personal messaging, banking, incognito browsing, HR compensation, and health portals must never be captured or stored.
+- **Prohibition of Manager Surveillance (ORY-006):** Managers cannot view or request an employee's raw screen or audio timeline through Oryn.
+- **Review Before Sharing (ORY-007):** Every candidate workflow contribution requires explicit employee inspection and approval of sanitized steps and redacted artifacts before organizational sync.
+- **Meeting Recording Confirmation (ORY-008):** Meeting recording is off by default and requires explicit per-meeting confirmation and notice acknowledgment.
+- **Retention Expiration (ORY-009):** Raw local capture expires automatically on the configured schedule (default 7 days, 1–6 employee choice, max 14 days) and is purged permanently.
+- **My Privacy Trust Center (ORY-010):** Exposes local retention status, active exclusion rules, consent logs, `last_cleanup_at`, next expiry, pending cleanup, and last error directly to the employee.
+- **Meeting Commitments (ORY-021):** Confirmed commitments produce contextual reminders; unconfirmed suggestions cannot trigger external mutations.
+- **Security Policy Enforcement (ORY-068):** Policy changes identify affected capabilities and immediately prevent prohibited capture or sharing actions.
+- **Offboarding & Data Purge (ORY-069):** Controlled offboarding flow enables permanent local private data purge with cryptographic receipt.
+- **Audit Logging (ORY-070):** Meaningful approvals, releases, permission changes, and deletions produce tamper-evident audit records.
+- **Governed Inference Egress (ORY-071–076):** All v1.0 AI inference routes through LiteLLM; zero local inference; purpose-authorized; US-processing; contractual zero content retention; offline recording requires fresh authorization upon reconnection.
+
+### Normative Privacy Requirements
+1. **Source Permit Timing:** Observation workers and browser content scripts operate strictly under reverse source permits issued by `oryn-privacy-helper`. Permits renew every 100 ms and expire within 300 ms. If a worker fails to receive a permit renewal within 300 ms, acquisition ceases immediately.
+2. **Visibility Lease Cutoff:** The desktop shell supervisor must renew the ephemeral visibility lease every 100 ms. If unrenewed for 500 ms (due to shell crash, lock, sleep, or occlusion), `CaptureGate` revokes all active permits, invalidates in-flight shared-memory slots, and halts observation.
+3. **Independent Modality Retention:**
+   - Screen evidence (visual frames and contextual window metadata) is governed by the configured raw retention deadline (default 7 days).
+   - Meeting evidence (audio recordings and transcripts) is governed by the meeting session coordinator under independent retention bounds.
+   - Turning off `personal_history_retention` applies strictly to new automatic screen history. Existing screen evidence remains readable and deletable until its unchanged deadline. Separately authorized meeting sessions continue storing audio and transcripts under their explicit retention policy.
+4. **Volatile Processing Guarantees:** When `personal_history_retention=false`, screen frames admitted for live assistance or visual extraction are held in locked, non-swappable volatile memory with a strict 30-second TTL from original acquisition. Buffers are zeroed immediately after extraction. No raw screen pixels, embeddings, or intermediate model outputs touch disk. If cloud inference is unavailable, the request fails without maintaining a deferred upload backlog.
+5. **Legal Hold Constraints:** Legal holds block voluntary employee deletion of eligible evidence within its existing configured retention deadline. A legal hold cannot authorize new capture, cannot provide manager or administrative browsing access to raw timelines, and cannot extend retention beyond the original raw retention deadline. Expired records are purged permanently regardless of hold status.
+6. **No Silent Recovery or Backup:** Oryn maintains no central backup, no recovery escrow, no administrator override keys, and no recovery export for private evidence. Lost device encryption keys result in permanent, unrecoverable loss of private history.
+
+---
 
 ## Upstream and downstream contracts
 
-**Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
+### Contract Topology Overview
+```
++------------------------------------------------------------------------------------+
+|                                  Desktop Shell                                     |
++------------------------------------------------------------------------------------+
+       ^                     | Channel 1: Control (shell-privacy.v1)
+       |                     | Channel 2: Bounded Queries
+       | Contract 19         | Channel 3: shell-browser.v1 (via broker)
+       |                     | Channel 4: shell-meeting-audio.v1 (via broker)
+       v                     v
++------------------------------------------------------------------------------------+
+|                         oryn-privacy-helper (Component 5)                          |
+|                                                                                    |
+|  +--------------------+  +--------------------+  +-------------------------------+ |
+|  |    CaptureGate     |  |  SourceSupervisor  |  |         EvidenceStore         | |
+|  +--------------------+  +--------------------+  +-------------------------------+ |
+|  +--------------------+  +--------------------+  +-------------------------------+ |
+|  | RetentionCoord     |  | SanitizationReview |  |     InferenceEgressClient     | |
+|  +--------------------+  +--------------------+  +-------------------------------+ |
++------------------------------------------------------------------------------------+
+   | Contract 1               | Contract 25             | Contract 2      | Contract 22
+   | (os-observation.v1,      | (privacy-context.v1)    | (ReviewedContrib| (LiteLLM
+   |  meeting pipes)          |                         |  Attestation)   |  TLS 1.3)
+   v                          v                         v                 v
++------------------+   +-------------------+   +------------------+  +---------------+
+| Observation &    |   | Local Context HUD |   | ContributionSync |  | LiteLLM Cloud |
+| Meeting Workers  |   | (Component 7)     |   | (Component 8)    |  | Gateway       |
++------------------+   +-------------------+   +------------------+  +---------------+
+```
 
-### Cross-Component Contracts
-- **Contract Reference #1 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests raw candidate observations from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md). Emits reverse source permits, policy configurations, and frame slot releases (`os-observation.v1`) to [os-observation](os-observation.md).
-- **Contract Reference #2 in [Contracts Catalog](../architecture/contracts/README.md):** Emits employee-approved sanitized task contributions with consent receipts to [workflow-discovery](workflow-discovery.md) via [contribution-sync](contribution-sync.md).
-- **Local Context Feed:** Streams redacted, permitted observation records to [local-context-hud](local-context-hud.md).
-- **Contract Reference #19 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes capture commands (`PauseCapture`, `ResumeCapture`, `SetCaptureCategory`, `RecordCaptureConsent`, `PrepareUninstall`) and visibility lease renewals (`RenewVisibilityLease`) from [desktop-shell](desktop-shell.md); emits authoritative `CaptureSnapshot` updates over private inherited byte channels.
+### Contract 1: Observation and Meeting Worker Interfaces
+Ingests candidate observations and emits reverse source permits over private inherited byte channels and shared memory:
+- Native Observation: `os-observation.v1` protocol. Worker sends `ObservationEvent` and shared-memory frame descriptors. Helper emits `GrantObservationPermit`, `RevokeObservationPermit`, and `ReleaseFrameSlot`.
+- Browser Extension: Inherited Channel 3 (`shell-browser.v1`, max 256 KiB framing) receives structured DOM observations and navigation events; helper evaluates route policies and emits browser observation permits.
+- Browser Meeting Audio: Inherited Channel 4 (`shell-meeting-audio.v1`) forwards binary 16 kHz 16-bit mono PCM frames with 64-byte `ORYA` headers from `BrowserBridgeBroker`.
+- Native Meeting Audio: Inherited pipe pair forwards process-tapped Core Audio / WASAPI PCM chunks from `oryn-meeting-worker`.
+
+### Contract 19: Desktop Shell Control and Query Interfaces
+Operates over two dedicated inherited byte channels using 4-byte big-endian framing with a 1,048,576 byte (1 MiB) maximum payload:
+- **Channel 1 (Control Channel):** Encapsulates idempotent commands and capture snapshot subscriptions. All mutations carry `command_id`, `session_epoch`, `expected_revision` (serialized as decimal string), and typed payload.
+- **Channel 2 (Query Channel):** Encapsulates bounded, read-only private history queries, candidate browsing, deletion previews, and purge status checks using cursor-based pagination (capped at 100 items).
+
+#### Authoritative CaptureSnapshot Payload (Channel 1 Subscription)
+```json
+{
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "revision": "1425",
+  "sequence": "88",
+  "enrollment": "ready",
+  "meeting": {
+    "meeting_session_id": "meet_98f1c2a0-4b12-4d89-9a10-112233445566",
+    "recording_mode": "online",
+    "processing_state": "live",
+    "meeting_title": "Sprint Planning",
+    "started_at": "2026-11-09T14:00:00.000Z",
+    "duration_ms": 180000
+  },
+  "categories": [
+    {
+      "category": "visual_work_observation",
+      "consented": true,
+      "enabled": true,
+      "permission": "granted",
+      "activity": "active"
+    },
+    {
+      "category": "contextual_work_application_recognition",
+      "consented": true,
+      "enabled": true,
+      "permission": "granted",
+      "activity": "active"
+    },
+    {
+      "category": "personal_history_retention",
+      "consented": true,
+      "enabled": true,
+      "permission": "not_required",
+      "activity": "active"
+    },
+    {
+      "category": "organizational_sharing",
+      "consented": true,
+      "enabled": true,
+      "permission": "not_required",
+      "activity": "stopped"
+    },
+    {
+      "category": "meeting_transcription",
+      "consented": true,
+      "enabled": true,
+      "permission": "granted",
+      "activity": "active"
+    },
+    {
+      "category": "meeting_commitment_extraction",
+      "consented": true,
+      "enabled": true,
+      "permission": "granted",
+      "activity": "active"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "native_os",
+      "health": "ready",
+      "activities": [
+        { "category": "visual_work_observation", "activity": "active" },
+        { "category": "contextual_work_application_recognition", "activity": "active" }
+      ],
+      "recovery_blocker": null,
+      "reason_codes": []
+    },
+    {
+      "source_id": "browser",
+      "health": "ready",
+      "activities": [
+        { "category": "visual_work_observation", "activity": "active" },
+        { "category": "contextual_work_application_recognition", "activity": "active" }
+      ],
+      "recovery_blocker": null,
+      "reason_codes": []
+    },
+    {
+      "source_id": "meeting",
+      "health": "ready",
+      "activities": [
+        { "category": "meeting_transcription", "activity": "active" },
+        { "category": "meeting_commitment_extraction", "activity": "active" }
+      ],
+      "recovery_blocker": null,
+      "reason_codes": []
+    }
+  ],
+  "employee_paused": false,
+  "suspension": null,
+  "recovery_blocker": null,
+  "policy_state": "valid",
+  "policy_version": "pol_rev_20261109_01",
+  "notice_version": "not_rev_20261109_01",
+  "policy_not_after": "2026-11-10T12:00:00.000Z",
+  "source_state": "permitted",
+  "reason_codes": []
+}
+```
+
+#### Channel 2 Query Protocol Messages
+
+1. **`ListHistory` / `SearchHistory` Request:**
+```json
+{
+  "query_id": "qry_8812a0f1",
+  "profile_id": "prof_99a8b7c6",
+  "source_id": "native_os",
+  "search_text": "Quarterly Report",
+  "from_utc": "2026-11-09T00:00:00.000Z",
+  "to_utc": "2026-11-09T23:59:59.000Z",
+  "cursor": null,
+  "limit": 50
+}
+```
+
+2. **`ListHistory` / `SearchHistory` Response:**
+```json
+{
+  "query_id": "qry_8812a0f1",
+  "items": [
+    {
+      "evidence_id": "evi_11223344-5566-7788-99aa-bbccddeeff00",
+      "source_id": "native_os",
+      "observed_at": "2026-11-09T14:15:22.100Z",
+      "retention_deadline": "2026-11-16T14:15:22.100Z",
+      "application_id": "com.microsoft.Excel",
+      "window_title": "Q3_Financial_Model.xlsx",
+      "modality": "snapshot",
+      "preview_handle": "local-media://prev_77a8b9c0-1122-3344-5566-778899aabbcc",
+      "sanitized_snippet": "Active Cell: C14, Formula: =SUM(C2:C13)"
+    }
+  ],
+  "next_cursor": "cur_141522100_evi11223344",
+  "has_more": false
+}
+```
+
+3. **`PreviewDeletion` Request:**
+```json
+{
+  "command_id": "cmd_preview_del_01",
+  "profile_id": "prof_99a8b7c6",
+  "scope": "date_range",
+  "source_id": "native_os",
+  "from_utc": "2026-11-02T00:00:00.000Z",
+  "to_utc": "2026-11-05T00:00:00.000Z",
+  "evidence_ids": []
+}
+```
+
+4. **`PreviewDeletion` Response:**
+```json
+{
+  "preview_id": "prv_del_99887766",
+  "preview_digest": "sha256-4a5b6c7d8e9f0123456789abcdef0123456789abcdef0123456789abcdef0123",
+  "deletion_generation": "4",
+  "signed_verdict_revision": "verdict_rev_104",
+  "expires_at": "2026-11-09T14:30:30.000Z",
+  "total_selected": 450,
+  "eligible_count": 410,
+  "blocked_count": 40,
+  "blocked_reasons": [
+    {
+      "reason": "active_legal_hold",
+      "hold_id": "hold_litigation_2026_q4",
+      "count": 40
+    }
+  ],
+  "affected_queued_shares": 2
+}
+```
+
+5. **`CommitDeletion` Command (Channel 1):**
+```json
+{
+  "command_id": "cmd_commit_del_01",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "expected_revision": "1425",
+  "payload": {
+    "preview_id": "prv_del_99887766",
+    "preview_digest": "sha256-4a5b6c7d8e9f0123456789abcdef0123456789abcdef0123456789abcdef0123",
+    "confirm_eligible_subset": true
+  }
+}
+```
+
+6. **`CommitDeletion` Response (Channel 1):**
+```json
+{
+  "command_id": "cmd_commit_del_01",
+  "status": "acknowledged",
+  "revision": "1426",
+  "deletion_job_id": "del_job_55443322",
+  "stage": "purge_pending",
+  "eligible_count": 410,
+  "blocked_count": 40
+}
+```
+
+7. **`GetPurgeStatus` Response (Channel 2):**
+```json
+{
+  "deletion_job_id": "del_job_55443322",
+  "stage": "purged",
+  "logical_deleted_at": "2026-11-09T14:31:00.100Z",
+  "physical_purged_at": "2026-11-09T14:31:02.450Z",
+  "selected_count": 450,
+  "deleted_count": 410,
+  "blocked_count": 40,
+  "new_catalog_generation": "gen_00000005-1122-3344-5566-778899aabbcc",
+  "receipt_id": "rcpt_purge_88776655"
+}
+```
+
+### Contract 25: Local Context HUD Interface (`privacy-context.v1`)
+The desktop shell host creates a connected Unix domain socketpair (macOS) or anonymous pipe pair (Windows) at launch, hands one descriptor to `oryn-privacy-helper` and the other to `oryn-hud-helper`, verifies both child Authenticode / designated requirements, and closes its own descriptors. This establishes a direct, isolated helper-to-helper byte stream with zero intermediate shell broker overhead.
+
+Wire format: 4-byte big-endian length prefix followed by UTF-8 JSON. Maximum frame size: 1,048,576 bytes (1 MiB). Bounded in-flight ring buffer: 128 messages or 8 MiB maximum. If the buffer overflows, an `ObservationGap` is emitted and delivery resynchronizes.
+
+#### PermittedObservationV1 Schema
+```json
+{
+  "schema_id": "privacy.observation.v1",
+  "event_id": "obs_99887766-1122-3344-5566-778899aabbcc",
+  "sequence": "1042",
+  "profile_id": "prof_99a8b7c6",
+  "source_id": "native_os",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "surface_id": "surf_excel_main_104",
+  "surface_generation": "2",
+  "modality": "structured",
+  "policy_revision": "pol_rev_20261109_01",
+  "consent_revision": "not_rev_20261109_01",
+  "input_generation": "1",
+  "deletion_generation": "4",
+  "acquired_at": "2026-11-09T14:32:00.120Z",
+  "volatile_expires_at": "2026-11-09T14:32:30.120Z",
+  "retention_mode": "retained",
+  "payload": {
+    "application_id": "com.microsoft.Excel",
+    "window_bounds": { "x": 100, "y": 100, "width": 1280, "height": 800 },
+    "focused_role": "AXCell",
+    "focused_value": "=VLOOKUP(A2, Rates!A:B, 2, FALSE)",
+    "sanitized_tokens": [
+      { "token": "<ACCOUNT_ID>", "original_len": 10 }
+    ]
+  },
+  "gap_reference": null
+}
+```
+
+#### DemonstrationProposalV1 Schema (Reverse Stream)
+```json
+{
+  "schema_id": "privacy.demonstration-proposal.v1",
+  "proposal_id": "prop_demo_77665544",
+  "profile_id": "prof_99a8b7c6",
+  "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
+  "expected_revision": "1426",
+  "referenced_evidence_ids": [
+    "evi_11223344-5566-7788-99aa-bbccddeeff00"
+  ],
+  "objective": "Reconcile daily invoice adjustments in ERP",
+  "steps": [
+    {
+      "step_index": 1,
+      "action_type": "click",
+      "target_description": "Post Adjustment button in Invoice screen",
+      "sanitized_inputs": {}
+    }
+  ],
+  "variables": [
+    {
+      "name": "invoice_total",
+      "value_label": "<DECIMAL_AMOUNT>"
+    }
+  ],
+  "confidence": "high",
+  "gap_detected": false
+}
+```
+
+### Identity Policy Signed Artifacts
+The privacy helper relies on cryptographic artifacts signed by `identity-policy` using pinned Ed25519 issuer keys. The signature covers the schema domain string, a newline, and RFC 8785 canonical UTF-8 JSON bytes.
+
+#### SignedCapturePolicyLease Schema
+```json
+{
+  "schema_id": "privacy.capture-policy.v1",
+  "key_id": "ed25519_pol_issuer_2026_01",
+  "payload": {
+    "organization_id": "org_enterprise_corp",
+    "actor_id": "usr_emp_harikeshav_r",
+    "device_id": "dev_macbook_pro_m3_001",
+    "enrollment_id": "enr_883a01f9-4b21-4f12-9c10-223344556677",
+    "policy_revision": "pol_rev_20261109_01",
+    "notice_revision": "not_rev_20261109_01",
+    "issued_at": "2026-11-09T08:00:00.000Z",
+    "not_after": "2026-11-10T08:00:00.000Z",
+    "permitted_categories": [
+      "visual_work_observation",
+      "contextual_work_application_recognition",
+      "personal_history_retention",
+      "organizational_sharing",
+      "meeting_transcription",
+      "meeting_commitment_extraction"
+    ],
+    "mandatory_exclusion_catalog_revision": "excl_cat_v12",
+    "excluded_application_ids": [
+      "com.1password.1password",
+      "com.bitwarden.desktop",
+      "KeePass.exe"
+    ],
+    "excluded_url_patterns": [
+      "*login.microsoftonline.com*",
+      "*accounts.google.com*",
+      "*bankofamerica.com*"
+    ],
+    "max_raw_retention_days": 14,
+    "research_extension_permitted": true,
+    "revocation_generation": "1"
+  },
+  "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1jYXB0dXJlLXBvbGljeS1sZWFzZS1leGFtcGxlCg=="
+}
+```
+
+#### SignedRetentionVerdict Schema
+```json
+{
+  "schema_id": "privacy.retention-verdict.v1",
+  "key_id": "ed25519_hold_issuer_2026_01",
+  "payload": {
+    "organization_id": "org_enterprise_corp",
+    "actor_id": "usr_emp_harikeshav_r",
+    "device_id": "dev_macbook_pro_m3_001",
+    "enrollment_id": "enr_883a01f9-4b21-4f12-9c10-223344556677",
+    "verdict_revision": "verdict_rev_104",
+    "issued_at": "2026-11-09T12:00:00.000Z",
+    "not_after": "2026-11-10T12:00:00.000Z",
+    "scope_coverage": "complete",
+    "active_holds": [
+      {
+        "hold_id": "hold_litigation_2026_q4",
+        "description": "Matter 2026-Q4 Legal Hold",
+        "from_utc": "2026-11-01T00:00:00.000Z",
+        "to_utc": "2026-11-10T00:00:00.000Z",
+        "affected_sources": ["native_os", "meeting"]
+      }
+    ],
+    "preservation_conflict": false
+  },
+  "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1yZXRlbnRpb24tdmVyZGljdC1leGFtcGxlCg=="
+}
+```
+
+#### SignedArtifactPolicy Schema
+```json
+{
+  "schema_id": "privacy.artifact-policy.v1",
+  "key_id": "ed25519_art_issuer_2026_01",
+  "payload": {
+    "organization_id": "org_enterprise_corp",
+    "policy_revision": "art_pol_rev_05",
+    "issued_at": "2026-11-09T00:00:00.000Z",
+    "not_after": "2026-11-10T00:00:00.000Z",
+    "approved_purposes": ["procedural_documentation", "peer_training"],
+    "allowed_audiences": ["aud_operations_finance", "aud_team_engineering"],
+    "max_artifact_lifetime_days": 365,
+    "max_image_resolution": { "width": 1920, "height": 1080 },
+    "max_image_bytes": 1048576,
+    "max_images_per_contribution": 4
+  },
+  "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1hcnRpZmFjdC1wb2xpY3ktZXhhbXBsZQo="
+}
+```
+
+---
 
 ## Trust and deployment boundaries
 
-### Process and Security Boundaries
-- **Deployment Location:** Executes as an unprivileged user-space child process (`oryn-privacy-helper`) spawned by the desktop shell native host, communicating exclusively over inherited byte channels (socketpair on macOS, anonymous pipes on Windows).
-- **Physical Storage:** Stores evidence in an encrypted local database (e.g., SQLite with SQLCipher or OS-native keychains). Encryption keys are protected by user credentials.
-- **Cloud Egress Prohibition:** Raw video, full-resolution screen frames, and raw audio files are strictly prohibited from network transmission to central Oryn cloud services.
+### Process Isolation and Execution Permissions
+`oryn-privacy-helper` runs strictly in unprivileged user space under the active employee's OS account:
+- **Zero Elevated Privileges:** Does not run as `root` (macOS) or `SYSTEM` / Administrator (Windows).
+- **Filesystem Permissions:** Private store root is restricted to the current user (POSIX `0700` for directories, `0600` for files; Windows restricted DACL giving access only to the user's SID).
+- **Symlink & Reparse Point Rejection:** Helper verifies before opening any database, catalog, or media file that no component of the path is a symlink, hard link, or Windows reparse point. If traversal is detected, storage locks immediately.
+- **Backup and Indexing Exclusions:** Helper sets platform-specific flags on the privacy root to prevent inclusion in consumer cloud backups and search indexers:
+  - macOS: Sets `NSURLIsExcludedFromBackupKey` on `~/Library/Application Support/Oryn/profiles/<profile_id>/privacy/` to exclude from Time Machine and iCloud Drive.
+  - Windows: Sets `FILE_ATTRIBUTE_NOT_CONTENT_INDEXED` on `%LOCALAPPDATA%\Oryn\profiles\<profile_id>\privacy\`.
+
+### Cryptographic Store Architecture (SQLCipher 4)
+The evidence store is built on SQLCipher 4, utilizing embedded encrypted SQLite partitions:
+- **Encryption Algorithm:** 256-bit AES in CBC mode with HMAC-SHA256 page authentication (`cipher_page_size = 4096`, `kdf_iter = 256000`).
+- **Encrypted WAL:** WAL files are encrypted using the identical page-level cipher and authentication parameters.
+- **Required PRAGMAs on Open:**
+  ```sql
+  PRAGMA cipher_memory_security = ON;
+  PRAGMA foreign_keys = ON;
+  PRAGMA synchronous = FULL;
+  PRAGMA temp_store = MEMORY;
+  PRAGMA secure_delete = ON;
+  PRAGMA cipher_plaintext_header_size = 0;
+  PRAGMA auto_vacuum = INCREMENTAL;
+  ```
+- **Runtime Integrity Verification:** Keying the database is immediately followed by a read query against `sqlite_master`. If keying fails or HMAC authentication fails, the connection closes immediately. An unreadable database is never opened as plaintext and is never silently deleted or overwritten.
+- **Memory Security Limits:** `cipher_memory_security = ON` uses platform memory locking (`mlock` / `VirtualLock`) on cryptographic state within the process. It does not prevent privileged root/admin memory dumps or OS-level kernel hibernation paging.
+
+### Credential Storage & Generation Catalog
+Encryption keys are independent random 256-bit byte arrays generated via OS cryptographically secure pseudorandom number generators (`SecRandomCopyBytes` on macOS, `BCryptGenRandom` on Windows). Evidence keys are never derived from employee passwords and never derived from device signing keys.
+
+```
++-------------------------------------------------------------------------------+
+| OS Secure Credential Store (macOS Keychain / Windows Credential Manager)     |
+| Bound to Current OS User + Oryn Profile                                       |
+| Holds exactly one active catalog credential:                                  |
+|   { "catalog_generation": UUIDv4, "key": 32-byte AES-256 Master Key }         |
++-------------------------------------------------------------------------------+
+                                    |
+                                    v Decrypts
++-------------------------------------------------------------------------------+
+| key-catalog.<generation>.enc (Encrypted with AES-256-GCM, AAD = gen+profile)   |
+| Contains:                                                                     |
+|   - Partition manifests (opaque IDs, paths, active generations)               |
+|   - Partition encryption keys (independent 256-bit random keys)               |
+|   - Schema version marker                                                     |
+| Does NOT contain captured content, transcripts, or window titles              |
++-------------------------------------------------------------------------------+
+                                    |
+                 +------------------+------------------+
+                 v                                     v
++---------------------------------+   +---------------------------------+
+| screen_<source>_<hour>.db       |   | meeting_<session_id>.db         |
+| (SQLCipher 4, Key from Catalog) |   | (SQLCipher 4, Key from Catalog) |
++---------------------------------+   +---------------------------------+
+```
+
+- **OS Credential Binding:** The current catalog generation key is stored under:
+  - macOS: Keychain Service `com.oryn.privacy.catalog`, Account `<profile_id>`.
+  - Windows: Credential Manager target `Oryn/PrivacyCatalog/<profile_id>`.
+- **Key Catalog File:** `key-catalog.<generation>.enc` is encrypted with AES-256-GCM. The AAD binds `profile_id`, `catalog_generation`, and schema version. The catalog contains partition identities and their respective independent keys. Old partition keys are purged during rotation.
+- **Device Signing Key Separation:** The Ed25519 device key used for signing consent receipts and contribution attestations is held in a separate credential slot (`com.oryn.device.identity`). Signing keys cannot be used to reconstruct storage encryption keys.
+
+---
 
 ## Internal architecture
 
-### Logical Submodules
-- **Pre-Capture Exclusion Interceptor & Permit Gate:** Evaluates window metadata, application identifiers, and URL domains against exclusion lists before image acquisition; issues unexpired 100 ms source permits to native workers and browser extensions.
-- **Worker Supervisor & Watchdog:** Spawns `oryn-observation-worker`, enforces 500 ms watchdog on worker heartbeats, quarantines shared-memory slots upon permit revocation, and manages backoff restarts.
-- **Sensitive Data Redaction Engine:** Performs on-device regex, NLP, and OCR masking of sensitive tokens, passwords, and PII.
-- **Local Encrypted Evidence Store:** Manages on-disk encrypted storage of raw frames, interaction logs, and local task indexes.
-- **Volatile Work Buffer Manager:** Manages ephemeral in-memory processing pipelines when `personal_history_retention=false`, enforcing zero-disk guarantees and 30-second TTL limits.
-- **Retention Sweeper:** Background process that enforces TTL rules and securely deletes expired media files.
-- **Sanitization Review Compiler:** Packages candidate workflow demonstrations into sanitized step narratives for employee inspection.
+### Partition Topology and Bounded Stores
+The evidence store partitions data to ensure fault isolation, crash safety, and bounded blast radius:
+
+```
+<profile_root>/privacy/
+├── catalog/
+│   ├── key-catalog.00000004-1122-3344-5566-778899aabbcc.enc
+│   └── key-catalog.00000004-1122-3344-5566-778899aabbcc.sig
+├── control/
+│   ├── control.db               (Consent, categories, deletion jobs, hold verdicts)
+│   └── control.db-wal
+├── screen/
+│   ├── native_20261109_14.db    (Hourly sealed screen partition)
+│   ├── browser_20261109_14.db   (Hourly sealed browser DOM partition)
+│   └── ...
+├── meetings/
+│   ├── meet_98f1c2a0.db         (Unified meeting DB: transcripts, commitments)
+│   └── meet_98f1c2a0-audio.opus (Independently encrypted audio blob)
+├── media/
+│   ├── blob_77a8b9c0.enc        (Encrypted masked PNG chunks)
+│   └── ...
+└── staging/
+    └── .maint_reserve           (256 MiB preallocated maintenance space)
+```
+
+1. **Screen Evidence Partitions:** Separated by source (`native_os`, `browser`) and sealed at the earliest of: one UTC clock hour, an active capture-policy or consent revision change, or 8 MiB of structured database content. Sealed partitions become read-only.
+2. **Meeting Partitions:** A single meeting session encapsulates audio metadata, raw transcript spans, transcript edits, candidate commitments, and saved commitments in one SQLCipher database (`meet_<session_id>.db`). This enables atomic transactions across transcript revisions and reminder states. Audio is stored in a sibling encrypted media file capped at 4 hours or 128 MiB. A meeting structured database cap of 8 MiB stops acquisition visibly if reached.
+3. **Control Store Partition:** Stores employee consent decisions, signed policy leases, active hold verdicts, deletion jobs, content-free audit logs, and release fences.
+4. **Capacity Bounds:**
+   - Maximum live retained partitions per profile: 1,024.
+   - Maximum open database connections: 4 (1 control, 1 active writer, 2 read/sweep connections).
+   - Maximum key catalog file size: 1 MiB.
+   - Per-profile managed store quota target: 10 GiB.
+   - Maintenance reserve: 256 MiB preallocated file (`.maint_reserve`) used exclusively to guarantee purge completion on a full disk.
+   - Free-volume admission floor: 1 GiB free disk space required to admit new capture.
+
+### Logical Storage Schemas
+
+#### EvidenceRecord Table (`evidence_records` in screen and meeting partitions)
+```sql
+CREATE TABLE evidence_records (
+    evidence_id TEXT PRIMARY KEY,             -- UUIDv4 string
+    event_id TEXT NOT NULL UNIQUE,            -- Upstream source event identifier
+    source_id TEXT NOT NULL,                  -- 'native_os' | 'browser' | 'meeting'
+    session_epoch TEXT NOT NULL,              -- UUIDv4 supervisor session epoch
+    source_epoch TEXT NOT NULL,               -- Source-instance epoch
+    surface_id TEXT,                          -- Surface or tab identifier
+    surface_generation TEXT,                  -- Decimal string u64
+    modality TEXT NOT NULL,                   -- 'structured' | 'snapshot'
+    acquired_at_utc TEXT NOT NULL,            -- RFC 3339 UTC timestamp
+    acquired_at_mono_ns TEXT NOT NULL,        -- Decimal string u64 boot-monotonic ns
+    policy_revision TEXT NOT NULL,            -- Active policy revision string
+    consent_revision TEXT NOT NULL,           -- Active consent revision string
+    retention_deadline_utc TEXT NOT NULL,     -- RFC 3339 retention deadline
+    input_generation TEXT NOT NULL,           -- Decimal string u64 input generation
+    deletion_generation TEXT NOT NULL,        -- Decimal string u64 deletion generation
+    sanitized_payload TEXT NOT NULL,          -- JSON text (strictly minimized)
+    media_blob_id TEXT,                       -- Nullable reference to media_manifests
+    state TEXT NOT NULL DEFAULT 'committed',  -- 'committed' | 'tombstoned'
+    FOREIGN KEY(media_blob_id) REFERENCES media_manifests(blob_id)
+);
+
+CREATE INDEX idx_evidence_retention ON evidence_records(retention_deadline_utc, state);
+CREATE INDEX idx_evidence_query ON evidence_records(acquired_at_utc DESC, evidence_id);
+```
+
+#### MediaManifest Table (`media_manifests` in screen and meeting partitions)
+```sql
+CREATE TABLE media_manifests (
+    blob_id TEXT PRIMARY KEY,                 -- UUIDv4 media blob identifier
+    evidence_id TEXT NOT NULL,                -- Owning evidence record ID
+    session_id TEXT NOT NULL,                 -- Owning session or meeting ID
+    mime_type TEXT NOT NULL,                  -- 'image/png' | 'audio/opus'
+    relative_path TEXT NOT NULL,              -- Opaque relative path (media/blob_<id>.enc)
+    plaintext_byte_count TEXT NOT NULL,       -- Decimal string u64
+    plaintext_sha256 TEXT NOT NULL,           -- Hex SHA-256 of plaintext
+    data_key_enc TEXT NOT NULL,               -- 32-byte key encrypted under partition key
+    nonce_prefix TEXT NOT NULL,               -- 4-byte random hex prefix
+    chunk_count INTEGER NOT NULL,             -- Number of 1 MiB chunks
+    committed_at_utc TEXT NOT NULL            -- RFC 3339 commit timestamp
+);
+```
+
+#### DeletionJob Table (`deletion_jobs` in control partition)
+```sql
+CREATE TABLE deletion_jobs (
+    job_id TEXT PRIMARY KEY,                  -- UUIDv4 job identifier
+    command_id TEXT NOT NULL UNIQUE,          -- Idempotent command ID
+    expected_revision TEXT NOT NULL,          -- Decimal string u64
+    scope_type TEXT NOT NULL,                 -- 'explicit_ids' | 'date_range' | 'full_personal'
+    scope_digest TEXT NOT NULL,               -- SHA-256 digest of frozen selection
+    verdict_revision TEXT NOT NULL,           -- Signed retention verdict revision
+    deletion_generation TEXT NOT NULL,        -- Decimal string u64
+    selected_count INTEGER NOT NULL,
+    eligible_count INTEGER NOT NULL,
+    blocked_count INTEGER NOT NULL,
+    old_catalog_gen TEXT NOT NULL,
+    new_catalog_gen TEXT,
+    stage TEXT NOT NULL,                      -- 'fenced' | 'rebuilding' | 'committed' | 'purged' | 'failed'
+    failure_code TEXT,                        -- Nullable error code string
+    created_at_utc TEXT NOT NULL,
+    completed_at_utc TEXT
+);
+```
+
+#### ReleaseFence Table (`release_fences` in control partition)
+```sql
+CREATE TABLE release_fences (
+    contribution_id TEXT PRIMARY KEY,         -- UUIDv4 contribution identifier
+    revision TEXT NOT NULL,                   -- Decimal string u64
+    canonical_digest TEXT NOT NULL,           -- SHA-256 of canonical contribution payload
+    dependent_evidence_ids TEXT NOT NULL,     -- JSON array of referenced private evidence IDs
+    fence_state TEXT NOT NULL,                -- 'active' | 'cancelled' | 'released'
+    delivery_projection TEXT NOT NULL,        -- 'queued' | 'dispatching' | 'delivered' | 'cancelled' | 'delivery_unknown'
+    created_at_utc TEXT NOT NULL,
+    updated_at_utc TEXT NOT NULL
+);
+```
+
+### Media Blob Encryption Specification
+- Media files are stored in 1 MiB chunks encrypted with AES-256-GCM.
+- Each media blob has a unique random 256-bit data key.
+- Nonce construction: 96-bit nonce composed of a 32-bit random blob prefix concatenated with a 64-bit big-endian chunk index ($0, 1, \dots$).
+- Additional Authenticated Data (AAD): Concatenation of `profile_id`, `blob_id`, `schema_version`, and chunk index.
+- Plaintext media is never spooled to disk; frames are compressed and encrypted directly in helper memory before writing to disk.
+
+### Full-Text Search (FTS5) Isolation
+- Private text search uses SQLite FTS5 tables local to each partition (`evidence_fts`).
+- No global cross-partition plaintext index or embedding index exists on disk.
+- Queries execute across relevant open partition connections and merge via newest-first `(observed_at, evidence_id)` keyset paging.
+- During selective deletion, the FTS index is not incrementally vacuumed; instead, it is rebuilt entirely from surviving rows in a new partition database to ensure zero residual virtual-table shadow data leaks.
+
+---
+
 ## State and lifecycle
 
-### State and Persistence
-- **Persisted State:** Local encrypted evidence database, exclusion rule cache, employee privacy preferences, and review receipts.
-- **Lifecycle Transitions:** `Active Capture → Redacting & Storing → Retention Aging → Purged / Expired`.
-- **Durable State and Blockers:** Persists durable employee pauses that survive restarts and reboots. Enforces recovery blockers (`crash`, `visibility_lost`, `update`, `unclean_restart`, `policy_expired`) that prevent automated resumption following abnormal transitions until an intentional employee resume command is received.
-- **Deletion and Uninstall Semantics:** When an employee deletes local history, disk sectors are unlinked and overwritten; deletion is immediate and permanent. Supported client uninstallation verifies legal hold constraints, halts capture, and securely purges unheld private data, emitting a cryptographic purge receipt.
+### The Selective Deletion Algorithm
+Selective erasure must withstand crashes, power loss, and partial writes without leaking deleted records or corrupting unaffected partitions:
+
+```
++-------------------------------------------------------------------------------+
+| Step 1: Control Transaction & Logical Fence                                  |
+| - Verify signed retention verdict.                                            |
+| - Insert DeletionJob with stage = 'fenced'.                                   |
+| - Advance deletion_generation.                                                |
+| - Mark matching ReleaseFences as 'cancelled'.                                 |
+| - Return logical acknowledgement (stage = 'purge_pending').                   |
++-------------------------------------------------------------------------------+
+                                    |
+                                    v
++-------------------------------------------------------------------------------+
+| Step 2: Partition Rebuild (Under Partition Writer Lock)                       |
+| - Open fresh database file (partition.db.rebuild) under fresh random key.      |
+| - Copy surviving non-deleted rows and held rows.                              |
+| - Copy surviving media encryption keys to new DB.                             |
+| - Rebuild FTS5 index from surviving rows.                                     |
+| - fsync new partition file and directory.                                     |
++-------------------------------------------------------------------------------+
+                                    |
+                                    v
++-------------------------------------------------------------------------------+
+| Step 3: Catalog Publication Staging                                           |
+| - Verify deletion_generation has not changed concurrently.                    |
+| - Generate fresh 256-bit catalog key and new catalog_generation UUID.         |
+| - Write key-catalog.<new_gen>.enc with new partition key and surviving keys.  |
+| - fsync new catalog file.                                                     |
++-------------------------------------------------------------------------------+
+                                    |
+                                    v
++-------------------------------------------------------------------------------+
+| Step 4: Generation Commit Point (Atomic OS Credential Update)                |
+| - Atomically write { new_catalog_generation, new_catalog_key } to Keychain /  |
+|   Windows Credential Manager.                                                 |
+| - Verify readback from credential store.                                      |
+| - THIS IS THE GENERATION COMMIT POINT.                                        |
++-------------------------------------------------------------------------------+
+                                    |
+                                    v
++-------------------------------------------------------------------------------+
+| Step 5: Obsolete Generation Teardown & Receipt                                |
+| - Close old database reader connections.                                      |
+| - Zero old in-memory keys and buffers.                                        |
+| - Unlink old partition database, WAL, and deleted media blobs.                |
+| - Remove old key-catalog.<old_gen>.enc.                                       |
+| - Mark DeletionJob stage = 'purged'.                                          |
+| - Sign PurgeReceipt with Ed25519 device key and return to caller.             |
++-------------------------------------------------------------------------------+
+```
+
+### Crash Recovery Semantics at Every Publication Boundary
+- **Crash before Step 4:** Startup reads the existing catalog credential. The old catalog is decrypted. Startup detects an uncommitted `DeletionJob` in stage `fenced` or `rebuilding`. The deny fence remains authoritative: deleted IDs remain inaccessible. Startup removes temporary `.rebuild` files and re-runs Step 2 onward.
+- **Crash during Step 4 (Ambiguous Credential Write):** Startup reads the credential store. If the stored generation matches `new_catalog_generation`, startup rolls forward to Step 5. If it matches `old_catalog_generation`, startup re-runs the rebuild. If the credential store returns an unresolvable or corrupted state, storage transitions to `PRIVACY_STORE_LOCKED` and requires administrative device verification; it never falls back to unencrypted or plaintext mode.
+- **Crash after Step 4:** Startup reads `new_catalog_generation`. Old database files and unlinked media cannot be decrypted by the active catalog. Startup unlinks orphaned old files and completes Step 5.
+
+### Supported Uninstallation Semantics
+1. The desktop shell supervisor dispatches `PrepareUninstall` over Channel 1.
+2. `RetentionCoordinator` evaluates the active `SignedRetentionVerdict`.
+3. If an active legal hold is present or the retention verdict is expired/unknown, uninstallation aborts with status `blocked`, returning the blocking hold details. No files are deleted.
+4. If no holds apply, `CaptureGate` terminates all observation workers and locks capture.
+5. `RetentionCoordinator` destroys the OS catalog credential and unlinks all partitions, catalogs, media blobs, and preferences.
+6. A signed `PurgeReceipt` with `scope = "full_personal"` is emitted, and the helper returns `ready` to the shell.
+
+---
 
 ## Error and edge-case behavior
 
-### Failure Handling
-- **Ambiguous Window Identity:** If the application identifier or URL of a window cannot be confirmed, the gate fails safe and suppresses capture.
-- **Storage Quota Exceeded:** If disk space thresholds are reached, oldest non-reviewed raw captures are purged early, accompanied by a user notification.
-- **Redaction Failure:** If sensitive data detection encounters an unhandled format, the entire frame/event is dropped from candidate generation.
+### Local Privacy Error Codes
+The component defines explicit error codes over Channel 1, Channel 2, and Contract 25. Established Contract 22 inference errors and shell reason codes remain intact.
 
-- **Visibility Lease Expiry:** If the native desktop shell crashes, hangs, or drops its status surfaces, visibility lease renewals cease. The privacy gate automatically halts observation within 500 ms, discarding any in-flight uncommitted frames.
-- **Offline Policy Expiry:** If disconnected from the enterprise network beyond the capture policy lease expiration (maximum 24 hours), capture halts immediately and enters `policy_expired` state.
+| Error Code | Trigger Condition | Subsystem Action | Client Recovery |
+|---|---|---|---|
+| `PRIVACY_INVALID_ARGUMENT` | Malformed JSON, out-of-range bounds, or invalid UUID. | Rejects message immediately. | Client fixes payload format. |
+| `PRIVACY_POLICY_INVALID` | Capture policy signature fails or schema version mismatched. | Rejects lease; halts capture. | Shell requests fresh policy from identity service. |
+| `PRIVACY_POLICY_EXPIRED` | Lease `not_after` elapsed (> 24 hours offline). | Revokes source permits; enters `policy_expired`. | Reconnect to enterprise network; deliberate resume. |
+| `PRIVACY_CLOCK_UNTRUSTED` | System clock rolled back behind monotonic trusted anchor. | Halts capture; denies history reads. | Restore NTP synchronization. |
+| `PRIVACY_CONSENT_REQUIRED` | Capture command received for unconsented category. | Rejects command. | Employee completes notice consent in UI. |
+| `PRIVACY_EXCLUDED` | Targeted surface matches mandatory or user exclusion. | Drops frame; emits gap record. | Safe background windows continue. |
+| `PRIVACY_STALE_GENERATION` | Command carries mismatched `expected_revision`. | Rejects mutation; returns current revision. | Client resynchronizes state and retries. |
+| `PRIVACY_STORE_LOCKED` | Credential store unavailable or store in teardown. | Denies storage access; capture paused. | Verify OS user session; unlock workstation. |
+| `PRIVACY_STORE_CORRUPT` | SQLCipher HMAC authentication or page read failure. | Closes store; halts capture; does not reset. | Quarantine corrupt file; inspect diagnostics. |
+| `PRIVACY_STORAGE_FULL` | Managed store exceeds 10 GiB or disk space < 1 GiB. | Purges expired; if still full, stops capture. | Employee purges history or frees disk space. |
+| `PRIVACY_HISTORY_DISABLED` | Durable query/save received while retention is off. | Rejects durable read/write. | Operate in volatile ephemeral mode. |
+| `PRIVACY_HOLD_ACTIVE` | Deletion or uninstall attempted on record under legal hold. | Rejects deletion; reports blocked count. | Wait for legal hold release. |
+| `PRIVACY_HOLD_UNKNOWN` | Retention verdict missing, unverifiable, or expired. | Blocks voluntary deletion and uninstall. | Connect to network to refresh hold verdict. |
+| `PRIVACY_PREVIEW_STALE` | Deletion commit digest mismatches current state. | Rejects commit; invalidates preview. | Generate fresh preview and re-confirm. |
+| `PRIVACY_NOT_FOUND` | Referenced evidence ID or blob ID does not exist. | Returns empty result. | Invalidate stale UI handles. |
+| `PRIVACY_BUSY` | Concurrent destructive deletion job already in progress. | Rejects second deletion command. | Await completion of active deletion job. |
+| `PRIVACY_PURGE_PENDING` | History read requested while partition rebuild is active. | Returns read data excluding fenced records. | Retry after purge completion. |
+| `PRIVACY_IO_FAILED` | Filesystem write error or disk hardware failure. | Aborts write; marks store degraded. | Check filesystem health and permissions. |
+| `PRIVACY_ARTIFACT_POLICY_REQUIRED`| Still-image review attempted without valid artifact policy. | Rejects image sharing; permits text review. | Provision valid organizational artifact policy. |
+| `PRIVACY_ARTIFACT_TOO_LARGE` | Redacted image exceeds 1920x1080 or 1 MiB. | Rejects image artifact. | Crop image or reduce capture region. |
+| `PRIVACY_MEMORY_UNAVAILABLE` | Memory locking (`mlock`) fails for volatile buffer. | Suppresses ephemeral extraction; stops capture. | Check OS memory limits. |
+
+### Edge Case Handling
+
+#### Deletion Racing Dispatched Network Upload
+If an employee deletes private evidence while a previously approved contribution referencing that evidence is in-flight:
+1. The control store transaction immediately marks the corresponding `ReleaseFence` as `cancelled`.
+2. The local purge completes independently without waiting for network I/O.
+3. If the upload cannot be aborted before bytes cross the wire, the delivery projection is marked `delivery_unknown`.
+4. Upon receiving a delivery acknowledgment, the helper does not re-upload the deleted source; instead, it marks the contribution as `withdrawal_requested` and exposes the separate contribution withdrawal flow to the employee.
+
+#### Offline Operation and Policy Lease Expiration
+- Observation may continue offline only within the unexpired duration of `SignedCapturePolicyLease` (maximum 24 hours from issuance).
+- Upon reaching `not_after`, `CaptureGate` revokes permits immediately, transitions `CaptureSnapshot.policy_state = "expired"`, and sets `recovery_blocker = "policy_expired"`.
+- When connectivity returns and a renewed lease is verified, capture **does not resume automatically**. Intentional employee resumption via `ResumeCapture` is strictly required.
+
+---
+
 ## Observability and audit
 
-### Telemetry and Diagnostics
-- Generates local audit logs recording capture events, redaction counts, retention purge runs, and contribution approvals.
-- No sensitive text, window titles of excluded apps, or raw media are emitted to diagnostic telemetry.
+### Content-Free Audit Event Logging
+All privacy-critical mutations produce tamper-evident audit records in the `audit_events` table within the control partition. Audit logs record administrative, security, and consent lifecycle changes without ever recording captured business content, window titles, URLs, keystrokes, pixels, or audio:
+
+```sql
+CREATE TABLE audit_events (
+    audit_id TEXT PRIMARY KEY,
+    event_type TEXT NOT NULL,
+    actor_id TEXT NOT NULL,
+    session_epoch TEXT NOT NULL,
+    occurred_at_utc TEXT NOT NULL,
+    policy_revision TEXT NOT NULL,
+    details TEXT NOT NULL
+);
+```
+
+#### Monitored Audit Event Types
+- `consent.category_changed`: Category toggled, notice accepted, or consent withdrawn.
+- `policy.lease_adopted`: New `SignedCapturePolicyLease` verified and activated.
+- `policy.verdict_evaluated`: Signed retention verdict evaluated for legal holds.
+- `evidence.retention_purged`: Scheduled sweep permanently purged expired partitions.
+- `evidence.deletion_committed`: Employee committed selective or full deletion.
+- `evidence.purge_completed`: Physical key destruction and file unlinking finished.
+- `contribution.reviewed`: Employee approved or declined workflow contribution.
+- `security.store_locked`: Cryptographic store locked due to credential or clock failure.
+
+### Diagnostic Telemetry Scrubbing
+Diagnostic telemetry emitted by `oryn-privacy-helper` to platform loggers or crash collectors strictly enforces:
+- Prohibited in Logs: Frame hashes, OCR strings, accessibility tree values, application window titles, file paths outside the Oryn sandbox, employee names, customer IDs, and encryption keys.
+- Permitted in Logs: Error codes, latency percentiles (p50, p95), memory RSS totals, active partition counts, database page counts, permit renewal durations, and watchdog status.
+
+---
 
 ## Security and threat model
 
-### Security and Safety Considerations
-- **Local Database Tampering:** Database files are encrypted at rest using platform-backed keys to prevent extraction by unauthorized local processes.
-- **PII Leakage in Excerpts:** Candidate contribution excerpts must replace detected PII with generic field tokens (e.g., `<CUSTOMER_ID>`) rather than plausible fake values.
-- **Surveillance Resistance:** The component rejects any administrative command requesting remote extraction of raw screen frames.
+### Threat Vectors and Mitigations
+
+```
++------------------------------------------------------------------------------------+
+| Threat: Local Database Extraction                                                  |
+| Attack: Malicious user-space process attempts to read evidence files on disk.      |
+| Mitigation: SQLCipher 4 AES-256-CBC encryption with HMAC-SHA256 page auth. Keys   |
+| held in OS Keychain / Credential Manager. File permissions 0700/0600.             |
++------------------------------------------------------------------------------------+
+                                    |
++------------------------------------------------------------------------------------+
+| Threat: Manager Surveillance Request                                               |
+| Attack: Admin uses central API to request raw employee screen/audio timeline.      |
+| Mitigation: No remote raw timeline retrieval API exists. Raw evidence never leaves |
+| the workstation. Voluntary sharing requires employee Ed25519 signed review.       |
++------------------------------------------------------------------------------------+
+                                    |
++------------------------------------------------------------------------------------+
+| Threat: In-Memory Key & Frame Scraping                                             |
+| Attack: Local process scrapes RAM for decrypted frame buffers or database keys.    |
+| Mitigation: cipher_memory_security = ON locks key memory; owned frame buffers are |
+| zeroed immediately after slot release; unprivileged process isolation.              |
++------------------------------------------------------------------------------------+
+                                    |
++------------------------------------------------------------------------------------+
+| Threat: Prompt Injection / Secret Egress                                           |
+| Attack: Hidden screen text instructs AI model to exfiltrate private credentials.   |
+| Mitigation: Deterministic regex and structural masking executed before model        |
+| egress; inference is transient with contractual zero content retention.            |
++------------------------------------------------------------------------------------+
+```
+
+### Residual Risks and Explicit Non-Claims
+1. **Compromised OS Kernel / Rootkit:** If an attacker gains kernel privileges or administrative root access on the employee workstation, they can inspect process memory, hook graphics compositors, or bypass file permissions. Oryn does not claim protection against a fully compromised host OS kernel.
+2. **Forensic Storage Remanence:** In accordance with modern solid-state drive (SSD) wear-leveling algorithms, unlinking an encrypted file or issuing `secure_delete` does not guarantee physical sector overwrite on NAND flash. Security rests on cryptographic key destruction: destroying the partition key and rotating the catalog renders residual flash blocks permanently unreadable ciphertext.
+3. **OS-Level Hibernation & Crash Dumps:** Operating system crash dumps (`core` files or `MEMORY.DMP`) or OS hibernation files (`hiberfil.sys`) can capture physical RAM to disk. Oryn configures core dump suppression (`setrlimit(RLIMIT_CORE, 0)`) where supported, but cannot override enterprise-wide OS crash collection policies.
+
+---
 
 ## Test strategy
 
-### Acceptance and Verification Scenarios
-- **Acceptance Criteria References:** [PRODUCT.md §31.1: ORY-005, ORY-006, ORY-007, ORY-008, ORY-009, ORY-010](../../PRODUCT.md).
-- **Concrete Verification Scenario:**
-  - *Input/Condition:* Local raw capture reaches day 8 under default 7-day retention setting.
-  - *Expected Observable Result:* The retention sweeper permanently purges the day 1 raw media and indexes; My Privacy displays updated retention bounds; no central API or dashboard can access the purged data.
+### Normative Acceptance Scenarios
+The following 20 acceptance scenarios define the normative test specification for Component 5. All scenarios are **specified, not executed** in this documentation phase.
+
+#### PRIV-TEST-01: Exclusion Enforcement with Permitted Background
+- **Condition:** Employee switches focus to an excluded application (`1Password`) while an approved document (`Excel`) is visible in the background.
+- **Expected Result:** `CaptureGate` revokes permits for the foreground window; no frames or metadata from `1Password` are acquired or stored; Excel background observation continues under certified occlusion subtraction; companion displays "Approved windows observed; foreground excluded".
+- **Traceability:** PRODUCT.md §31.1 (ORY-003, ORY-005).
+
+#### PRIV-TEST-02: Missing Visibility Lease Cutoff
+- **Condition:** Desktop shell supervisor crashes or misses visibility lease renewals for > 500 ms while screen capture is active.
+- **Expected Result:** Helper's internal watchdog revokes all source permits within 500 ms; in-flight shared-memory frame slots are invalidated; capture halts immediately; companion status transitions to "Attention Needed".
+- **Traceability:** PRODUCT.md §31.1 (ORY-003, ORY-004).
+
+#### PRIV-TEST-03: Shared-Memory Frame Verification Failure
+- **Condition:** Native observer worker signals an 8 MiB frame slot where declared masked regions do not equal opaque-black BGRA `(0,0,0,255)` or the SHA-256 digest mismatches.
+- **Expected Result:** Helper rejects the frame; zero bytes are written to storage or egressed to inference; slot is zeroed and quarantined; helper logs an extraction error and emits an `ObservationGap`.
+- **Traceability:** PRODUCT.md §31.1 (ORY-005), TECHNICAL.md §4.2.
+
+#### PRIV-TEST-04: Volatile Ephemeral Mode (Retention Off)
+- **Condition:** Screen observation is active with `personal_history_retention=false`. Frame is acquired at time $T$.
+- **Expected Result:** Frame is processed in volatile memory with a strict 30-second TTL ($T+30$ s); zero disk writes occur in `screen/`; memory buffers are zeroed; no deferred upload queue is maintained; previously retained historical records keep their original deadlines.
+- **Traceability:** PRODUCT.md §25.1, §31.1 (ORY-005, ORY-009).
+
+#### PRIV-TEST-05: Default Retention Expiration Sweep
+- **Condition:** Local raw screen evidence reaches day 8 under default 7-day retention setting.
+- **Expected Result:** Background retention sweep purges day 1 partition files and encryption keys; My Privacy displays updated retention bounds; zero records from day 1 can be decrypted or queried.
+- **Traceability:** PRODUCT.md §31.1 (ORY-009, ORY-010).
+
+#### PRIV-TEST-06: Future-Only Retention Policy Extension
+- **Condition:** Employee changes retention preference from 3 days to 7 days.
+- **Expected Result:** Evidence acquired prior to the change expires on its original 3-day deadline; only evidence acquired after the policy update receives the 7-day deadline; expired records are never resurrected.
+- **Traceability:** PRODUCT.md §25.4, §31.1 (ORY-009).
+
+#### PRIV-TEST-07: Immediate Retention Shortening
+- **Condition:** Employee shortens retention preference from 7 days to 2 days.
+- **Expected Result:** All retained evidence older than 2 days becomes immediately inaccessible via queries and is scheduled for immediate selective purge on the next sweep.
+- **Traceability:** PRODUCT.md §25.4, §31.1 (ORY-009).
+
+#### PRIV-TEST-08: Legal Hold Blocking Voluntary Deletion
+- **Condition:** Employee attempts to delete history covering a date range subject to an active signed legal hold.
+- **Expected Result:** `PreviewDeletion` reports exact blocked count and hold ID; `CommitDeletion` deletes only eligible non-held records; held records remain preserved within their existing retention deadline; hold does not extend retention past raw expiry.
+- **Traceability:** PRODUCT.md §25.4, §31.1 (ORY-009).
+
+#### PRIV-TEST-09: Unknown Hold Verdict Offline Blocking Deletion
+- **Condition:** Workstation is offline; employee requests full history deletion, but `SignedRetentionVerdict` is expired (> 24 hours) or absent.
+- **Expected Result:** Helper returns `PRIVACY_HOLD_UNKNOWN` and rejects voluntary deletion; all data remains intact until a verified verdict is obtained upon reconnection.
+- **Traceability:** PRODUCT.md §25.4, §31.1 (ORY-009).
+
+#### PRIV-TEST-10: Untrusted Clock Rollback Protection
+- **Condition:** System clock is manually rolled back 10 days behind the persisted trusted-time high-water mark.
+- **Expected Result:** Helper transitions state to `PRIVACY_CLOCK_UNTRUSTED`; halts capture; blocks all history reads and previews; capture does not resume until trusted time is restored.
+- **Traceability:** PRODUCT.md §25.4, TECHNICAL.md §11.5.
+
+#### PRIV-TEST-11: Post-Offline Cleanup on Day-Eight Startup
+- **Condition:** Device is powered off on day 6 and powered on day 9 without network connectivity.
+- **Expected Result:** On startup, helper runs overdue retention sweeps before enabling history queries; day 1 and 2 records are purged; UI accurately reflects `last_cleanup_at` and does not claim cleanup occurred while powered off.
+- **Traceability:** PRODUCT.md §31.1 (ORY-009, ORY-010).
+
+#### PRIV-TEST-12: Managed Store Capacity Limit (Storage Full)
+- **Condition:** Managed store exceeds 10 GiB and available disk space drops below 1 GiB.
+- **Expected Result:** Helper executes immediate purge of expired records; if space remains full, active screen and meeting capture halt; helper emits `PRIVACY_STORAGE_FULL`; no early eviction of unexpired records occurs; companion prompts user recovery.
+- **Traceability:** PRODUCT.md §25.4, TECHNICAL.md §12.
+
+#### PRIV-TEST-13: Crash Recovery at Generation Commit Point
+- **Condition:** Power loss occurs during Step 4 of selective deletion, before OS credential write finishes.
+- **Expected Result:** On reboot, helper detects old catalog generation with an uncommitted `DeletionJob`; re-verifies deny fence; re-executes partition rebuild; successfully commits new catalog; no deleted records leak.
+- **Traceability:** PRODUCT.md §25.4, TECHNICAL.md §10.3.
+
+#### PRIV-TEST-14: Residual Flash Ciphertext Invalidation
+- **Condition:** Attacker inspects raw NAND flash sectors for deleted partition data.
+- **Expected Result:** Old partition encryption keys were destroyed from the catalog and zeroed in RAM; residual flash blocks consist entirely of cryptographically strong AES-256 ciphertext without usable keys.
+- **Traceability:** PRODUCT.md §25.4, TECHNICAL.md §10.3.
+
+#### PRIV-TEST-15: Meeting Source Expiry vs. Saved Commitment
+- **Condition:** Meeting audio and raw transcripts reach their 7-day retention deadline, but a confirmed action item was saved as a personal task.
+- **Expected Result:** Audio blob and raw transcript spans are purged; the saved task survives with `evidence_status = "unavailable"`; reminders continue to function; full personal purge deletes the task.
+- **Traceability:** PRODUCT.md §31.2 (ORY-021), [meeting-intelligence.md](meeting-intelligence.md).
+
+#### PRIV-TEST-16: Stale Local Preview Handle Revocation
+- **Condition:** Renderer attempts to fetch a thumbnail using a `local-media://` handle after the evidence record was deleted or 30 seconds elapsed.
+- **Expected Result:** Helper rejects request with HTTP 404 / `PRIVACY_NOT_FOUND`; arbitrary filesystem path traversal is blocked.
+- **Traceability:** PRODUCT.md §31.1 (ORY-006, ORY-010).
+
+#### PRIV-TEST-17: Redacted Still-Image Excerpt Sharing
+- **Condition:** Employee reviews a workflow candidate and includes a cropped screen still-image with an account number masked.
+- **Expected Result:** Image is re-encoded as a metadata-stripped PNG <= 1920x1080 and <= 1 MiB; opaque black mask covers account number; final review displays exact image; Ed25519 review attestation binds image SHA-256; original raw screenshot remains private.
+- **Traceability:** PRODUCT.md §25.5, §31.1 (ORY-007).
+
+#### PRIV-TEST-18: Deletion Racing Queued Share
+- **Condition:** Contribution is queued in `contribution-sync` while offline; employee deletes the underlying raw screen evidence.
+- **Expected Result:** Control store immediately sets `ReleaseFence` to `cancelled`; sync queue drops the upload; no outgoing network transmission occurs upon reconnection.
+- **Traceability:** PRODUCT.md §25.5, §31.1 (ORY-007, ORY-009).
+
+#### PRIV-TEST-19: Supported Client Uninstallation with Hold Block
+- **Condition:** Employee triggers application uninstallation while an active legal hold applies.
+- **Expected Result:** Helper aborts cleanup, returns `PrepareUninstall` status `blocked` with hold details; protected evidence remains intact; uninstallation cannot proceed silently.
+- **Traceability:** PRODUCT.md §25.4, §31.7 (ORY-069).
+
+#### PRIV-TEST-20: Cloud Inference Cancellation on Capture Pause
+- **Condition:** Visual extraction inference request is in-flight via LiteLLM; employee clicks "Pause Screen Observation".
+- **Expected Result:** `InferenceEgressClient` immediately aborts the HTTP request; any late response arriving after pause is discarded and not committed to history.
+- **Traceability:** PRODUCT.md §31.9 (ORY-071, ORY-073).
+
+---
 
 ## Performance and operations
 
-### Operational Characteristics ([TECHNICAL.md §12](../../TECHNICAL.md))
-- Low I/O overhead during continuous frame and event logging.
-- Background retention sweeps run at low process priority to avoid disk contention during employee working hours.
+### Operational Budgets and Certification Targets
+All metrics listed below are **certification targets to be verified during performance qualification**, not measured platform benchmarks:
+- **Source Permit Issuance/Renewal Latency:** Issued every 100 ms; p95 latency < 5 ms.
+- **Visibility Lease Cutoff Latency:** Watchdog timeout strictly enforced at 500 ms; p99 cutoff < 505 ms.
+- **Employee Pause p95 Latency:** Control gate halts permit issuance within < 10 ms; durable pause written within < 100 ms.
+- **Volatile In-Memory Processing Ceiling:** Strict 30-second TTL enforced by monotonic timer; memory zeroing completed within < 5 ms after extraction.
+- **Channel 2 Keyset Paging:** 50-item history page retrieved within < 25 ms across 10 open partition databases.
+- **Shared-Memory Frame Slot Copy:** Copying 8 MiB BGRA8 frame and calculating SHA-256 takes < 8 ms on target hardware (Apple M-series or Intel Core i7 11th Gen+).
+- **Storage Consumption Caps:** Maximum 10 GiB per profile; 256 MiB maintenance reserve; 1 GiB free-volume admission floor.
+
+### Storage Maintenance and Upgrades
+- **Automatic WAL Checkpointing:** Partitions execute `PRAGMA wal_checkpoint(PASSIVE)` during idle capture gaps and `PRAGMA wal_checkpoint(TRUNCATE)` upon hourly partition sealing.
+- **Background Retention Sweeper:** Runs low-priority cleanup sweeps once per minute while the helper process is active.
+- **Schema Migration Strategy:** Database schemas carry a `schema_version` in their metadata table. Forward schema migrations execute in a fresh generation database during startup; downgrade into an older unsupported schema is prohibited and transitions the store to `PRIVACY_STORE_LOCKED`.
+
+---
 
 ## Architecture decisions and open questions
 
-### Specific Preserved Implementation Questions
-- What local embedded storage engine (SQLite with SQLCipher, LevelDB, or OS data stores) offers the best combination of encryption speed and indexing?
-- How should deterministic secret removal algorithms balance pre-transfer latency against CPU utilization?
-- What exact encryption key derivation and storage scheme (OS Keychain / DPAPI) should protect the local evidence database?
-- How should legal hold requests be handled without violating product maximum retention limits?
+### Resolved Architecture Decisions
+1. **Embedded Database Engine:** SQLCipher 4 selected over LevelDB, RocksDB, or raw SQLite. Provides transparent AES-256-CBC page encryption, authenticated WAL journals, FTS5 virtual table support, and robust ACID transaction guarantees.
+2. **Encryption Key Hierarchy:** Independent random 256-bit keys per partition managed via an encrypted generation catalog (`key-catalog.<generation>.enc`), anchored by a single catalog credential stored in macOS Keychain or Windows Credential Manager. Device signing keys are kept strictly separate from storage encryption keys.
+3. **Legal Hold Precedence:** Legal holds prevent voluntary employee deletion within the configured raw retention period, but cannot extend retention beyond the original raw deadline and cannot grant remote manager playback access.
+4. **Capacity Exhaustion Strategy:** Storage quota exhaustion halts capture visibly and prompts user action; it never evicts unexpired records early and never silently drops to unencrypted ephemeral mode.
 
-### Handoff Questions ([TECHNICAL.md §14.2](../../TECHNICAL.md))
-1. *Owns exclusively:* Local capture consent enforcement, raw evidence storage, redaction pipeline, and retention purging.
-2. *Data ingress/egress:* Ingests raw observation streams; outputs sanitized, employee-approved workflow contributions.
-3. *Versions/identities:* Local device ID, policy version hash, and employee user identifier.
-4. *Upstream failure:* If upstream observers fail, storage maintains existing data and logs gap markers.
-5. *Authority:* The employee is authoritative for local retention choices (within 1–14 day bounds) and sharing review.
-6. *Testing without private details:* Tested via mock observation streams containing synthetic PII and excluded app IDs.
-7. *Audit and duplicate prevention:* Contribution approvals generate signed cryptographic receipts.
-8. *Failure blast radius:* Local storage failure stops local observation; fails closed to ensure privacy.
-9. *v1.0 criteria:* Enables ORY-005, ORY-006, ORY-007, ORY-009, and ORY-010 verified through retention sweeps and privacy audits.
+### Subsystem Handoff Answers (TECHNICAL.md §14.2)
+1. **Owns exclusively:** Authoritative capture consent enforcement, source permit issuance, raw screen/audio encrypted storage, SQLCipher partition lifecycle, retention sweeping, crash-safe selective purge, `ReviewedContributionV1` signing, and `InferenceEgressClient` token attachment.
+2. **Data ingress/egress:** Ingress via Channels 1–4, `os-observation.v1`, and native audio pipes; egress via Contract 2 (`contribution.approved_for_sharing`), Contract 22 (`InferenceRequest` over TLS 1.3), and Contract 25 (`privacy-context.v1`). Zero raw media egresses to central organizational dashboards.
+3. **Versions and identities:** Profile ID, enrollment ID, `session_epoch`, `source_epoch`, `surface_generation`, `input_generation`, `deletion_generation`, `catalog_generation`, and policy revision.
+4. **Upstream failure handling:** Observation worker crash isolates to affected source (`native_os`, `browser`, `meeting`); healthy sources continue; helper marks affected source degraded/unavailable with recovery blocker; emits gap marker to HUD.
+5. **Authority boundary:** Employee is authoritative for local retention choices (1–14 days), voluntary deletion, sharing review, and pause. Organization is authoritative for mandatory exclusions, maximum retention cap, legal hold verdicts, and artifact policy. Denial always wins.
+6. **Testing without private details:** Verified using synthetic test fixtures with mock PII, fake application IDs, deterministic mock clocks, and synthetic frame buffers.
+7. **Audit and duplicate prevention:** Idempotent command envelope (`command_id`, `expected_revision`), Ed25519 signed consent and review receipts, signed purge receipts, and monotonic sequence numbers.
+8. **Failure blast radius:** Helper crash or storage corruption halts local observation within 500 ms, keeps private storage locked, and fails closed without leaking private data.
+9. **v1.0 criteria enablement:** Enables ORY-002, ORY-003, ORY-004, ORY-005, ORY-006, ORY-007, ORY-008, ORY-009, ORY-010, ORY-021, ORY-068, ORY-069, ORY-070, ORY-071, ORY-072, ORY-073, ORY-074, ORY-075, and ORY-076.

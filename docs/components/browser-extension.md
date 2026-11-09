@@ -1318,13 +1318,13 @@ The subsystem operates across three strictly orthogonal state axes:
 
 | Current State | Trigger / Event | Owner | Content / Action Effect | Reported Capture State | Recovery Action |
 |---|---|---|---|---|---|
-| `unpaired` | First extension connection with unpinned key | Extension / Broker | Zero observation or execution allowed. Exchanging pairing challenges only. | `sources.browser.health = "unavailable"` | Complete 6-digit comparison confirmation in Shell UI. |
-| `pairing` | 60 s challenge expires or 3 failed attempts | Broker | Disconnects port. Zero content emitted. | `sources.browser.health = "unavailable"` | Restart pairing from extension popup. |
-| `paired_disconnected` | Browser launches or extension reloads | Extension | Retains pinned key. Initiates native messaging connection. | `sources.browser.health = "degraded"` | Service worker calls `runtime.connectNative`. |
-| `connecting` | Handshake timeout (> 3,000 ms) or build mismatch | Broker | Closes connection. Native host exits cleanly. | `sources.browser.health = "unavailable"` | Host restarted on next browser activity; updates inspected. |
-| `connecting` | Signature verified within 3,000 ms | Broker | Issues `BridgeReady` and token. Enables policy distribution. | `sources.browser.health = "ready"` | Advance to `ready`. |
-| `ready` | Native port EOF or browser process crash | Broker | Revokes all active permits. Zeroes in-memory session token. | `sources.browser.health = "unavailable"`, `recovery_blocker = "crash"` | Service worker reconnects; employee resumes capture. |
-| `ready` | Organization switch or enrollment revoked | Shell Native Core | Clears pinned keys and session tokens. Drops queues. | `sources.browser.health = "unavailable"` | Re-pair profile to new organization. |
+| `unpaired` | First extension connection with unpinned key | Extension / Broker | Zero observation or execution allowed. Exchanging pairing challenges only. | `sources[source_id="browser"].health = "unavailable"` | Complete 6-digit comparison confirmation in Shell UI. |
+| `pairing` | 60 s challenge expires or 3 failed attempts | Broker | Disconnects port. Zero content emitted. | `sources[source_id="browser"].health = "unavailable"` | Restart pairing from extension popup. |
+| `paired_disconnected` | Browser launches or extension reloads | Extension | Retains pinned key. Initiates native messaging connection. | `sources[source_id="browser"].health = "degraded"` | Service worker calls `runtime.connectNative`. |
+| `connecting` | Handshake timeout (> 3,000 ms) or build mismatch | Broker | Closes connection. Native host exits cleanly. | `sources[source_id="browser"].health = "unavailable"` | Host restarted on next browser activity; updates inspected. |
+| `connecting` | Signature verified within 3,000 ms | Broker | Issues `BridgeReady` and token. Enables policy distribution. | `sources[source_id="browser"].health = "ready"` | Advance to `ready`. |
+| `ready` | Native port EOF or browser process crash | Broker | Revokes all active permits. Zeroes in-memory session token. | `sources[source_id="browser"].health = "unavailable"`, `recovery_blocker = "crash"` | Service worker reconnects; employee resumes capture. |
+| `ready` | Organization switch or enrollment revoked | Shell Native Core | Clears pinned keys and session tokens. Drops queues. | `sources[source_id="browser"].health = "unavailable"` | Re-pair profile to new organization. |
 
 #### 2. Document Observation State Transitions
 
@@ -1332,8 +1332,8 @@ The subsystem operates across three strictly orthogonal state axes:
 |---|---|---|---|---|---|
 | `unadmitted` | Committed navigation to approved work context route | Extension | Emits `DocumentCandidate`. Zero content read. | `source_state = "permitted"` | Helper evaluates policy and issues permit. |
 | `unadmitted` | Committed navigation to unapproved or excluded origin | Extension | Inactive. Content script not injected. | `source_state = "excluded"` | Navigate to approved work route. |
-| `awaiting_permit` | `GrantObservationPermit` received within 300 ms | Helper / Extension | Injects observer. Begins baseline extraction. | `sources.browser.activities.active` | Advance to `active`. |
-| `awaiting_permit` | Permit request rejected or timed out | Helper | Remains dormant. Emits `ObservationGap(reason="permit_denied")`. | `sources.browser.activities.stopped` | Recheck employee consent and corporate policy. |
+| `awaiting_permit` | `GrantObservationPermit` received within 300 ms | Helper / Extension | Injects observer. Begins baseline extraction. | `sources[source_id="browser"].activities.active` | Advance to `active`. |
+| `awaiting_permit` | Permit request rejected or timed out | Helper | Remains dormant. Emits `ObservationGap(reason="permit_denied")`. | `sources[source_id="browser"].activities.stopped` | Recheck employee consent and corporate policy. |
 | `active` | Employee pauses screen capture | Desktop Shell | Revokes permit immediately. Flushes uncommitted queues. | `employee_paused = true`, `activities.stopped` | Intentional employee resume action in Shell UI. |
 | `active` | Tab hidden, minimized, or switched to background | Browser / Probe | Emits `DocumentLifecycleChanged(state="hidden")`. Suspends queries. | `activities.stopped` | Switch tab back to active foreground. |
 | `active` | Page enters BFCache, prerender, or discard | Browser Engine | Invalidates document generation. Drops target handles. | `activities.stopped` | Page restore triggers fresh `DocumentCandidate`. |
