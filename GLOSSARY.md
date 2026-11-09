@@ -65,5 +65,25 @@ Explicitly authorized local acquisition without AI processing. Later cloud proce
 _Avoid_: offline AI, automatic backfill
 
 **Reviewed Contribution**:
-Sanitized content an employee explicitly approves for a named organizational purpose and audience. Processing private content with an AI service does not make it a reviewed contribution.
+Sanitized content an employee explicitly approves for a named organizational purpose and audience, including approved purpose-bound still-image derivatives. Processing private content with an AI service does not make it a reviewed contribution.
 _Avoid_: inference output, raw upload
+
+**Private Evidence**:
+Employee-local captured material and private supporting records, distinct from a Reviewed Contribution or organizational evidence.
+_Avoid_: Local log, central recording, employee audit trace
+
+**Retention Deadline**:
+The latest permitted lifetime of private source material under its applicable setting; a legal hold does not extend it.
+_Avoid_: Hold expiration, archive date, storage timeout
+
+**Legal Hold**:
+A disclosed restriction on voluntary deletion of eligible retained material; not permission for new capture or longer raw retention.
+_Avoid_: Preservation order, mandatory capture, retention extension
+
+**Redacted Excerpt**:
+A separately reviewed sanitized artifact for a named purpose and audience, not access to a private original.
+_Avoid_: Raw screenshot, playback clip, unmasked excerpt
+
+**Purge Receipt**:
+A record stating the outcome and scope of completed eligible local destruction; not proof that external copies or published knowledge disappeared.
+_Avoid_: Global erasure proof, backup purge certificate
