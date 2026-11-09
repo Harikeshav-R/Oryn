@@ -290,9 +290,9 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 4.1 Desktop Shell and User Experience Host
 
-**Responsibility:** The installed Windows/macOS application that exposes enrollment, visible capture state, employee controls, personal history, notifications, contextual help, and approved local execution interfaces. Implemented using Tauri 2 (Rust native core + React/TypeScript UI in system WebView) with native platform status adapters (AppKit on macOS, Win32 on Windows) and an unprivileged child privacy helper communicating via inherited byte channels.
+**Responsibility:** The installed Windows/macOS application that exposes enrollment, visible capture state, employee controls, personal history, notifications, contextual help, and approved local execution interfaces. Implemented using Tauri 2 (Rust native core + React/TypeScript UI in system WebView) with native platform status adapters (AppKit on macOS, Win32 on Windows) and an unprivileged child privacy helper communicating via inherited byte channels. Host native core also owns the restricted OS-local endpoint broker (`BrowserBridgeBroker`) and content-free `BrowserGeometryProbe` for connecting the browser extension native host (`oryn-browser-host`).
 
-**Owns:** Desktop-level session and UI lifecycle; native system tray and movable capture badge presentation; employee visibility into local observation across the 7 canonical states; user controls for starting/stopping capture; presentation host for guidance overlays, highlight geometries, notifications, and consequential approvals; local UI preferences and enrollment markers; ephemeral visibility lease renewals.
+**Owns:** Desktop-level session and UI lifecycle; native system tray and movable capture badge presentation; employee visibility into local observation across the 7 canonical states; user controls for starting/stopping capture; presentation host for guidance overlays, highlight geometries, notifications, and consequential approvals; local UI preferences and enrollment markers; ephemeral visibility lease renewals; restricted OS-local IPC broker for browser extension attachment; content-free window geometry and display layout tracking.
 
 **Consumes:** Authoritative capture snapshots and exclusions from [local-privacy-storage](docs/components/local-privacy-storage.md), structured guidance presentation models from [local-context-hud](docs/components/local-context-hud.md), permitted guidance from [contribution-sync](docs/components/contribution-sync.md), job/approval requests from [control-plane](docs/components/control-plane.md), application-compatibility information from [os-observation](docs/components/os-observation.md), and authentication/policy state from [identity-policy](docs/components/identity-policy.md).
 
@@ -303,32 +303,30 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 **Boundary requirement:** Closing or disconnecting the UI must not silently change user consent or cause invisible capture. Closing the main window continues capture only if background observation is explicitly enabled and the native status badge remains visible on an active desktop; otherwise it halts capture (`Paused by You`). Explicit quit stops capture and persists a quit pause. Workstation lock/sleep halts capture; unlock/wake automatically restores previously active screen observation only, never meeting audio. Unexpected crashes, visibility loss, or updates fail closed within 500 ms and require explicit employee resume. Local capture requires a valid capture policy lease, capped at an absolute maximum of 24 hours of disconnection.
 ### 4.2 Native OS Observation Adapters
 
-**Responsibility:** Read permitted desktop context and relevant changes across approved Windows and macOS applications using supported platform facilities.
+**Responsibility:** Read permitted desktop context and relevant changes across approved Windows and macOS applications using supported platform facilities. Implemented via a dedicated unprivileged child worker (`oryn-observation-worker`) supervised by `oryn-privacy-helper` over private inherited byte channels and shared memory (see [detailed technical specification](docs/components/os-observation.md)).
 
-**Owns:** OS-specific observation capabilities, their limitations, and a standardized stream of observations to the local privacy and task pipeline.
+**Owns:** OS-specific observation capabilities, window inventory, z-order occlusion calculation, settled accessibility tree extraction, event-triggered snapshots, pre-transfer black-pixel masking, fair multi-window scheduling, and a standardized stream of observations to the local privacy and task pipeline.
 
-**Consumes:** Capture consent, app/window exclusion policy, active observation scope, OS access grants.
+**Consumes:** Capture consent, app/window exclusion policy, active observation scope, reverse source permits (`GrantObservationPermit`, `RevokeObservationPermit`), frame slot releases, and OS access grants.
 
-**Produces:** Typed local observations such as application changes, relevant UI state, permitted interaction events, and capture references with confidence/availability labels.
+**Produces:** Typed local observations (`ObservationEvent`), masked shared-memory snapshots, explicit `ObservationGap` records, and capability declarations with confidence/availability labels.
 
-**Does not own:** Whether observations are safe to share, workflow intent inference, or business rule approval.
+**Does not own:** Whether observations are safe to share, workflow intent inference, business rule approval, or downstream OCR/retention.
 
-**Boundary requirement:** Supported capabilities must be declared per operating system and application; inaccessible controls and gaps are reported rather than guessed. The capture implementation may use different mechanisms per platform; those choices are deferred.
-
+**Boundary requirement:** Supported capabilities must be declared per operating system and application; inaccessible controls and gaps are reported rather than guessed. Multi-window observation covers all permitted visible windows across displays, acquiring uncovered-only regions with conservative occlusion subtraction. When an excluded window takes focus, safe background windows continue observation. A native worker crash isolates to the `native_os` source and fails closed, leaving healthy browser and meeting capture active while the companion shows Attention Needed. Certified native browser fallback is strictly limited to enterprise-managed profiles with verifiably disabled private browsing (effective `IncognitoModeAvailability=1` or `InPrivateModeAvailability=1` and empty URL exception allowlists). Detailed architecture and wire protocols are resolved in [docs/components/os-observation.md](docs/components/os-observation.md).
 ### 4.3 Browser Extension and Local Browser Bridge
 
-**Responsibility:** Obtain high-fidelity, permissioned browser context for supported Chrome/Edge business applications; enable context-aware guidance and approved browser actions where supported.
+**Responsibility:** Obtain high-fidelity, permissioned browser context for supported Chrome/Edge business applications; coordinate local browser bridge over native messaging and restricted shell broker; enable context-aware guidance and approved browser actions where supported. Implemented in TypeScript under Manifest V3 and Rust native messaging host `oryn-browser-host` (see [detailed technical specification](docs/components/browser-extension.md)).
 
-**Owns:** Browser-side observation/interaction and communication with the desktop/local services. It reports current application and task-relevant context using a shared observation contract.
+**Owns:** TypeScript `BrowserCoordinator` in MV3 service worker, `DocumentObserver` content script, `TargetResolver`, `DomExecutor`, packaged `ApplicationProfileRegistry`, native host `oryn-browser-host` (`com.oryn.browser_bridge`), and tab-scoped navigation guard (`declarativeNetRequest`).
 
-**Consumes:** Allowed domains, capture settings, authenticated local desktop session, relevant published guide context, authorized assistance requests.
+**Consumes:** Authoritative browser permits, policy, exclusions, capture consent from [local-privacy-storage](docs/components/local-privacy-storage.md) via privacy helper over inherited channel 3 (`shell-browser.v1`), guidance target queries from [local-context-hud](docs/components/local-context-hud.md) via Contract 21, and authorized action commands from [agent-runtime](docs/components/agent-runtime.md) and [application-adapters](docs/components/application-adapters.md).
 
-**Produces:** Structured UI observations, permitted navigation/action evidence, element targets for guidance, authorized browser action results.
+**Produces:** Structured browser observations (`browser-observation.event.v1`), target presence/geometry (`BrowserTargetResult`), and action execution receipts (`BrowserActionResult`).
 
-**Does not own:** Organizational sharing policy, raw cloud upload, independent autonomous job scheduling, or permissions to act beyond a declared job.
+**Does not own:** Organizational sharing policy, raw cloud upload, independent autonomous job scheduling, action authorization issuance, business outcome verification, or in-browser overlay rendering (shell hosts all presentation windows).
 
-**Boundary requirement:** Browser and OS observations must be deduplicated or correlated when describing the same action. The extension must pass observations through the same local privacy policy as other capture sources.
-
+**Boundary requirement:** Browser and OS observations are arbitrated per modality. When connected, the extension is authoritative for web semantics while native OS observation provides window geometry, lifecycle, and optional extension-bound masked snapshots. Native fallback requires certified enterprise-managed browser profiles with verified disabled private browsing. User screen-observation pause immediately stops local browser actions at a safe boundary. Local execution requires exclusive device-wide reservation and `declarativeNetRequest` session navigation guard.
 ### 4.4 Meeting and Audio Intelligence
 
 **Responsibility:** Support separately authorized meeting transcription, candidate commitments, and later contextual reminders.
@@ -345,18 +343,17 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 4.5 Local Privacy Gate, Evidence Store, and Retention
 
-**Responsibility:** Enforce exclusions and data minimization at source; store private screen/audio evidence locally; govern its retention, export, and deliberate conversion into shareable procedural information.
+**Responsibility:** Enforce exclusions and data minimization at source; store private screen/audio evidence locally; govern its retention, export, and deliberate conversion into shareable procedural information. Executes as unprivileged `oryn-privacy-helper`, supervising the native worker and issuing unexpired source permits.
 
-**Owns:** Consent state and exclusion enforcement on the device, private capture retention, sensitive-data classification/redaction, the employee's review-before-sharing workflow, local evidence deletion.
+**Owns:** Consent state and exclusion enforcement on the device, native worker supervision and watchdog monitoring, source-aware recovery blocker tracking, private capture retention, sensitive-data classification/redaction, volatile ephemeral pipelines when personal retention is off, the employee's review-before-sharing workflow, and local evidence deletion.
 
-**Consumes:** All observation streams, organization restrictions, employee preferences, explicit contribution approvals.
+**Consumes:** All observation streams, organization restrictions, employee preferences, explicit contribution approvals, and visibility lease renewals from the desktop shell.
 
-**Produces:** Permitted private evidence for local use; sanitized candidate contributions after explicit review; privacy-status events without leaking excluded content.
+**Produces:** Permitted private evidence for local use; sanitized candidate contributions after explicit review; privacy-status events and authoritative `CaptureSnapshot` updates without leaking excluded content.
 
 **Does not own:** Automatically publishing a playbook, creating an agent from unreviewed raw capture, or providing managers remote playback.
 
-**Boundary requirement:** Protected application categories must be excluded before capture wherever possible; mixed windows and accidental sensitive exposure require safe suppression. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`. The capture gate consumes an ephemeral 100 ms visibility lease from the desktop shell supervisor and immediately revokes capture within 500 ms if unrenewed.
-
+**Boundary requirement:** Protected application categories must be excluded before capture at source; post-capture OCR or classification cannot authorize capture of mandatory excluded content. Mixed windows and accidental sensitive exposure require safe suppression. When `personal_history_retention=false`, live guidance operates ephemerally on volatile work buffers with a strict 30-second TTL without durable writes. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`. The capture gate consumes an ephemeral 100 ms visibility lease from the desktop shell supervisor and immediately revokes capture within 500 ms if unrenewed.
 ### 4.6 Local Task Understanding, Context Matcher, and Knowledge Cache
 
 **Responsibility:** Interpret the employee's currently permitted activity into candidate task context and match it against approved guidance without continuously needing a central model call.
@@ -668,7 +665,7 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 
 | Producer | Consumer | Information / command | Boundary rule |
 |---|---|---|---|
-| OS/browser/audio observers | Privacy + local evidence | Raw candidate observations | Filter at source; no direct cloud pathway |
+| OS/browser/audio observers | Privacy + local evidence | Raw candidate observations and reverse source permits | Filter at source; reverse privacy-to-worker permits and streaming over inherited channels; masked shared-memory frames; no direct cloud pathway |
 | Local privacy/contribution | Discovery | Employee-approved sanitized task contribution | Preserve consent receipt, provenance, sensitivity and scope |
 | Knowledge Governance | Edge context | Published, access-filtered playbook/peer fix | May be cached only for currently authorized scope |
 | Discovery | Knowledge Governance | Candidate workflow, observed variants, questions | Candidate cannot be auto-published |
@@ -688,6 +685,7 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | Governance / domain owners | Command Center | Authorized read models, notifications, audit | Frontend is not an authorization authority |
 | Desktop Shell | Local Privacy Storage | Capture control, visibility lease, and state subscription | Inherited byte-channel control; visibility loss or unrenewed lease immediately stops capture; raw media never crosses control channel |
 | Local Context HUD | Desktop Shell | Guidance cards, highlight targets, and user guidance interactions | Shell hosts all presentation and windows; HUD produces structured models and tracks guide progression; stale context invalidates highlights |
+| Local Context HUD | Browser Extension | Target presence and geometry query | HUD queries target resolution; extension resolves packaged deterministic locators against live DOM and returns desktop coordinates and affine transform; fallback to text-only guidance if geometry unproven |
 
 ### 7.3 Shared metadata requirements
 
@@ -1151,8 +1149,8 @@ This section distinguishes **decisions that should remain stable** from choices 
 | Future detailed design | Decisions to resolve | Must preserve |
 |---|---|---|
 | **Desktop Shell** | Resolved in [detailed technical specification](docs/components/desktop-shell.md) (Tauri 2, Rust core, React views, AppKit/Win32 native status adapters, inherited IPC, ephemeral visibility lease, durable pause, bounded offline policy). | Always-visible consent state, movable status badge, and fail-closed capture controls |
-| **Native Capture Engine** | Per-OS APIs, event normalization, sampling, OCR fallback, permission prompts, resource budgets | Exclusion-first private capture and honest capability reporting |
-| **Browser Extension / Bridge** | Extension architecture, browser permissions, DOM observation, communication with desktop, guidance rendering | Local privacy gate and authorization for actions |
+| **Native Capture Engine** | Resolved in [detailed technical specification](docs/components/os-observation.md) (Rust core + Swift/Win32 bridges, child worker supervised by privacy helper, inherited byte channels, 8 MiB shared-memory snapshots with pre-transfer masking, all-visible multi-window scope, source-specific crash containment, certified managed browser fallback). | Exclusion-first private capture, honest capability reporting, and zero unmasked pixel leakage |
+| **Browser Extension / Bridge** | Resolved in [detailed technical specification](docs/components/browser-extension.md) (Manifest V3, TypeScript service worker + isolated content scripts, Native Messaging host `oryn-browser-host`, shell broker endpoint, P-256 WebCrypto mutual authentication, `declarativeNetRequest` session navigation guard, deterministic multi-tier locators, safe action primitives, local-action pause). | Local privacy gate, explicit pairing, origin-specific grants, single-job reservation, and authorization for actions |
 | **Meeting/Audio** | Capture pipeline, transcription/diarization, participant notice UX, local processing | Per-meeting authorization and private evidence |
 | **Local Storage and Privacy** | Local schema, encryption, redaction stages, retention cleanup, evidence references, offline behavior | Raw local-only and review-before-sharing |
 | **Local Context + HUD** | Task segmentation, signature matching, cache layout, suggestion ranking, overlay rendering | No inferred authority, nonintrusive guidance |

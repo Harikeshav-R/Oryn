@@ -56,7 +56,7 @@ A machine learning model may request authorization, but cannot grant it. Every c
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes specific action authorization requests from [agent-runtime](agent-runtime.md) and returns authoritative allow/deny/approve decisions.
+- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes specific action authorization requests from [agent-runtime](agent-runtime.md) and local executors (including browser actions delegated to [browser-extension](browser-extension.md)); issues cryptographic authorization tokens bound to stable `action_sha256` proposal digests, enforcing item-level approval for Tier 3 actions and unconditional denial for Tier 4.
 - **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers authorized role-scoped read models and audit events to [command-center-analytics](command-center-analytics.md).
 - **Revocation Broadcasts:** Emits `policy.changed`, `access.revoked`, and `consent.revoked` domain events to invalidate distributed caches.
 

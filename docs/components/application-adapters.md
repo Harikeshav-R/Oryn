@@ -49,8 +49,8 @@ Observe, Guide, Assist, Run Supervised, and Run Autonomously are distinct advert
 
 ### Cross-Component Contracts
 - **Contract Reference #6 in [Contracts Catalog](../architecture/contracts/README.md):** Advertises supported actions, limitations, and verification capabilities to [agent-factory-ir](agent-factory-ir.md), [job-orchestration](job-orchestration.md), and [agent-runtime](agent-runtime.md).
-- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes authorized external operation requests from [agent-runtime](agent-runtime.md).
-- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Emits action submission receipts and readback evidence to [outcome-verification](outcome-verification.md).
+- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes authorized external operation requests from [agent-runtime](agent-runtime.md); delegates local browser actions to [browser-extension](browser-extension.md) via `ExecuteBrowserAction` over `browser-bridge.v1`.
+- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Emits action submission receipts (`BrowserActionResult`) and independent readback evidence to [outcome-verification](outcome-verification.md).
 
 ## Trust and deployment boundaries
 

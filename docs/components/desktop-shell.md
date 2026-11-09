@@ -84,10 +84,11 @@ The Desktop Shell directly presents or participates in verifying key product req
 
 ### Parent / Helper Transport Architecture
 
-The Desktop Shell native host communicates with the supervised unprivileged Privacy Helper process via **private inherited byte channels** established at process creation. Public named pipes, localhost TCP sockets, and discoverable Unix domain filesystem sockets are strictly prohibited to prevent unauthorized local process connection or eavesdropping.
+The Desktop Shell native host communicates with the supervised unprivileged Privacy Helper process (`oryn-privacy-helper`) via **private inherited byte channels** established at process creation. The Privacy Helper in turn launches and directly supervises the nested native observation worker (`oryn-observation-worker`) over its own private inherited channels (see [os-observation](os-observation.md)), while the desktop shell supervises the overall helper process tree. Public named pipes, localhost TCP sockets, and discoverable Unix domain filesystem sockets are strictly prohibited to prevent unauthorized local process connection or eavesdropping.
 
-- **macOS / Unix:** The host creates two connected Unix domain stream socket pairs via `socketpair(AF_UNIX, SOCK_STREAM, 0)`: one dedicated to real-time bidirectional control/state streaming, and one dedicated to bounded query responses (history pagination, review candidate payloads). The host passes the child socket descriptors across `fork`/`exec` and closes the child ends in the host. The child closes the host ends and closes all inherited descriptors other than standard descriptors and the explicit protocol channels.
-- **Windows:** The host creates two anonymous unidirectional pipe pairs (`CreatePipe`) per channel (four pipes total: control read/write, query read/write). The host uses `InitializeProcThreadAttributeList` with `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` in `STARTUPINFOEXW` to restrict handle inheritance strictly to the child pipe ends. Unused handle copies in both parent and child are closed immediately upon child process creation.
+As a narrowly scoped architectural exception ([ADR-0004](../adr/0004-browser-bridge-and-execution-boundaries.md)), the Desktop Shell native core hosts an authenticated OS-local endpoint (`~/Library/Application Support/Oryn/run/browser-bridge.sock` on macOS; `\\.\pipe\Oryn.BrowserBridge.<user-SID>.<logon-LUID>` on Windows) managed by `BrowserBridgeBroker` to accept connections strictly from the browser-launched `oryn-browser-host` executable with verified UID, PID, and publisher signatures. To route browser source observations into the privacy engine without crossing the capture control channel, the host allocates a third inherited byte channel at helper launch.
+- **macOS / Unix:** The host creates three connected Unix domain stream socket pairs via `socketpair(AF_UNIX, SOCK_STREAM, 0)`: control/state streaming (channel 1), bounded query responses (channel 2), and browser source streaming (channel 3, `shell-browser.v1`). The host passes the child socket descriptors across `fork`/`exec` and closes the child ends in the host. The child closes the host ends and closes all inherited descriptors other than standard descriptors and the explicit protocol channels.
+- **Windows:** The host creates three anonymous unidirectional pipe pairs (`CreatePipe`) per channel (six pipes total: control read/write, query read/write, browser read/write). The host uses `InitializeProcThreadAttributeList` with `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` in `STARTUPINFOEXW` to restrict handle inheritance strictly to the child pipe ends. Unused handle copies in both parent and child are closed immediately upon child process creation.
 
 Both host and child enforce strict closure of duplicate handles/descriptors. Failure to close duplicate handles breaks EOF detection upon process crash or termination, which violates the fail-closed capture invariant.
 
@@ -99,14 +100,17 @@ Prior to spawning the helper:
 - On Windows, the host validates the Authenticode digital signature and publisher subject of the helper binary using `WinVerifyTrust`.
 
 #### Framing and Protocol Wire Format
-Communication on both channels uses length-prefixed framing:
+Communication on control (channel 1) and query (channel 2) channels uses length-prefixed framing:
 1. A **4-byte unsigned big-endian integer** indicating the payload length in bytes ($0 < \text{length} \le 1{,}048{,}576$).
 2. A **UTF-8 JSON encoded payload** of exactly the specified length.
 
-The maximum message size is fixed at **1,048,576 bytes (1 MiB)**. Payloads exceeding this size or reporting zero length are rejected immediately by closing the transport channel. Diagnostics and logs must never be multiplexed onto protocol channels.
+The maximum message size on channels 1 and 2 is fixed at **1,048,576 bytes (1 MiB)**. Payloads exceeding this size or reporting zero length are rejected immediately by closing the transport channel. Diagnostics and logs must never be multiplexed onto protocol channels.
+
+#### Inherited Channel 3: Browser Source Stream (`shell-browser.v1`)
+Channel 3 is allocated strictly for browser source traffic between `BrowserBridgeBroker` and `oryn-privacy-helper`. It employs 4-byte big-endian framing with a maximum payload limit of **262,144 bytes (256 KiB)**. Raw candidate DOM observations, element state mutations, and baseline trees flow exclusively across this dedicated channel and never cross the capture control channel (Contract 19). If Channel 3 experiences framing errors or transport termination, only the browser observation source is marked `degraded` or `unavailable`; the primary capture control channel (channel 1) and query channel (channel 2) remain fully operational.
 
 #### Protocol Handshake (`shell-privacy.v1`)
-Immediately following channel creation, the host and helper execute a mandatory protocol handshake. The protocol version is `shell-privacy.v1` (major 1, minor 0).
+Immediately following channel creation, the host and helper execute a mandatory protocol handshake. The protocol version is `shell-privacy.v1` (major 1, minor 1).
 
 **Host Handshake Hello:**
 ```json
@@ -114,7 +118,7 @@ Immediately following channel creation, the host and helper execute a mandatory 
   "type": "HandshakeHello",
   "protocol_version": "shell-privacy.v1",
   "protocol_major": 1,
-  "protocol_minor": 0,
+  "protocol_minor": 1,
   "shell_build": "2026.11.08.1",
   "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
   "organization_id": "org_enterprise_corp",
@@ -127,7 +131,7 @@ Immediately following channel creation, the host and helper execute a mandatory 
 {
   "type": "HandshakeAck",
   "protocol_major": 1,
-  "protocol_minor": 0,
+  "protocol_minor": 1,
   "helper_build": "2026.11.08.1",
   "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
   "status": "ready"
@@ -148,14 +152,13 @@ All employee-initiated mutations carry an idempotent command envelope:
 
 1. **`PauseCapture`**
    - **Payload:** `{"reason": "employee" | "window_closed" | "quit" | "update" | "uninstall"}`
-   - **Semantics:** Commands immediate suspension of all active observation streams. Establishes a durable pause or specific recovery blocker in local privacy storage before responding. Bypasses `expected_revision` checks: requesting a capture stop must never fail due to a revision race.
+   - **Semantics:** Commands immediate suspension of all active observation streams across native and browser sources, and commands immediate pause of any executing local browser actions at the nearest safe boundary. Establishes a durable pause or specific recovery blocker in local privacy storage before responding. Bypasses `expected_revision` checks: requesting a capture stop must never fail due to a revision race.
    - **Response:** `{"command_id": "...", "status": "acknowledged", "revision": "1421", "stopped_at": "2026-11-08T14:30:00.120Z"}`
 
 2. **`ResumeCapture`**
    - **Payload:** `{"categories": ["visual_work_observation", "contextual_work_application_recognition"]}`
-   - **Semantics:** Requests resumption of consented, policy-permitted screen observation categories. **Never accepts audio or meeting categories.** Local privacy storage atomically validates current policy validity, employee consent, OS permissions, physical visibility lease, and absence of recovery blockers. Missing authority or mismatched `expected_revision` causes immediate rejection.
+   - **Semantics:** Requests resumption of consented, policy-permitted screen observation categories across all eligible sources (`native_os`, `browser`). **Never accepts audio or meeting categories.** Deliberately addresses every stopped native and browser source supporting a requested category, clears only that source's eligible recovery blocker after all gates validate, and leaves already healthy or running sources untouched. A native-fault recovery action in the UI is labeled **Resume Screen Observation** because other stopped screen sources may also resume. Local privacy storage atomically validates current policy validity, employee consent, OS permissions, physical visibility lease, and absence of global blockers. Missing authority or mismatched `expected_revision` causes immediate rejection.
    - **Response:** `{"command_id": "...", "status": "acknowledged", "revision": "1422", "active_categories": [...]}` or rejection with reason code.
-
 3. **`SetCaptureCategory`**
    - **Payload:** `{"category": "<CategoryIdentifier>", "enabled": boolean}`
    - **Semantics:** Toggles employee preference for a single category. Enabling a category cannot bypass missing employee notice consent, cannot start meeting recording, and cannot override an organizational policy prohibition.
@@ -463,6 +466,7 @@ export interface CaptureSnapshot {
   sequence: string;                // Stream monotonic decimal string representation of u64
   enrollment: "not_enrolled" | "notice_required" | "permissions_required" | "ready";
   categories: CategoryState[];
+  sources: CaptureSourceState[];   // Per-source operational health and category activity
   employee_paused: boolean;        // Durable employee pause flag
   suspension: null | "locked" | "asleep" | "signing_out" | "shutting_down";
   recovery_blocker: null | "crash" | "visibility_lost" | "update" | "unclean_restart" | "policy_expired";
@@ -483,7 +487,30 @@ export interface CategoryState {
   permission: "granted" | "denied" | "not_required";
   activity: "active" | "stopped" | "unknown";
 }
+
+export interface CaptureSourceState {
+  source_id: "native_os" | "browser" | "meeting";
+  health: "ready" | "degraded" | "unavailable";
+  activities: SourceCategoryActivity[];
+  recovery_blocker: null | "crash" | "hang" | "unclean_restart";
+  reason_codes: string[];
+}
+
+export interface SourceCategoryActivity {
+  category: "visual_work_observation" | "contextual_work_application_recognition" |
+            "personal_history_retention" | "organizational_sharing" |
+            "meeting_transcription" | "meeting_commitment_extraction";
+  activity: "active" | "stopped" | "unknown";
+}
 ```
+
+#### Category and Source State Aggregation Rules
+- **Category Aggregation:** For each consented and enabled category, the top-level `CategoryState.activity` is derived across its contributing sources:
+  - `active`: If at least one eligible source for that category is `active`.
+  - `unknown`: If no eligible source is `active`, but at least one eligible source is `unknown`.
+  - `stopped`: If all eligible sources are `stopped` (or unconsented / disabled).
+- **Source State Derivation:** `source_state` evaluates to `"permitted"` if any screen surface is currently admitted; `"excluded"` if zero screen surfaces are admitted and exclusion is the relevant restriction; otherwise `"unavailable"`.
+- **Fault Isolation:** A localized source crash (e.g. `native_os` worker crash) sets that source's health to `unavailable` and records its specific `recovery_blocker="crash"`. It does **not** set the top-level `recovery_blocker` (which is reserved for global supervisor/policy failures) and does **not** stop independent healthy sources (`browser`, `meeting`).
 
 ### The Seven Canonical Product States & Deterministic Headline Priority
 
@@ -491,15 +518,15 @@ In accordance with [PRODUCT.md §8.1](../../PRODUCT.md), the desktop shell prese
 
 | Priority | Canonical Headline | Trigger Condition | Visual & Explanatory Details |
 |---|---|---|---|
-| **1 (Highest)** | **Attention Needed** | Unknown capture state, failed helper, broken IPC, lost visibility lease, or unverified crash restart. | Warning badge; explainer states exact subsystem failure; offers Retry Connection or Restart. |
+| **1 (Highest)** | **Attention Needed** | Unknown capture state, failed helper, broken IPC, lost visibility lease, unverified crash restart, or native worker failure (while independent indicators show actual continued capture for other sources). | Warning badge; explainer states exact subsystem failure (e.g. "Native observation stopped; other active sources shown below"); offers Retry Connection or Restart. |
 | **2** | **Not Configured** | `enrollment != "ready"` (notice unacknowledged, consent missing, or mandatory OS permissions denied). | Informational badge; provides direct link to Enrollment or OS Settings guide. |
 | **3** | **Meeting Capture Active** | Audio transcription category `activity == "active"`. | Distinct high-visibility recording indicator; displays meeting title/duration and Stop Meeting button. |
 | **4** | **Paused by You** | `employee_paused == true`. | Amber paused badge; indicates manual pause; displays Resume button. Surpasses background/policy states. |
 | **5** | **Paused by Policy** | `policy_state != "valid"`, `suspension != null`, or administrative policy blocks capture. | Blue restriction badge; explains policy reason (e.g. "Workstation locked", "Policy lease expired", "Offline > 24h"). |
-| **6** | **In Excluded Application** | Foreground window belongs to an organizationally or personally excluded application/domain. | Shield badge; displays "Excluded window active — observation suspended"; zero frames captured. |
-| **7 (Lowest)** | **Observing Approved Work** | Eligible screen categories `activity == "active"`, policy valid, permitted source, visibility healthy. | Green active badge; displays "Observing approved work context" and quick Pause All button. |
+| **6** | **In Excluded Application** | Foreground window belongs to an organizationally or personally excluded application/domain AND no approved screen surface remains visible/admitted. | Shield badge; displays "Excluded window active — observation suspended"; zero frames captured. |
+| **7 (Lowest)** | **Observing Approved Work** | Eligible screen categories `activity == "active"`, policy valid, permitted source, visibility healthy. | Green active badge; displays "Observing approved work context" (or when an excluded window takes foreground while approved background windows continue: "Approved windows observed; foreground excluded") and quick Pause All button. |
 
-**Independent Status Invariant:** Regardless of the headline state, the companion UI and native badge **always display independent Screen and Meeting status indicators** alongside active restriction text. Meeting audio is never concealed behind a screen pause headline.
+**Independent Status Invariant:** Regardless of the headline state, the companion UI and native badge **always display independent Screen and Meeting status indicators** alongside active restriction text. When a native worker crashes while browser or meeting capture is active, the headline displays **Attention Needed** at highest priority, the explanatory subline displays `Native observation stopped; other active sources shown below`, and the independent Screen details and Meeting indicator accurately show continued live capture. Meeting audio is never concealed behind a screen pause headline.
 
 ### Command States and Stopping Transitions
 When an employee clicks Pause:
@@ -694,7 +721,7 @@ The Desktop Shell certifies explicit operating system and hardware architecture 
 *Note on Windows ARM64:* Tauri's NSIS installer bootstrapper may execute under Windows Prism emulation, but installs a 100% native `ARM64` application binary and native child helpers.
 
 ### Resource Budgets and Acceptance Criteria
-All measurements apply to the complete process tree (Host + OS WebView + Privacy Helper + HUD Helper) on reference hardware (Apple M1 8GB SSD / Intel Core i5 8GB SSD / Snapdragon X Elite 16GB SSD / Intel Core i7 16GB SSD):
+All measurements apply to the complete process tree (Host + OS WebView + Privacy Helper + Observation Worker + HUD Helper) on reference hardware (Apple M1 8GB SSD / Intel Core i5 8GB SSD / Snapdragon X Elite 16GB SSD / Intel Core i7 16GB SSD):
 
 | Metric | Acceptance Threshold | Measurement Condition |
 |---|---|---|

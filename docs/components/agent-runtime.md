@@ -54,8 +54,8 @@ The runtime is treated as **less trusted than the authorization, verification, a
 ### Cross-Component Contracts
 - **Contract Reference #10 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests bounded work assignments from [job-orchestration](job-orchestration.md).
 - **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Submits action authorization requests to [identity-policy](identity-policy.md).
-- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches authorized operations to [application-adapters](application-adapters.md).
-- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers action submission records and evidence to [outcome-verification](outcome-verification.md).
+- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches authorized operations to [application-adapters](application-adapters.md), which routes local browser operations to [browser-extension](browser-extension.md) over `browser-bridge.v1` (`ExecuteBrowserAction`) with canonical `action_sha256` proposal digests.
+- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers action submission records and UI primitive results (`BrowserActionResult`) to [outcome-verification](outcome-verification.md).
 
 ## Trust and deployment boundaries
 

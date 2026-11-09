@@ -47,7 +47,7 @@ An independent authoritative readback is preferred over runner self-reporting. A
 
 ### Cross-Component Contracts
 - **Contract Reference #8 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers oracle verification results to [flight-simulator](flight-simulator.md) and [release-governance](release-governance.md).
-- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests submission records and readback evidence from [agent-runtime](agent-runtime.md) and [application-adapters](application-adapters.md).
+- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests submission records and readback evidence from [agent-runtime](agent-runtime.md) and [application-adapters](application-adapters.md) (including local browser action results `BrowserActionResult` from [browser-extension](browser-extension.md)). A `BrowserActionResult.status="completed"` confirms only that the local DOM primitive was dispatched; independent readback is required before issuing `Verified Complete`. An action with `submission_state="unknown"` is classified as `Outcome Unknown`, halting execution and preventing blind retries.
 - **Contract Reference #14 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers verification verdicts and mismatch diagnoses to [job-orchestration](job-orchestration.md) and [incident-correction-repair](incident-correction-repair.md).
 
 ## Trust and deployment boundaries

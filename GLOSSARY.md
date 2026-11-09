@@ -19,3 +19,23 @@ _Avoid_: Headless capture, silent recording, stealth monitoring
 **My Privacy**:
 The employee-facing trust center view that displays active capture settings, excluded applications, data retention schedules, consent history, and deletion controls.
 _Avoid_: Privacy dashboard, telemetry settings, user audit log
+
+**Observation Surface**:
+A specific application window or document context that can be independently permitted or excluded from work observation.
+_Avoid_: Capture target, watched window
+
+**Observation Gap**:
+A known interval or portion of permitted work for which reliable evidence is unavailable; missing actions remain unknown.
+_Avoid_: Reconstructed activity, assumed step
+
+**Observation Capability**:
+The declared kinds and limits of work evidence available for a particular application and platform; it grants no authority to observe or execute.
+_Avoid_: Automation support, blanket compatibility
+
+**Browser Work Context**:
+An approved business account and page context within a browser application that may independently qualify for observation or assistance.
+_Avoid_: Allowed website, browser session
+
+**Reserved Execution Tab**:
+An employee-visible browser workspace temporarily reserved for one authorized automation, distinct from the employee's ordinary browsing.
+_Avoid_: Hidden worker tab, background bot session

@@ -10,13 +10,19 @@ Status: Baseline brief — detailed design pending
 The Local Privacy Gate, Evidence Store, and Retention component enforces mandatory exclusions and data minimization at the desktop source, securely stores private screen and audio evidence locally, and governs retention, deletion, and conversion into shareable procedural knowledge.
 
 - Device-level capture consent, authoritative capture snapshot generation, and active exclusion policy enforcement.
+- Supervision and lifecycle management of the nested native observation worker (`oryn-observation-worker`), including binary signature verification, 100 ms heartbeat watchdog (500 ms timeout), and source permit issuance (`GrantObservationPermit`, `RevokeObservationPermit`, `ReleaseFrameSlot`).
+- Source-aware operational tracking and recovery blocker isolation: maintains per-source health (`ready`, `degraded`, `unavailable`) and recovery blockers (`crash`, `hang`, `unclean_restart`) across `native_os`, `browser`, and `meeting` sources. A native-worker fault isolates to `native_os` without stopping independent healthy browser or meeting sources.
+- Admission and routing of the third inherited browser source channel (`shell-browser.v1`) negotiated via `shell-privacy.v1` major 1, minor 1: ingests candidate browser observations, evaluates conjunctive work context rules, and issues unexpired browser permits (`GrantObservationPermit`, `RevokeObservationPermit`) with 100 ms refresh and 300 ms maximum TTL.
+- Aggregation of per-profile browser bridge health into the authoritative `browser` capture source state (`sources.browser.health = "ready" | "degraded" | "unavailable"`).
+- Execution gate coordination: `PauseCapture` from Desktop Shell immediately halts browser observation permits and pauses local browser execution at the nearest safe boundary.
+- Masked shared-memory slot admission: maps inherited 8 MiB BGRA8 frame slots, verifies declared masked regions equal opaque-black BGRA `(0,0,0,255)`, verifies SHA-256 digest, copies frames into private buffers, and releases slots.
 - Supervision interface, ephemeral visibility lease validation (100ms lease / 500ms timeout), and fail-closed capture gating.
 - Durable employee pause persistence and recovery blocker tracking across process restarts and workstation power events.
 - Local encrypted storage for private observations, raw screenshots, and transient audio evidence.
 - Redaction and data minimization pipelines (masking credentials, tokens, PII, and financial account details).
+- Ephemeral volatile processing pipeline when `personal_history_retention=false`: copies frame to volatile buffer, releases slot immediately, executes local redaction/OCR, delivers ephemeral result to live context with a strict 30-second TTL, then zeroes and discards memory without disk writes or durable evidence receipts.
 - The employee's review-before-sharing workflow, ensuring no raw media egresses to the cloud.
 - Automatic local retention sweeps, user-initiated local evidence deletion, and supported uninstall data purges.
-
 ### Consumes
 - Raw candidate observation streams from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md).
 - Organization-wide mandatory exclusion rules and maximum retention caps from [identity-policy](identity-policy.md).
@@ -34,7 +40,7 @@ The Local Privacy Gate, Evidence Store, and Retention component enforces mandato
 - Remote video/screen playback for managers or administrators (strictly prohibited by product architecture).
 
 ### Boundary Requirement
-Protected application categories (password managers, banking, personal messaging, health portals) must be excluded before capture at source. Mixed windows require strict pixel and DOM masking. Default local raw retention is strictly **7 days**, employee-selectable between **1–6 days**, with documented organization extension up to a maximum of **14 days** (per [PRODUCT.md §25.4](../../PRODUCT.md)). Discarded or expired private raw capture cannot be recovered from organizational dashboards. The capture gate requires continuous 100 ms visibility lease renewals from the desktop shell supervisor; loss of renewal revokes the capture gate within 500 ms and discards in-flight post-revocation observations. Capture policy validity during offline operation is capped at an absolute maximum of 24 hours.
+Protected application categories (password managers, banking, personal messaging, health portals) must be excluded before capture at source; post-capture OCR or classification cannot authorize capture of mandatory excluded content. Mixed windows require strict pixel and DOM masking. Default local raw retention is strictly **7 days**, employee-selectable between **1–6 days**, with documented organization extension up to a maximum of **14 days** (per [PRODUCT.md §25.4](../../PRODUCT.md)). Discarded or expired private raw capture cannot be recovered from organizational dashboards. The capture gate requires continuous 100 ms visibility lease renewals from the desktop shell supervisor; loss of renewal revokes the capture gate within 500 ms and discards in-flight post-revocation observations. Capture policy validity during offline operation is capped at an absolute maximum of 24 hours.
 
 ## Product requirements
 
@@ -50,7 +56,7 @@ Protected application categories (password managers, banking, personal messaging
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Contract Reference #1 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests raw candidate observations from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md).
+- **Contract Reference #1 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests raw candidate observations from [os-observation](os-observation.md), [browser-extension](browser-extension.md), and [meeting-intelligence](meeting-intelligence.md). Emits reverse source permits, policy configurations, and frame slot releases (`os-observation.v1`) to [os-observation](os-observation.md).
 - **Contract Reference #2 in [Contracts Catalog](../architecture/contracts/README.md):** Emits employee-approved sanitized task contributions with consent receipts to [workflow-discovery](workflow-discovery.md) via [contribution-sync](contribution-sync.md).
 - **Local Context Feed:** Streams redacted, permitted observation records to [local-context-hud](local-context-hud.md).
 - **Contract Reference #19 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes capture commands (`PauseCapture`, `ResumeCapture`, `SetCaptureCategory`, `RecordCaptureConsent`, `PrepareUninstall`) and visibility lease renewals (`RenewVisibilityLease`) from [desktop-shell](desktop-shell.md); emits authoritative `CaptureSnapshot` updates over private inherited byte channels.
@@ -65,12 +71,13 @@ Protected application categories (password managers, banking, personal messaging
 ## Internal architecture
 
 ### Logical Submodules
-- **Pre-Capture Exclusion Interceptor:** Evaluates window metadata, application identifiers, and URL domains against exclusion lists before image acquisition.
+- **Pre-Capture Exclusion Interceptor & Permit Gate:** Evaluates window metadata, application identifiers, and URL domains against exclusion lists before image acquisition; issues unexpired 100 ms source permits to native workers and browser extensions.
+- **Worker Supervisor & Watchdog:** Spawns `oryn-observation-worker`, enforces 500 ms watchdog on worker heartbeats, quarantines shared-memory slots upon permit revocation, and manages backoff restarts.
 - **Sensitive Data Redaction Engine:** Performs on-device regex, NLP, and OCR masking of sensitive tokens, passwords, and PII.
 - **Local Encrypted Evidence Store:** Manages on-disk encrypted storage of raw frames, interaction logs, and local task indexes.
+- **Volatile Work Buffer Manager:** Manages ephemeral in-memory processing pipelines when `personal_history_retention=false`, enforcing zero-disk guarantees and 30-second TTL limits.
 - **Retention Sweeper:** Background process that enforces TTL rules and securely deletes expired media files.
 - **Sanitization Review Compiler:** Packages candidate workflow demonstrations into sanitized step narratives for employee inspection.
-
 ## State and lifecycle
 
 ### State and Persistence

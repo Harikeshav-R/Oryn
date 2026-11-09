@@ -17,7 +17,8 @@ The Local Context HUD and Guided Assistance component interprets the employee's 
 - Tracking interactive guidance step progress and executing approved, supervised local actions.
 
 ### Consumes
-- Redacted, permitted local observations from [local-privacy-storage](local-privacy-storage.md).
+- Redacted, permitted local observations from [local-privacy-storage](local-privacy-storage.md), tagged with explicit source identity (`native_os` vs `browser`), document generations, and modality provenance.
+- Target presence, physical desktop coordinates, and affine transforms from [browser-extension](browser-extension.md) via Contract 21 (`BrowserTargetResult`).
 - Published organizational playbooks, peer fixes, and rule definitions via [contribution-sync](contribution-sync.md).
 - Confirmed personal commitments from [meeting-intelligence](meeting-intelligence.md).
 - User guidance preferences (snooze, mute, dismiss) from [desktop-shell](desktop-shell.md).
@@ -36,8 +37,7 @@ The Local Context HUD and Guided Assistance component interprets the employee's 
 - Desktop window hosting, native click-through highlight rendering, or UI presentation (owned by [desktop-shell](desktop-shell.md)).
 
 ### Boundary Requirement
-Context matching must be uncertainty-aware and respect employee snooze/dismiss preferences. An inferred task identity or matched playbook must never be treated as implicit authorization to execute business actions. Assisted local actions must obey the same rigorous policy authorization checks as remote runners.
-
+Context matching must be uncertainty-aware and respect employee snooze/dismiss preferences. The input observation stream carries explicit source-aware `ObservationGap` records, incomplete or omitted baseline hierarchies (`TreeBaseline.complete=false`), exact source generations, modality provenance (`structured` vs `snapshot`), and affine coordinate transforms. The component must never synthesize guessed events or fabricate task continuity across reported observation gaps or surface generation changes; unobserved intervals must be treated as incomplete task evidence. When `personal_history_retention=false`, live guidance functions ephemerally on stream inputs within a 30-second window, without creating persistent task indexes or candidate records. An inferred task identity or matched playbook must never be treated as implicit authorization to execute business actions. Assisted local actions must obey the same rigorous policy authorization checks as remote runners.
 ## Product requirements
 
 ### Key Product Requirements ([PRODUCT.md §§9.4, 12, 29.1–6; ORY-011, ORY-018–021](../../PRODUCT.md))
@@ -50,12 +50,12 @@ Context matching must be uncertainty-aware and respect employee snooze/dismiss p
 ## Upstream and downstream contracts
 
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
-
 ### Cross-Component Contracts
+- **Local Observation Feed:** Consumes redacted, permitted local observation records, masked visual extraction results, affine coordinate transforms, and explicit `ObservationGap` events from [local-privacy-storage](local-privacy-storage.md).
 - **Contract Reference #3 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes published, access-filtered playbooks and peer fixes from [operational-graph](operational-graph.md) cached via [contribution-sync](contribution-sync.md).
 - **Contract Reference #20 in [Contracts Catalog](../architecture/contracts/README.md):** Emits structured guidance cards and target highlight coordinates to [desktop-shell](desktop-shell.md), and consumes employee guidance interaction events (`confirm_step`, `back`, `skip_optional`, `stop`, `dismiss`, `snooze_1h`, `mute_category`).
+- **Contract Reference #21 in [Contracts Catalog](../architecture/contracts/README.md):** Emits `ResolveBrowserTarget` queries to [browser-extension](browser-extension.md) via the privacy gate; consumes `BrowserTargetResult` containing ephemeral target handles and desktop geometry. If target geometry is unavailable or unproven, the HUD gracefully falls back to text-only step guidance without drawing coordinate highlights.
 - **Local Executor Interface:** Emits structured action requests to local UI and browser adapters, requiring explicit user confirmation for Tier 2/3 actions.
-
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

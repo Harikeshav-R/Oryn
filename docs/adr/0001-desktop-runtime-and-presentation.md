@@ -14,6 +14,8 @@ We adopt **Tauri 2** with a native **Rust core** and an isolated **React / TypeS
 
 The local privacy gate, evidence store, and retention engine execute in a separate unprivileged child process (`oryn-privacy-helper`). Communication between the desktop shell host and the helper occurs exclusively over **private inherited byte channels** (`socketpair` on macOS/Unix, anonymous pipe pairs with explicit child handle allowlisting on Windows). Public named pipes, localhost TCP sockets, and discoverable Unix domain filesystem sockets are strictly prohibited.
 
+*(Scope Amendment — 2026-11-09): [ADR-0004](0004-browser-bridge-and-execution-boundaries.md) establishes a narrowly scoped rendezvous exception for browser extension attachment: the desktop shell native core hosts an authenticated OS-local endpoint (`~/Library/Application Support/Oryn/run/browser-bridge.sock` on macOS; `\\.\pipe\Oryn.BrowserBridge.<user-SID>.<logon-LUID>` on Windows) accessible strictly to the browser-launched `oryn-browser-host` executable with verified UID, PID, and publisher signatures. Communication with `oryn-privacy-helper` continues exclusively over private inherited channels, with a third inherited channel (`shell-browser.v1`) allocated for browser source traffic.*
+
 ## Rationale and Alternatives
 We evaluated three primary alternatives:
 1. **Electron:** While offering unified multi-platform UI tooling, Electron's bundled Chromium instances consume 300–500 MiB idle memory, violating our resource budget. Furthermore, managing privilege boundaries within Chromium processes introduces unnecessary attack surface.
