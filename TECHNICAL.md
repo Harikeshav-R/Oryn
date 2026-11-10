@@ -385,17 +385,17 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 4.8 Contribution and Synchronization Gateway
 
-**Responsibility:** Mediate the boundary between private device knowledge and organization-shared knowledge; deliver approved playbooks/context back to the device.
+**Responsibility:** Mediate the boundary between private device knowledge and organization-shared knowledge; deliver approved playbooks/context back to the device. Fully specified in [detailed technical specification](docs/components/contribution-sync.md) and [ADR-0010](docs/adr/0010-contribution-delivery-and-guidance-sync.md).
 
-**Owns:** Transport, encrypted queueing, and delivery of employee-approved workflow contributions (`ReviewedContributionV1`) and reviewed meeting handoffs (`ReviewedMeetingHandoffProposal`); delivery receipts; connectivity state; and authorized retrieval of published guidance.
+**Owns:** Transport, encrypted queueing, and network delivery of employee-approved workflow contributions (`ReviewedContributionV1`) and reviewed meeting handoffs (`ReviewedMeetingHandoffProposal`) governed by wire schemas [`contribution-sync-v1.schema.json`](docs/architecture/contracts/contribution-sync-v1.schema.json) and [`guidance-sync-v1.schema.json`](docs/architecture/contracts/guidance-sync-v1.schema.json); central delivery receipts (`DeliveryReceiptV1`); connectivity state machines; minimal organization-lifetime replay identity; and authorized retrieval and caching of published guidance working sets.
 
-**Consumes:** Employee-reviewed contributions with Ed25519 review attestations signed by [local-privacy-storage](docs/components/local-privacy-storage.md), centrally published playbooks and rules from [operational-graph](docs/components/operational-graph.md), access-policy changes from [identity-policy](docs/components/identity-policy.md), and local connectivity state.
+**Consumes:** Employee-reviewed contributions with Ed25519 review attestations signed by [local-privacy-storage](docs/components/local-privacy-storage.md) over `privacy-sync.v1`, centrally published playbooks and guidance manifest deltas from [operational-graph](docs/components/operational-graph.md), access-policy changes, trust keysets, and signed guidance leases from [identity-policy](docs/components/identity-policy.md), and supervisor lifecycle events from [desktop-shell](docs/components/desktop-shell.md) over `shell-sync.v1`.
 
-**Produces:** Authenticated organizational contributions to [workflow-discovery](docs/components/workflow-discovery.md), delivery acknowledgments, guide cache updates, and revocation notifications.
+**Produces:** Authenticated organizational contributions to [workflow-discovery](docs/components/workflow-discovery.md), reviewed meeting handoffs to [operational-graph](docs/components/operational-graph.md), delivery acknowledgments, guidance working sets to [local-context-hud](docs/components/local-context-hud.md) via [desktop-shell](docs/components/desktop-shell.md) over Contract 20 rails, and revocation notifications.
 
-**Does not own:** Generating or signing employee review approvals (owned by [local-privacy-storage](docs/components/local-privacy-storage.md)), raw media uploads, or automatic publication.
+**Does not own:** Generating or signing employee review approvals (owned by [local-privacy-storage](docs/components/local-privacy-storage.md)), raw media uploads, index compilation (owned by HUD), or automatic publication.
 
-**Boundary requirement:** Reconnection order must process policy and revocation updates before outgoing approved contributions. Unreviewed drafts never upload automatically. If underlying source evidence is deleted locally while queued, the privacy helper's authoritative release fence cancels the release, and the sync gateway drops the queued upload idempotently. Transmitted artifacts are limited strictly to sanitized text narratives and purpose-bound redacted still images (<= 1920x1080, <= 1 MiB, max 4 per contribution) under a valid artifact policy; no audio/video clips, raw screenshots, or full transcripts may cross the boundary.
+**Boundary requirement:** Executes in a dedicated signed, unprivileged child process `oryn-sync-helper` supervised by Desktop Shell. Reconnection order must process policy and revocation updates before outgoing approved contributions. Unreviewed drafts never upload automatically. If underlying source evidence is deleted locally while queued, the privacy helper's authoritative release fence cancels the release, and the sync gateway drops the queued upload idempotently. Transmitted artifacts are limited strictly to sanitized text narratives and purpose-bound redacted still images (<= 1920x1080, <= 1 MiB, max 4 per contribution) under a valid artifact policy; no audio/video clips, raw screenshots, or full transcripts may cross the boundary. Central acceptance into PostgreSQL is atomic, committing destination intake rows, `bytea` artifacts, signed delivery receipts, and outbox events in a single transaction. Offline guidance reading is permitted under signed 24-hour access leases, but offline action execution is unconditionally blocked.
 ---
 
 ## 5. Organizational Control Plane and Knowledge Services
@@ -664,8 +664,8 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | Producer | Consumer | Information / command | Boundary rule |
 |---|---|---|---|
 | OS/browser/meeting observers | Privacy + local evidence | Raw candidate observations and reverse source permits | Filter at source; reverse privacy-to-worker permits (`GrantObservationPermit`, `RevokeObservationPermit`, `GrantMeetingPermit`, `RevokeMeetingPermit`) and streaming over inherited channels (`os-observation.v1`, `shell-browser.v1`, and channel 4 `shell-meeting-audio.v1`); masked shared-memory frames; native meeting taps and offscreen tab capture; no direct cloud pathway |
-| Local privacy / Contribution sync | Discovery | Employee-approved sanitized task contribution | Privacy helper generates and signs Ed25519 review attestation (`ReviewedContributionV1`); contribution-sync verifies attestations and manages encrypted queue and delivery receipts; sanitized text and purpose-bound redacted still images only under valid artifact policy; no raw media or private evidence IDs cross boundary |
-| Knowledge Governance | Edge context | Published, access-filtered playbook/peer fix | May be cached only for currently authorized scope |
+| Local privacy / Contribution sync | Discovery | Employee-approved sanitized task contribution (Contract 2) | Privacy helper generates and signs Ed25519 review attestation (`ReviewedContributionV1`); contribution-sync verifies attestations and manages encrypted queue and delivery receipts; sanitized text and purpose-bound redacted still images only under valid artifact policy; wire schema `contribution-sync-v1.schema.json`; no raw media or private evidence IDs cross boundary |
+| Operational Graph / Contribution sync | Local Context HUD | Published, access-filtered playbook / peer fix bundles (Contract 3) | Cached only within currently authorized employee session and scope; bundles are version-pinned by content SHA-256 (`hud.guidance-bundle.v1`); wire schema `guidance-sync-v1.schema.json`; offline reads governed by signed access lease (`hud.guidance-access-lease.v1`, max 24 hours); immediate eviction upon revocation |
 | Discovery | Knowledge Governance | Candidate workflow, observed variants, questions | Candidate cannot be auto-published |
 | Knowledge Governance | Agent Factory | Approved capability, rules, postconditions | Immutable/versioned references |
 | Capability Registry | Factory/Orchestrator/Runner | Supported actions, limitations and verification support | Unsupported ability cannot be inferred from model output |
@@ -686,7 +686,7 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | Local Context HUD | Browser Extension | Target presence and geometry query | HUD queries target resolution; extension resolves packaged deterministic locators against live DOM and returns desktop coordinates and affine transform; fallback to text-only guidance if geometry unproven |
 | All components / Privacy Helper | Control Plane / LiteLLM Gateway | Governed cloud inference request and authorization | Strict US processing, contractual zero content retention, no model training, route pinning; no local model execution; memory-backed upload spooling only |
 | Local Privacy Storage / Meeting Intelligence | Local Context HUD / Desktop Shell | Confirmed personal commitment projections and review commands | Private-local records only; HUD receives only `open` + `confirmed` commitments; 09:00 default working-zone occurrence; source edits require reconfirmation and suspend reminders |
-| Meeting Intelligence / Contribution Sync | Operational Graph | Reviewed meeting handoff contribution | Sanitized, employee-reviewed handoff proposal; no raw audio or full transcript upload; Operational Graph owns canonical shared status, deduplication, and recipient authorization |
+| Meeting Intelligence / Contribution Sync | Operational Graph | Reviewed meeting handoff contribution (Contract 24) | Sanitized, employee-reviewed handoff proposal (`ReviewedMeetingHandoffProposal`); wire schema `contribution-sync-v1.schema.json`; no raw audio, full transcript, or meeting session IDs upload; Operational Graph owns canonical shared status, deduplication, and recipient authorization |
 | Local Privacy Storage | Local Context HUD | Sanitized observation feed and reverse demonstration proposals | Direct helper-to-helper socketpair/anonymous pipe link passed at launch; length-prefixed protocol `privacy-context.v1`; bounded 128-message / 8 MiB buffer; no raw media or DOM trees; reverse demonstration proposals validated before local storage or contribution review |
 
 ### 7.3 Shared metadata requirements
@@ -756,8 +756,10 @@ sequenceDiagram
     O->>P: Candidate observations
     P->>P: Exclude, minimize, retain privately
     P-->>U: Private candidate task summary
-    U->>C: Review and approve sanitized contribution
-    C->>D: Approved structured task evidence
+    U->>P: Review and approve sanitized contribution
+    P->>C: Enqueue signed ReviewedContributionV1 (privacy-sync.v1)
+    C->>D: HTTPS multipart submission with release permit (POST /v1/sync/submissions)
+    D-->>C: Atomic PostgreSQL intake + signed DeliveryReceiptV1
     D->>K: Candidate workflow + gaps
     K-->>W: Request verification
     W->>K: Approve steps, rules, outcomes and scope
@@ -896,7 +898,7 @@ sequenceDiagram
 
 1. Employee or administrator changes relevant permission/consent state.
 2. The authoritative policy owner records the change and its effective scope.
-3. Local capture stops immediately for withdrawn capture categories; no queued private observations are newly shared.
+3. Local capture stops immediately for withdrawn capture categories; no queued private observations are newly shared. Pending egress releases and unreleased transport capsules are cancelled; unpublished accepted contributions are immediately excluded from discovery synthesis.
 4. Central eligibility is recalculated for affected guidance, jobs, agents, and scheduled execution.
 5. Affected runners are prevented from starting new privileged actions; ongoing cases are paused or contained where required.
 6. Cached data and credentials are invalidated/expired according to revocation semantics; auditable notifications explain restrictions.
@@ -1176,6 +1178,7 @@ This section distinguishes **decisions that should remain stable** from choices 
 | **Browser Extension / Bridge** | Resolved in [detailed technical specification](docs/components/browser-extension.md) (Manifest V3, TypeScript service worker + isolated content scripts, Native Messaging host `oryn-browser-host`, shell broker endpoint, P-256 WebCrypto mutual authentication, `declarativeNetRequest` session navigation guard, deterministic multi-tier locators, safe action primitives, local-action pause). | Local privacy gate, explicit pairing, origin-specific grants, single-job reservation, and authorization for actions |
 | **Meeting/Audio** | Resolved in [detailed technical specification](docs/components/meeting-intelligence.md) and [shared cloud inference contract](docs/architecture/cloud-inference.md) (Core Audio/WASAPI taps, tabCapture, LiteLLM live/near-live STT, commitment review, reminders). | Per-meeting authorization, private evidence, and zero-retention US cloud inference |
 | **Local Storage and Privacy** | Resolved in [detailed technical specification](docs/components/local-privacy-storage.md) and [ADR-0007](docs/adr/0007-private-evidence-storage-and-retention.md) / [ADR-0008](docs/adr/0008-reviewed-still-image-sharing.md) (Rust `oryn-privacy-helper`, SQLCipher 4 partitioned stores, AES-256-GCM chunked media, generation catalog anchored in OS credential manager, crash-safe selective purge, 30s volatile memory ceiling when retention disabled, Contract 25 `privacy-context.v1`, signed review attestations, and bounded offline leases). | Raw local-only, review-before-sharing, and zero unconsented/held retention expansion |
+| **Contribution and Synchronization Gateway** | Resolved in [detailed technical specification](docs/components/contribution-sync.md) and [ADR-0010](docs/adr/0010-contribution-delivery-and-guidance-sync.md) (Dedicated Rust child `oryn-sync-helper`, `shell-sync.v1` and `privacy-sync.v1`, SQLCipher 4 + AES-256-GCM offline queue, atomic PostgreSQL domain intake with signed receipts, minimal organization-lifetime replay identity, wire schemas `contribution-sync-v1.schema.json` and `guidance-sync-v1.schema.json`, status-first recovery, signed guidance leases). | Honest review attestation gating, truthful deletion/upload race semantics, immediate unpublished withdrawal exclusion, bounded offline guidance lease, and minimal central replay identity |
 | **Local Context + HUD** | Task segmentation, signature matching, cache layout, suggestion ranking, overlay rendering | No inferred authority, nonintrusive guidance |
 | **Control Plane / APIs** | Language/framework, module boundaries, auth/session mechanisms, endpoints, internal protocols | Domain ownership, tenant scoping, consistent validation |
 | **Messaging + Durable Workflows** | Event contracts, broker, outbox, ordering, job engine, idempotency handling | Durable state and duplicate-safe business effects |

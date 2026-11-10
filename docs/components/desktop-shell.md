@@ -223,9 +223,9 @@ When an employee reviews a sanitized task demonstration for potential organizati
 - **Request (`ReviewContribution`):**
   ```json
   {
-    "contribution_id": "contrib_8f7a1c9e",
-    "revision": "4",
-    "content_digest": "sha256-4b2a8f9c1e7a00112233445566778899aabbccddeeff00112233445566778899",
+    "contribution_id": "c0000000-0000-4000-8000-000000000001",
+    "revision": "1",
+    "content_digest": "6c8b43c2e4aa672a3a2b919b20da24336cfb8e2790c469b2f643924b36fb102f",
     "decision": "approve",
     "redaction_overrides": {
       "mask_field_ids": [],
@@ -236,6 +236,7 @@ When an employee reviews a sanitized task demonstration for potential organizati
   - `decision` must be `"approve"` or `"decline"`.
   - If `redaction_overrides` contains non-empty modifications (e.g. newly masked fields, removed steps, or updated artifact crops), the helper produces a fresh preview, advances the candidate revision and digest, and returns `PRIVACY_PREVIEW_STALE`. The employee must inspect and confirm the updated digest; unseen transformed content cannot be approved in the same mutation.
 - **Response:** Committal receipt with signed audit hash. Only the review/storage owner (`oryn-privacy-helper`) constructs the Ed25519-signed review attestation and emits the downstream domain event `contribution.approved_for_sharing`. The desktop shell never manufactures sharing events or digital signatures.
+- **Helper Supervision & Network Relay:** Desktop Shell supervises the unprivileged child process `oryn-sync-helper` over two inherited bidirectional byte channels (`shell-sync.v1`, major 1, minor 0: control/status and bulk data relay). `SessionBroker` delegates short-lived, audience-bound access tokens to sync. Shell acts as an opaque relay for guidance generation chunks forwarded from sync to `oryn-hud-helper` over Contract 20 bulk-data rails without caching or inspecting guidance contents.
 
 #### 2. HUD Guidance Presentation Interface (`HudPresentationPort`, Contract 20: `shell-hud.v1`)
 `local-context-hud` produces structured guidance models; `desktop-shell` renders them. The interface operates over two private, inherited bidirectional byte channels created by the shell supervisor at launch (`shell-hud.v1`, major 1, minor 0):
@@ -467,7 +468,7 @@ The desktop shell runs under Tauri 2, which enforces explicit capability-based s
    - Dispatches mutations and maintains subscription stream.
 
 6. **`HudPresentationPort`, `SyncPort`, `IdentityPort` (Rust):**
-   - Abstract internal ports decoupling the shell coordinator from network transports and child process protocols of external components.
+   - Abstract internal ports decoupling the shell coordinator from network transports and child process protocols of external components. `SyncPort` supervises `oryn-sync-helper`, manages process health, monitors queue admission status, and coordinates opaque chunk relaying to HUD.
 
 7. **`ShellViews` (React / TypeScript):**
    - Component surfaces rendering user views.

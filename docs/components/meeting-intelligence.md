@@ -242,27 +242,63 @@ Transmits incremental projection updates and removals:
 ```
 ### 3.5 Contract 24: Reviewed Meeting Handoff Contribution
 - **Producer:** `CommitmentReviewCoordinator` via `contribution-sync`.
-- **Consumer:** `operational-graph`.
-- **Payload:** `ReviewedMeetingHandoffProposal`.
-- **Invariants:** Sanitized, employee-reviewed business handoff only. Raw audio, full transcripts, and unreviewed excerpts are strictly prohibited.
+- **Consumer:** `operational-graph` via `contribution-sync`.
+- **Payload:** `ReviewedContributionV1` containing `MeetingReviewedHandoffV1`.
+- **Invariants:** Sanitized, employee-reviewed business handoff only. Raw audio, full transcripts, raw `meeting_session_id`, unreviewed excerpts, and unverified reference receipts are strictly prohibited. The payload conforms to `urn:oryn:schemas:contribution-sync:v1#/$defs/ReviewedContributionV1`, contains an RFC 8785 canonical content digest, and includes an Ed25519 hardware/Secure Enclave review attestation.
 
 ```json
 {
-  "proposal_id": "hnd_4f9a2b1c-8e3d-4c5a-9f1e-0e1d2c3b4a5f",
-  "meeting_session_id": "8f9a2b1c-4d3e-4b2a-9f1e-8c7b6a5d4e3f",
-  "source_workflow_id": "wf_invoice_po_reconciliation",
-  "destination_workflow_id": "wf_vendor_payment_approval",
-  "proposed_assignee_id": "usr_sarah_finance",
-  "expected_downstream_state": "po_reconciled_pending_signoff",
-  "due_at": "2026-11-13T22:00:00Z",
-  "time_zone": "America/New_York",
-  "business_context": {
-    "purchase_order_id": "PO-99241",
-    "vendor_name": "Acme Supplies Ltd",
-    "discrepancy_amount_usd": 0.00
+  "schema_id": "sync.reviewed-contribution.v1",
+  "organization_id": "00000000-0000-4000-8000-000000000001",
+  "actor_id": "usr_employee_01",
+  "device_id": "dev_macbook_01",
+  "profile_id": "prf_default_01",
+  "contribution_id": "c0000000-0000-4000-8000-000000000002",
+  "revision": 1,
+  "kind": "meeting_handoff",
+  "purpose": "handoff_coordination",
+  "audience": {
+    "audience_ids": [
+      "aud_procurement_team"
+    ]
   },
-  "sanitized_reviewed_excerpt": "Sarah agreed to sign off once the reconciled PO invoice matching was verified.",
-  "review_receipt_ref": "receipt://review/hnd_4f9a2b1c-8e3d-4c5a-9f1e-0e1d2c3b4a5f/approved"
+  "content": {
+    "schema_id": "meeting.reviewed-handoff.v1",
+    "proposal_id": "c0000000-0000-4000-8000-000000000002",
+    "source_workflow_id": "wf_triage_meeting",
+    "destination_workflow_id": "wf_po_reconciliation",
+    "proposed_assignee_id": "usr_reviewer_02",
+    "expected_downstream_state": "Invoice line variance verified against supplier agreement",
+    "due_at": "2026-11-10T17:00:00Z",
+    "time_zone": "America/New_York",
+    "business_context": {
+      "invoice_ref": "INV-2026-9921",
+      "variance_amount": "1420.50",
+      "priority_high": true
+    },
+    "sanitized_reviewed_excerpt": "Discussed PO line 4 variance with supplier; agreed to apply negotiated volume discount rebate."
+  },
+  "artifacts": [],
+  "content_digest": "3e04980855e8eab4cc08c66fd53f484db5f4b149f87f6b2f8546470b28dc5443",
+  "review_attestation": {
+    "schema_id": "sync.review-attestation.v1",
+    "key_id": "key_dev_01",
+    "payload": {
+      "review_receipt_id": "90000000-0000-4000-8000-000000000002",
+      "organization_id": "00000000-0000-4000-8000-000000000001",
+      "actor_id": "usr_employee_01",
+      "device_id": "dev_macbook_01",
+      "profile_id": "prf_default_01",
+      "contribution_id": "c0000000-0000-4000-8000-000000000002",
+      "revision": 1,
+      "content_digest": "3e04980855e8eab4cc08c66fd53f484db5f4b149f87f6b2f8546470b28dc5443",
+      "reviewed_at": "2026-11-09T20:05:00Z",
+      "source_not_after": null,
+      "policy_revision": "100",
+      "artifact_policy_revision": null
+    },
+    "signature": "b9LiiC9z8xSMDqiu1kpfy2dcuUpUvpX8nd79FommquqANOWzsTO7F-tG8j37qk01BnDiftuIyA98mPoIgzuhDQ"
+  }
 }
 ```
 ---

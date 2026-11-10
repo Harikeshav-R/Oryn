@@ -1310,7 +1310,11 @@ CREATE TABLE release_fences (
     canonical_digest TEXT NOT NULL,           -- SHA-256 of canonical contribution payload
     dependent_evidence_ids TEXT NOT NULL,     -- JSON array of referenced private evidence IDs
     fence_state TEXT NOT NULL,                -- 'active' | 'cancelled' | 'released'
-    delivery_projection TEXT NOT NULL,        -- 'queued' | 'dispatching' | 'delivered' | 'cancelled' | 'delivery_unknown'
+    delivery_projection TEXT NOT NULL,        -- 'queued' | 'dispatching' | 'delivered' | 'cancelled' | 'delivery_unknown' | 'withdrawal_requested'
+    active_attempt_id TEXT,                   -- UUIDv4 of active attempt in-flight
+    dispatch_started_at_utc TEXT,             -- RFC 3339 UTC
+    eligibility_not_after TEXT,               -- RFC 3339 UTC or NULL for confirmed obligations
+    cancellation_reason TEXT,                 -- 'source_deleted' | 'source_expired' | 'source_changed' | 'sharing_revoked' | 'employee_withdrawal' | 'policy_restricted' | 'session_ended' | 'helper_lost'
     created_at_utc TEXT NOT NULL,
     updated_at_utc TEXT NOT NULL
 );
@@ -1486,10 +1490,12 @@ The component defines explicit error codes over Channel 1, Channel 2, and Contra
 
 #### Deletion Racing Dispatched Network Upload
 If an employee deletes private evidence while a previously approved contribution referencing that evidence is in-flight:
-1. The control store transaction immediately marks the corresponding `ReleaseFence` as `cancelled`.
-2. The local purge completes independently without waiting for network I/O.
+1. The control store transaction immediately marks the corresponding `ReleaseFence` as `cancelled` with `cancellation_reason = 'source_deleted'`.
+2. The local purge completes independently and immediately without waiting for network I/O.
 3. If the upload cannot be aborted before bytes cross the wire, the delivery projection is marked `delivery_unknown`.
-4. Upon receiving a delivery acknowledgment, the helper does not re-upload the deleted source; instead, it marks the contribution as `withdrawal_requested` and exposes the separate contribution withdrawal flow to the employee.
+4. Upon receiving a delivery acknowledgment or during reconnection reconciliation, the helper does not re-upload the deleted source; instead, it marks the contribution as `withdrawal_requested` and issues a metadata-only withdrawal request (`SubmissionClosureRequestV1`) to the control plane.
+5. If the server durably accepted the contribution before the source's natural expiration or deletion, that prior acceptance remains valid and delivered. Natural expiry of underlying local sources for an already accepted contribution never automatically retracts organizational knowledge.
+6. When `personal_history_retention=false`, screen-derived contributions bypass durable transport capsules and offline queue storage; approved bytes reside strictly in locked volatile memory bounded by the source's 30-second deadline. Expiration destroys the buffer without durable trace.
 
 #### Offline Operation and Policy Lease Expiration
 - Observation may continue offline only within the unexpired duration of `SignedCapturePolicyLease` (maximum 24 hours from issuance).

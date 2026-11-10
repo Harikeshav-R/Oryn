@@ -49,8 +49,31 @@ The Control Plane API is a structured gateway to authoritative domain owners, no
 ### Cross-Component Contracts
 - **Communication Patterns Reference in [Contracts Catalog](../architecture/contracts/README.md):** Implements synchronous request/response handling and event publishing per §7.1.
 - **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers authorized read models and notifications to [command-center-analytics](command-center-analytics.md).
+- **Contract Reference #20 in [Contracts Catalog](../architecture/contracts/README.md):** Receives signed guidance bundle sync polling and cursor requests from `desktop-shell` and `local-context-hud` via [contribution-sync](contribution-sync.md).
 - **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Operates `InferenceAdmission` (validating `InferenceAuthorization` tokens, route limits, schemas) and `InferenceSessionCoordinator` (managing active stream lifetimes and cancellations) via [cloud-inference](../architecture/cloud-inference.md).
+- **Contract Reference #24 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests reviewed contributions and withdrawal notices from [contribution-sync](contribution-sync.md) via atomic intake endpoints.
 - **Domain Event Bus:** Emits organization-scoped events (`workflow.candidate_created`, `job.requested`, `incident.created`) following the event taxonomy in §7.4.
+
+### Sync Ingress and Guidance Distribution Endpoints
+Control Plane hosts the authoritative cloud HTTP/TLS sync transport endpoints for [contribution-sync](contribution-sync.md):
+- `POST /v1/sync/contributions/intake`: Ingests `sync.reviewed-contribution.v1` envelopes. Scopes idempotency to `(organization_id, contribution_id, revision)`. Executes atomic PostgreSQL acceptance transaction (inserting into `sync_submission_identity`, `sync_accepted_contributions`, `sync_contribution_artifacts`, and destination intake queues `discovery_contribution_intake` or `graph_handoff_intake`). Returns HTTP 200 with `sync.delivery-receipt.v1` on success or identical replay.
+- `POST /v1/sync/contributions/withdraw`: Ingests `sync.withdrawal-notice.v1` envelopes. Transactionally marks identity terminal (`withdrawn`), deletes accepted contribution and artifact rows, and writes tombstone records to destination queues within the same transaction.
+- `GET /v1/sync/guidance/bundles`: Streams cursor-paginated active guidance bundle headers for employee working set synchronization.
+- `GET /v1/sync/guidance/bundles/{bundle_id}`: Delivers single `hud.guidance-bundle.v1` payload with publisher signature sidecar.
+
+#### Structured Sync Error Responses
+Validation and admission rejections return standardized `sync.error-response.v1` payloads:
+- `SYNC_SCHEMA_VIOLATION` (400): Malformed envelope, missing fields, or unrecognized schema ID.
+- `SYNC_DIGEST_MISMATCH` (400): Content SHA-256 digest does not match RFC 8785 canonical content bytes.
+- `SYNC_ATTESTATION_INVALID` (401): Cryptographic review attestation signature fails Ed25519 verification.
+- `SYNC_ATTESTATION_KEY_REVOKED` (403): Review key has been revoked by Identity Policy.
+- `SYNC_POLICY_MISMATCH` (403): Review policy revision stale or superseded.
+- `SYNC_IMAGE_POLICY_VIOLATION` (400): Artifact count exceeds 4, exceeds 1920x1080 dimensions, or non-PNG MIME type.
+- `SYNC_REVISION_CONFLICT` (409): Submission specifies revision $\le$ existing accepted revision with differing content digest.
+- `SYNC_CONTRIBUTION_WITHDRAWN` (410): Submission references a previously withdrawn contribution ID.
+- `SYNC_ORGANIZATION_INACTIVE` (403): Tenant account suspended or offboarded.
+- `SYNC_RATE_LIMITED` (429): Ingestion rate or burst ceiling exceeded.
+- `SYNC_PAYLOAD_TOO_LARGE` (413): Total request envelope exceeds 20 MiB limit.
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

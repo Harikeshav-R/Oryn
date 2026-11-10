@@ -5,6 +5,7 @@
 **Deciders:** User-Approved Architecture Session  
 **Authority:** Technical Architecture & Security Engineering  
 **Amends:** [ADR-0001](0001-desktop-runtime-and-presentation.md), [ADR-0002](0002-desktop-capture-lifecycle.md), [ADR-0005](0005-cloud-inference-and-private-evidence.md), [ADR-0006](0006-meeting-capture-and-review-boundaries.md)  
+**Amended by:** [ADR-0010](0010-contribution-delivery-and-guidance-sync.md)  
 **Normative Specification:** [docs/components/local-privacy-storage.md](../components/local-privacy-storage.md)
 
 ---

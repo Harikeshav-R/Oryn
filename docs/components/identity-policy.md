@@ -69,24 +69,30 @@ A machine learning model may request authorization, but cannot grant it. Inferen
 ```json
 {
   "schema_id": "hud.guidance-access-lease.v1",
-  "key_id": "ed25519_pol_issuer_2026_01",
+  "key_id": "key_policy_01",
   "payload": {
-    "organization_id": "org_enterprise_corp",
-    "actor_id": "usr_emp_harikeshav_r",
-    "device_id": "dev_macbook_pro_01",
-    "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+    "organization_id": "00000000-0000-4000-8000-000000000001",
+    "actor_id": "usr_employee_01",
+    "device_id": "dev_macbook_01",
+    "profile_id": "prf_default_01",
     "allowed_bundle_hashes": [
-      "sha256_e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b"
+      "780ea94e79bc83bd44ebe2bcc04f67b194c012161b797373668a89a9c67c4bec"
     ],
-    "policy_revision": "1420",
-    "access_revision": "841",
-    "issued_at": "2026-11-09T10:00:00Z",
-    "not_after": "2026-11-10T10:00:00Z",
+    "policy_revision": "100",
+    "access_revision": "200",
+    "issued_at": "2026-11-09T20:00:00Z",
+    "not_after": "2026-11-10T20:00:00Z",
     "read_only": true
   },
-  "signature": "MEQCID3k8l_guidance_lease_signature_base64url_raw_ed25519"
+  "signature": "2Opurx3PwyqhwUEWsVUKziAiBS_HMvGp7iwigfzXI3_e6WyH-0RdCz9z-VkstR2-3i9_10H9sxrwBP9DH2S4DQ"
 }
 ```
+
+### Review Key Challenge and Registration Lifecycle
+- **Key Generation:** During device enrollment, the desktop helper (`oryn-sync-helper`) generates a dedicated Ed25519 review keypair in hardware/Secure Enclave with an identifier `key_id`.
+- **Registration and Proof of Possession:** The endpoint submits the public key to Identity Policy along with a challenge signed by the device enrollment credential. Identity Policy validates the challenge, binds `(organization_id, actor_id, device_id, key_id, public_key, registered_at_utc)`, and activates the key.
+- **Sync Authority:** Identity Policy serves as the authoritative trust root for `contribution-sync` (Contract 24). During contribution intake, `control-plane` verifies review attestations against the active public key registered with Identity Policy.
+- **Revocation:** When an employee departs, a device is decommissioned, or a key is suspected of compromise, Identity Policy marks the key revoked (`revoked_at_utc`). Subsequent contributions bearing attestations from revoked keys are rejected immediately with `SYNC_ATTESTATION_KEY_REVOKED`.
 - **Revocation Broadcasts:** Emits `policy.changed`, `access.revoked`, and `consent.revoked` domain events to invalidate distributed caches and terminate active capture or execution leases upon reconnection.
 
 ### Process and Security Boundaries

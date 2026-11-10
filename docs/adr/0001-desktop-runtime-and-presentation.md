@@ -3,6 +3,7 @@
 **Status:** accepted  
 **Date:** 2026-11-08  
 **Deciders:** Core Engineering Team  
+**Amended by:** [ADR-0010](0010-contribution-delivery-and-guidance-sync.md)  
 
 ## Context
 The Desktop Shell serves as the primary employee-facing host on Windows 11 and macOS workstations, exposing user enrollment, persistent capture visibility, personal work history, guidance overlays, and human-in-the-loop consequential action approvals. The runtime must satisfy stringent resource limits ($\le 250\text{ MiB}$ idle process tree memory, $\le 1\%$ idle CPU), guarantee that capture status is never concealed, and run with unprivileged user permissions.

@@ -68,6 +68,18 @@ _Avoid_: offline AI, automatic backfill
 Sanitized content an employee explicitly approves for a named organizational purpose and audience, including approved purpose-bound still-image derivatives. Processing private content with an AI service does not make it a reviewed contribution.
 _Avoid_: inference output, raw upload
 
+**Delivery Receipt**:
+A record that the intended organizational destination accepted a reviewed contribution; it does not prove publication, business correctness, or acceptance of an obligation.
+_Avoid_: Publication receipt, outcome verdict
+
+**Contribution Withdrawal**:
+An employee request to stop use of a shared contribution; unpublished use stops immediately while published knowledge and retained records follow governed removal rules.
+_Avoid_: Local deletion, guaranteed global erasure
+
+**Guidance Working Set**:
+Published guidance currently retained for authorized local use within declared capacity; it is not all available organizational knowledge.
+_Avoid_: Complete company cache, offline knowledge mirror
+
 **Private Evidence**:
 Employee-local captured material and private supporting records, distinct from a Reviewed Contribution or organizational evidence.
 _Avoid_: Local log, central recording, employee audit trace

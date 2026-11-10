@@ -3,6 +3,7 @@
 **Status:** accepted  
 **Date:** 2026-11-09  
 **Deciders:** Architecture and Security Review  
+**Amended by:** [ADR-0010](0010-contribution-delivery-and-guidance-sync.md)  
 
 ## Context
 Oryn provides employees with real-time contextual guidance, peer error fixes, commitment reminders, and supervised assistance during desktop and browser work. Designing the boundary between local context understanding and execution assistance involves key architectural tensions:

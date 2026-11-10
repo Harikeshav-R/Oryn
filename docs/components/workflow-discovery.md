@@ -47,10 +47,16 @@ Workflow discovery operates asynchronously. Ambiguous demonstrations, conflictin
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Contract Reference #2 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests employee-approved sanitized task contributions from [local-privacy-storage](local-privacy-storage.md) via [contribution-sync](contribution-sync.md).
+- **Contract Reference #2 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests employee-approved sanitized task contributions from [local-privacy-storage](local-privacy-storage.md) via [contribution-sync](contribution-sync.md) through the `discovery_contribution_intake` destination queue.
 - **Contract Reference #4 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers candidate workflows, observed variants, and clarifying questions to [operational-graph](operational-graph.md).
 - **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes `text.reason` and `text.embed` via the LiteLLM gateway under [cloud-inference](../architecture/cloud-inference.md) for task clustering and procedure synthesis; inferred candidates remain unapproved drafts until human verification.
 - **Review Notification Contract:** Emits `workflow.candidate_created` domain events to alert assigned domain owners in [command-center-analytics](command-center-analytics.md).
+
+### Contribution Ingestion and Deduplication Lifecycle
+- **Destination Intake Queue (`discovery_contribution_intake`):** Workflow Discovery polls the PostgreSQL queue populated atomically by [contribution-sync](contribution-sync.md) for contributions where `kind = 'task_demonstration'`.
+- **Transport Idempotency vs. Semantic Clustering:** Transport idempotency on `(organization_id, contribution_id, revision)` prevents duplicate queue insertion at the API layer. Downstream, the Discovery inbox worker deduplicates by `(organization_id, contribution_id)` to process only the latest revision, feeding distinct demonstrations into semantic clustering algorithms.
+- **Immediate Exclusion of Withdrawn Contributions:** When a contribution is withdrawn via `sync.withdrawal-notice.v1`, the sync transaction writes a withdrawal tombstone to `discovery_contribution_intake`. The discovery worker immediately excludes withdrawn contributions from active clusters and candidate generation pipelines. If an unpublished candidate workflow was derived from a withdrawn contribution and now has fewer than 3 qualifying demonstrations, the candidate is revoked.
+- **Late-Result Fencing:** Before committing any synthesized candidate workflow or clustering output to the database, the worker validates against `sync_submission_identity` that all constituent contribution IDs remain active (`disposition = 'accepted'`). Any late-arriving inference result referencing a withdrawn contribution is fenced and discarded.
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries

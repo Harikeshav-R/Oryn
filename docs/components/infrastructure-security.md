@@ -76,7 +76,7 @@ Simulation execution environments must be completely network-isolated from produ
 ### State and Persistence
 - **Persisted State:** Central database clusters, encrypted object stores, KMS keys, and audit log archives.
 - **Lifecycle Transitions:** `Provisioned → Active Monitoring ↔ Scaling / Maintenance → Decommissioned`.
-- **Backup and Restore:** Continuous point-in-time recovery (PITR) for relational stores; backups are encrypted with distinct keys.
+- **Backup, Restore, and Certified Artifact Storage:** Continuous point-in-time recovery (PITR) for relational stores; backups are encrypted with distinct keys. Cloud primary storage, write-ahead logs (WAL), read replicas, and backup archives must certify compliance with the signed artifact policy's maximum lifetime (<= 365 days); issuance of artifact policies by `identity-policy` is blocked unless cloud infrastructure storage certification is active. Database restore procedures filter expired and revoked artifacts before serving any read traffic. Disclose truthfully that local withdrawal removes active published intake immediately but does not promise instant physical erasure of existing write-ahead log segments or encrypted offline disaster recovery snapshots until normal snapshot retention expiry. If no certified image-storage policy exists, image-bearing review and release are rejected; employees may prepare and review a separate text-only contribution.
 
 ## Error and edge-case behavior
 

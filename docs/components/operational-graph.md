@@ -50,171 +50,158 @@ Strictly separate observational evidence, proposed interpretations, and authorit
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Contract Reference #3 in [Contracts Catalog](../architecture/contracts/README.md) (`hud.guidance-bundle.v1`):** Publishes access-filtered guidance bundles (`GuidanceBundleV1`) to [contribution-sync](contribution-sync.md) for caching and delivery to [local-context-hud](local-context-hud.md). Bundles are strictly immutable, version-pinned by content SHA-256 (`playbook_version`), signed by the publisher, and contain deterministic task signatures, step graphs (max 128 steps, cycle-checked), peer-fix descriptors, profile-approved predicates, and optional Stage 3 approved assist plans (`AssistPlanV1`). Private evidence IDs, customer values, executable scripts, and draft procedures are strictly prohibited:
+- **Contract Reference #3 in [Contracts Catalog](../architecture/contracts/README.md) (`sync.signed-guidance-bundle.v1` / `hud.guidance-bundle.v1`):** Publishes access-filtered guidance bundles (`GuidanceBundleV1`) paired with publisher signature sidecars (`PublisherSignatureSidecarV1`) to [contribution-sync](contribution-sync.md) for caching and delivery to [local-context-hud](local-context-hud.md). Bundles are strictly immutable, version-pinned by content SHA-256 (`content_sha256`), signed by the Operational Graph publisher key, and contain deterministic task signatures, DAG step graphs (`step_edges`, max 128 steps, cycle-checked), peer-fix descriptors, profile-approved predicates, and optional Stage 3 approved assist plans (`AssistPlanV1`). Private evidence IDs, customer values, executable scripts, and draft procedures are strictly prohibited:
 
 ```json
 {
-  "schema_id": "hud.guidance-bundle.v1",
-  "organization_id": "org_enterprise_corp",
-  "bundle_id": "01928374-2001-7000-8000-000000000001",
-  "bundle_revision": "1",
-  "content_sha256": "sha256_e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
-  "publisher_signature_ref": "sig_opgraph_pub_20261109_01",
-  "playbook_id": "pb_tax_reconciliation_v2",
-  "workflow_id": "wf_invoice_po_reconciliation",
-  "capability_id": "cap_erp_tax_adjustment",
-  "playbook_version": "sha256-e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
-  "display_revision_label": "v2.1",
-  "status": "published",
-  "audience": {
-    "team_ids": ["team_finance_gl", "team_ap_invoicing"],
-    "role_tiers": ["operator", "senior_accountant"]
-  },
-  "last_verified_at": "2026-11-01T10:00:00Z",
-  "applicable_profiles": [
-    { "application_profile_id": "prof_app_excel_v1", "min_version": "1.0.0" },
-    { "application_profile_id": "prof_app_finance_invoicing_v1", "min_version": "1.0.0" }
-  ],
-  "effective_rule_versions": ["rule_finance_tax_matching_01:v3"],
-  "conflict_flags": [],
-  "record_independent": false,
-  "objective": "Resolve ERP invoice tax discrepancy",
-  "prerequisites": {
-    "predicate": {
-      "op": "eq",
-      "field": "error_code",
-      "value": "ERR_TAX_DISCREPANCY_401"
-    }
-  },
-  "expected_result": "Invoice tax discrepancy cleared and ready for GL post",
-  "task_signature": {
-    "entry_application_id": "com.microsoft.Excel",
-    "entry_predicate": {
-      "op": "eq",
-      "field": "error_code",
-      "value": "ERR_TAX_DISCREPANCY_401"
-    }
-  },
-  "steps": [
-    {
-      "step_id": "step_check_rate",
-      "order": 1,
-      "title": "Verify Tax Rate in Reference Schedule",
-      "instruction": "Check tax rate formula matches line item schedule before posting.",
-      "rationale": "Prevents GL tax mismatch.",
-      "rule_refs": ["rule_finance_tax_matching_01:v3"],
-      "source_refs": ["ev_pub_guidance_tax_01"],
-      "optional": false,
-      "prerequisite_predicate": null,
-      "expected_state_predicate": {
-        "op": "eq",
-        "field": "active_cell_formula",
-        "value": "=VLOOKUP(A2, Rates!A:B, 2, FALSE)"
-      },
-      "allowed_targets": [
-        { "application_profile_id": "prof_app_excel_v1", "target_key": "active_cell" }
-      ],
-      "timeout_ms": 30000,
-      "assist_plan_ref": null
-    },
-    {
-      "step_id": "step_post_adjustment",
-      "order": 2,
-      "title": "Post Adjustment in ERP",
-      "instruction": "Click Post Adjustment in the invoice screen to reconcile batch.",
-      "rationale": "Commits verified line items.",
-      "rule_refs": ["rule_finance_tax_matching_01:v3"],
-      "source_refs": ["ev_pub_guidance_tax_01"],
-      "optional": false,
-      "prerequisite_predicate": {
-        "op": "eq",
-        "field": "active_cell_formula",
-        "value": "=VLOOKUP(A2, Rates!A:B, 2, FALSE)"
-      },
-      "expected_state_predicate": {
-        "op": "eq",
-        "field": "status",
-        "value": "Pending Review"
-      },
-      "allowed_targets": [
-        { "application_profile_id": "prof_app_finance_invoicing_v1", "target_key": "target_approve_button" }
-      ],
-      "timeout_ms": 30000,
-      "assist_plan_ref": "plan_tax_post_adjustment_v1"
-    }
-  ],
-  "peer_fixes": [
-    {
-      "peer_fix_id": "fix_tax_disc_01",
-      "application_profile_id": "prof_app_excel_v1",
-      "application_profile_version": "1.0.0",
-      "normalized_error_code": "ERR_TAX_DISCREPANCY_401",
-      "fix_playbook_version": "sha256-e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
-      "provenance": "peer_verified",
-      "permitted_action_categories": ["guidance_and_assist"]
-    }
-  ],
-  "assist_plans": [
-    {
-      "assist_plan_id": "plan_tax_post_adjustment_v1",
-      "assist_plan_version": "1.0.0",
-      "plan_sha256": "sha256_b3f0e1d2c3b4a596877869504132231405162738495a6b7c8d9e0f1a2b3c4d5e",
-      "playbook_version": "sha256-e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
-      "owner_approval_ref": "appr_tax_lead_20261109",
-      "allowed_applications": ["prof_app_finance_invoicing_v1"],
-      "allowed_transitions": ["trans_open_invoices", "trans_view_invoice_detail"],
-      "allowed_record_types": ["rec_inv"],
-      "variables": [
-        { "name": "amount", "type": "decimal", "required": true }
-      ],
-      "actions": [
-        {
-          "step_id": "step_post_adjustment",
-          "action_order": 1,
-          "operation": "click",
-          "target_key": "target_approve_button",
-          "risk_tier": "tier_2",
-          "declared_effects": ["state_transition_pending_review"],
-          "stopping_point": "stop_before_commit",
-          "timeout_ms": 5000,
-          "expected_state": {
-            "record_revision": "12",
-            "fields": [
-              { "field_key": "status", "value": "Pending Review" }
-            ]
-          }
+  "schema_id": "sync.signed-guidance-bundle.v1",
+  "bundle": {
+    "bundle_id": "00000000-0000-4000-8000-000000000010",
+    "bundle_revision": 1,
+    "playbook_id": "pb_invoice_recon_v1",
+    "workflow_id": "wf_po_reconciliation",
+    "capability_id": "cap_financial_recon",
+    "playbook_version": "sha256-7697c5f7a01890a2609560c49733cd1880809a00e48331030c2a777029fbb5a7",
+    "objective": "Guide accounts payable staff through purchase order line matching.",
+    "prerequisites": {
+      "predicate": {
+        "eq": {
+          "field": "user_role",
+          "value": "accounts_payable_clerk"
         }
-      ],
-      "assist_eligibility": {
-        "eligibility_id": "elg_01928374-0001",
-        "organization_id": "org_enterprise_corp",
-        "assist_plan_id": "plan_tax_post_adjustment_v1",
-        "assist_plan_version": "1.0.0",
-        "plan_sha256": "sha256_b3f0e1d2c3b4a596877869504132231405162738495a6b7c8d9e0f1a2b3c4d5e",
-        "playbook_version": "sha256-e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
-        "rule_versions": ["rule_finance_tax_matching_01:v3"],
-        "application_profile_versions": ["prof_app_finance_invoicing_v1:1.0.0"],
-        "evaluation_id": "eval_flt_01928374-0001",
-        "suite_version": "suite_v2_stage3",
-        "verified_example_count": 6,
-        "passed_scenario_count": 28,
-        "edge_negative_count": 6,
-        "mandatory_checks_passed": true,
-        "all_branches_covered": true,
-        "owner_approval_ref": "appr_rel_gov_20261109_01",
-        "separation_of_duties_satisfied": true,
-        "allowed_scope": "finance_invoicing_batch",
-        "status": "approved"
       }
-    }
-  ]
+    },
+    "expected_result": "All invoice lines reconciled with corresponding purchase order records.",
+    "task_signature": {
+      "entry_application_id": "app_erp_core",
+      "entry_predicate": {
+        "exists": {
+          "field": "queue_active"
+        }
+      }
+    },
+    "steps": [
+      {
+        "step_id": "step_select_queue",
+        "order": 1,
+        "label": "Open Reconciliation Queue",
+        "description": "Navigate to Financial Accounts and open Pending Invoices.",
+        "target_key": "target_btn_queue",
+        "application_profile_id": "prof_erp_web",
+        "predicate": null,
+        "timeout_ms": 45000,
+        "assist_plan_ref": null,
+        "rule_refs": [
+          "rule_po_match_01"
+        ],
+        "source_refs": [
+          "src_accounting_manual_v2"
+        ],
+        "allowed_targets": [
+          {
+            "application_profile_id": "prof_erp_web",
+            "target_key": "target_btn_queue"
+          }
+        ]
+      },
+      {
+        "step_id": "step_verify_po",
+        "order": 2,
+        "label": "Match Purchase Order",
+        "description": "Enter the PO identifier into the match field and confirm unit counts.",
+        "target_key": "target_input_po",
+        "application_profile_id": "prof_erp_web",
+        "predicate": {
+          "eq": {
+            "field": "batch_status",
+            "value": "open"
+          }
+        },
+        "timeout_ms": 60000,
+        "assist_plan_ref": null,
+        "rule_refs": [
+          "rule_po_match_01"
+        ],
+        "source_refs": [
+          "src_accounting_manual_v2"
+        ],
+        "allowed_targets": [
+          {
+            "application_profile_id": "prof_erp_web",
+            "target_key": "target_input_po"
+          }
+        ]
+      }
+    ],
+    "step_edges": [
+      {
+        "from_step_id": "step_select_queue",
+        "to_step_id": "step_verify_po",
+        "condition": null
+      }
+    ],
+    "peer_fixes": [
+      {
+        "peer_fix_id": "fix_timeout_retry",
+        "application_profile_id": "prof_erp_web",
+        "profile_version": "2.4.0",
+        "normalized_error_code": "ERR_ERP_SESSION_TIMEOUT",
+        "state_predicate": null,
+        "fix_playbook_version": "sha256-7697c5f7a01890a2609560c49733cd1880809a00e48331030c2a777029fbb5a7",
+        "provenance": "peer_verified",
+        "permitted_actions": "guidance"
+      }
+    ],
+    "assist_plans": [],
+    "record_independent": true,
+    "applicable_profiles": [
+      {
+        "application_profile_id": "prof_erp_web",
+        "min_version": "2.4.0",
+        "max_version": null
+      }
+    ],
+    "effective_rule_versions": [
+      "rule_po_match_01"
+    ],
+    "audience": {
+      "team_ids": [
+        "team_accounts_payable"
+      ],
+      "role_tiers": [
+        "tier_standard"
+      ]
+    },
+    "published_at": "2026-11-09T18:00:00Z",
+    "content_sha256": "780ea94e79bc83bd44ebe2bcc04f67b194c012161b797373668a89a9c67c4bec",
+    "publisher_signature_ref": "00000000-0000-4000-8000-000000000020"
+  },
+  "publisher_signature": {
+    "schema_id": "sync.publisher-signature.v1",
+    "key_id": "key_publisher_01",
+    "payload": {
+      "organization_id": "00000000-0000-4000-8000-000000000001",
+      "bundle_id": "00000000-0000-4000-8000-000000000010",
+      "bundle_revision": 1,
+      "content_sha256": "780ea94e79bc83bd44ebe2bcc04f67b194c012161b797373668a89a9c67c4bec",
+      "playbook_version": "sha256-7697c5f7a01890a2609560c49733cd1880809a00e48331030c2a777029fbb5a7",
+      "publisher_signature_ref": "00000000-0000-4000-8000-000000000020",
+      "signed_at": "2026-11-09T18:00:00Z"
+    },
+    "signature": "buxAGs2d9WdpH0DZvRfHmNTdrMMMl8GF-3ViYA7tFjK_fxadDit_3D5UQmRqLm0coRGWLbD0KLYKjHj6VhYCDw"
+  }
 }
 ```
 
 - **Contract Reference #5 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers approved capability models, business rules, and postconditions to [agent-factory-ir](agent-factory-ir.md).
 - **Contract Reference #16 in [Contracts Catalog](../architecture/contracts/README.md):** Receives accepted expert corrections and candidate rule changes from [incident-correction-repair](incident-correction-repair.md).
 - **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes `text.embed` and `text.rerank` via LiteLLM gateway under [cloud-inference](../architecture/cloud-inference.md) for semantic knowledge retrieval and node search.
-- **Contract Reference #24 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests `ReviewedMeetingHandoffProposal` from [contribution-sync](contribution-sync.md); manages canonical shared status, recipient authorization, and duplicate prevention.
+- **Contract Reference #24 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests `MeetingReviewedHandoffV1` envelopes from [contribution-sync](contribution-sync.md) via the `graph_handoff_intake` destination queue; manages canonical shared status, recipient authorization, and duplicate prevention.
+
+### Handoff Intake and Guidance Publisher Boundaries
+- **Destination Intake Queue (`graph_handoff_intake`):** Operational Graph polls the PostgreSQL intake queue populated atomically by [contribution-sync](contribution-sync.md) for `meeting_handoff` contributions.
+- **Recipient Acceptance vs. Transport Delivery:** Transport delivery creates a staged handoff record in `proposed` state. Transport acknowledgment (`sync.delivery-receipt.v1`) confirms only that the handoff was safely stored in the cloud intake queue. Recipient acceptance is a distinct domain action: the designated recipient (`proposed_assignee_id`) reviews the proposal in Command Center or Local Context HUD and explicitly transitions the handoff to `accepted`, `rejected`, or `reassigned`.
+- **Publisher Signature Sidecars:** Every guidance bundle emitted under Contract 3 is signed by the Operational Graph publisher key (`key_publisher_01`). The resulting `PublisherSignatureSidecarV1` covers the bundle's RFC 8785 canonical content hash. Edge devices verify this signature against Identity Policy before loading guidance into the HUD working set.
 - **Operations Map Projections:** Serves graph queries to [command-center-analytics](command-center-analytics.md).
 ## Trust and deployment boundaries
 

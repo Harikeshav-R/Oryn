@@ -127,35 +127,44 @@ Operating over an isolated, direct socketpair (macOS) or anonymous pipe pair (Wi
 Consumes published, access-filtered guidance bundles from [operational-graph](operational-graph.md) via [contribution-sync](contribution-sync.md), and signed access leases from [identity-policy](identity-policy.md).
 - **`GuidanceBundleV1` Schema:**
   - `schema_id`: `"hud.guidance-bundle.v1"`
-  - `organization_id`: string UUID
-  - `bundle_id`: string UUID
-  - `bundle_revision`: decimal-string u64
-  - `content_sha256`: lowercase hex SHA-256 digest
-  - `publisher_signature_ref`: cryptographic signature reference from operational graph publisher
-  - `playbook_id`: string
-  - `workflow_id`: string
-  - `capability_id`: string
-  - `playbook_version`: immutable SHA-256 string
-  - `display_revision_label`: human-readable revision string (e.g. `"v2.1"`)
-  - `status`: strictly `"published"`
-  - `audience`: authorized teams and role tiers
-  - `last_verified_at`: RFC 3339 UTC timestamp
-  - `applicable_profiles`: array of compatible application profile IDs and version bounds
-  - `effective_rule_versions`: array of bound rule version strings
-  - `conflict_flags`: array of detected rule conflict identifiers
-  - `record_independent`: boolean (if true, guide cannot acquire mutation eligibility without an exact live record binding)
+  - `bundle_id`: string UUIDv4
+  - `bundle_revision`: integer (>= 1)
+  - `content_sha256`: lowercase 64-hex SHA-256 digest of canonical RFC 8785 bundle bytes (excluding `content_sha256` and `publisher_signature_ref`)
+  - `publisher_signature_ref`: string UUIDv4 matching the corresponding `PublisherSignatureSidecarV1`
+  - `playbook_id`: string identifier
+  - `workflow_id`: string identifier
+  - `capability_id`: string identifier
+  - `playbook_version`: immutable SHA-256 string (e.g. `sha256-<64-hex>`)
   - `objective`: plain text workflow goal
   - `prerequisites`: closed predicate expression
   - `expected_result`: plain text postcondition summary
   - `task_signature`: deterministic entry application and state predicate
-  - `steps`: array of at most 128 ordered steps (cycle-checked directed graph). Each step includes `step_id`, `order`, `title`, `instruction`, `rationale`, `rule_refs`, `source_refs`, `optional` flag, `prerequisite_predicate`, `expected_state_predicate` (or null), `allowed_targets`, `timeout_ms` (30,000–300,000 ms), and optional `assist_plan_ref`.
+  - `steps`: array of at most 128 steps. Each step includes `step_id`, `order`, `label`, `description`, `target_key`, `application_profile_id`, `predicate`, `timeout_ms` (30,000–300,000 ms), `assist_plan_ref`, `rule_refs`, `source_refs`, and `allowed_targets`.
+  - `step_edges`: array of explicit DAG edges `{from_step_id, to_step_id, condition}` forming a cycle-free directed acyclic graph.
   - `peer_fixes`: array of peer fix descriptors binding normalized error codes or declared state predicates to verified fix playbooks.
   - `assist_plans`: optional array of Stage 3 approved `AssistPlanV1` records.
+  - `record_independent`: boolean (if false, guide cannot acquire mutation eligibility without an exact live record binding).
+  - `applicable_profiles`: array of compatible application profile IDs and version bounds.
+  - `effective_rule_versions`: array of bound rule version strings.
+  - `audience`: authorized teams and role tiers.
+  - `published_at`: RFC 3339 UTC timestamp.
+
+- **Fail-Closed Successor Evaluation:**
+  - Successor transitions follow explicit `step_edges` DAG topology.
+  - For each candidate successor step, the HUD evaluates edge conditions and prerequisite predicates using three-valued logic (`true`, `false`, `unknown`).
+  - If a condition evaluates to `false` or `unknown`, the edge is blocked.
+  - If no outgoing edge from the active step evaluates to `true`, the HUD fails closed: it refuses to guess, halts advancement, clears target highlights, and prompts the employee to confirm whether an unobserved path was taken.
+
+- **Whole-Guide Conflict Revocation:**
+  - If Operational Graph, Identity Policy, or Local Privacy Storage flags an active playbook with rule conflicts, license restrictions, or legal holds (`conflict_flags`), HUD revokes guidance for the entire guide immediately.
+  - Partial execution of uncontested steps in a conflicted guide is strictly prohibited; all active cards, highlights, and pending assist plans are cleared instantly.
+
 - **Closed Predicate Algebra:** Predicates use a bounded algebra supporting operators: `all`, `any`, `not`, `exists`, `eq`, `enum_in`.
   - Maximum nesting depth: 8 levels.
   - Maximum leaf conditions per signature or step: 64 leaves.
   - Evaluation semantics: Three-valued logic (`true`, `false`, `unknown`). If a required field is missing or snapshot-inferred, evaluation yields `unknown`. In three-valued logic, `not unknown = unknown`.
   - Profile-approved field keys only; arbitrary regex, JavaScript evaluation, XPath, or dynamic remote code are strictly prohibited.
+
 - **Signed Guidance Access Lease (`SignedGuidanceAccessLeaseV1`):**
   - Schema ID: `hud.guidance-access-lease.v1`.
   - Issued and signed by `identity-policy` using Ed25519 over RFC 8785 canonical JSON bytes.
@@ -166,7 +175,8 @@ Consumes published, access-filtered guidance bundles from [operational-graph](op
 ### Contract 20: Desktop Shell Guidance Presentation Interface (`shell-hud.v1`)
 The desktop shell host creates two private inherited byte channels at launch (`shell-hud.v1`, major 1, minor 0):
 1. **Control/Presentation Channel:** Max 256 KiB frame, 64 queued messages / 1 MiB. Carries `PresentGuidance`, `ClearGuidance`, and content-free heartbeats every 100 ms. 500 ms silence or EOF invalidates presentation and pauses pending assists.
-2. **Data Channel:** Max 1 MiB frame, 16 queued messages / 8 MiB. Carries bulk bundle transfers, manual search queries, and interaction feedback receipts.
+2. **Data Channel:** Max 1 MiB frame, 16 queued messages / 8 MiB. Carries bulk bundle transfers, manual search queries, interaction feedback receipts, and streaming generation chunk intake (`HudGenerationChunkV1`).
+- **Generation Chunk Intake (`HudGenerationChunkV1`):** Streams semantic explanations and long-form summaries progressively across the Data Channel. Each chunk specifies `generation_id`, `chunk_index`, `is_last`, and `text_delta`. The desktop shell renders text progressively as chunks arrive without interrupting control heartbeats or highlight refreshes on the control channel.
 - **Model Ingress (`PresentGuidance`):** Emits structured card model and target highlight geometry. All narrative text is rendered strictly as plain text (no HTML/script injection). Highlights use physical screen pixels; the native adapter translates coordinates using active display DPI scaling without applying double transforms. Highlight TTL is clamped to 1–250 ms (default 150 ms) and expires automatically unless continuously refreshed every 100 ms while visible. Highlights clear immediately upon window focus change, window movement, scroll, display reconfiguration, security prompts, or context revision mismatch. Highlighting OS security prompts or browser permission dialogs is strictly prohibited.
 - **Clear Guidance Ingress (`ClearGuidance`):** Dismisses active guidance card and highlight with presentation revision and reason. Stale presentation revisions cannot restore cleared highlights.
 - **Interaction Feedback (`GuidanceInteraction`):** Consumes employee UI commands:
