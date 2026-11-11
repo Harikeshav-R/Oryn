@@ -384,7 +384,7 @@ Wire format: 4-byte big-endian unsigned length prefix followed by UTF-8 JSON. Ma
 
 Control slots are reserved exclusively for control traffic (`ContextFence`, `ContextGap`, `ContextHello`, `ContextReady`). A privacy fence must never be dropped to admit an observation: if the control reserve cannot carry a fence, the helper closes the link, invalidating HUD state and forcing fresh resynchronization upon reconnection. Observation queue overflow emits one ordered `ContextGap` reporting the dropped sequence interval, discards intermediate deltas, and triggers a fresh permitted baseline request.
 
-Protocol negotiation mandates `protocol_version: "privacy-context.v1"`, `protocol_major: 1`, `protocol_minor: 1`. Both bundled peers require this exact minor. If either endpoint advertises an incompatible version or minor, the link is closed immediately without fallback.
+Protocol negotiation mandates `protocol_version: "privacy-context.v1"`, `protocol_major: 1`, `protocol_minor: 2`. Both bundled peers require this exact minor. If either endpoint advertises an incompatible version or minor, the link is closed immediately without fallback.
 
 #### Common Wire Envelope
 Every message on Contract 25 uses a uniform envelope with typed payload:
@@ -392,7 +392,7 @@ Every message on Contract 25 uses a uniform envelope with typed payload:
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1001-7000-8000-000000000001",
   "correlation_id": null,
   "sequence": "1",
@@ -417,7 +417,7 @@ Sent immediately on connection to negotiate protocol minor and session parameter
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1002-7000-8000-000000000002",
   "correlation_id": "01928374-1001-7000-8000-000000000001",
   "sequence": "1",
@@ -446,7 +446,7 @@ Transmits privacy-screened application and browser surface facts. Opaque `record
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1003-7000-8000-000000000003",
   "correlation_id": null,
   "sequence": "2",
@@ -513,7 +513,7 @@ Revokes live context across profile, source, or surface boundaries due to exclus
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1004-7000-8000-000000000004",
   "correlation_id": null,
   "sequence": "3",
@@ -542,7 +542,7 @@ Notifies HUD of observation discontinuities, invalidating intermediate sequence 
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1005-7000-8000-000000000005",
   "correlation_id": null,
   "sequence": "4",
@@ -568,7 +568,7 @@ Requests fresh full baseline for a permitted surface after gap or restart:
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1006-7000-8000-000000000006",
   "correlation_id": null,
   "sequence": "5",
@@ -588,7 +588,7 @@ Requests fresh full baseline for a permitted surface after gap or restart:
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1007-7000-8000-000000000007",
   "correlation_id": "01928374-1006-7000-8000-000000000006",
   "sequence": "6",
@@ -642,7 +642,7 @@ Relays browser target resolution between HUD and browser extension via the priva
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1008-7000-8000-000000000008",
   "correlation_id": null,
   "sequence": "7",
@@ -674,7 +674,7 @@ Relays browser target resolution between HUD and browser extension via the priva
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1009-7000-8000-000000000009",
   "correlation_id": "01928374-1008-7000-8000-000000000008",
   "sequence": "8",
@@ -718,7 +718,7 @@ Submits semantic inference requests through the privacy helper edge egress clien
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1010-7000-8000-000000000010",
   "correlation_id": null,
   "sequence": "9",
@@ -743,7 +743,7 @@ Submits semantic inference requests through the privacy helper edge egress clien
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1011-7000-8000-000000000011",
   "correlation_id": null,
   "sequence": "10",
@@ -762,7 +762,7 @@ Submits semantic inference requests through the privacy helper edge egress clien
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1012-7000-8000-000000000012",
   "correlation_id": "01928374-1010-7000-8000-000000000010",
   "sequence": "11",
@@ -794,7 +794,7 @@ Queries sanitized task history within profile retention bounds:
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1013-7000-8000-000000000013",
   "correlation_id": null,
   "sequence": "12",
@@ -817,7 +817,7 @@ Queries sanitized task history within profile retention bounds:
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1014-7000-8000-000000000014",
   "correlation_id": "01928374-1013-7000-8000-000000000013",
   "sequence": "13",
@@ -852,7 +852,7 @@ Saves and retrieves bounded `PrivateTaskSummaryV1` and `GuideCheckpointV1` in sc
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1015-7000-8000-000000000015",
   "correlation_id": null,
   "sequence": "14",
@@ -890,7 +890,7 @@ Saves and retrieves bounded `PrivateTaskSummaryV1` and `GuideCheckpointV1` in sc
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1016-7000-8000-000000000016",
   "correlation_id": null,
   "sequence": "15",
@@ -929,7 +929,7 @@ Saves and retrieves bounded `PrivateTaskSummaryV1` and `GuideCheckpointV1` in sc
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1017-7000-8000-000000000017",
   "correlation_id": "01928374-1016-7000-8000-000000000016",
   "sequence": "16",
@@ -951,7 +951,7 @@ Saves and retrieves bounded `PrivateTaskSummaryV1` and `GuideCheckpointV1` in sc
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1018-7000-8000-000000000018",
   "correlation_id": null,
   "sequence": "17",
@@ -970,7 +970,7 @@ Saves and retrieves bounded `PrivateTaskSummaryV1` and `GuideCheckpointV1` in sc
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1019-7000-8000-000000000019",
   "correlation_id": null,
   "sequence": "18",
@@ -993,7 +993,7 @@ Transmits local synthesized task demonstration proposals for privacy-storage val
 {
   "protocol_version": "privacy-context.v1",
   "protocol_major": 1,
-  "protocol_minor": 1,
+  "protocol_minor": 2,
   "message_id": "01928374-1020-7000-8000-000000000020",
   "correlation_id": null,
   "sequence": "19",
@@ -1007,6 +1007,12 @@ Transmits local synthesized task demonstration proposals for privacy-storage val
     "proposal_id": "prop_demo_77665544",
     "task_id": "tsk_01928374-0002",
     "observed_completion_basis": "observed_complete",
+    "task_measurement": {
+      "elapsed_ms": 600000,
+      "wait_ms": 120000,
+      "basis": "observed_task_boundary",
+      "complete_interval": true
+    },
     "expected_privacy_revision": "1422",
     "deletion_generation": "5",
     "referenced_evidence_ids": [
@@ -1033,6 +1039,13 @@ Transmits local synthesized task demonstration proposals for privacy-storage val
   }
 }
 ```
+
+##### Shared Demonstration Identity and Measurement Validation
+The Privacy Helper mints a fresh random `demonstration_id` (UUIDv4) once for one local Task Instance, organization, and profile. The helper persists the local-task-to-shared-ID mapping alongside source-linked private task metadata only when retention allows. Revisions and separate contributions for the same local Task Instance reuse that ID. Local task IDs, evidence IDs, source epochs, observation timestamps, record identifiers, and reusable employee tracking keys never cross in this field. When personal retention is disabled (`personal_history_retention = false`), this mapping exists strictly within the source's 30-second volatile buffer lifetime; no durable map, shadow payload, or deferred queue is created.
+
+The central attempt identity is `(organization_id, actor_id, device_id, profile_id, demonstration_id)` because device enrollment authenticates its issuer. A demonstration ID reused with a different issuer does not collapse unrelated employees' attempts. Different contribution IDs for this tuple do not increase support. A helper-controlled identifier prevents accidental duplicate submissions; it does not cryptographically prove independent real-world work against a compromised endpoint or deliberate human collusion.
+
+HUD proposes task-level durations via `task_measurement`, but the Privacy Helper validates them against permitted boundaries, source gaps, and monotonic intervals before presenting them during contribution review. The employee reviewer inspects elapsed duration, wait duration, basis (`observed_task_boundary` vs `reviewer_estimate`), and interval completeness before signing the review attestation. Per-step durations are excluded to prevent unconsented granular surveillance.
 
 ### Identity Policy Signed Artifacts
 The privacy helper relies on cryptographic artifacts signed by `identity-policy` using pinned Ed25519 issuer keys. The signature covers the exact normative preimage: `UTF-8(schema_id) + 0x0A (LF byte) + RFC_8785_Canonical_JSON(payload)`. Signatures are unpadded base64url-encoded strings (86 characters).

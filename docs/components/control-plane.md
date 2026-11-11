@@ -111,12 +111,13 @@ Control Plane sits at the central crossroads of Oryn multi-tenant operations, se
 Control Plane coordinates transport across eight authoritative platform contracts:
 1. **Contract 2 (Workflow Contributions):** Ingests reviewed workflow contributions (`sync.reviewed-contribution.v1`) over `POST /v1/sync/submissions`. Enforces 5 MiB body cap, max 4 PNG artifacts (≤ 1 MiB each, ≤ 1920x1080), and returns `DeliveryReceiptV1` or `SubmissionStatusV1`.
 2. **Contract 3 (Guidance Distribution):** Serves signed guidance manifests and immutable guidance bundles over `/v1/sync/guidance/*` for employee working set sync.
-3. **Contract 11 (Action Execution Credentials):** Validates child tokens and mTLS workload principals for autonomous execution.
-4. **Contract 18 (Authorized Management Projections):** Serves `ChangePageV1` metadata feeds and `OperationV1` progress projections to administrative consoles.
-5. **Local Presentation Decoupling:** Control Plane does not participate in endpoint UI presentation; local HUD display and coordinate highlighting use Contract 20 (`shell-hud.v1`) entirely on-device, while central guidance distribution uses Contract 3.
-6. **Contract 22 (Cloud Inference):** Transports transient single-shot requests and real-time audio WebSocket streams to LiteLLM under signed chunk proofs.
-7. **Contract 24 (Reviewed Meeting Handoffs):** Coordinates reviewed meeting action handoffs without private audio or meeting identifiers.
-8. **Contract 25 (Privacy Context Feed):** Ingests signed local privacy authorization proofs from Desktop Privacy Helper.
+3. **Contract 4 (Candidate Guidance Staging):** Stages approved workflow candidates (`CandidatePromotionV1`) into [operational-graph](operational-graph.md) over `POST /v1/discovery/candidates/{candidate_id}/approvals`, returning `GraphCandidateReceiptV1`. Operational Graph separately publishes playbooks over `POST /v1/knowledge/candidate-stages/{graph_draft_id}/publications`.
+4. **Contract 11 (Action Execution Credentials):** Validates child tokens and mTLS workload principals for autonomous execution.
+5. **Contract 18 (Authorized Management Projections):** Serves `ChangePageV1` metadata feeds and `OperationV1` progress projections to administrative consoles.
+6. **Local Presentation Decoupling:** Control Plane does not participate in endpoint UI presentation; local HUD display and coordinate highlighting use Contract 20 (`shell-hud.v1`) entirely on-device, while central guidance distribution uses Contract 3.
+7. **Contract 22 (Cloud Inference):** Transports transient single-shot requests and real-time audio WebSocket streams to LiteLLM under signed chunk proofs.
+8. **Contract 24 (Reviewed Meeting Handoffs):** Coordinates reviewed meeting action handoffs without private audio or meeting identifiers.
+9. **Contract 25 (Privacy Context Feed):** Ingests signed local privacy authorization proofs from Desktop Privacy Helper.
 
 ### Canonical HTTP Route Specifications
 Control Plane exposes the following canonical endpoints (documented in `docs/architecture/contracts/control-plane-v1.openapi.json`):
@@ -153,6 +154,30 @@ Control Plane exposes the following canonical endpoints (documented in `docs/arc
 - `POST /v1/inference/streams/{stream_id}/renewals`: Renews 60-second authorization quantum for active stream.
 - `POST /v1/inference/requests/{request_id}/cancellation`: Cancels request or stream; stops upstream provider immediately.
 - `GET /v1/inference/routes/{operation}`: Returns certified limits and pricing descriptor (`InferenceRoutePricingV1`).
+
+#### 5. Workflow Discovery and Candidate Review
+- `GET /v1/discovery/candidates`: Access-filtered cursor-paginated list of candidates, filtered by caller's authorized audience expressions, team, and lifecycle state.
+- `POST /v1/discovery/candidates`: Creates an explicit manual candidate draft with an authorized responsible team and audience expression; initializes with zero automatic repetition claims.
+- `GET /v1/discovery/candidates/{candidate_id}`: Retrieves candidate header and current revision; revalidates caller permissions against contributing sources in real-time.
+- `GET /v1/discovery/candidates/{candidate_id}/revisions/{revision}`: Retrieves specific immutable revision; invalidated or expired payloads report status without replaying purged text.
+- `GET /v1/discovery/candidates/{candidate_id}/revisions/{revision}/sections/{section}`: Bounded section retrieval (`procedure`, `evidence`, `questions`, `history`) enforcing standard 256 KiB response caps.
+- `POST /v1/discovery/candidates/{candidate_id}/reviews`: Transition candidate state (`begin_review`, `request_evidence`) under optimistic concurrency (`expected_revision`).
+- `POST /v1/discovery/candidates/{candidate_id}/revisions`: Submits reviewer edits (`CandidateEditV1`) applying full replacement of the editable procedure subset.
+- `POST /v1/discovery/candidates/{candidate_id}/proposals/{proposal_id}/decisions`: Accepts or declines proposed evidence diffs.
+- `POST /v1/discovery/candidates/{candidate_id}/questions/{question_id}/answers`: Submits reviewer answers to open clarification questions.
+- `POST /v1/discovery/candidates/{candidate_id}/approvals`: Approves candidate for guidance publication staging; verifies assigned owner remit, current source generation fence, and absence of blocking questions. Stages proposal to Operational Graph; does NOT publish.
+- `POST /v1/discovery/candidates/{candidate_id}/rejections`: Owner rejects candidate and activates an owner-reviewed `SuppressionRuleV1`.
+- `POST /v1/discovery/candidates/{candidate_id}/reconsiderations/{reconsideration_id}/decisions`: Owner decision (`accept`, `decline`) on suppression reconsideration requests.
+- `POST /v1/discovery/candidates/{candidate_id}/splits`: Asynchronous candidate split operation returning 202 `OperationV1`.
+- `POST /v1/discovery/candidate-merges`: Asynchronous candidate merge operation returning 202 `OperationV1`.
+- `POST /v1/discovery/candidates/{candidate_id}/regenerations`: Triggers authorized re-synthesis from pinned source manifest returning 202 `OperationV1`.
+- `POST /v1/discovery/suppression-rules/{rule_id}/retirements`: Owner-only retirement of active suppression rule.
+- `POST /v1/discovery/candidates/{candidate_id}/retention-decisions`: Extends candidate retention under explicit enterprise policy grant.
+- `POST /v1/discovery/demonstrations/{demonstration_id}/verifications`: Records evidenced outcome verification assessment for human demonstration.
+- `GET /v1/discovery/opportunities`: Privacy-policy-filtered aggregate opportunity metrics with cohort privacy suppression.
+- `PUT /v1/discovery/candidates/{candidate_id}/opportunity-assumptions`: Sets owner-supplied baseline and volume assumptions for potential savings projections.
+- `GET /v1/discovery/configuration` & `PUT /v1/discovery/configuration`: Manages organization-level discovery configuration, certified embedding spaces, and responsible routing team. Requires `security_policy.manage` authority.
+- `POST /v1/knowledge/candidate-stages/{graph_draft_id}/publications`: Operational Graph-owned publication boundary. Revalidates source fences and staged content hash before publishing immutable playbook.
 
 ### Product Requirements and Acceptance Mappings
 Control Plane fulfills core enterprise coordination, tenant isolation, and privacy governance requirements defined in [PRODUCT.md](../../PRODUCT.md):

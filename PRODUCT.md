@@ -439,30 +439,39 @@ Private transcript excerpts, candidate commitments, and raw recordings remain du
 
 Oryn identifies repeated, semantically similar task executions, including reasonable differences in identifiers, customer names, document contents, and navigation details. A candidate is triggered by a recognizable business objective and relevant beginning and ending context, not merely by an identical sequence of mouse actions. Oryn must not combine separate workflows solely because they happen in the same application.
 
+Automatic candidate generation requires at least **three distinct observed-complete Task Instances** (`completion_basis = observed_complete`), which may originate from one or more employees. Multiple revisions and duplicate submissions for the same Task Instance count exactly once. Incomplete, unobserved, or self-reported completions can surface clarifying questions, but cannot satisfy the three-instance threshold. Alternatively, an authorized domain owner or delegate may author an explicit **manual candidate draft** with an assigned responsible team and audience expression, starting with zero automatic repetition claims.
+
 ### 10.2 Workflow candidate card
 
-Each candidate shows: suggested name; owning team if identifiable; number of observed completed examples; application sequence; task objective; likely inputs and outputs; significant decisions; known exceptions; estimated complexity; observed variation; missing evidence; likely value to operators; and current approval status. All inferred or ambiguous content is marked accordingly.
+Each candidate shows: suggested name; responsible team (mandatory; unassigned individuals display `Unassigned — Owner Required`); number of observed completed examples; application sequence; task objective; likely inputs and outputs; significant decisions; known exceptions; estimated complexity; observed variation; missing evidence; likely value to operators; and current approval status. All inferred or ambiguous content is marked accordingly.
+
+The card may report optional employee-reviewed task-level elapsed and wait durations where complete, monotonic task-boundary intervals were observed. Per-step speed metrics, keystroke intervals, active-hours tracking, and employee idle tracking are strictly prohibited.
 
 ### 10.3 Review and editing
 
-The reviewer can accept or revise the workflow's boundaries, rename it, correct its goal, group or split steps, identify variables, add missing prerequisites, remove unrelated captured actions, define business outcomes, and select an appropriate reviewer. The reviewer can reject the candidate as not reusable, duplicate, sensitive, or incorrectly inferred. Rejection reasons improve the quality of future suggestions but do not silently publish a new rule.
+The reviewer can accept or revise the workflow's boundaries, rename it, correct its goal, group or split steps, identify variables, add missing prerequisites, remove unrelated captured actions, define business outcomes, and select an appropriate reviewer. Reviewer edits apply complete replacement of the editable procedure subset under optimistic concurrency, producing immutable revision diffs. Incoming evidence generates a proposed diff rather than silently modifying an active review draft.
+
+The reviewer can reject the candidate as not reusable, duplicate, sensitive, or incorrectly inferred. Rejection activates an owner-reviewed suppression rule that permanently excludes equivalent automatic proposals. If material new evidence is subsequently established, an owner-gated reconsideration request is routed to the domain owner; the rejected revision itself never enters peer guidance caches.
 
 ### 10.4 Canonical workflow and legitimate variants
 
-Oryn can suggest a preferred path based on verified success, relevant exception rate, compliance with approved rules, and efficiency. It must not choose the fastest path if that path fails a required control or has unverified results. When multiple legitimate variants exist, Oryn stores explicit conditions for each; it must not force distinct business situations into one generic sequence.
+Oryn can suggest a preferred path based on verified success, relevant exception rate, compliance with approved rules, and efficiency. It must not choose the fastest path if that path fails a required control or has unverified results. When multiple legitimate variants exist, Oryn stores explicit conditions for each; it must not force distinct business situations into one generic sequence. Suggested variants reflect observed differences without owner endorsement; approved legitimate variants are explicitly validated by the domain owner as compliant with enterprise policy.
 
 ### 10.5 Completion and verification
 
-A human demonstration can be marked **Observed Complete** when its sequence visibly ends. It can be marked **Outcome Verified** only when an authorized outcome source or reviewer confirms the required postconditions. A workflow can be published for guidance with known limitations, but it cannot advance to automatic execution when business-critical verification is missing.
+A human demonstration can be marked **Observed Complete** when its sequence visibly ends without unhandled gaps. It can be marked **Outcome Verified** only when an authorized outcome source or reviewer confirms the required postconditions via independent system evidence or an authorized reviewer assessment (`DemonstrationVerificationV1`). A workflow can be published for guidance with known limitations, but it cannot advance to automatic execution when business-critical verification is missing.
 
 ### 10.6 Candidate states
 
-**Suggested → Under Review → Needs Evidence / Approved for Guidance / Rejected.** An approved playbook may later be **Under Revision**, **Superseded**, or **Archived**. Every state change has a reason, actor, and timestamp. Rejected candidates are not shown to other operators as reliable guidance.
+**Suggested → Under Review → Needs Evidence / Approved for Guidance / Rejected.** Every state change records reason, actor, and timestamp.
+
+Guidance publication follows a strict **two-step boundary**:
+1. **Approval for Guidance:** An authorized domain Workflow Owner approves the candidate, staging an immutable promotion proposal (`CandidatePromotionV1`) into the Operational Graph. Staging does NOT publish guidance or update HUD caches.
+2. **Explicit Publication:** The Operational Graph exclusively owns the publication command, revalidating current source eligibility, rule versions, and staged content hashes before creating an immutable published playbook.
 
 ### 10.7 Opportunity detection
 
-Oryn may identify high-volume repetitive workflows and suggest possible automation value. The opportunity card shows observed volume, time per verified case, exception frequency, degree of repeatability, known risks, and the quality of the sample. Potential hours saved are labeled estimates and must disclose the assumptions used. An opportunity is not an automatically approved agent.
-
+Oryn may identify high-volume repetitive workflows and suggest possible automation value. The opportunity card shows observed volume, time per verified case, exception frequency, degree of repeatability, known risks, and the quality of the sample. Potential hours saved are labeled estimates and must disclose the assumptions used (`OpportunityAssumptionsV1`). Aggregate metrics are suppressed if the contributor cohort size is below the organization's privacy threshold. An opportunity is not an automatically approved agent.
 ---
 
 ## 11. The Living Operational Graph

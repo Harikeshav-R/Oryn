@@ -125,6 +125,8 @@ An `InferenceRoute` represents an approved, capability-certified upstream model 
   "output_schema_ids": [
     "meeting.commitments.v1",
     "workflow.synthesis.v1",
+    "workflow.embedding.v1",
+    "workflow.compatibility.v1",
     "agent.ir.candidate.v1",
     "repair.patch.v1",
     "hud.context-interpretation.v1",
@@ -332,6 +334,29 @@ The Local Context HUD component consumes semantic interpretation via `text.reaso
 - **Concurrency and Rate Limits:** Exactly one in-flight HUD inference request per device; background requests require at least 500 ms debounce, at least 30 seconds cooldown between successive background requests, and at most 120 background requests per rolling hour.
 - **Explicit vs. Background:** Explicit employee requests (e.g. manual search, why step) share the one-in-flight limit but bypass the 30-second background cooldown.
 - **No Shadow Queues:** Zero prompt text, intermediate embeddings, or model completions persist on disk in the HUD. Expired or cancelled requests discard late completions without processing.
+---
+
+### 3.8 Workflow Discovery Model Contracts (`text.embed`, `text.reason`)
+
+Workflow Discovery and Procedure Synthesis consumes transient cloud text inference via the LiteLLM gateway under Contract 22 for vector retrieval, cluster-wide compatibility evaluation, and structured DAG procedure synthesis:
+
+1. **`workflow_discovery_embed` (Operation: `text.embed`):**
+   - **Purpose:** Generates dense vector representations from canonical objective/summary/application projections for exact cosine nearest-neighbor search in PostgreSQL `pgvector`.
+   - **Output Schema:** `workflow.embedding.v1` (enforcing `input_fingerprint`, `embedding_space_id`, `dimensions` 1..4096, and normalized vector array).
+   - **Input Scope:** `SourceScopeV1.source_kind = "organizational_artifact"` referencing RAM-only text projections capped at 32 KiB. Output capped at 256 KiB. Timeout: 30,000 ms.
+
+2. **`workflow_discovery_compare` (Operation: `text.reason`):**
+   - **Purpose:** Evaluates pairwise semantic equivalence, boundary agreement, and postcondition alignment across contributing task demonstrations.
+   - **Output Schema:** `workflow.compatibility.v1` (enforcing structured pair verdicts `"equivalent" | "different" | "uncertain"`, supporting/contradicting pointers, and clarification questions).
+   - **Input Scope:** Bounded batches of at most 16 pairs and at most 32 distinct source references. Input capped at 128 KiB; output capped at 128 KiB. Timeout: 60,000 ms.
+
+3. **`workflow_discovery_synthesize` (Operation: `text.reason`):**
+   - **Purpose:** Infers canonical procedure steps, DAG edges, textual decision branches, suggested variants, exceptions, postconditions, and acyclic repetition guidance from representative task demonstrations.
+   - **Output Schema:** `workflow.synthesis.v1` (enforcing `CandidateProcedureV1` with `guidance_eligibility = not_ready` and `agent_eligibility = not_assessed`, `ClaimProvenanceV1`, and `ClarificationQuestionV1`).
+   - **Input Scope:** Deterministically selected representative examples (up to 32 examples per batch; partitioned across multiple passes if diversity exceeds batch size). Input capped at 1 MiB; output capped at 256 KiB. Timeout: 120,000 ms.
+
+All Workflow Discovery inference operations strictly prohibit raw screenshot transmission (images remain reviewer-only verification artifacts). Certified route pinning enforces zero content retention and US geographic processing. Transient transport errors permit at most one same-binding retry prior to response commencement.
+
 ---
 
 ## 4. Control Plane and Gateway Interfaces

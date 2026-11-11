@@ -297,9 +297,51 @@
         }
       }
     },
+    "TaskMeasurementV1": {
+      "type": "object",
+      "required": [
+        "elapsed_ms",
+        "wait_ms",
+        "basis",
+        "complete_interval"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "elapsed_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800000
+        },
+        "wait_ms": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 604800000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "observed_task_boundary",
+            "reviewer_estimate"
+          ]
+        },
+        "complete_interval": {
+          "type": "boolean"
+        }
+      }
+    },
     "WorkflowContributionContentV1": {
       "type": "object",
       "required": [
+        "demonstration_id",
+        "completion_basis",
+        "task_measurement",
         "objective",
         "summary",
         "applications",
@@ -314,6 +356,28 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "demonstration_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "completion_basis": {
+          "type": "string",
+          "enum": [
+            "observed_complete",
+            "employee_reported_complete",
+            "incomplete",
+            "unknown"
+          ]
+        },
+        "task_measurement": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/TaskMeasurementV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "objective": {
           "type": "string",
           "minLength": 1,

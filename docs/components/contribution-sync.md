@@ -158,7 +158,7 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
     {
       "key_id": "key_dev_01",
       "purpose": "device",
-      "public_key": "gJhtweMJaH5Ew56h6IHcTLSxUr9qmUGeYFNaKGs6dbw"
+      "public_key": "AIoCVTdr59W0XbpaOLUKVIG2JsuMhvooms7AgJyPI78"
     }
   ],
   "artifacts": [
@@ -242,6 +242,9 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
 ```
 
 #### Reviewed Workflow Contribution (`sync.reviewed-contribution.v1`)
+
+The review digest `content_digest` covers the exact RFC 8785 canonical JSON bytes of the unsigned semantic projection `{organization_id, actor_id, device_id, profile_id, contribution_id, revision, kind, purpose, audience, content, artifacts}`, excluding `content_digest` and `review_attestation` themselves. Preimage canonicalization sorts `audience.audience_ids`, each step's `variable_refs` and `artifact_ids` lexicographically, and sorts top-level artifact manifests by `artifact_id`; all other array orders (steps, decisions, branches, application sequence) are preserved. Duplicate set members are rejected. Artifact manifests and hashes are bound directly, never mutable image URLs. The review attestation signature covers `UTF-8(schema_id) + 0x0A + RFC_8785_Canonical_JSON(payload)`.
+
 ```json
 {
   "schema_id": "sync.reviewed-contribution.v1",
@@ -259,6 +262,14 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
     ]
   },
   "content": {
+    "demonstration_id": "d0000000-0000-4000-8000-000000000001",
+    "completion_basis": "observed_complete",
+    "task_measurement": {
+      "elapsed_ms": 600000,
+      "wait_ms": 120000,
+      "basis": "observed_task_boundary",
+      "complete_interval": true
+    },
     "objective": "Reconcile daily invoice batches with ERP purchase orders",
     "summary": "Match received invoice line items to open ERP purchase orders and flag unit variance.",
     "applications": [
@@ -341,7 +352,7 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
       "artifact_policy_revision": "art_pol_rev_05"
     }
   ],
-  "content_digest": "6c8b43c2e4aa672a3a2b919b20da24336cfb8e2790c469b2f643924b36fb102f",
+  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
   "review_attestation": {
     "schema_id": "sync.review-attestation.v1",
     "key_id": "key_dev_01",
@@ -353,13 +364,13 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
       "profile_id": "prf_default_01",
       "contribution_id": "c0000000-0000-4000-8000-000000000001",
       "revision": 1,
-      "content_digest": "6c8b43c2e4aa672a3a2b919b20da24336cfb8e2790c469b2f643924b36fb102f",
+      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
       "reviewed_at": "2026-11-09T20:00:00Z",
       "source_not_after": "2026-11-09T20:30:00Z",
       "policy_revision": "100",
       "artifact_policy_revision": "art_pol_rev_05"
     },
-    "signature": "ceCZJkveK3lAjDNWH2AqjVrAKkdiDM7k-nts04dU4vpSB0uAaqFMEVG40r9RcXDMjjzRfyL75PegHU8Z6JC0DA"
+    "signature": "CVjAQ2TAehOJ-YpqlQ2fYOoA0EIFU0mP7ujKhF_wTPQstFWvm0IW6XsNxh9xEZOLDIoAxOgsT_7_hVbRILAvDg"
   }
 }
 ```
@@ -434,7 +445,7 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
     "profile_id": "prf_default_01",
     "contribution_id": "c0000000-0000-4000-8000-000000000001",
     "revision": 1,
-    "content_digest": "6c8b43c2e4aa672a3a2b919b20da24336cfb8e2790c469b2f643924b36fb102f",
+    "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
     "review_receipt_id": "90000000-0000-4000-8000-000000000001",
     "control_epoch": "e0000000-0000-4000-8000-000000000001",
     "control_sequence": "42",
@@ -444,7 +455,7 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
     "issued_at": "2026-11-09T20:00:10Z",
     "not_after": "2026-11-09T20:00:40Z"
   },
-  "signature": "eA79MBJIGkvgFKIUSD38q1Utly6-Q5MoZTbMMk2qPrlcZnUNnaX_d4yS4kszX3R7yAIiJAkdLDrwTVmNlYIoDA"
+  "signature": "Xo_j9wPKjLdvriBIiLKdqlPVl67ZFmgN6vU1DraGi0n7DshueLnBcDT2GNmiJzpWzwzl-h_XnuX-49nJTj1UDQ"
 }
 ```
 
@@ -458,7 +469,7 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
     "organization_id": "00000000-0000-4000-8000-000000000001",
     "contribution_id": "c0000000-0000-4000-8000-000000000001",
     "revision": 1,
-    "content_digest": "6c8b43c2e4aa672a3a2b919b20da24336cfb8e2790c469b2f643924b36fb102f",
+    "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
     "kind": "workflow",
     "review_receipt_id": "90000000-0000-4000-8000-000000000001",
     "destination": "workflow_discovery",
@@ -481,7 +492,7 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
     "organization_id": "00000000-0000-4000-8000-000000000001",
     "contribution_id": "c0000000-0000-4000-8000-000000000001",
     "revision": 1,
-    "content_digest": "6c8b43c2e4aa672a3a2b919b20da24336cfb8e2790c469b2f643924b36fb102f",
+    "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
     "disposition": "accepted",
     "delivery_receipt": {
       "schema_id": "sync.delivery-receipt.v1",
@@ -491,7 +502,7 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
         "organization_id": "00000000-0000-4000-8000-000000000001",
         "contribution_id": "c0000000-0000-4000-8000-000000000001",
         "revision": 1,
-        "content_digest": "6c8b43c2e4aa672a3a2b919b20da24336cfb8e2790c469b2f643924b36fb102f",
+        "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
         "kind": "workflow",
         "review_receipt_id": "90000000-0000-4000-8000-000000000001",
         "destination": "workflow_discovery",
@@ -518,7 +529,7 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
   "organization_id": "00000000-0000-4000-8000-000000000001",
   "contribution_id": "c0000000-0000-4000-8000-000000000001",
   "revision": 1,
-  "expected_digest": "6c8b43c2e4aa672a3a2b919b20da24336cfb8e2790c469b2f643924b36fb102f",
+  "expected_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
   "review_attestation": {
     "schema_id": "sync.review-attestation.v1",
     "key_id": "key_dev_01",
@@ -530,13 +541,13 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
       "profile_id": "prf_default_01",
       "contribution_id": "c0000000-0000-4000-8000-000000000001",
       "revision": 1,
-      "content_digest": "6c8b43c2e4aa672a3a2b919b20da24336cfb8e2790c469b2f643924b36fb102f",
+      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
       "reviewed_at": "2026-11-09T20:00:00Z",
       "source_not_after": "2026-11-09T20:30:00Z",
       "policy_revision": "100",
       "artifact_policy_revision": "art_pol_rev_05"
     },
-    "signature": "ceCZJkveK3lAjDNWH2AqjVrAKkdiDM7k-nts04dU4vpSB0uAaqFMEVG40r9RcXDMjjzRfyL75PegHU8Z6JC0DA"
+    "signature": "CVjAQ2TAehOJ-YpqlQ2fYOoA0EIFU0mP7ujKhF_wTPQstFWvm0IW6XsNxh9xEZOLDIoAxOgsT_7_hVbRILAvDg"
   },
   "action": "withdraw",
   "reason": "employee_withdrawal"
@@ -781,7 +792,7 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
     "review_keys": [
       {
         "key_id": "key_dev_01",
-        "public_key": "gJhtweMJaH5Ew56h6IHcTLSxUr9qmUGeYFNaKGs6dbw",
+        "public_key": "AIoCVTdr59W0XbpaOLUKVIG2JsuMhvooms7AgJyPI78",
         "actor_id": "usr_employee_01",
         "device_id": "dev_macbook_01",
         "profile_id": "prf_default_01",

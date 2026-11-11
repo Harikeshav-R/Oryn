@@ -57,6 +57,7 @@ Simulation execution environments must be completely network-isolated from produ
 - **Secret Vault Protocol:** Delivers short-lived, least-privileged credentials to [application-adapters](application-adapters.md) and [agent-runtime](agent-runtime.md).
 - **Audit Logging Bus:** Ingests immutable audit events from all system services for secure long-term storage.
 - **Private Evidence Boundary:** Central infrastructure explicitly maintains zero backup infrastructure, recovery key escrow, or administrative override keys for employee private evidence. Device-local encrypted storage and key management are governed strictly by [local-privacy-storage](local-privacy-storage.md).
+- **PostgreSQL pgvector & Vector Store Hosting:** Provisions and operates the `pgvector` extension within the managed PostgreSQL cluster, supporting organization-isolated vector columns (`vector(1..4096)`) for [workflow-discovery](workflow-discovery.md) without introducing external third-party vector databases.
 
 ### Process and Security Boundaries
 - **Deployment Location:** Multi-cloud or customer-dedicated infrastructure (Kubernetes, managed PostgreSQL, KMS, object storage).
@@ -71,6 +72,7 @@ Simulation execution environments must be completely network-isolated from produ
 - **Secret and Key Vault:** Manages HashiCorp Vault Transit engine for software Ed25519 signing keys (`derived=false`, `exportable=false`, `allow_plaintext_backup=false`), HSM envelope encryption, provider API keys, and ephemeral token generation. Separate key mounts and ACLs segregate `root` (isolated infrastructure custody), `policy` (identity, authorization, privacy policy authority), `publisher` (guidance bundles), and `receipt` signing keys. Application services receive no private key material; they request bounded sign operations over workload-authenticated mTLS.
 - **Immutable Audit Store and Authority Recovery Journal:** Write-once-read-many (WORM) storage for compliance audit logs with cryptographic hash chains. Operates the independent Authority Recovery Journal outside the PostgreSQL backup domain: accepts idempotent appends of `AuthorityJournalEntryV1` (`identity.authority-journal-entry.v1`) and issues signed `SignedAuthorityCheckpointV1` (`identity.authority-checkpoint.v1`) receipts.
 - **Zero-Trust Network Mesh:** Implements mutual TLS (mTLS) and fine-grained network policies between all microservices.
+- **Discovery Compute and Connection Budget:** Allocates background worker resources for [workflow-discovery](workflow-discovery.md) within the Worker role (2 replicas at 2 vCPU / 2 GiB RAM), capping Discovery database concurrency at 4 connections from the 16-connection worker pool. Outbound network policies permit egress solely to certified US LiteLLM proxy routes.
 ## State and lifecycle
 
 ### State and Persistence

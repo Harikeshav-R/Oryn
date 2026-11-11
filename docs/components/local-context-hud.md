@@ -18,10 +18,10 @@ The helper ingests sanitized, permitted screen observations from [local-privacy-
 - Tracking interactive guidance step progress across a per-step state ledger (`pending`, `active`, `acknowledged`, `observed_complete`, `skipped_optional`, `failed`, `unknown`).
 - Managing at most one active guidance session per employee profile, with deterministic suspension upon task switching and explicit revalidation upon resume.
 - Coordinating employee-supervised assisted execution (`AssistPlanV1`) binding an explicit tagged union `ExecutionContextV1` (`assist`), enforcing preflight reservations and preparation stopping points before consequential submissions.
-- Generating reverse demonstration proposals (`DemonstrationProposalV1`) from observed completed task instances for validation by privacy storage prior to local contribution review.
+- Generating reverse demonstration proposals (`DemonstrationProposalV1`) with task-boundary measurement proposals (`task_measurement`) from observed completed task instances for validation by privacy storage prior to local contribution review.
 
 ### Consumes
-- Redacted, permitted local observations (`PermittedObservationV1`), privacy fences (`ContextFence`), sequence gap markers (`ContextGap`), baseline responses, and storage receipts from [local-privacy-storage](local-privacy-storage.md) over Contract 25 (`privacy-context.v1`, major 1, minor 1).
+- Redacted, permitted local observations (`PermittedObservationV1`), privacy fences (`ContextFence`), sequence gap markers (`ContextGap`), baseline responses, and storage receipts from [local-privacy-storage](local-privacy-storage.md) over Contract 25 (`privacy-context.v1`, major 1, minor 2).
 - Published, access-filtered guidance bundles (`GuidanceBundleV1`) from [operational-graph](operational-graph.md) via [contribution-sync](contribution-sync.md) under Contract 3.
 - Signed guidance access leases (`SignedGuidanceAccessLeaseV1`, schema `hud.guidance-access-lease.v1`) issued by [identity-policy](identity-policy.md) governing offline and online cache read eligibility (capped at 24 hours).
 - Confirmed personal commitment projections (`CommitmentReminderProjection`) and projection changes (`CommitmentProjectionChangeV1`) from [meeting-intelligence](meeting-intelligence.md) via Contract 23.
@@ -85,14 +85,14 @@ The helper ingests sanitized, permitted screen observations from [local-privacy-
 
 ### Contract 25: Local Privacy Storage Interface (`privacy-context.v1`)
 Operating over an isolated, direct socketpair (macOS) or anonymous pipe pair (Windows) established by the desktop shell supervisor at launch.
-- **Negotiation:** Length-prefixed wire protocol negotiating `protocol_version: "privacy-context.v1"`, `protocol_major: 1`, `protocol_minor: 1`. Both peers require this minor; incompatible versions close the link immediately.
+- **Negotiation:** Length-prefixed wire protocol negotiating `protocol_version: "privacy-context.v1"`, `protocol_major: 1`, `protocol_minor: 2`. Both peers require this minor; incompatible versions close the link immediately.
 - **Framing & Queuing:** 4-byte big-endian unsigned length prefix + UTF-8 JSON. Max frame size: 1,048,576 bytes (1 MiB). Ring buffer capped at 128 messages or 8 MiB, with eight reserved control slots. Control slots guarantee delivery of privacy fences (`ContextFence`); if the reserve cannot carry a fence, the helper closes the link, invalidating HUD state and forcing resynchronization. Observation queue overflow emits one ordered `ContextGap` reporting lost sequence intervals and requests a fresh baseline.
 - **Envelope Structure:** All Contract 25 messages use the canonical wire envelope:
   ```json
   {
     "protocol_version": "privacy-context.v1",
     "protocol_major": 1,
-    "protocol_minor": 1,
+    "protocol_minor": 2,
     "message_id": "01928374-4001-7000-8000-000000000001",
     "correlation_id": null,
     "sequence": "101",
@@ -121,7 +121,7 @@ Operating over an isolated, direct socketpair (macOS) or anonymous pipe pair (Wi
   - `GetContextHistory`: Queries historical task summaries for repetition analysis.
   - `SaveTaskSummary`: Persists bounded `PrivateTaskSummaryV1` in screen partition databases.
   - `SaveGuideCheckpoint`, `GetGuideCheckpoint`, `DeleteGuideCheckpoint`: Manages at most one resumable `GuideCheckpointV1` per profile.
-  - `DemonstrationProposalV1`: Submits synthesized task demonstration proposals for privacy-storage validation before contribution review.
+  - `DemonstrationProposalV1`: Submits synthesized task demonstration proposals with proposed task-level duration measurements (elapsed and wait ms, observed vs estimate basis, complete interval flag) for privacy-storage validation and helper-minted shared demonstration identity before contribution review.
 
 ### Contract 3: Guidance Bundle and Access Lease Interface (`hud.guidance-bundle.v1`)
 Consumes published, access-filtered guidance bundles from [operational-graph](operational-graph.md) via [contribution-sync](contribution-sync.md), and signed access leases from [identity-policy](identity-policy.md).
@@ -390,7 +390,7 @@ Assisted execution coordinates bounded macros under explicit employee supervisio
 
 | Error Code Literal | Category | Trigger Condition | System Behavior & Safe Outcome |
 |---|---|---|---|
-| `HUD_PROTOCOL_INCOMPATIBLE` | Fatal | Peer advertises protocol version or minor other than `privacy-context.v1` (1.1) or `shell-hud.v1` (1.0). | Helper terminates connection immediately; logs fatal diagnostic; fails closed without fallback. |
+| `HUD_PROTOCOL_INCOMPATIBLE` | Fatal | Peer advertises protocol version or minor other than `privacy-context.v1` (1.2) or `shell-hud.v1` (1.0). | Helper terminates connection immediately; logs fatal diagnostic; fails closed without fallback. |
 | `HUD_INVALID_MESSAGE` | Fatal | Malformed JSON, frame exceeding 1 MiB, invalid UTF-8, or missing required envelope fields. | Closes affected channel; invalidates session state; requests clean reconnection. |
 | `HUD_CONTEXT_UNAVAILABLE` | Transient | Active application window is excluded, minimized, or obscured by unpermitted windows. | Clears guidance cards and highlights; transitions guide to `Suspended`; suspends inference. |
 | `HUD_CONTEXT_STALE` | Transient | Observation sequence mismatch, superseded surface generation, or document generation change. | Discards pending suggestions; suppresses coordinate highlights; requests fresh baseline. |

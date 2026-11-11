@@ -36,7 +36,7 @@ Oryn provides employees with real-time contextual guidance, peer error fixes, co
 
 ## Consequences
 - `browser-bridge.v1` bumps to major 1, minor 2, adding `assist_execution_v1` capability and requiring `ExecutionContextV1` in reservation and action messages.
-- `privacy-context.v1` (major 1, minor 1) establishes direct helper-to-helper communication between `oryn-privacy-helper` and `oryn-hud-helper`.
+- `privacy-context.v1` (major 1, minor 1) establishes direct helper-to-helper communication between `oryn-privacy-helper` and `oryn-hud-helper`. *(Scope Amendment — 2026-11-09): [ADR-0013](0013-workflow-discovery-evidence-and-review-boundaries.md) amends Contract 25 (`privacy-context.v1`) to negotiate `protocol_major: 1`, `protocol_minor: 2`, adding task-level duration proposals (`task_measurement`) and helper-minted shared demonstration identity.*
 - `identity-policy` issues Ed25519-signed `SignedGuidanceAccessLeaseV1` artifacts and validates `ExecutionContextV1` in action authorization tokens using dual digests (`action_sha256` and `proposal_digest`) under Contract 11 (see [ADR-0011](0011-identity-authority-and-approval-fencing.md)).
 - `browser-bridge.v1` advances to major 1, minor 3 with capability `identity_authority_v1` under Contract 12, passing the complete `{authorization, approval, admission}` authority bundle.
 - `flight-simulator` and `release-governance` evaluate and gate assist plans using `EvaluationTargetV1` before publishing eligibility to `operational-graph`.

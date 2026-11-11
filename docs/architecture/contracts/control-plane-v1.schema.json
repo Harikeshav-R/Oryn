@@ -283,7 +283,19 @@
             "CP_RATE_LIMITED",
             "CP_DEPENDENCY_UNAVAILABLE",
             "CP_DELIVERY_UNKNOWN",
-            "CP_RECOVERY_REQUIRED"
+            "CP_RECOVERY_REQUIRED",
+            "DISCOVERY_REVISION_CONFLICT",
+            "DISCOVERY_SOURCE_INELIGIBLE",
+            "DISCOVERY_INSUFFICIENT_EXAMPLES",
+            "DISCOVERY_AUDIENCE_EMPTY",
+            "DISCOVERY_OWNER_REQUIRED",
+            "DISCOVERY_QUESTION_UNRESOLVED",
+            "DISCOVERY_SUPPRESSED",
+            "DISCOVERY_LIMIT_EXCEEDED",
+            "DISCOVERY_EVIDENCE_UNAVAILABLE",
+            "DISCOVERY_MODEL_BLOCKED",
+            "DISCOVERY_IDENTITY_CONFLICT",
+            "DISCOVERY_CONFIG_REQUIRED"
           ]
         },
         "request_id": {
@@ -543,7 +555,14 @@
             "incident.created",
             "policy.changed",
             "access.revoked",
-            "operation.changed"
+            "operation.changed",
+            "workflow.candidate_created",
+            "workflow.candidate_changed",
+            "workflow.candidate_invalidated",
+            "workflow.candidate_rejected",
+            "workflow.candidate_approved",
+            "workflow.reconsideration_requested",
+            "workflow.promotion_staged"
           ]
         },
         "aggregate_type": {

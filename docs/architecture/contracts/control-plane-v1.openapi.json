@@ -1109,6 +1109,1514 @@
           }
         }
       }
+    },
+    "/v1/discovery/candidates": {
+      "get": {
+        "operationId": "listDiscoveryCandidates",
+        "summary": "List access-filtered workflow discovery candidates",
+        "description": "Returns cursor-paginated candidates filtered by caller's authorized audience, team, and state.",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "suggested",
+                "under_review",
+                "needs_evidence",
+                "approved_for_guidance",
+                "rejected"
+              ]
+            }
+          },
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "origin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "automatic",
+                "manual",
+                "playbook_update"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated candidate list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "candidates",
+                    "next_cursor"
+                  ],
+                  "properties": {
+                    "candidates": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./workflow-discovery-v1.schema.json#/$defs/WorkflowCandidateV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createDiscoveryCandidate",
+        "summary": "Create explicit manual workflow candidate draft",
+        "description": "Owner or delegated author creates manual candidate draft with explicit team and audience.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidateCreateV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Candidate draft created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidateRevisionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized to create candidate for team",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or duplicate",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}": {
+      "get": {
+        "operationId": "getDiscoveryCandidate",
+        "summary": "Get workflow candidate details",
+        "description": "Fetches candidate header and current revision, revalidating caller audience against contributing sources.",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow candidate details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/WorkflowCandidateV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied by source audience conjunction",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Candidate not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/revisions/{revision}": {
+      "get": {
+        "operationId": "getDiscoveryCandidateRevision",
+        "summary": "Get specific immutable candidate revision",
+        "description": "Fetches immutable historical candidate revision. Source content is revalidated; invalidated payloads report status without replaying purged text.",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]{0,19})$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Candidate revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidateRevisionV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Revision not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/revisions/{revision}/sections/{section}": {
+      "get": {
+        "operationId": "getDiscoveryCandidateSection",
+        "summary": "Get bounded section of candidate revision",
+        "description": "Retrieves large candidate sections (procedure, evidence, questions, history) partitioned under standard 256 KiB response caps.",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]{0,19})$"
+            }
+          },
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "procedure",
+                "evidence",
+                "questions",
+                "history"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded section content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "candidate_id",
+                    "revision",
+                    "section",
+                    "items",
+                    "next_cursor"
+                  ],
+                  "properties": {
+                    "candidate_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "section": {
+                      "type": "string"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Section or candidate not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/reviews": {
+      "post": {
+        "operationId": "reviewDiscoveryCandidate",
+        "summary": "Begin review or request evidence on candidate",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidateReviewCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Candidate state updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/WorkflowCandidateV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/revisions": {
+      "post": {
+        "operationId": "editDiscoveryCandidate",
+        "summary": "Apply reviewer edits to candidate procedure",
+        "description": "Applies full replacement of the editable procedure subset under optimistic concurrency.",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidateEditV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "New candidate revision created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidateRevisionV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/proposals/{proposal_id}/decisions": {
+      "post": {
+        "operationId": "decideDiscoveryProposal",
+        "summary": "Accept or decline proposed evidence diff",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/ProposalDecisionV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proposal decision recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/WorkflowCandidateV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/questions/{question_id}/answers": {
+      "post": {
+        "operationId": "answerDiscoveryQuestion",
+        "summary": "Submit answer to clarification question",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/QuestionAnswerV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Question answered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/ClarificationQuestionV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/approvals": {
+      "post": {
+        "operationId": "approveDiscoveryCandidate",
+        "summary": "Approve candidate and stage for guidance publication",
+        "description": "Validates owner remit, gates, and source fence, then stages candidate into Operational Graph.",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidateApprovalV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Candidate approved and promotion staged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidatePromotionV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized owner remit",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Approval gates failed or revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/rejections": {
+      "post": {
+        "operationId": "rejectDiscoveryCandidate",
+        "summary": "Reject candidate and activate suppression rule",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidateRejectionV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Candidate rejected and suppression rule active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/WorkflowCandidateV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/reconsiderations/{reconsideration_id}/decisions": {
+      "post": {
+        "operationId": "decideDiscoveryReconsideration",
+        "summary": "Owner decision on suppression reconsideration request",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reconsideration_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/ReconsiderationDecisionV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reconsideration decision recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/ReconsiderationV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/splits": {
+      "post": {
+        "operationId": "splitDiscoveryCandidate",
+        "summary": "Split candidate into multiple narrower drafts",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidateSplitV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Split operation accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or insufficient support",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidate-merges": {
+      "post": {
+        "operationId": "mergeDiscoveryCandidates",
+        "summary": "Merge multiple candidates into single unified draft",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/CandidateMergeV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Merge operation accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or incompatible scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/regenerations": {
+      "post": {
+        "operationId": "regenerateDiscoveryCandidate",
+        "summary": "Trigger authorized re-synthesis from pinned manifest",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/RegenerationV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Regeneration operation accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Manifest mismatch or insufficient support",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/suppression-rules/{rule_id}/retirements": {
+      "post": {
+        "operationId": "retireSuppressionRule",
+        "summary": "Owner retirement of active suppression rule",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/SuppressionRetirementV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Suppression rule retired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/SuppressionRuleV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/retention-decisions": {
+      "post": {
+        "operationId": "decideDiscoveryRetention",
+        "summary": "Extend candidate retention under explicit policy grant",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/RetentionDecisionV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Retention extended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/WorkflowCandidateV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or unpermitted extension",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/demonstrations/{demonstration_id}/verifications": {
+      "post": {
+        "operationId": "verifyDemonstrationOutcome",
+        "summary": "Record evidenced outcome assessment for demonstration",
+        "parameters": [
+          {
+            "name": "demonstration_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/DemonstrationVerificationV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Outcome verification recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/DemonstrationVerificationV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicting evidence or attempt not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/opportunities": {
+      "get": {
+        "operationId": "listDiscoveryOpportunities",
+        "summary": "List privacy-filtered workflow opportunity metrics",
+        "description": "Returns aggregate opportunity metrics subject to cohort privacy suppression. No per-employee filters or grouping keys exposed.",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated opportunity projections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "opportunities",
+                    "next_cursor"
+                  ],
+                  "properties": {
+                    "opportunities": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./workflow-discovery-v1.schema.json#/$defs/OpportunityV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/candidates/{candidate_id}/opportunity-assumptions": {
+      "put": {
+        "operationId": "updateOpportunityAssumptions",
+        "summary": "Set owner-supplied assumptions for financial projection",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/OpportunityAssumptionsV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Opportunity assumptions recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/OpportunityAssumptionsV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner remit required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discovery/configuration": {
+      "get": {
+        "operationId": "getDiscoveryConfiguration",
+        "summary": "Get organization discovery configuration",
+        "responses": {
+          "200": {
+            "description": "Active discovery configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/DiscoveryConfigurationV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Configuration uninitialized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateDiscoveryConfiguration",
+        "summary": "Update organization discovery configuration",
+        "description": "Requires security_policy.manage and an authorized routing team.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/DiscoveryConfigurationV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Configuration updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./workflow-discovery-v1.schema.json#/$defs/DiscoveryConfigurationV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Security policy management authority required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/candidate-stages/{graph_draft_id}/publications": {
+      "post": {
+        "operationId": "publishStagedCandidate",
+        "summary": "Publish staged candidate into canonical company playbook",
+        "description": "Operational Graph-owned publication boundary. Revalidates eligibility, rules, and staged content hash before emitting workflow.published.",
+        "parameters": [
+          {
+            "name": "graph_draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./workflow-discovery-v1.schema.json#/$defs/GraphPublicationCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Playbook published",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "playbook_id",
+                    "playbook_version",
+                    "published_at"
+                  ],
+                  "properties": {
+                    "playbook_id": {
+                      "type": "string"
+                    },
+                    "playbook_version": {
+                      "type": "string"
+                    },
+                    "published_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Publication authority required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Staged revision mismatch or source invalidated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

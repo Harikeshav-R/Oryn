@@ -104,6 +104,30 @@ _Avoid_: Global erasure proof, backup purge certificate
 One employee attempt to achieve a business objective, distinct from the reusable workflow describing that objective.
 _Avoid_: Workflow instance, employee activity session
 
+**Demonstration**:
+A sanitized, employee-approved record of one observed Task Instance submitted for procedural discovery; it represents evidence of how work was performed, not an approved organizational standard.
+_Avoid_: Playbook, automated macro, training trace
+
+**Workflow Candidate**:
+A proposed reusable procedure synthesized from multiple concordant demonstrations or authored as a manual draft; it remains an unapproved suggestion until explicit domain owner approval.
+_Avoid_: Published playbook, approved standard, active workflow
+
+**Workflow Variant**:
+An alternative procedural path achieving the same verifiable business outcome under documented conditions. A suggested variant reflects observed variations without owner endorsement; an approved legitimate variant is explicitly accepted by an authorized domain owner as compliant with enterprise policy.
+_Avoid_: Procedural error, ad-hoc detour, loose branch
+
+**Observed Complete**:
+An observation where an employee completed the final step of a task without observed observation gaps or unhandled exceptions; it indicates behavioral completion, not verification of real-world business outcomes.
+_Avoid_: Verified outcome, successful transaction, verified state
+
+**Outcome Verified**:
+An evidenced postcondition confirmation that a task achieved its intended business effect, substantiated by independent business-system records or an authorized reviewer's signed assessment.
+_Avoid_: Self-reported success, employee assertion, assumed outcome
+
+**Reconsideration Request**:
+An owner-gated review proposal triggered by material new evidence for a previously rejected workflow concept; it does not revive the rejected candidate revision or grant publication authority.
+_Avoid_: Automatic appeal, candidate un-rejection, un-suppression
+
 **Task Hypothesis**:
 An unconfirmed interpretation of which task an employee may be performing and where its boundaries lie.
 _Avoid_: Confirmed task, execution authority

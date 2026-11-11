@@ -1,0 +1,3168 @@
+{
+  "schema_id": "workflow.discovery-fixture-set.v1",
+  "positive_cases": [
+    {
+      "case_id": "pos_WorkflowCandidateV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/WorkflowCandidateV1",
+      "instance": {
+        "schema_id": "workflow.candidate.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "product_state": "under_review",
+        "processing_state": "ready",
+        "current_revision": {
+          "schema_id": "workflow.candidate-revision.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "candidate_id": "11111111-2222-4333-8444-555555555555",
+          "revision": "1",
+          "predecessor_revision": null,
+          "body": {
+            "origin": "automatic",
+            "responsible_team_id": "team_finance_ap",
+            "owner_actor_id": "usr_owner_sarah",
+            "linked_playbook_version": null,
+            "procedure": {
+              "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+              "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+              "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+              "scope": {
+                "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+                "excluded_cases": [
+                  "Credit notes",
+                  "Inter-company transfers"
+                ],
+                "application_ids": [
+                  "app_erp_core",
+                  "app_spreadsheet"
+                ],
+                "business_record_types": [
+                  "rec_invoice",
+                  "rec_purchase_order"
+                ]
+              },
+              "allowed_roles": [
+                "role_ap_specialist",
+                "role_finance_supervisor"
+              ],
+              "triggers": [
+                "Daily AP batch import completion notification"
+              ],
+              "boundaries": {
+                "start": "Opening reconciliation work queue in ERP Core Client",
+                "end": "Posting invoice adjustment batch or escalating variance"
+              },
+              "prerequisites": [
+                "Active ERP session",
+                "Open reconciliation batch"
+              ],
+              "inputs": [
+                {
+                  "name": "batch_file",
+                  "value_label": "REDACTED_INVOICE_BATCH.CSV",
+                  "provenance": "observed"
+                }
+              ],
+              "variables": [
+                {
+                  "name": "batch_id",
+                  "value_label": "BATCH-20261109-01",
+                  "provenance": "reviewer_supplied"
+                }
+              ],
+              "applications": [
+                {
+                  "application_id": "app_erp_core",
+                  "display_name": "ERP Core Client"
+                }
+              ],
+              "steps": [
+                {
+                  "step_id": "step_open_batch",
+                  "kind": "action",
+                  "application_id": "app_erp_core",
+                  "label": "Open Reconciliation Queue",
+                  "description": "Navigate to AP queue and select active daily invoice batch",
+                  "expected_result": "Batch line items display with pending status indicators",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_01"
+                  ],
+                  "provenance_claim_ids": [
+                    "claim_step_open"
+                  ],
+                  "repeat": null
+                },
+                {
+                  "step_id": "step_check_variance",
+                  "kind": "decision",
+                  "application_id": "app_erp_core",
+                  "label": "Check Unit Variance",
+                  "description": "Compare line item unit price with corresponding purchase order",
+                  "expected_result": "Line item tagged as under or over tolerance threshold",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_02"
+                  ],
+                  "provenance_claim_ids": [
+                    "claim_step_variance"
+                  ],
+                  "repeat": null
+                }
+              ],
+              "step_edges": [
+                {
+                  "from_step_id": "step_open_batch",
+                  "to_step_id": "step_check_variance",
+                  "condition_description": null
+                }
+              ],
+              "entry_step_id": "step_open_batch",
+              "exit_step_ids": [
+                "step_check_variance"
+              ],
+              "decisions": [
+                {
+                  "decision_id": "dec_variance_check",
+                  "step_id": "step_check_variance",
+                  "condition_description": "Unit price variance exceeds $50.00 threshold",
+                  "branches": [
+                    {
+                      "branch_id": "branch_under_tolerance",
+                      "label": "Under tolerance",
+                      "first_step_id": "step_open_batch",
+                      "condition_description": "Variance <= $50.00",
+                      "status": "reviewed"
+                    }
+                  ]
+                }
+              ],
+              "variants": [
+                {
+                  "variant_id": "var_bulk_csv_import",
+                  "label": "Bulk CSV Import Variant",
+                  "conditions": "Supplier supports automated EDI line imports",
+                  "step_ids": [
+                    "step_open_batch"
+                  ],
+                  "application_ids": [
+                    "app_erp_core"
+                  ],
+                  "status": "reviewed",
+                  "supporting_sources": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                      "revision": 1,
+                      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                      "eligibility_generation": 1
+                    }
+                  ]
+                }
+              ],
+              "exceptions": [
+                {
+                  "exception_id": "exc_closed_po",
+                  "description": "Purchase order status is closed or cancelled",
+                  "resolution": "Route invoice line to supervisory exception queue",
+                  "escalation_route": "Escalate to Finance Supervisor",
+                  "supporting_sources": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                      "revision": 1,
+                      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                      "eligibility_generation": 1
+                    }
+                  ]
+                }
+              ],
+              "expected_outputs": [
+                "Daily reconciliation variance report"
+              ],
+              "postconditions": [
+                {
+                  "postcondition_id": "post_adjustment_posted",
+                  "description": "Reconciliation batch posted and variance journal created in ERP",
+                  "verification_method": "system_evidence",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_01"
+                  ]
+                }
+              ],
+              "escalation_routes": [
+                "Finance Supervisor AP Queue"
+              ],
+              "proposed_risk_tier": 2,
+              "guidance_eligibility": "ready",
+              "agent_eligibility": "not_assessed",
+              "execution_qualification_gaps": [],
+              "missing_evidence": [],
+              "known_limitations": [
+                "Requires manual supervisor review for line items over $1,000"
+              ]
+            },
+            "source_manifest": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              }
+            ],
+            "source_manifest_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+            "audience": {
+              "source_audience_bindings": [
+                {
+                  "source": {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                    "revision": 1,
+                    "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                    "eligibility_generation": 1
+                  },
+                  "purpose": "workflow_sharing",
+                  "audience_ids": [
+                    "aud_finance_ops"
+                  ]
+                }
+              ],
+              "manual_audience_ids": [],
+              "restriction_refs": [],
+              "policy_revision": "100"
+            },
+            "provenance": [
+              {
+                "claim_id": "claim_step_open",
+                "field_pointer": "/procedure/steps/0",
+                "basis": "observed",
+                "source_pointers": [
+                  {
+                    "source": {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                      "revision": 1,
+                      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                      "eligibility_generation": 1
+                    },
+                    "field_pointer": "/content/steps/0"
+                  }
+                ],
+                "approved_rule_refs": [
+                  "rule_ap_sox_01"
+                ],
+                "verification_status": "verified",
+                "conflict_ids": []
+              }
+            ],
+            "verification_coverage": {
+              "eligible_attempts": 3,
+              "observed_complete_attempts": 3,
+              "verified_attempts": 2,
+              "contradicted_attempts": 0,
+              "unknown_attempts": 1,
+              "assessment_refs": [
+                "assess_demo_01"
+              ]
+            },
+            "questions": [
+              {
+                "question_id": "q_missing_tolerance_doc",
+                "kind": "variant_condition",
+                "prompt": "What threshold dictates escalation to supervisory queue for foreign currency lines?",
+                "affected_claim_ids": [
+                  "claim_step_open"
+                ],
+                "source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                    "revision": 1,
+                    "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                    "eligibility_generation": 1
+                  }
+                ],
+                "answer_kind": "text",
+                "choices": [],
+                "assigned_reviewer_id": "usr_ap_lead",
+                "blocks_guidance": false,
+                "status": "answered",
+                "answer": {
+                  "kind": "text",
+                  "text": "Standard $50.00 equivalent tolerance applies"
+                }
+              }
+            ]
+          },
+          "content_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+          "created_by": "service_discovery_worker",
+          "created_at": "2026-11-09T20:00:00Z"
+        },
+        "pending_proposal_ids": [],
+        "created_at": "2026-11-09T20:00:00Z",
+        "expires_at": "2027-11-09T20:00:00Z",
+        "content_availability": "available"
+      }
+    },
+    {
+      "case_id": "pos_CandidateRevisionV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateRevisionV1",
+      "instance": {
+        "schema_id": "workflow.candidate-revision.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "revision": "1",
+        "predecessor_revision": null,
+        "body": {
+          "origin": "automatic",
+          "responsible_team_id": "team_finance_ap",
+          "owner_actor_id": "usr_owner_sarah",
+          "linked_playbook_version": null,
+          "procedure": {
+            "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+            "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+            "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+            "scope": {
+              "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+              "excluded_cases": [
+                "Credit notes",
+                "Inter-company transfers"
+              ],
+              "application_ids": [
+                "app_erp_core",
+                "app_spreadsheet"
+              ],
+              "business_record_types": [
+                "rec_invoice",
+                "rec_purchase_order"
+              ]
+            },
+            "allowed_roles": [
+              "role_ap_specialist",
+              "role_finance_supervisor"
+            ],
+            "triggers": [
+              "Daily AP batch import completion notification"
+            ],
+            "boundaries": {
+              "start": "Opening reconciliation work queue in ERP Core Client",
+              "end": "Posting invoice adjustment batch or escalating variance"
+            },
+            "prerequisites": [
+              "Active ERP session",
+              "Open reconciliation batch"
+            ],
+            "inputs": [
+              {
+                "name": "batch_file",
+                "value_label": "REDACTED_INVOICE_BATCH.CSV",
+                "provenance": "observed"
+              }
+            ],
+            "variables": [
+              {
+                "name": "batch_id",
+                "value_label": "BATCH-20261109-01",
+                "provenance": "reviewer_supplied"
+              }
+            ],
+            "applications": [
+              {
+                "application_id": "app_erp_core",
+                "display_name": "ERP Core Client"
+              }
+            ],
+            "steps": [
+              {
+                "step_id": "step_open_batch",
+                "kind": "action",
+                "application_id": "app_erp_core",
+                "label": "Open Reconciliation Queue",
+                "description": "Navigate to AP queue and select active daily invoice batch",
+                "expected_result": "Batch line items display with pending status indicators",
+                "approved_rule_refs": [
+                  "rule_ap_sox_01"
+                ],
+                "provenance_claim_ids": [
+                  "claim_step_open"
+                ],
+                "repeat": null
+              },
+              {
+                "step_id": "step_check_variance",
+                "kind": "decision",
+                "application_id": "app_erp_core",
+                "label": "Check Unit Variance",
+                "description": "Compare line item unit price with corresponding purchase order",
+                "expected_result": "Line item tagged as under or over tolerance threshold",
+                "approved_rule_refs": [
+                  "rule_ap_sox_02"
+                ],
+                "provenance_claim_ids": [
+                  "claim_step_variance"
+                ],
+                "repeat": null
+              }
+            ],
+            "step_edges": [
+              {
+                "from_step_id": "step_open_batch",
+                "to_step_id": "step_check_variance",
+                "condition_description": null
+              }
+            ],
+            "entry_step_id": "step_open_batch",
+            "exit_step_ids": [
+              "step_check_variance"
+            ],
+            "decisions": [
+              {
+                "decision_id": "dec_variance_check",
+                "step_id": "step_check_variance",
+                "condition_description": "Unit price variance exceeds $50.00 threshold",
+                "branches": [
+                  {
+                    "branch_id": "branch_under_tolerance",
+                    "label": "Under tolerance",
+                    "first_step_id": "step_open_batch",
+                    "condition_description": "Variance <= $50.00",
+                    "status": "reviewed"
+                  }
+                ]
+              }
+            ],
+            "variants": [
+              {
+                "variant_id": "var_bulk_csv_import",
+                "label": "Bulk CSV Import Variant",
+                "conditions": "Supplier supports automated EDI line imports",
+                "step_ids": [
+                  "step_open_batch"
+                ],
+                "application_ids": [
+                  "app_erp_core"
+                ],
+                "status": "reviewed",
+                "supporting_sources": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                    "revision": 1,
+                    "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                    "eligibility_generation": 1
+                  }
+                ]
+              }
+            ],
+            "exceptions": [
+              {
+                "exception_id": "exc_closed_po",
+                "description": "Purchase order status is closed or cancelled",
+                "resolution": "Route invoice line to supervisory exception queue",
+                "escalation_route": "Escalate to Finance Supervisor",
+                "supporting_sources": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                    "revision": 1,
+                    "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                    "eligibility_generation": 1
+                  }
+                ]
+              }
+            ],
+            "expected_outputs": [
+              "Daily reconciliation variance report"
+            ],
+            "postconditions": [
+              {
+                "postcondition_id": "post_adjustment_posted",
+                "description": "Reconciliation batch posted and variance journal created in ERP",
+                "verification_method": "system_evidence",
+                "approved_rule_refs": [
+                  "rule_ap_sox_01"
+                ]
+              }
+            ],
+            "escalation_routes": [
+              "Finance Supervisor AP Queue"
+            ],
+            "proposed_risk_tier": 2,
+            "guidance_eligibility": "ready",
+            "agent_eligibility": "not_assessed",
+            "execution_qualification_gaps": [],
+            "missing_evidence": [],
+            "known_limitations": [
+              "Requires manual supervisor review for line items over $1,000"
+            ]
+          },
+          "source_manifest": [
+            {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "contribution_id": "c0000000-0000-4000-8000-000000000001",
+              "revision": 1,
+              "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+              "eligibility_generation": 1
+            }
+          ],
+          "source_manifest_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+          "audience": {
+            "source_audience_bindings": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                },
+                "purpose": "workflow_sharing",
+                "audience_ids": [
+                  "aud_finance_ops"
+                ]
+              }
+            ],
+            "manual_audience_ids": [],
+            "restriction_refs": [],
+            "policy_revision": "100"
+          },
+          "provenance": [
+            {
+              "claim_id": "claim_step_open",
+              "field_pointer": "/procedure/steps/0",
+              "basis": "observed",
+              "source_pointers": [
+                {
+                  "source": {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                    "revision": 1,
+                    "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                    "eligibility_generation": 1
+                  },
+                  "field_pointer": "/content/steps/0"
+                }
+              ],
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ],
+              "verification_status": "verified",
+              "conflict_ids": []
+            }
+          ],
+          "verification_coverage": {
+            "eligible_attempts": 3,
+            "observed_complete_attempts": 3,
+            "verified_attempts": 2,
+            "contradicted_attempts": 0,
+            "unknown_attempts": 1,
+            "assessment_refs": [
+              "assess_demo_01"
+            ]
+          },
+          "questions": [
+            {
+              "question_id": "q_missing_tolerance_doc",
+              "kind": "variant_condition",
+              "prompt": "What threshold dictates escalation to supervisory queue for foreign currency lines?",
+              "affected_claim_ids": [
+                "claim_step_open"
+              ],
+              "source_refs": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ],
+              "answer_kind": "text",
+              "choices": [],
+              "assigned_reviewer_id": "usr_ap_lead",
+              "blocks_guidance": false,
+              "status": "answered",
+              "answer": {
+                "kind": "text",
+                "text": "Standard $50.00 equivalent tolerance applies"
+              }
+            }
+          ]
+        },
+        "content_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+        "created_by": "service_discovery_worker",
+        "created_at": "2026-11-09T20:00:00Z"
+      }
+    },
+    {
+      "case_id": "pos_CandidateCreateV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateCreateV1",
+      "instance": {
+        "schema_id": "workflow.candidate-create.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "responsible_team_id": "team_finance_ap",
+        "owner_actor_id": "usr_owner_sarah",
+        "audience": {
+          "source_audience_bindings": [
+            {
+              "source": {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              },
+              "purpose": "workflow_sharing",
+              "audience_ids": [
+                "aud_finance_ops"
+              ]
+            }
+          ],
+          "manual_audience_ids": [],
+          "restriction_refs": [],
+          "policy_revision": "100"
+        },
+        "procedure": {
+          "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+          "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+          "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+          "scope": {
+            "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+            "excluded_cases": [
+              "Credit notes",
+              "Inter-company transfers"
+            ],
+            "application_ids": [
+              "app_erp_core",
+              "app_spreadsheet"
+            ],
+            "business_record_types": [
+              "rec_invoice",
+              "rec_purchase_order"
+            ]
+          },
+          "allowed_roles": [
+            "role_ap_specialist",
+            "role_finance_supervisor"
+          ],
+          "triggers": [
+            "Daily AP batch import completion notification"
+          ],
+          "boundaries": {
+            "start": "Opening reconciliation work queue in ERP Core Client",
+            "end": "Posting invoice adjustment batch or escalating variance"
+          },
+          "prerequisites": [
+            "Active ERP session",
+            "Open reconciliation batch"
+          ],
+          "inputs": [
+            {
+              "name": "batch_file",
+              "value_label": "REDACTED_INVOICE_BATCH.CSV",
+              "provenance": "observed"
+            }
+          ],
+          "variables": [
+            {
+              "name": "batch_id",
+              "value_label": "BATCH-20261109-01",
+              "provenance": "reviewer_supplied"
+            }
+          ],
+          "applications": [
+            {
+              "application_id": "app_erp_core",
+              "display_name": "ERP Core Client"
+            }
+          ],
+          "steps": [
+            {
+              "step_id": "step_open_batch",
+              "kind": "action",
+              "application_id": "app_erp_core",
+              "label": "Open Reconciliation Queue",
+              "description": "Navigate to AP queue and select active daily invoice batch",
+              "expected_result": "Batch line items display with pending status indicators",
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ],
+              "provenance_claim_ids": [
+                "claim_step_open"
+              ],
+              "repeat": null
+            },
+            {
+              "step_id": "step_check_variance",
+              "kind": "decision",
+              "application_id": "app_erp_core",
+              "label": "Check Unit Variance",
+              "description": "Compare line item unit price with corresponding purchase order",
+              "expected_result": "Line item tagged as under or over tolerance threshold",
+              "approved_rule_refs": [
+                "rule_ap_sox_02"
+              ],
+              "provenance_claim_ids": [
+                "claim_step_variance"
+              ],
+              "repeat": null
+            }
+          ],
+          "step_edges": [
+            {
+              "from_step_id": "step_open_batch",
+              "to_step_id": "step_check_variance",
+              "condition_description": null
+            }
+          ],
+          "entry_step_id": "step_open_batch",
+          "exit_step_ids": [
+            "step_check_variance"
+          ],
+          "decisions": [
+            {
+              "decision_id": "dec_variance_check",
+              "step_id": "step_check_variance",
+              "condition_description": "Unit price variance exceeds $50.00 threshold",
+              "branches": [
+                {
+                  "branch_id": "branch_under_tolerance",
+                  "label": "Under tolerance",
+                  "first_step_id": "step_open_batch",
+                  "condition_description": "Variance <= $50.00",
+                  "status": "reviewed"
+                }
+              ]
+            }
+          ],
+          "variants": [
+            {
+              "variant_id": "var_bulk_csv_import",
+              "label": "Bulk CSV Import Variant",
+              "conditions": "Supplier supports automated EDI line imports",
+              "step_ids": [
+                "step_open_batch"
+              ],
+              "application_ids": [
+                "app_erp_core"
+              ],
+              "status": "reviewed",
+              "supporting_sources": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ]
+            }
+          ],
+          "exceptions": [
+            {
+              "exception_id": "exc_closed_po",
+              "description": "Purchase order status is closed or cancelled",
+              "resolution": "Route invoice line to supervisory exception queue",
+              "escalation_route": "Escalate to Finance Supervisor",
+              "supporting_sources": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ]
+            }
+          ],
+          "expected_outputs": [
+            "Daily reconciliation variance report"
+          ],
+          "postconditions": [
+            {
+              "postcondition_id": "post_adjustment_posted",
+              "description": "Reconciliation batch posted and variance journal created in ERP",
+              "verification_method": "system_evidence",
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ]
+            }
+          ],
+          "escalation_routes": [
+            "Finance Supervisor AP Queue"
+          ],
+          "proposed_risk_tier": 2,
+          "guidance_eligibility": "ready",
+          "agent_eligibility": "not_assessed",
+          "execution_qualification_gaps": [],
+          "missing_evidence": [],
+          "known_limitations": [
+            "Requires manual supervisor review for line items over $1,000"
+          ]
+        },
+        "reason": "Authoring initial manual candidate draft for invoice reconciliation"
+      }
+    },
+    {
+      "case_id": "pos_CandidateReviewCommandV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateReviewCommandV1",
+      "instance": {
+        "schema_id": "workflow.candidate-review.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "expected_revision": "1",
+        "action": "begin_review",
+        "reason": "Owner Sarah starting review of suggested candidate"
+      }
+    },
+    {
+      "case_id": "pos_CandidateEditV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateEditV1",
+      "instance": {
+        "schema_id": "workflow.candidate-edit.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "expected_revision": "1",
+        "procedure": {
+          "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+          "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+          "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+          "scope": {
+            "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+            "excluded_cases": [
+              "Credit notes",
+              "Inter-company transfers"
+            ],
+            "application_ids": [
+              "app_erp_core",
+              "app_spreadsheet"
+            ],
+            "business_record_types": [
+              "rec_invoice",
+              "rec_purchase_order"
+            ]
+          },
+          "allowed_roles": [
+            "role_ap_specialist",
+            "role_finance_supervisor"
+          ],
+          "triggers": [
+            "Daily AP batch import completion notification"
+          ],
+          "boundaries": {
+            "start": "Opening reconciliation work queue in ERP Core Client",
+            "end": "Posting invoice adjustment batch or escalating variance"
+          },
+          "prerequisites": [
+            "Active ERP session",
+            "Open reconciliation batch"
+          ],
+          "inputs": [
+            {
+              "name": "batch_file",
+              "value_label": "REDACTED_INVOICE_BATCH.CSV",
+              "provenance": "observed"
+            }
+          ],
+          "variables": [
+            {
+              "name": "batch_id",
+              "value_label": "BATCH-20261109-01",
+              "provenance": "reviewer_supplied"
+            }
+          ],
+          "applications": [
+            {
+              "application_id": "app_erp_core",
+              "display_name": "ERP Core Client"
+            }
+          ],
+          "steps": [
+            {
+              "step_id": "step_open_batch",
+              "kind": "action",
+              "application_id": "app_erp_core",
+              "label": "Open Reconciliation Queue",
+              "description": "Navigate to AP queue and select active daily invoice batch",
+              "expected_result": "Batch line items display with pending status indicators",
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ],
+              "provenance_claim_ids": [
+                "claim_step_open"
+              ],
+              "repeat": null
+            },
+            {
+              "step_id": "step_check_variance",
+              "kind": "decision",
+              "application_id": "app_erp_core",
+              "label": "Check Unit Variance",
+              "description": "Compare line item unit price with corresponding purchase order",
+              "expected_result": "Line item tagged as under or over tolerance threshold",
+              "approved_rule_refs": [
+                "rule_ap_sox_02"
+              ],
+              "provenance_claim_ids": [
+                "claim_step_variance"
+              ],
+              "repeat": null
+            }
+          ],
+          "step_edges": [
+            {
+              "from_step_id": "step_open_batch",
+              "to_step_id": "step_check_variance",
+              "condition_description": null
+            }
+          ],
+          "entry_step_id": "step_open_batch",
+          "exit_step_ids": [
+            "step_check_variance"
+          ],
+          "decisions": [
+            {
+              "decision_id": "dec_variance_check",
+              "step_id": "step_check_variance",
+              "condition_description": "Unit price variance exceeds $50.00 threshold",
+              "branches": [
+                {
+                  "branch_id": "branch_under_tolerance",
+                  "label": "Under tolerance",
+                  "first_step_id": "step_open_batch",
+                  "condition_description": "Variance <= $50.00",
+                  "status": "reviewed"
+                }
+              ]
+            }
+          ],
+          "variants": [
+            {
+              "variant_id": "var_bulk_csv_import",
+              "label": "Bulk CSV Import Variant",
+              "conditions": "Supplier supports automated EDI line imports",
+              "step_ids": [
+                "step_open_batch"
+              ],
+              "application_ids": [
+                "app_erp_core"
+              ],
+              "status": "reviewed",
+              "supporting_sources": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ]
+            }
+          ],
+          "exceptions": [
+            {
+              "exception_id": "exc_closed_po",
+              "description": "Purchase order status is closed or cancelled",
+              "resolution": "Route invoice line to supervisory exception queue",
+              "escalation_route": "Escalate to Finance Supervisor",
+              "supporting_sources": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ]
+            }
+          ],
+          "expected_outputs": [
+            "Daily reconciliation variance report"
+          ],
+          "postconditions": [
+            {
+              "postcondition_id": "post_adjustment_posted",
+              "description": "Reconciliation batch posted and variance journal created in ERP",
+              "verification_method": "system_evidence",
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ]
+            }
+          ],
+          "escalation_routes": [
+            "Finance Supervisor AP Queue"
+          ],
+          "proposed_risk_tier": 2,
+          "guidance_eligibility": "ready",
+          "agent_eligibility": "not_assessed",
+          "execution_qualification_gaps": [],
+          "missing_evidence": [],
+          "known_limitations": [
+            "Requires manual supervisor review for line items over $1,000"
+          ]
+        },
+        "responsible_team_id": "team_finance_ap",
+        "owner_actor_id": "usr_owner_sarah",
+        "question_answers": [
+          {
+            "question_id": "q_missing_tolerance_doc",
+            "answer": {
+              "kind": "text",
+              "text": "Confirmed $50 tolerance"
+            }
+          }
+        ],
+        "reason": "Updated step labels and confirmed tolerance threshold"
+      }
+    },
+    {
+      "case_id": "pos_CandidateApprovalV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateApprovalV1",
+      "instance": {
+        "schema_id": "workflow.candidate-approval.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "expected_revision": "1",
+        "candidate_content_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+        "accepted_limitation_claim_ids": [
+          "claim_step_open"
+        ],
+        "audience": {
+          "source_audience_bindings": [
+            {
+              "source": {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              },
+              "purpose": "workflow_sharing",
+              "audience_ids": [
+                "aud_finance_ops"
+              ]
+            }
+          ],
+          "manual_audience_ids": [],
+          "restriction_refs": [],
+          "policy_revision": "100"
+        },
+        "reason": "Approved candidate for guidance publication staging"
+      }
+    },
+    {
+      "case_id": "pos_CandidateRejectionV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateRejectionV1",
+      "instance": {
+        "schema_id": "workflow.candidate-rejection.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "expected_revision": "1",
+        "rejection_category": "sensitive",
+        "duplicate_workflow_ref": null,
+        "suppression_rule": {
+          "schema_id": "workflow.suppression-rule.v1",
+          "rule_id": "22222222-3333-4444-8555-666666666666",
+          "revision": "1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "objective": "Process manual cash payouts from cashier drawer",
+          "scope": {
+            "eligible_cases": "Cash drawer manual balance disbursements",
+            "excluded_cases": [],
+            "application_ids": [
+              "app_pos_terminal"
+            ],
+            "business_record_types": [
+              "rec_cash_voucher"
+            ]
+          },
+          "rejection_category": "sensitive",
+          "reconsideration_conditions": [
+            "Formal dual-custody cashier policy change approved by internal audit"
+          ],
+          "audience": {
+            "source_audience_bindings": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                },
+                "purpose": "workflow_sharing",
+                "audience_ids": [
+                  "aud_finance_ops"
+                ]
+              }
+            ],
+            "manual_audience_ids": [],
+            "restriction_refs": [],
+            "policy_revision": "100"
+          },
+          "state": "active",
+          "approval_record_ref": "audit_rec_rej_01"
+        },
+        "reason": "Manual cash handling is prohibited from procedural guidance"
+      }
+    },
+    {
+      "case_id": "pos_ProposalDecisionV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/ProposalDecisionV1",
+      "instance": {
+        "schema_id": "workflow.proposal-decision.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "proposal_id": "77777777-8888-4999-8000-111111111111",
+        "expected_revision": "1",
+        "action": "accept",
+        "reason": "Accepted proposed step refinement from new evidence"
+      }
+    },
+    {
+      "case_id": "pos_QuestionAnswerV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/QuestionAnswerV1",
+      "instance": {
+        "schema_id": "workflow.question-answer.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "question_id": "q_missing_tolerance_doc",
+        "expected_revision": "1",
+        "answer": {
+          "kind": "text",
+          "text": "Resolved by policy reference SOX-02"
+        },
+        "reason": "Supplied authoritative answer"
+      }
+    },
+    {
+      "case_id": "pos_ReconsiderationDecisionV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/ReconsiderationDecisionV1",
+      "instance": {
+        "schema_id": "workflow.reconsideration-decision.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "reconsideration_id": "33333333-4444-4555-8666-777777777777",
+        "expected_revision": "1",
+        "action": "accept",
+        "reason": "Accepted reconsideration due to internal audit policy amendment"
+      }
+    },
+    {
+      "case_id": "pos_CandidateSplitV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateSplitV1",
+      "instance": {
+        "schema_id": "workflow.candidate-split.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "expected_revision": "1",
+        "new_drafts": [
+          {
+            "procedure": {
+              "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+              "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+              "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+              "scope": {
+                "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+                "excluded_cases": [
+                  "Credit notes",
+                  "Inter-company transfers"
+                ],
+                "application_ids": [
+                  "app_erp_core",
+                  "app_spreadsheet"
+                ],
+                "business_record_types": [
+                  "rec_invoice",
+                  "rec_purchase_order"
+                ]
+              },
+              "allowed_roles": [
+                "role_ap_specialist",
+                "role_finance_supervisor"
+              ],
+              "triggers": [
+                "Daily AP batch import completion notification"
+              ],
+              "boundaries": {
+                "start": "Opening reconciliation work queue in ERP Core Client",
+                "end": "Posting invoice adjustment batch or escalating variance"
+              },
+              "prerequisites": [
+                "Active ERP session",
+                "Open reconciliation batch"
+              ],
+              "inputs": [
+                {
+                  "name": "batch_file",
+                  "value_label": "REDACTED_INVOICE_BATCH.CSV",
+                  "provenance": "observed"
+                }
+              ],
+              "variables": [
+                {
+                  "name": "batch_id",
+                  "value_label": "BATCH-20261109-01",
+                  "provenance": "reviewer_supplied"
+                }
+              ],
+              "applications": [
+                {
+                  "application_id": "app_erp_core",
+                  "display_name": "ERP Core Client"
+                }
+              ],
+              "steps": [
+                {
+                  "step_id": "step_open_batch",
+                  "kind": "action",
+                  "application_id": "app_erp_core",
+                  "label": "Open Reconciliation Queue",
+                  "description": "Navigate to AP queue and select active daily invoice batch",
+                  "expected_result": "Batch line items display with pending status indicators",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_01"
+                  ],
+                  "provenance_claim_ids": [
+                    "claim_step_open"
+                  ],
+                  "repeat": null
+                },
+                {
+                  "step_id": "step_check_variance",
+                  "kind": "decision",
+                  "application_id": "app_erp_core",
+                  "label": "Check Unit Variance",
+                  "description": "Compare line item unit price with corresponding purchase order",
+                  "expected_result": "Line item tagged as under or over tolerance threshold",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_02"
+                  ],
+                  "provenance_claim_ids": [
+                    "claim_step_variance"
+                  ],
+                  "repeat": null
+                }
+              ],
+              "step_edges": [
+                {
+                  "from_step_id": "step_open_batch",
+                  "to_step_id": "step_check_variance",
+                  "condition_description": null
+                }
+              ],
+              "entry_step_id": "step_open_batch",
+              "exit_step_ids": [
+                "step_check_variance"
+              ],
+              "decisions": [
+                {
+                  "decision_id": "dec_variance_check",
+                  "step_id": "step_check_variance",
+                  "condition_description": "Unit price variance exceeds $50.00 threshold",
+                  "branches": [
+                    {
+                      "branch_id": "branch_under_tolerance",
+                      "label": "Under tolerance",
+                      "first_step_id": "step_open_batch",
+                      "condition_description": "Variance <= $50.00",
+                      "status": "reviewed"
+                    }
+                  ]
+                }
+              ],
+              "variants": [
+                {
+                  "variant_id": "var_bulk_csv_import",
+                  "label": "Bulk CSV Import Variant",
+                  "conditions": "Supplier supports automated EDI line imports",
+                  "step_ids": [
+                    "step_open_batch"
+                  ],
+                  "application_ids": [
+                    "app_erp_core"
+                  ],
+                  "status": "reviewed",
+                  "supporting_sources": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                      "revision": 1,
+                      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                      "eligibility_generation": 1
+                    }
+                  ]
+                }
+              ],
+              "exceptions": [
+                {
+                  "exception_id": "exc_closed_po",
+                  "description": "Purchase order status is closed or cancelled",
+                  "resolution": "Route invoice line to supervisory exception queue",
+                  "escalation_route": "Escalate to Finance Supervisor",
+                  "supporting_sources": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                      "revision": 1,
+                      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                      "eligibility_generation": 1
+                    }
+                  ]
+                }
+              ],
+              "expected_outputs": [
+                "Daily reconciliation variance report"
+              ],
+              "postconditions": [
+                {
+                  "postcondition_id": "post_adjustment_posted",
+                  "description": "Reconciliation batch posted and variance journal created in ERP",
+                  "verification_method": "system_evidence",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_01"
+                  ]
+                }
+              ],
+              "escalation_routes": [
+                "Finance Supervisor AP Queue"
+              ],
+              "proposed_risk_tier": 2,
+              "guidance_eligibility": "ready",
+              "agent_eligibility": "not_assessed",
+              "execution_qualification_gaps": [],
+              "missing_evidence": [],
+              "known_limitations": [
+                "Requires manual supervisor review for line items over $1,000"
+              ]
+            },
+            "source_manifest": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              }
+            ]
+          },
+          {
+            "procedure": {
+              "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+              "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+              "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+              "scope": {
+                "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+                "excluded_cases": [
+                  "Credit notes",
+                  "Inter-company transfers"
+                ],
+                "application_ids": [
+                  "app_erp_core",
+                  "app_spreadsheet"
+                ],
+                "business_record_types": [
+                  "rec_invoice",
+                  "rec_purchase_order"
+                ]
+              },
+              "allowed_roles": [
+                "role_ap_specialist",
+                "role_finance_supervisor"
+              ],
+              "triggers": [
+                "Daily AP batch import completion notification"
+              ],
+              "boundaries": {
+                "start": "Opening reconciliation work queue in ERP Core Client",
+                "end": "Posting invoice adjustment batch or escalating variance"
+              },
+              "prerequisites": [
+                "Active ERP session",
+                "Open reconciliation batch"
+              ],
+              "inputs": [
+                {
+                  "name": "batch_file",
+                  "value_label": "REDACTED_INVOICE_BATCH.CSV",
+                  "provenance": "observed"
+                }
+              ],
+              "variables": [
+                {
+                  "name": "batch_id",
+                  "value_label": "BATCH-20261109-01",
+                  "provenance": "reviewer_supplied"
+                }
+              ],
+              "applications": [
+                {
+                  "application_id": "app_erp_core",
+                  "display_name": "ERP Core Client"
+                }
+              ],
+              "steps": [
+                {
+                  "step_id": "step_open_batch",
+                  "kind": "action",
+                  "application_id": "app_erp_core",
+                  "label": "Open Reconciliation Queue",
+                  "description": "Navigate to AP queue and select active daily invoice batch",
+                  "expected_result": "Batch line items display with pending status indicators",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_01"
+                  ],
+                  "provenance_claim_ids": [
+                    "claim_step_open"
+                  ],
+                  "repeat": null
+                },
+                {
+                  "step_id": "step_check_variance",
+                  "kind": "decision",
+                  "application_id": "app_erp_core",
+                  "label": "Check Unit Variance",
+                  "description": "Compare line item unit price with corresponding purchase order",
+                  "expected_result": "Line item tagged as under or over tolerance threshold",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_02"
+                  ],
+                  "provenance_claim_ids": [
+                    "claim_step_variance"
+                  ],
+                  "repeat": null
+                }
+              ],
+              "step_edges": [
+                {
+                  "from_step_id": "step_open_batch",
+                  "to_step_id": "step_check_variance",
+                  "condition_description": null
+                }
+              ],
+              "entry_step_id": "step_open_batch",
+              "exit_step_ids": [
+                "step_check_variance"
+              ],
+              "decisions": [
+                {
+                  "decision_id": "dec_variance_check",
+                  "step_id": "step_check_variance",
+                  "condition_description": "Unit price variance exceeds $50.00 threshold",
+                  "branches": [
+                    {
+                      "branch_id": "branch_under_tolerance",
+                      "label": "Under tolerance",
+                      "first_step_id": "step_open_batch",
+                      "condition_description": "Variance <= $50.00",
+                      "status": "reviewed"
+                    }
+                  ]
+                }
+              ],
+              "variants": [
+                {
+                  "variant_id": "var_bulk_csv_import",
+                  "label": "Bulk CSV Import Variant",
+                  "conditions": "Supplier supports automated EDI line imports",
+                  "step_ids": [
+                    "step_open_batch"
+                  ],
+                  "application_ids": [
+                    "app_erp_core"
+                  ],
+                  "status": "reviewed",
+                  "supporting_sources": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                      "revision": 1,
+                      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                      "eligibility_generation": 1
+                    }
+                  ]
+                }
+              ],
+              "exceptions": [
+                {
+                  "exception_id": "exc_closed_po",
+                  "description": "Purchase order status is closed or cancelled",
+                  "resolution": "Route invoice line to supervisory exception queue",
+                  "escalation_route": "Escalate to Finance Supervisor",
+                  "supporting_sources": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                      "revision": 1,
+                      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                      "eligibility_generation": 1
+                    }
+                  ]
+                }
+              ],
+              "expected_outputs": [
+                "Daily reconciliation variance report"
+              ],
+              "postconditions": [
+                {
+                  "postcondition_id": "post_adjustment_posted",
+                  "description": "Reconciliation batch posted and variance journal created in ERP",
+                  "verification_method": "system_evidence",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_01"
+                  ]
+                }
+              ],
+              "escalation_routes": [
+                "Finance Supervisor AP Queue"
+              ],
+              "proposed_risk_tier": 2,
+              "guidance_eligibility": "ready",
+              "agent_eligibility": "not_assessed",
+              "execution_qualification_gaps": [],
+              "missing_evidence": [],
+              "known_limitations": [
+                "Requires manual supervisor review for line items over $1,000"
+              ]
+            },
+            "source_manifest": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              }
+            ]
+          }
+        ],
+        "reason": "Split candidate into standard and exception reconciliation paths"
+      }
+    },
+    {
+      "case_id": "pos_CandidateMergeV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateMergeV1",
+      "instance": {
+        "schema_id": "workflow.candidate-merge.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidates": [
+          {
+            "candidate_id": "11111111-2222-4333-8444-555555555555",
+            "expected_revision": "1"
+          },
+          {
+            "candidate_id": "11111111-2222-4333-8444-555555555555",
+            "expected_revision": "1"
+          }
+        ],
+        "procedure": {
+          "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+          "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+          "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+          "scope": {
+            "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+            "excluded_cases": [
+              "Credit notes",
+              "Inter-company transfers"
+            ],
+            "application_ids": [
+              "app_erp_core",
+              "app_spreadsheet"
+            ],
+            "business_record_types": [
+              "rec_invoice",
+              "rec_purchase_order"
+            ]
+          },
+          "allowed_roles": [
+            "role_ap_specialist",
+            "role_finance_supervisor"
+          ],
+          "triggers": [
+            "Daily AP batch import completion notification"
+          ],
+          "boundaries": {
+            "start": "Opening reconciliation work queue in ERP Core Client",
+            "end": "Posting invoice adjustment batch or escalating variance"
+          },
+          "prerequisites": [
+            "Active ERP session",
+            "Open reconciliation batch"
+          ],
+          "inputs": [
+            {
+              "name": "batch_file",
+              "value_label": "REDACTED_INVOICE_BATCH.CSV",
+              "provenance": "observed"
+            }
+          ],
+          "variables": [
+            {
+              "name": "batch_id",
+              "value_label": "BATCH-20261109-01",
+              "provenance": "reviewer_supplied"
+            }
+          ],
+          "applications": [
+            {
+              "application_id": "app_erp_core",
+              "display_name": "ERP Core Client"
+            }
+          ],
+          "steps": [
+            {
+              "step_id": "step_open_batch",
+              "kind": "action",
+              "application_id": "app_erp_core",
+              "label": "Open Reconciliation Queue",
+              "description": "Navigate to AP queue and select active daily invoice batch",
+              "expected_result": "Batch line items display with pending status indicators",
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ],
+              "provenance_claim_ids": [
+                "claim_step_open"
+              ],
+              "repeat": null
+            },
+            {
+              "step_id": "step_check_variance",
+              "kind": "decision",
+              "application_id": "app_erp_core",
+              "label": "Check Unit Variance",
+              "description": "Compare line item unit price with corresponding purchase order",
+              "expected_result": "Line item tagged as under or over tolerance threshold",
+              "approved_rule_refs": [
+                "rule_ap_sox_02"
+              ],
+              "provenance_claim_ids": [
+                "claim_step_variance"
+              ],
+              "repeat": null
+            }
+          ],
+          "step_edges": [
+            {
+              "from_step_id": "step_open_batch",
+              "to_step_id": "step_check_variance",
+              "condition_description": null
+            }
+          ],
+          "entry_step_id": "step_open_batch",
+          "exit_step_ids": [
+            "step_check_variance"
+          ],
+          "decisions": [
+            {
+              "decision_id": "dec_variance_check",
+              "step_id": "step_check_variance",
+              "condition_description": "Unit price variance exceeds $50.00 threshold",
+              "branches": [
+                {
+                  "branch_id": "branch_under_tolerance",
+                  "label": "Under tolerance",
+                  "first_step_id": "step_open_batch",
+                  "condition_description": "Variance <= $50.00",
+                  "status": "reviewed"
+                }
+              ]
+            }
+          ],
+          "variants": [
+            {
+              "variant_id": "var_bulk_csv_import",
+              "label": "Bulk CSV Import Variant",
+              "conditions": "Supplier supports automated EDI line imports",
+              "step_ids": [
+                "step_open_batch"
+              ],
+              "application_ids": [
+                "app_erp_core"
+              ],
+              "status": "reviewed",
+              "supporting_sources": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ]
+            }
+          ],
+          "exceptions": [
+            {
+              "exception_id": "exc_closed_po",
+              "description": "Purchase order status is closed or cancelled",
+              "resolution": "Route invoice line to supervisory exception queue",
+              "escalation_route": "Escalate to Finance Supervisor",
+              "supporting_sources": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ]
+            }
+          ],
+          "expected_outputs": [
+            "Daily reconciliation variance report"
+          ],
+          "postconditions": [
+            {
+              "postcondition_id": "post_adjustment_posted",
+              "description": "Reconciliation batch posted and variance journal created in ERP",
+              "verification_method": "system_evidence",
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ]
+            }
+          ],
+          "escalation_routes": [
+            "Finance Supervisor AP Queue"
+          ],
+          "proposed_risk_tier": 2,
+          "guidance_eligibility": "ready",
+          "agent_eligibility": "not_assessed",
+          "execution_qualification_gaps": [],
+          "missing_evidence": [],
+          "known_limitations": [
+            "Requires manual supervisor review for line items over $1,000"
+          ]
+        },
+        "source_manifest": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "contribution_id": "c0000000-0000-4000-8000-000000000001",
+            "revision": 1,
+            "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+            "eligibility_generation": 1
+          }
+        ],
+        "responsible_team_id": "team_finance_ap",
+        "audience": {
+          "source_audience_bindings": [
+            {
+              "source": {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              },
+              "purpose": "workflow_sharing",
+              "audience_ids": [
+                "aud_finance_ops"
+              ]
+            }
+          ],
+          "manual_audience_ids": [],
+          "restriction_refs": [],
+          "policy_revision": "100"
+        },
+        "reason": "Merged equivalent AP reconciliation drafts"
+      }
+    },
+    {
+      "case_id": "pos_RetentionDecisionV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/RetentionDecisionV1",
+      "instance": {
+        "schema_id": "workflow.retention-decision.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "expected_revision": "1",
+        "requested_expires_at": "2027-11-09T20:00:00Z",
+        "reason": "Extended retention for annual review cycle"
+      }
+    },
+    {
+      "case_id": "pos_RegenerationV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/RegenerationV1",
+      "instance": {
+        "schema_id": "workflow.regeneration.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "expected_revision": "1",
+        "source_manifest_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+        "reason": "Regenerate procedure with updated reasoning prompt"
+      }
+    },
+    {
+      "case_id": "pos_SuppressionRetirementV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/SuppressionRetirementV1",
+      "instance": {
+        "schema_id": "workflow.suppression-retirement.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "rule_id": "22222222-3333-4444-8555-666666666666",
+        "expected_revision": "1",
+        "reason": "Retiring suppression rule after business process change"
+      }
+    },
+    {
+      "case_id": "pos_GraphPublicationCommandV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/GraphPublicationCommandV1",
+      "instance": {
+        "schema_id": "workflow.graph-publication.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "graph_draft_id": "draft_playbook_ap_recon_01",
+        "expected_staged_revision": "1",
+        "candidate_content_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+        "audience": {
+          "source_audience_bindings": [
+            {
+              "source": {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              },
+              "purpose": "workflow_sharing",
+              "audience_ids": [
+                "aud_finance_ops"
+              ]
+            }
+          ],
+          "manual_audience_ids": [],
+          "restriction_refs": [],
+          "policy_revision": "100"
+        },
+        "reason": "Publishing staged candidate as canonical company playbook"
+      }
+    },
+    {
+      "case_id": "pos_CandidatePromotionV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidatePromotionV1",
+      "instance": {
+        "schema_id": "workflow.candidate-promotion.v1",
+        "promotion_id": "44444444-5555-4666-8777-888888888888",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "candidate_revision": "1",
+        "candidate_content_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+        "source_manifest_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+        "source_manifest": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "contribution_id": "c0000000-0000-4000-8000-000000000001",
+            "revision": 1,
+            "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+            "eligibility_generation": 1
+          }
+        ],
+        "invalidation_generation": 1,
+        "audience": {
+          "source_audience_bindings": [
+            {
+              "source": {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              },
+              "purpose": "workflow_sharing",
+              "audience_ids": [
+                "aud_finance_ops"
+              ]
+            }
+          ],
+          "manual_audience_ids": [],
+          "restriction_refs": [],
+          "policy_revision": "100"
+        },
+        "responsible_team_id": "team_finance_ap",
+        "owner_actor_id": "usr_owner_sarah",
+        "approval_record_ref": "rev_rec_appr_01",
+        "approved_at": "2026-11-09T20:00:00Z",
+        "procedure": {
+          "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+          "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+          "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+          "scope": {
+            "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+            "excluded_cases": [
+              "Credit notes",
+              "Inter-company transfers"
+            ],
+            "application_ids": [
+              "app_erp_core",
+              "app_spreadsheet"
+            ],
+            "business_record_types": [
+              "rec_invoice",
+              "rec_purchase_order"
+            ]
+          },
+          "allowed_roles": [
+            "role_ap_specialist",
+            "role_finance_supervisor"
+          ],
+          "triggers": [
+            "Daily AP batch import completion notification"
+          ],
+          "boundaries": {
+            "start": "Opening reconciliation work queue in ERP Core Client",
+            "end": "Posting invoice adjustment batch or escalating variance"
+          },
+          "prerequisites": [
+            "Active ERP session",
+            "Open reconciliation batch"
+          ],
+          "inputs": [
+            {
+              "name": "batch_file",
+              "value_label": "REDACTED_INVOICE_BATCH.CSV",
+              "provenance": "observed"
+            }
+          ],
+          "variables": [
+            {
+              "name": "batch_id",
+              "value_label": "BATCH-20261109-01",
+              "provenance": "reviewer_supplied"
+            }
+          ],
+          "applications": [
+            {
+              "application_id": "app_erp_core",
+              "display_name": "ERP Core Client"
+            }
+          ],
+          "steps": [
+            {
+              "step_id": "step_open_batch",
+              "kind": "action",
+              "application_id": "app_erp_core",
+              "label": "Open Reconciliation Queue",
+              "description": "Navigate to AP queue and select active daily invoice batch",
+              "expected_result": "Batch line items display with pending status indicators",
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ],
+              "provenance_claim_ids": [
+                "claim_step_open"
+              ],
+              "repeat": null
+            },
+            {
+              "step_id": "step_check_variance",
+              "kind": "decision",
+              "application_id": "app_erp_core",
+              "label": "Check Unit Variance",
+              "description": "Compare line item unit price with corresponding purchase order",
+              "expected_result": "Line item tagged as under or over tolerance threshold",
+              "approved_rule_refs": [
+                "rule_ap_sox_02"
+              ],
+              "provenance_claim_ids": [
+                "claim_step_variance"
+              ],
+              "repeat": null
+            }
+          ],
+          "step_edges": [
+            {
+              "from_step_id": "step_open_batch",
+              "to_step_id": "step_check_variance",
+              "condition_description": null
+            }
+          ],
+          "entry_step_id": "step_open_batch",
+          "exit_step_ids": [
+            "step_check_variance"
+          ],
+          "decisions": [
+            {
+              "decision_id": "dec_variance_check",
+              "step_id": "step_check_variance",
+              "condition_description": "Unit price variance exceeds $50.00 threshold",
+              "branches": [
+                {
+                  "branch_id": "branch_under_tolerance",
+                  "label": "Under tolerance",
+                  "first_step_id": "step_open_batch",
+                  "condition_description": "Variance <= $50.00",
+                  "status": "reviewed"
+                }
+              ]
+            }
+          ],
+          "variants": [
+            {
+              "variant_id": "var_bulk_csv_import",
+              "label": "Bulk CSV Import Variant",
+              "conditions": "Supplier supports automated EDI line imports",
+              "step_ids": [
+                "step_open_batch"
+              ],
+              "application_ids": [
+                "app_erp_core"
+              ],
+              "status": "reviewed",
+              "supporting_sources": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ]
+            }
+          ],
+          "exceptions": [
+            {
+              "exception_id": "exc_closed_po",
+              "description": "Purchase order status is closed or cancelled",
+              "resolution": "Route invoice line to supervisory exception queue",
+              "escalation_route": "Escalate to Finance Supervisor",
+              "supporting_sources": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ]
+            }
+          ],
+          "expected_outputs": [
+            "Daily reconciliation variance report"
+          ],
+          "postconditions": [
+            {
+              "postcondition_id": "post_adjustment_posted",
+              "description": "Reconciliation batch posted and variance journal created in ERP",
+              "verification_method": "system_evidence",
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ]
+            }
+          ],
+          "escalation_routes": [
+            "Finance Supervisor AP Queue"
+          ],
+          "proposed_risk_tier": 2,
+          "guidance_eligibility": "ready",
+          "agent_eligibility": "not_assessed",
+          "execution_qualification_gaps": [],
+          "missing_evidence": [],
+          "known_limitations": [
+            "Requires manual supervisor review for line items over $1,000"
+          ]
+        },
+        "limitations": [
+          "Requires supervisor review for amounts > $1,000"
+        ],
+        "verification_coverage": {
+          "eligible_attempts": 3,
+          "observed_complete_attempts": 3,
+          "verified_attempts": 2,
+          "contradicted_attempts": 0,
+          "unknown_attempts": 1,
+          "assessment_refs": [
+            "assess_demo_01"
+          ]
+        },
+        "linked_playbook_version": null
+      }
+    },
+    {
+      "case_id": "pos_GraphCandidateReceiptV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/GraphCandidateReceiptV1",
+      "instance": {
+        "schema_id": "workflow.graph-candidate-receipt.v1",
+        "promotion_id": "44444444-5555-4666-8777-888888888888",
+        "graph_draft_id": "draft_playbook_ap_recon_01",
+        "candidate_content_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+        "source_manifest_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+        "staged_at": "2026-11-09T20:00:00Z"
+      }
+    },
+    {
+      "case_id": "pos_SuppressionRuleV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/SuppressionRuleV1",
+      "instance": {
+        "schema_id": "workflow.suppression-rule.v1",
+        "rule_id": "22222222-3333-4444-8555-666666666666",
+        "revision": "1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "objective": "Process manual cash payouts from cashier drawer",
+        "scope": {
+          "eligible_cases": "Cash drawer manual balance disbursements",
+          "excluded_cases": [],
+          "application_ids": [
+            "app_pos_terminal"
+          ],
+          "business_record_types": [
+            "rec_cash_voucher"
+          ]
+        },
+        "rejection_category": "sensitive",
+        "reconsideration_conditions": [
+          "Formal dual-custody cashier policy change approved by internal audit"
+        ],
+        "audience": {
+          "source_audience_bindings": [
+            {
+              "source": {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              },
+              "purpose": "workflow_sharing",
+              "audience_ids": [
+                "aud_finance_ops"
+              ]
+            }
+          ],
+          "manual_audience_ids": [],
+          "restriction_refs": [],
+          "policy_revision": "100"
+        },
+        "state": "active",
+        "approval_record_ref": "audit_rec_rej_01"
+      }
+    },
+    {
+      "case_id": "pos_ReconsiderationV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/ReconsiderationV1",
+      "instance": {
+        "schema_id": "workflow.reconsideration.v1",
+        "reconsideration_id": "33333333-4444-4555-8666-777777777777",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "rule_id": "22222222-3333-4444-8555-666666666666",
+        "rule_revision": "1",
+        "rejected_candidate_id": "11111111-2222-4333-8444-555555555555",
+        "source_manifest": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "contribution_id": "c0000000-0000-4000-8000-000000000001",
+            "revision": 1,
+            "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+            "eligibility_generation": 1
+          }
+        ],
+        "new_evidence": [
+          {
+            "kind": "approved_rule_change",
+            "explanation": "Internal audit approved Dual Custody Cash Standard 2026.4",
+            "source_refs": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              }
+            ]
+          }
+        ],
+        "state": "pending",
+        "created_at": "2026-11-09T20:00:00Z",
+        "decision_ref": null
+      }
+    },
+    {
+      "case_id": "pos_DemonstrationVerificationV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/DemonstrationVerificationV1",
+      "instance": {
+        "schema_id": "workflow.demonstration-verification.v1",
+        "assessment_id": "55555555-6666-4777-8888-999999999999",
+        "assessment_revision": "1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "actor_id": "usr_employee_01",
+        "device_id": "dev_macbook_01",
+        "profile_id": "prf_default_01",
+        "demonstration_id": "d0000000-0000-4000-8000-000000000001",
+        "verdict": "verified",
+        "method": "system_evidence",
+        "postconditions": [
+          "Reconciliation batch posted and variance journal created in ERP"
+        ],
+        "authorized_source_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "contribution_id": "c0000000-0000-4000-8000-000000000001",
+            "revision": 1,
+            "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+            "eligibility_generation": 1
+          }
+        ],
+        "assessed_by": "usr_owner_sarah",
+        "assessed_at": "2026-11-09T20:00:00Z"
+      }
+    },
+    {
+      "case_id": "pos_OpportunityAssumptionsV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/OpportunityAssumptionsV1",
+      "instance": {
+        "schema_id": "workflow.opportunity-assumptions.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "expected_revision": "1",
+        "reason": "Owner documented standard baseline from quarterly time-study",
+        "baseline_ms_per_case": 720000,
+        "eligible_case_count": 5000,
+        "saved_fraction_basis_points": 6667,
+        "period_start": "2026-10-01T00:00:00Z",
+        "period_end": "2026-12-31T23:59:59Z",
+        "basis_description": "Observed 12-minute manual invoice entry vs 4-minute guided assistance",
+        "supporting_source_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "contribution_id": "c0000000-0000-4000-8000-000000000001",
+            "revision": 1,
+            "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+            "eligibility_generation": 1
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "pos_OpportunityV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/OpportunityV1",
+      "instance": {
+        "schema_id": "workflow.opportunity.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "candidate_revision": "1",
+        "submission_period_start": "2026-11-01T00:00:00Z",
+        "submission_period_end": "2026-11-09T20:00:00Z",
+        "complete_attempts": 3,
+        "verified_attempts": 2,
+        "contradicted_attempts": 0,
+        "unknown_attempts": 1,
+        "measured_verified_attempts": 2,
+        "exception_fraction": {
+          "numerator": 1,
+          "denominator": 3
+        },
+        "observed_variant_count": 1,
+        "unresolved_question_count": 0,
+        "rule_conflict_count": 0,
+        "median_elapsed_ms": 600000,
+        "median_net_ms": 480000,
+        "assumptions": {
+          "schema_id": "workflow.opportunity-assumptions.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "candidate_id": "11111111-2222-4333-8444-555555555555",
+          "expected_revision": "1",
+          "reason": "Owner documented standard baseline from quarterly time-study",
+          "baseline_ms_per_case": 720000,
+          "eligible_case_count": 5000,
+          "saved_fraction_basis_points": 6667,
+          "period_start": "2026-10-01T00:00:00Z",
+          "period_end": "2026-12-31T23:59:59Z",
+          "basis_description": "Observed 12-minute manual invoice entry vs 4-minute guided assistance",
+          "supporting_source_refs": [
+            {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "contribution_id": "c0000000-0000-4000-8000-000000000001",
+              "revision": 1,
+              "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+              "eligibility_generation": 1
+            }
+          ]
+        },
+        "estimated_saved_ms": 2400120000,
+        "suppression_reason": null,
+        "ranking_keys": {
+          "safety_blocked": false,
+          "verified_attempts": 2,
+          "complete_attempts": 3,
+          "unresolved_questions": 0,
+          "candidate_id": "11111111-2222-4333-8444-555555555555"
+        }
+      }
+    },
+    {
+      "case_id": "pos_EmbeddingResultV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/EmbeddingResultV1",
+      "instance": {
+        "schema_id": "workflow.embedding.v1",
+        "input_fingerprint": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+        "embedding_space_id": "space_text_embedding_3_large_1536",
+        "dimensions": 3,
+        "vector": [
+          0.1234,
+          -0.5678,
+          0.9012
+        ]
+      }
+    },
+    {
+      "case_id": "pos_CompatibilityResultV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CompatibilityResultV1",
+      "instance": {
+        "schema_id": "workflow.compatibility.v1",
+        "pairs": [
+          {
+            "left_source": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "contribution_id": "c0000000-0000-4000-8000-000000000001",
+              "revision": 1,
+              "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+              "eligibility_generation": 1
+            },
+            "right_source": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "contribution_id": "c0000000-0000-4000-8000-000000000001",
+              "revision": 1,
+              "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+              "eligibility_generation": 1
+            },
+            "verdict": "equivalent",
+            "supporting_pointers": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                },
+                "field_pointer": "/content/objective"
+              }
+            ],
+            "contradicting_pointers": [],
+            "questions": []
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "pos_WorkflowSynthesisV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/WorkflowSynthesisV1",
+      "instance": {
+        "schema_id": "workflow.synthesis.v1",
+        "procedure": {
+          "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+          "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+          "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+          "scope": {
+            "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+            "excluded_cases": [
+              "Credit notes",
+              "Inter-company transfers"
+            ],
+            "application_ids": [
+              "app_erp_core",
+              "app_spreadsheet"
+            ],
+            "business_record_types": [
+              "rec_invoice",
+              "rec_purchase_order"
+            ]
+          },
+          "allowed_roles": [
+            "role_ap_specialist",
+            "role_finance_supervisor"
+          ],
+          "triggers": [
+            "Daily AP batch import completion notification"
+          ],
+          "boundaries": {
+            "start": "Opening reconciliation work queue in ERP Core Client",
+            "end": "Posting invoice adjustment batch or escalating variance"
+          },
+          "prerequisites": [
+            "Active ERP session",
+            "Open reconciliation batch"
+          ],
+          "inputs": [
+            {
+              "name": "batch_file",
+              "value_label": "REDACTED_INVOICE_BATCH.CSV",
+              "provenance": "observed"
+            }
+          ],
+          "variables": [
+            {
+              "name": "batch_id",
+              "value_label": "BATCH-20261109-01",
+              "provenance": "reviewer_supplied"
+            }
+          ],
+          "applications": [
+            {
+              "application_id": "app_erp_core",
+              "display_name": "ERP Core Client"
+            }
+          ],
+          "steps": [
+            {
+              "step_id": "step_open_batch",
+              "kind": "action",
+              "application_id": "app_erp_core",
+              "label": "Open Reconciliation Queue",
+              "description": "Navigate to AP queue and select active daily invoice batch",
+              "expected_result": "Batch line items display with pending status indicators",
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ],
+              "provenance_claim_ids": [
+                "claim_step_open"
+              ],
+              "repeat": null
+            },
+            {
+              "step_id": "step_check_variance",
+              "kind": "decision",
+              "application_id": "app_erp_core",
+              "label": "Check Unit Variance",
+              "description": "Compare line item unit price with corresponding purchase order",
+              "expected_result": "Line item tagged as under or over tolerance threshold",
+              "approved_rule_refs": [
+                "rule_ap_sox_02"
+              ],
+              "provenance_claim_ids": [
+                "claim_step_variance"
+              ],
+              "repeat": null
+            }
+          ],
+          "step_edges": [
+            {
+              "from_step_id": "step_open_batch",
+              "to_step_id": "step_check_variance",
+              "condition_description": null
+            }
+          ],
+          "entry_step_id": "step_open_batch",
+          "exit_step_ids": [
+            "step_check_variance"
+          ],
+          "decisions": [
+            {
+              "decision_id": "dec_variance_check",
+              "step_id": "step_check_variance",
+              "condition_description": "Unit price variance exceeds $50.00 threshold",
+              "branches": [
+                {
+                  "branch_id": "branch_under_tolerance",
+                  "label": "Under tolerance",
+                  "first_step_id": "step_open_batch",
+                  "condition_description": "Variance <= $50.00",
+                  "status": "reviewed"
+                }
+              ]
+            }
+          ],
+          "variants": [
+            {
+              "variant_id": "var_bulk_csv_import",
+              "label": "Bulk CSV Import Variant",
+              "conditions": "Supplier supports automated EDI line imports",
+              "step_ids": [
+                "step_open_batch"
+              ],
+              "application_ids": [
+                "app_erp_core"
+              ],
+              "status": "reviewed",
+              "supporting_sources": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ]
+            }
+          ],
+          "exceptions": [
+            {
+              "exception_id": "exc_closed_po",
+              "description": "Purchase order status is closed or cancelled",
+              "resolution": "Route invoice line to supervisory exception queue",
+              "escalation_route": "Escalate to Finance Supervisor",
+              "supporting_sources": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                }
+              ]
+            }
+          ],
+          "expected_outputs": [
+            "Daily reconciliation variance report"
+          ],
+          "postconditions": [
+            {
+              "postcondition_id": "post_adjustment_posted",
+              "description": "Reconciliation batch posted and variance journal created in ERP",
+              "verification_method": "system_evidence",
+              "approved_rule_refs": [
+                "rule_ap_sox_01"
+              ]
+            }
+          ],
+          "escalation_routes": [
+            "Finance Supervisor AP Queue"
+          ],
+          "proposed_risk_tier": 2,
+          "guidance_eligibility": "ready",
+          "agent_eligibility": "not_assessed",
+          "execution_qualification_gaps": [],
+          "missing_evidence": [],
+          "known_limitations": [
+            "Requires manual supervisor review for line items over $1,000"
+          ]
+        },
+        "provenance": [
+          {
+            "claim_id": "claim_step_open",
+            "field_pointer": "/procedure/steps/0",
+            "basis": "observed",
+            "source_pointers": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                  "revision": 1,
+                  "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                  "eligibility_generation": 1
+                },
+                "field_pointer": "/content/steps/0"
+              }
+            ],
+            "approved_rule_refs": [
+              "rule_ap_sox_01"
+            ],
+            "verification_status": "verified",
+            "conflict_ids": []
+          }
+        ],
+        "questions": [
+          {
+            "question_id": "q_missing_tolerance_doc",
+            "kind": "variant_condition",
+            "prompt": "What threshold dictates escalation to supervisory queue for foreign currency lines?",
+            "affected_claim_ids": [
+              "claim_step_open"
+            ],
+            "source_refs": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              }
+            ],
+            "answer_kind": "text",
+            "choices": [],
+            "assigned_reviewer_id": "usr_ap_lead",
+            "blocks_guidance": false,
+            "status": "answered",
+            "answer": {
+              "kind": "text",
+              "text": "Standard $50.00 equivalent tolerance applies"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "pos_DiscoveryConfigurationV1",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/DiscoveryConfigurationV1",
+      "instance": {
+        "schema_id": "workflow.discovery-config.v1",
+        "configuration_id": "66666666-7777-4888-8999-000000000000",
+        "revision": "1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "enabled": true,
+        "responsible_team_id": "team_finance_ap",
+        "embedding_space": {
+          "space_id": "space_text_embedding_3_large_1536",
+          "route_id": "route_openai_embed_us",
+          "route_revision": "1",
+          "dimensions": 1536,
+          "projection_version": "v1_objective_summary_apps"
+        },
+        "reasoning_route": "route_claude_3_5_sonnet_us",
+        "reasoning_route_revision": "1",
+        "prompt_version": "v1.0.0",
+        "algorithm_version": "v1.0.0",
+        "max_cluster_members": 128,
+        "debounce_ms": 30000,
+        "retrieval_demonstration_limit": 20,
+        "retrieval_playbook_limit": 10,
+        "synthesis_batch_limit": 32,
+        "pair_batch_limit": 16,
+        "candidate_retention_days": 365,
+        "max_inflight_per_organization": 2
+      }
+    }
+  ],
+  "structural_negative_cases": [
+    {
+      "case_id": "neg_closed_schema_extra_property",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateApprovalV1",
+      "instance": {
+        "schema_id": "workflow.candidate-approval.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "expected_revision": "1",
+        "candidate_content_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+        "accepted_limitation_claim_ids": [
+          "claim_step_open"
+        ],
+        "audience": {
+          "source_audience_bindings": [
+            {
+              "source": {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              },
+              "purpose": "workflow_sharing",
+              "audience_ids": [
+                "aud_finance_ops"
+              ]
+            }
+          ],
+          "manual_audience_ids": [],
+          "restriction_refs": [],
+          "policy_revision": "100"
+        },
+        "reason": "Approved candidate for guidance publication staging",
+        "unauthorized_extra_field": "injected_attack_value"
+      },
+      "expected_error": "additionalProperties"
+    },
+    {
+      "case_id": "neg_candidate_bad_uuid",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/WorkflowCandidateV1",
+      "instance": {
+        "schema_id": "workflow.candidate.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "not-a-valid-uuid",
+        "product_state": "under_review",
+        "processing_state": "ready",
+        "current_revision": {
+          "schema_id": "workflow.candidate-revision.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "candidate_id": "11111111-2222-4333-8444-555555555555",
+          "revision": "1",
+          "predecessor_revision": null,
+          "body": {
+            "origin": "automatic",
+            "responsible_team_id": "team_finance_ap",
+            "owner_actor_id": "usr_owner_sarah",
+            "linked_playbook_version": null,
+            "procedure": {
+              "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+              "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+              "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+              "scope": {
+                "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+                "excluded_cases": [
+                  "Credit notes",
+                  "Inter-company transfers"
+                ],
+                "application_ids": [
+                  "app_erp_core",
+                  "app_spreadsheet"
+                ],
+                "business_record_types": [
+                  "rec_invoice",
+                  "rec_purchase_order"
+                ]
+              },
+              "allowed_roles": [
+                "role_ap_specialist",
+                "role_finance_supervisor"
+              ],
+              "triggers": [
+                "Daily AP batch import completion notification"
+              ],
+              "boundaries": {
+                "start": "Opening reconciliation work queue in ERP Core Client",
+                "end": "Posting invoice adjustment batch or escalating variance"
+              },
+              "prerequisites": [
+                "Active ERP session",
+                "Open reconciliation batch"
+              ],
+              "inputs": [
+                {
+                  "name": "batch_file",
+                  "value_label": "REDACTED_INVOICE_BATCH.CSV",
+                  "provenance": "observed"
+                }
+              ],
+              "variables": [
+                {
+                  "name": "batch_id",
+                  "value_label": "BATCH-20261109-01",
+                  "provenance": "reviewer_supplied"
+                }
+              ],
+              "applications": [
+                {
+                  "application_id": "app_erp_core",
+                  "display_name": "ERP Core Client"
+                }
+              ],
+              "steps": [
+                {
+                  "step_id": "step_open_batch",
+                  "kind": "action",
+                  "application_id": "app_erp_core",
+                  "label": "Open Reconciliation Queue",
+                  "description": "Navigate to AP queue and select active daily invoice batch",
+                  "expected_result": "Batch line items display with pending status indicators",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_01"
+                  ],
+                  "provenance_claim_ids": [
+                    "claim_step_open"
+                  ],
+                  "repeat": null
+                },
+                {
+                  "step_id": "step_check_variance",
+                  "kind": "decision",
+                  "application_id": "app_erp_core",
+                  "label": "Check Unit Variance",
+                  "description": "Compare line item unit price with corresponding purchase order",
+                  "expected_result": "Line item tagged as under or over tolerance threshold",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_02"
+                  ],
+                  "provenance_claim_ids": [
+                    "claim_step_variance"
+                  ],
+                  "repeat": null
+                }
+              ],
+              "step_edges": [
+                {
+                  "from_step_id": "step_open_batch",
+                  "to_step_id": "step_check_variance",
+                  "condition_description": null
+                }
+              ],
+              "entry_step_id": "step_open_batch",
+              "exit_step_ids": [
+                "step_check_variance"
+              ],
+              "decisions": [
+                {
+                  "decision_id": "dec_variance_check",
+                  "step_id": "step_check_variance",
+                  "condition_description": "Unit price variance exceeds $50.00 threshold",
+                  "branches": [
+                    {
+                      "branch_id": "branch_under_tolerance",
+                      "label": "Under tolerance",
+                      "first_step_id": "step_open_batch",
+                      "condition_description": "Variance <= $50.00",
+                      "status": "reviewed"
+                    }
+                  ]
+                }
+              ],
+              "variants": [
+                {
+                  "variant_id": "var_bulk_csv_import",
+                  "label": "Bulk CSV Import Variant",
+                  "conditions": "Supplier supports automated EDI line imports",
+                  "step_ids": [
+                    "step_open_batch"
+                  ],
+                  "application_ids": [
+                    "app_erp_core"
+                  ],
+                  "status": "reviewed",
+                  "supporting_sources": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                      "revision": 1,
+                      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                      "eligibility_generation": 1
+                    }
+                  ]
+                }
+              ],
+              "exceptions": [
+                {
+                  "exception_id": "exc_closed_po",
+                  "description": "Purchase order status is closed or cancelled",
+                  "resolution": "Route invoice line to supervisory exception queue",
+                  "escalation_route": "Escalate to Finance Supervisor",
+                  "supporting_sources": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                      "revision": 1,
+                      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                      "eligibility_generation": 1
+                    }
+                  ]
+                }
+              ],
+              "expected_outputs": [
+                "Daily reconciliation variance report"
+              ],
+              "postconditions": [
+                {
+                  "postcondition_id": "post_adjustment_posted",
+                  "description": "Reconciliation batch posted and variance journal created in ERP",
+                  "verification_method": "system_evidence",
+                  "approved_rule_refs": [
+                    "rule_ap_sox_01"
+                  ]
+                }
+              ],
+              "escalation_routes": [
+                "Finance Supervisor AP Queue"
+              ],
+              "proposed_risk_tier": 2,
+              "guidance_eligibility": "ready",
+              "agent_eligibility": "not_assessed",
+              "execution_qualification_gaps": [],
+              "missing_evidence": [],
+              "known_limitations": [
+                "Requires manual supervisor review for line items over $1,000"
+              ]
+            },
+            "source_manifest": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                "eligibility_generation": 1
+              }
+            ],
+            "source_manifest_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+            "audience": {
+              "source_audience_bindings": [
+                {
+                  "source": {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                    "revision": 1,
+                    "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                    "eligibility_generation": 1
+                  },
+                  "purpose": "workflow_sharing",
+                  "audience_ids": [
+                    "aud_finance_ops"
+                  ]
+                }
+              ],
+              "manual_audience_ids": [],
+              "restriction_refs": [],
+              "policy_revision": "100"
+            },
+            "provenance": [
+              {
+                "claim_id": "claim_step_open",
+                "field_pointer": "/procedure/steps/0",
+                "basis": "observed",
+                "source_pointers": [
+                  {
+                    "source": {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                      "revision": 1,
+                      "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                      "eligibility_generation": 1
+                    },
+                    "field_pointer": "/content/steps/0"
+                  }
+                ],
+                "approved_rule_refs": [
+                  "rule_ap_sox_01"
+                ],
+                "verification_status": "verified",
+                "conflict_ids": []
+              }
+            ],
+            "verification_coverage": {
+              "eligible_attempts": 3,
+              "observed_complete_attempts": 3,
+              "verified_attempts": 2,
+              "contradicted_attempts": 0,
+              "unknown_attempts": 1,
+              "assessment_refs": [
+                "assess_demo_01"
+              ]
+            },
+            "questions": [
+              {
+                "question_id": "q_missing_tolerance_doc",
+                "kind": "variant_condition",
+                "prompt": "What threshold dictates escalation to supervisory queue for foreign currency lines?",
+                "affected_claim_ids": [
+                  "claim_step_open"
+                ],
+                "source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "c0000000-0000-4000-8000-000000000001",
+                    "revision": 1,
+                    "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+                    "eligibility_generation": 1
+                  }
+                ],
+                "answer_kind": "text",
+                "choices": [],
+                "assigned_reviewer_id": "usr_ap_lead",
+                "blocks_guidance": false,
+                "status": "answered",
+                "answer": {
+                  "kind": "text",
+                  "text": "Standard $50.00 equivalent tolerance applies"
+                }
+              }
+            ]
+          },
+          "content_sha256": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+          "created_by": "service_discovery_worker",
+          "created_at": "2026-11-09T20:00:00Z"
+        },
+        "pending_proposal_ids": [],
+        "created_at": "2026-11-09T20:00:00Z",
+        "expires_at": "2027-11-09T20:00:00Z",
+        "content_availability": "available"
+      },
+      "expected_error": "pattern"
+    },
+    {
+      "case_id": "neg_task_measurement_out_of_bounds",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/TaskMeasurementV1",
+      "instance": {
+        "elapsed_ms": 700000000,
+        "wait_ms": 100,
+        "basis": "observed_task_boundary",
+        "complete_interval": true
+      },
+      "expected_error": "maximum"
+    },
+    {
+      "case_id": "neg_repeat_step_overflow_max_count",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/ProcedureStepV1",
+      "instance": {
+        "step_id": "step_bad_repeat",
+        "kind": "repeat",
+        "application_id": "app_erp_core",
+        "label": "Bad Repeat",
+        "description": "Invalid repeat with max count > 1000000",
+        "expected_result": null,
+        "approved_rule_refs": [],
+        "provenance_claim_ids": [],
+        "repeat": {
+          "collection_description": "Items",
+          "item_description": "Item",
+          "body_step_ids": [
+            "step_sub"
+          ],
+          "body_entry_step_id": "step_sub",
+          "body_exit_step_ids": [
+            "step_sub"
+          ],
+          "termination_description": "Done",
+          "maximum_count": 2000000,
+          "termination_status": "observed"
+        }
+      },
+      "expected_error": "maximum"
+    },
+    {
+      "case_id": "neg_clarification_question_bad_kind",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/ClarificationQuestionV1",
+      "instance": {
+        "question_id": "q_missing_tolerance_doc",
+        "kind": "unsupported_hallucinated_kind",
+        "prompt": "What threshold dictates escalation to supervisory queue for foreign currency lines?",
+        "affected_claim_ids": [
+          "claim_step_open"
+        ],
+        "source_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "contribution_id": "c0000000-0000-4000-8000-000000000001",
+            "revision": 1,
+            "content_digest": "dc3679cef69b52542a84edbbadeeaa07a5fafe14c2bbddea5a48a21bf6c86f5a",
+            "eligibility_generation": 1
+          }
+        ],
+        "answer_kind": "text",
+        "choices": [],
+        "assigned_reviewer_id": "usr_ap_lead",
+        "blocks_guidance": false,
+        "status": "answered",
+        "answer": {
+          "kind": "text",
+          "text": "Standard $50.00 equivalent tolerance applies"
+        }
+      },
+      "expected_error": "enum"
+    }
+  ],
+  "semantic_cases": [
+    {
+      "case_id": "sem_three_distinct_attempts_eligible",
+      "description": "Three distinct observed-complete attempts from one or more employees generate candidate",
+      "attempts": [
+        {
+          "demonstration_id": "d0000000-0000-4000-8000-000000000001",
+          "completion_basis": "observed_complete"
+        },
+        {
+          "demonstration_id": "d0000000-0000-4000-8000-000000000002",
+          "completion_basis": "observed_complete"
+        },
+        {
+          "demonstration_id": "d0000000-0000-4000-8000-000000000003",
+          "completion_basis": "observed_complete"
+        }
+      ],
+      "expected_candidate_eligible": true,
+      "expected_support_count": 3
+    },
+    {
+      "case_id": "sem_duplicate_revisions_count_once",
+      "description": "Three contributions claiming identical attempt tuple count as single attempt",
+      "attempts": [
+        {
+          "demonstration_id": "d0000000-0000-4000-8000-000000000001",
+          "completion_basis": "observed_complete"
+        },
+        {
+          "demonstration_id": "d0000000-0000-4000-8000-000000000001",
+          "completion_basis": "observed_complete"
+        },
+        {
+          "demonstration_id": "d0000000-0000-4000-8000-000000000001",
+          "completion_basis": "observed_complete"
+        }
+      ],
+      "expected_candidate_eligible": false,
+      "expected_support_count": 1
+    },
+    {
+      "case_id": "sem_incomplete_attempt_suppresses_candidate",
+      "description": "Two complete attempts plus one incomplete attempt remain gathering",
+      "attempts": [
+        {
+          "demonstration_id": "d0000000-0000-4000-8000-000000000001",
+          "completion_basis": "observed_complete"
+        },
+        {
+          "demonstration_id": "d0000000-0000-4000-8000-000000000002",
+          "completion_basis": "observed_complete"
+        },
+        {
+          "demonstration_id": "d0000000-0000-4000-8000-000000000003",
+          "completion_basis": "incomplete"
+        }
+      ],
+      "expected_candidate_eligible": false,
+      "expected_support_count": 2
+    },
+    {
+      "case_id": "sem_pairwise_transitive_incompatibility",
+      "description": "A equivalent to B, B equivalent to C, but A different from C rejects three-member cluster",
+      "verdicts": [
+        {
+          "pair": [
+            "A",
+            "B"
+          ],
+          "verdict": "equivalent"
+        },
+        {
+          "pair": [
+            "B",
+            "C"
+          ],
+          "verdict": "equivalent"
+        },
+        {
+          "pair": [
+            "A",
+            "C"
+          ],
+          "verdict": "different"
+        }
+      ],
+      "expected_cluster_valid": false
+    },
+    {
+      "case_id": "sem_audience_conjunction_intersection",
+      "description": "Source audiences intersect to non-empty common audience",
+      "audiences": [
+        [
+          "aud_finance",
+          "aud_ops"
+        ],
+        [
+          "aud_ops",
+          "aud_legal"
+        ]
+      ],
+      "expected_common_audience": [
+        "aud_ops"
+      ],
+      "expected_empty": false
+    },
+    {
+      "case_id": "sem_audience_conjunction_disjoint",
+      "description": "Disjoint source audiences produce empty conjunction and block clustering",
+      "audiences": [
+        [
+          "aud_finance"
+        ],
+        [
+          "aud_legal"
+        ]
+      ],
+      "expected_common_audience": [],
+      "expected_empty": true
+    },
+    {
+      "case_id": "sem_timing_wait_lte_elapsed_valid",
+      "description": "elapsed=600000, wait=120000 produces valid net duration 480000 ms",
+      "elapsed_ms": 600000,
+      "wait_ms": 120000,
+      "complete_interval": true,
+      "expected_valid": true,
+      "expected_net_ms": 480000
+    },
+    {
+      "case_id": "sem_timing_wait_gt_elapsed_invalid",
+      "description": "wait > elapsed is semantically invalid",
+      "elapsed_ms": 600000,
+      "wait_ms": 700000,
+      "complete_interval": true,
+      "expected_valid": false,
+      "expected_net_ms": null
+    },
+    {
+      "case_id": "sem_timing_null_wait_null_net",
+      "description": "null wait produces null net duration, never zero",
+      "elapsed_ms": 600000,
+      "wait_ms": null,
+      "complete_interval": true,
+      "expected_valid": true,
+      "expected_net_ms": null
+    }
+  ]
+}
