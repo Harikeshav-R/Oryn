@@ -1,170 +1,681 @@
-# Identity, Organization, Access, and Approval Governance Component Brief
+# Identity, Organization, Access, and Approval Governance Component Specification
 
-Status: Baseline brief — detailed design pending
+Status: Detailed technical specification — implementation pending
 
 ## Purpose and ownership
 
-**Source references:** [TECHNICAL.md §§5.2, 9.2–3, 11.3](../../TECHNICAL.md) | [PRODUCT.md §§6–7, 14, 16.6, 25.6–9; ORY-001, ORY-026–030, ORY-048, ORY-068–069](../../PRODUCT.md)
+**Source references:** [TECHNICAL.md §§5.2, 7.2 (Contracts 11, 18, 22), 9.2–3, 11.3–5, 13.2](../../TECHNICAL.md) | [PRODUCT.md §§6–7, 14, 16.6, 25.6–9; ORY-001, ORY-026–030, ORY-041, ORY-045–048, ORY-067–070, ORY-071–076](../../PRODUCT.md) | [ADR-0011](../adr/0011-identity-authority-and-approval-fencing.md) | [identity-policy-v1.schema.json](../architecture/contracts/identity-policy-v1.schema.json) | [identity-policy-v1.fixtures.json](../architecture/contracts/identity-policy-v1.fixtures.json)
 
 ### Core Responsibility
-Identity, Organization, Access, and Approval Governance governs organizations, workspaces, teams, user and agent identities, role assignments, action risk tiers, approval policies, credential scoping, and formal human approval decisions across Oryn.
+Identity, Organization, Access, and Approval Governance (Catalog Component 8) is the authoritative policy definition point (PDP), admission authority, session governance engine, and formal approval clearinghouse across the Oryn platform. It governs organizations, memberships, teams, user and service identities, role assignments, action risk classifications (Tier 0 through Tier 4), autonomy gates, approval delegations, execution credentials, and cryptographic approval and admission receipts.
 
-### Owns
-- Authoritative tenant/organization structures, workspace boundaries, and membership rosters.
-- Role-Based Access Control (RBAC) and granular permission evaluation engines.
-- Policy definitions specifying action risk tiers (Tier 0 through Tier 4) and autonomy gates.
-- Human approval request routing, binding verification, and cryptographic approval records.
-- Mandatory enterprise capture exclusion policies distributed to employee endpoints.
-- Issuing signed endpoint capture-policy leases and guidance access leases with configured validity periods (shorter than, but never exceeding, the desktop's 24-hour offline cap).
-- Authoritative inference route, purpose, budget, and consent policy governance; issuing and signing `InferenceAuthorization` tokens under Contract 22 (see [cloud-inference](../architecture/cloud-inference.md)).
-- Organization offboarding, suspension, and permission revocation enforcement.
-### Consumes
-- Identity claims and SSO assertions from enterprise identity providers (SAML, OIDC).
-- Administrative role assignments and permission updates from [command-center-analytics](command-center-analytics.md).
-- Real-time action authorization requests from [agent-runtime](agent-runtime.md) and local executors.
-- Approval decisions submitted by authorized human reviewers.
+### Deployment Reference Architecture
+Identity is implemented as a pure, deterministic Rust logical module embedded directly within the modular Oryn Control Plane, backed by transactional PostgreSQL storage with Row-Level Security (RLS) and transactionally locked authority guards. It uses a pure typed evaluator without dynamic script interpreters, external policy servers, or customer-authored domain policy languages.
 
-### Produces
-- Authoritative authorization verdicts (`Allow`, `Deny`, `RequireHumanApproval`) with policy justifications.
-- Cryptographically signed approval tokens bound to specific proposed operations and parameters.
-- Signed `InferenceAuthorization` tokens scoped to tenant, purpose, operation, route, and deletion generation (including HUD purposes `hud_context_interpretation`, `hud_demonstration_summary`, `hud_step_explanation`).
-- Signed `SignedGuidanceAccessLeaseV1` artifacts authorizing offline read-only cached playbook access (max 24 hours).
-- Policy change and access revocation events emitted across the system.
-- Audit log records documenting every role change, policy update, and consequential approval.
+```
++---------------------------------------------------------------------------------------------------+
+|                                        ORYN CONTROL PLANE                                         |
+|                                                                                                   |
+|  +-------------------------+     +-------------------------------+     +-----------------------+  |
+|  |     BFF / HTTP Tier     |     |   Session Admission Manager   |     |    Auth0 Universal    |  |
+|  | (Cookies / CSRF / CORS) |<--->| (Exchange / Refresh / Secret) |<--->| Login Broker (OIDC)   |  |
+|  +-------------------------+     +---------------+---------------+     +-----------------------+  |
+|               ^                                  |                                                |
+|               |                                  v                                                |
+|               |                  +-------------------------------+                                |
+|               |                  | Verified Principal / Session  |                                |
+|               |                  +---------------+---------------+                                |
+|               v                                  v                                                |
+|  +---------------------------------------------------------------------------------------------+  |
+|  |                 IDENTITY, ORGANIZATION, ACCESS, AND APPROVAL GOVERNANCE                     |  |
+|  |                                                                                             |  |
+|  |  +---------------------------+  +---------------------------+  +-------------------------+  |  |
+|  |  | Pure Rust Typed Evaluator |  | Formal Approval Engine    |  | Keyset & Signer Manager |  |  |
+|  |  | (evaluate_authorization)  |  | (Proposals / Decisions)   |  | (Ed25519 / Hashi Vault) |  |  |
+|  |  +-------------+-------------+  +-------------+-------------+  +------------+------------+  |  |
+|  |                |                              |                             |               |  |
+|  |                v                              v                             v               |  |
+|  |  +---------------------------------------------------------------------------------------+  |  |
+|  |  |                Durable PostgreSQL Storage (RLS Enabled + Authority Guards)            |  |  |
+|  |  +---------------------------------------------------------------------------------------+  |  |
+|  +-----------------------------------------------+---------------------------------------------+  |
+|                                                  |                                                |
+|                                                  v                                                |
+|                                  +-------------------------------+                                |
+|                                  |   Authority Recovery Journal  |                                |
+|                                  |  (Outbox -> Immutable Audit)  |                                |
+|                                  +-------------------------------+                                |
++---------------------------------------------------------------------------------------------------+
+```
+
+### Module Ownership Matrix
+
+| System Domain | Responsible Owner | Clear Boundary Invariants |
+|---|---|---|
+| **External Authentication** | Auth0 Universal Login Broker | Auth0 handles user credential verification, SAML/OIDC enterprise federation, passwordless email codes, and WebAuthn/TOTP MFA. Auth0 claims prove *authentication only*. Auth0 assertions never confer Oryn organization membership, role assignments, capture consent, publication rights, or execution authority. |
+| **HTTP Transport & Physical Sessions** | Control Plane (BFF Tier) | BFF terminates HTTP, manages secure session cookies (`Secure`, `HttpOnly`, `SameSite=Lax`, `__Host-`), verifies CSRF tokens, manages rate limits, and persists physical token digests. Identity Policy evaluates session admission, lifetime bounds, idle timeouts, step-up requirements, and verified principal construction. |
+| **Endpoint Credentials & Local Gates** | Desktop `SessionBroker` & Privacy Helper | `SessionBroker` holds native session secrets in OS credential storage (`com.oryn.device.identity`). Privacy Helper enforces local capture consent, manages software Ed25519 review keys, and maintains local release fences. Sync transports public enrollment and verified artifacts only. |
+| **Release & Readiness Governance** | Release Governance | Release Governance owns candidate evaluation benchmarks, readiness evidence, and active release eligibility. Identity Policy verifies whether the requesting actor or workflow holds authorization to propose or approve releases, but does not compute simulation metrics. |
+| **Business Verification** | Outcome Verification | Outcome Verification evaluates whether an executed external mutation achieved its intended business truth. Identity Policy authorizes execution attempts; authorization success ≠ business completion. |
+| **Cryptographic Custody** | Infrastructure Security | Infrastructure Security manages HashiCorp Vault Transit mounts, service identity (mTLS), and WORM audit archive infrastructure. Identity Policy requests purpose-bound Ed25519 signatures through narrowly scoped Vault Transit keys. |
 
 ### Does Not Own
-- Verifying whether an agent's business action was *factually correct* (owned by [outcome-verification](outcome-verification.md)).
-- Generating agent execution plans or prompt instructions (owned by [agent-factory-ir](agent-factory-ir.md)).
-- Directly executing external third-party API mutations (owned by [application-adapters](application-adapters.md)).
+- Executing external API or browser mutations (owned by [application-adapters](application-adapters.md) and [browser-extension](browser-extension.md)).
+- Determining factual correctness or readback confirmation of business outcomes (owned by [outcome-verification](outcome-verification.md)).
+- Generating prompt instructions or agent plans (owned by [agent-factory-ir](agent-factory-ir.md)).
+- Selecting customer-side frontend frameworks, LLM foundation providers, or cluster orchestrators.
 
-### Boundary Requirement
-A machine learning model may request authorization, but cannot grant it. Inference authorization is strictly distinct from business action authorization: permission to process information through a model grants zero permission to perform external mutations or publish knowledge. Every consequential action (Tier 3) is intercepted and evaluated by a trusted, deterministic policy engine at the execution boundary. Tier 3 requires an item-level human approval before external commit; Tier 4 restricted actions are strictly unavailable for v1.0 agent execution regardless of prior human demonstrations. All inference routes must have verified contractual zero retention and US-only processing. Capture-policy leases distributed to employee desktop endpoints are bounded by an absolute maximum offline validity ceiling of 24 hours. Upon lease expiry, endpoint observation halts until network connectivity is re-established and policy refreshed.
+### Boundary Requirements and Autonomy Invariants
+1. **Model Never Grants Authority:** A machine learning model or autonomous agent may request authorization for an action, but cannot grant authorization. Machine inference authority is strictly decoupled from business action authorization: permission to execute an inference request grants zero right to mutate external business systems or export data.
+2. **Deterministic Interception:** Every consequential action (Tier 3) is intercepted and evaluated by the deterministic policy engine at the physical execution boundary. Tier 3 actions require an explicit item-level human approval matching the canonical proposal digest (`action_sha256`).
+3. **Tier 4 Absolute Prohibition:** Tier 4 restricted operations (e.g., automated funds transfers, credential exports, production database drops) are unconditionally denied for automated agent actuation across all v1.0 workloads, regardless of prior human demonstrations or prompt instructions.
+4. **Single Active Organization Profile:** Exactly one organization and employee profile is active per operating system desktop user session. Switching organizations requires an explicit sign-out, termination of background capture, flushing of session tokens and local caches, locking of the private profile, and pairing via an independent browser login transaction.
+
+---
+
 ## Product requirements
 
-### Key Product Requirements ([PRODUCT.md §§6–7, 14, 16.6, 25.6–9](../../PRODUCT.md))
-- **Workspace Administration:** Admins can invite users, assign roles, and revoke roles; revocations take effect immediately for future privileged actions (ORY-001).
-- **Tier 3 Human-in-the-Loop:** Consequential operations (monetary, external, irreversible) trigger item-level human approval displaying exact proposed changes (ORY-026).
-- **Tier 4 Prohibition:** Tier 4 restricted actions are completely blocked from automated execution (ORY-027).
-- **Scope Containment:** Agents cannot access applications or records outside their approved scope (ORY-028).
-- **No Silent Privilege Expansion:** Agent repairs cannot expand permissions without explicit administrator re-authorization (ORY-029).
-- **Stage Progression Gates:** Enforces minimum demonstration and evaluation gates before advancing an agent's autonomy stage (ORY-030).
-- **Separation of Duties:** Initiating an agent job does not grant the operator authority to approve consequential actions if their role lacks approval rights (ORY-048).
-- **Security Policy Enforcement:** Policy changes immediately block prohibited actions across all active capabilities (ORY-068).
-- **Controlled Offboarding:** Deactivating an organization immediately terminates all active capture and agent executions (ORY-069).
+### Key Product Traceability
+
+| Requirement ID | Product Specification Clause | Normative Identity Policy Implementation |
+|---|---|---|
+| **ORY-001** | Workspace Administration & Instant Revocation | Immediate transactional guard updates; outbox broadcast of `policy.changed` and `access.revoked`; connected long-poll wakeup within 2s; 500 ms endpoint acknowledgment barrier. |
+| **ORY-002** | Observation and Consent Controls | Issuance of bounded `SignedCapturePolicyLease` (max 24h); consent withdrawal immediately pauses capture while preserving cached read-only guidance access. |
+| **ORY-003** | Offline Capture Ceilings | Strict 24-hour absolute offline expiration for capture-policy leases; zero automatic resumption without fresh network policy refresh. |
+| **ORY-004** | Privacy Helper Autonomy | Desktop privacy helper maintains software Ed25519 review key in OS-protected storage (`com.oryn.device.identity`) without central key escrow. |
+| **ORY-005** | Raw Data Retention Bounds | Enforces organization policy ceilings (default 7 days, max 14 days) in capture leases; legal holds cannot extend raw retention bounds. |
+| **ORY-007** | Mandatory Retention Verdicts | Issuance of `SignedRetentionVerdict` with `scope_coverage: complete`; missing or incomplete verdict unconditionally blocks voluntary destruction or client uninstall. |
+| **ORY-008** | Transient Cloud Inference | Issuance of `InferenceAuthorization` tokens strictly bounded to certified routes, contractual ZDR terms, US data confinement, and deletion generation matching. |
+| **ORY-026** | Tier 3 Human-in-the-Loop Approval | Item-level human approval displaying exact parameter diffs, consequence summary, and rule/authority checks bound to stable `action_sha256` and `proposal_digest`. |
+| **ORY-027** | Tier 4 Execution Prohibition | Hardcoded, non-overridable code guard denying automated execution attempts for Tier 4 operations. |
+| **ORY-028** | Strict Scope Containment | Closed `ScopeV1` typed record enforcement; multi-tenant RLS partitioning; missing or null organization denied. |
+| **ORY-029** | No Silent Privilege Expansion | Agent repairs or rule changes cannot expand operational permissions without explicit administrator re-authorization. |
+| **ORY-030** | Autonomy Stage Progression Gates | Formal governance proposals (`SignedGovernanceProposalV1`) requiring independent Workflow Owner and Security Admin approval remits. |
+| **ORY-041** | Target Generation Staleness | Validation of live document generation, surface generation, and record revision; generation drift invalidates authorization and requires revised proposal. |
+| **ORY-045** | Durable One-Use Consumption Fence | Atomically locks `identity_action_fence` keyed by `(organization_id, execution_context_sha256, action_id)`; duplicate attempts rejected. |
+| **ORY-046** | Honest Outcome Boundary | Permission consumption and dispatch admission are distinct from external outcome verification; unverified external results report `Outcome Unknown`. |
+| **ORY-047** | Authority Recovery Protection | Independent durable authority recovery journal protocol preventing backup restoration from resurrecting revoked permissions or consumed fences. |
+| **ORY-048** | Separation of Duties | Job initiators cannot approve staged consequential actions without an explicit, active `ApprovalDelegationV1` within approved policy ceilings. |
+| **ORY-067** | Legal Hold Governance | Security Admin with recent MFA sets/releases holds; holds require complete source coverage and prevent destruction of processed records. |
+| **ORY-068** | Immediate Security Policy Enforcement | Policy updates apply immediately to canonical guards; in-flight unconsumed authorizations invalidated. |
+| **ORY-069** | Controlled Tenant Offboarding | Suspending or deactivating an organization revokes session credentials, terminates capture leases, and halts future job authorization. |
+| **ORY-070** | Consequential Audit Immutability | Tamper-evident, WORM-compatible audit trails for every role grant, policy revision, authorization verdict, and formal approval. |
+| **ORY-071–076** | Governed Inference Gates | Enforces certified routes, tenant monthly budget caps, ephemeral input-scope hashing, and zero retention. |
+
+### Fixed Role Catalog and Role-Maximum Matrix
+Oryn defines nine immutable role IDs with standard product display names:
+
+```
++---------------------------------------------------------------------------------------------------+
+|                                      FIXED ROLE HIERARCHY                                         |
+|                                                                                                   |
+|  [Organization Admin]  [Security Admin]                                                           |
+|          |                     |                                                                  |
+|          +----------+----------+                                                                  |
+|                     |                                                                             |
+|                     v                                                                             |
+|            [Operations Manager]                                                                   |
+|                     |                                                                             |
+|                     v                                                                             |
+|             [Workflow Owner]                                                                      |
+|               /          \                                                                        |
+|              v            v                                                                       |
+|      [Agent Operator]   [Automation Builder]                                                      |
+|              \            /                                                                       |
+|               v          v                                                                        |
+|                   [SME]                                                                           |
+|                     |                                                                             |
+|                     v                                                                             |
+|                [Employee]  <---  [Read-Only Stakeholder] (Scoped read subset)                     |
++---------------------------------------------------------------------------------------------------+
+```
+
+1. **`employee` (Employee):** `playbook.read`, personal privacy and contribution controls, participation in authorized assist sessions. No production `job.run`.
+2. **`sme` (Subject Matter Expert):** Employee permissions plus `workflow.review`. May explain workflows and propose candidate rules, but cannot approve business rules.
+3. **`agent_operator` (Agent Operator):** Employee permissions plus `job.run`, team-scoped `incident.review`, and `action.approve` *only under an active, matching approval delegation*.
+4. **`workflow_owner` (Workflow Owner):** Employee permissions plus assigned `workflow.review`, `rule.approve`, `incident.review`, `repair.approve`, `release.approve`, and `schedule.manage`. Action approval requires an explicit approval delegation; job execution requires the operator role.
+5. **`automation_builder` (Automation Builder):** Employee permissions plus `workflow.review` and `agent.edit`. May propose candidate agents, repairs, and test runs, but cannot approve production releases.
+6. **`operations_manager` (Operations Manager):** Team-scoped `playbook.read`, `analytics.read`, and read-only issue/incident status. Manager status does *not* confer action approval or raw evidence access.
+7. **`security_admin` (Security Admin):** `privacy_policy.manage`, `security_policy.manage`, `audit.read`, `hold.manage`, and security-side permission expansion approval. No implicit business rule or release owner authority.
+8. **`organization_admin` (Organization Admin):** `membership.manage`, team structure administration, and external identity federation configuration. No implicit action approval, business rule approval, or private evidence rights.
+9. **`read_only_stakeholder` (Read-Only Stakeholder):** Scoped `playbook.read` and eligible report/status reads. No write, execution, or export rights by default.
+
+### Public Capability Catalog
+The system enforces eighteen strictly bounded capabilities:
+- **Public Capabilities:** `playbook.read`, `workflow.review`, `rule.approve`, `agent.edit`, `job.run`, `action.approve`, `incident.review`, `repair.approve`, `release.approve`, `analytics.read`, `report.export`, `privacy_policy.manage`, `membership.manage`.
+- **Internal Governance Capabilities:** `schedule.manage`, `audit.read`, `security_policy.manage`, `hold.manage`, `identity.recover`.
+
+*Special Policy Guard (`report.export`):* `report.export` requires an explicit grant from an authorized security policy within an existing report-read scope. Its absence denies export even if an actor can view a dashboard.
+
+### Approval Delegations and Separation of Duties
+An `ApprovalDelegationV1` is strictly decoupled from basic role assignments:
+- **Delegation Attributes:** Approver actor ID, allowed action types (1–128), allowed record types (1–128), scope (`team_id`, `workflow_id`, `application_id`, optional record ID list <= 1,000), optional amount limit (`AmountLimitV1`), validity interval (`valid_from` to `not_after`), and `distinct_initiator_required` boolean.
+- **Monetary Constraints:** `AmountLimitV1` specifies `max_minor_units` (nonnegative decimal integer string, semantic max signed 64-bit integer `9223372036854775807`) and a 3-letter ISO-4217 `currency` string. Currency conversion, floating-point arithmetic, split-action downgrade, or missing amount limits are strictly prohibited.
+- **Bootstrap Invariant:** The power to *establish* a delegation is separated from the power to *exercise* it. Security Admin plus applicable Workflow Owner establish initial delegation ceilings without holding an action-approval delegation themselves. Operators and owners cannot redelegate.
+- **Self-Approval Rules:** A job initiator or assist employee may approve its own staged action only if they hold an active, matching `ApprovalDelegationV1` and the organization policy has `distinct_initiator_required: false`. If organization policy requires distinct humans, self-approval is denied with `IDENTITY_SEPARATION_REQUIRED`.
+- **Release Separation:** A Tier 3 agent release always requires a Workflow Owner distinct from its proposer.
+
+---
 
 ## Upstream and downstream contracts
 
-**Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
+**Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md) | Wire Schema: [`identity-policy-v1.schema.json`](../architecture/contracts/identity-policy-v1.schema.json)
 
-### Cross-Component Contracts
-- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes specific action authorization requests from [agent-runtime](agent-runtime.md) and local executors (including browser actions delegated to [browser-extension](browser-extension.md) and HUD-assisted actions coordinated by [local-context-hud](local-context-hud.md)); validates `ExecutionContextV1` (`job` or `assist`), and issues cryptographic authorization tokens bound to stable `action_sha256` proposal digests, enforcing item-level approval for Tier 3 actions and unconditional denial for Tier 4.
-- **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers authorized role-scoped read models and audit events to [command-center-analytics](command-center-analytics.md).
-- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Issues and validates signed `InferenceAuthorization` tokens for [cloud-inference](../architecture/cloud-inference.md); enforces tenant inference budgets, purpose restrictions (including HUD semantic purposes), ZDR terms, and US geographic confinement.
-- **Local Policy Artifact Issuance:** Issues Ed25519-signed policy artifacts to [local-privacy-storage](local-privacy-storage.md) and [local-context-hud](local-context-hud.md) using canonical RFC 8785 JSON encoding:
-  - `SignedCapturePolicyLease` (`privacy.capture-policy.v1`): Bounded capture lease (max 24 hours) specifying permitted categories, mandatory exclusion catalog revision, application exclusions, and maximum raw retention bounds.
-  - `SignedRetentionVerdict` (`privacy.retention-verdict.v1`): Authoritative legal hold verdict (max 24 hours) with complete source scope; missing or incomplete coverage blocks voluntary destruction and uninstallation.
-  - `SignedArtifactPolicy` (`privacy.artifact-policy.v1`): Authorizes redacted still-image excerpt sharing for approved organizational purposes, audiences, and maximum artifact lifetimes.
-  - `SignedGuidanceAccessLeaseV1` (`hud.guidance-access-lease.v1`): Bounded read-only guidance access lease (max 24 hours) specifying permitted playbook version hashes and scope for [local-context-hud](local-context-hud.md):
+### Contract Reference Summary
+- **Contract 11 (Synchronous Action Authorization):** Real-time interception of proposed operations from [agent-runtime](agent-runtime.md) and [local-context-hud](local-context-hud.md). Binds `ExecutionContextV1`, `action_sha256`, target key, record key, and document/surface generations. Returns `Allow`, `Deny`, or `RequireHumanApproval`.
+- **Contract 18 (Analytics & Audit Read Models):** Delivers authorized role-scoped read models, permission updates, and immutable audit streams to [command-center-analytics](command-center-analytics.md).
+- **Contract 22 (Governed Cloud Inference Authorization):** Issues short-lived, signed `InferenceAuthorization` tokens to [cloud-inference](../architecture/cloud-inference.md). Enforces purpose allowlists, US processing, ZDR terms, and tenant monthly micro-USD budgets.
+- **Contract 24 (Contribution Sync Root):** Authoritative trust root for review-key registration and enrollment challenge validation for [contribution-sync](contribution-sync.md).
 
+### Cryptographic Envelopes and Signer Preimage Rule
+All signed identity and policy artifacts use standard Draft 2020-12 envelopes:
 ```json
 {
-  "schema_id": "hud.guidance-access-lease.v1",
-  "key_id": "key_policy_01",
+  "schema_id": "identity.action-authorization.v1",
+  "key_id": "key_policy_2026_01",
   "payload": {
+    "authorization_id": "22222222-2222-4222-8222-222222222222",
     "organization_id": "00000000-0000-4000-8000-000000000001",
     "actor_id": "usr_employee_01",
+    "worker_id": "wrk_runner_finance_01",
     "device_id": "dev_macbook_01",
     "profile_id": "prf_default_01",
-    "allowed_bundle_hashes": [
-      "780ea94e79bc83bd44ebe2bcc04f67b194c012161b797373668a89a9c67c4bec"
-    ],
+    "audience": "execution",
+    "execution_context": {
+      "kind": "job",
+      "job_id": "job_invoice_audit_01",
+      "case_id": "case_inv_99882",
+      "agent_version": "2026.11.08.1"
+    },
+    "action_id": "act_approve_invoice_001",
+    "action_sha256": "sha256_15b72bca85a9ceff0f848dbe1519d51a6668d33200369cf06dd89145b66a60ed",
+    "environment": "production",
+    "risk_tier": 3,
     "policy_revision": "100",
     "access_revision": "200",
-    "issued_at": "2026-11-09T20:00:00Z",
-    "not_after": "2026-11-10T20:00:00Z",
-    "read_only": true
+    "revocation_generation": "1",
+    "approval_id": "33333333-3333-4333-8333-333333333333",
+    "nonce": "N0nc3S3cr3tV4lu3B4s364Ur132Byt3s00000000000",
+    "issued_at": "2026-11-10T15:05:00Z",
+    "not_after": "2026-11-10T15:05:30Z"
   },
-  "signature": "2Opurx3PwyqhwUEWsVUKziAiBS_HMvGp7iwigfzXI3_e6WyH-0RdCz9z-VkstR2-3i9_10H9sxrwBP9DH2S4DQ"
+  "signature": "95mgxLgGBOsMr0f0eJlcda6UXTOA-1_Z5MjgKFvcPaIyzMFt_eZd-iZVkZl32T6TaGhjOEN49fSbEs6F5pzNDQ"
 }
 ```
+**Exact Normative Signing Preimage:**
+```text
+PreimageBytes = UTF8(schema_id) + 0x0A (LF byte) + RFC_8785_Canonical_JSON(payload)
+```
+Signatures are computed via Ed25519 over `PreimageBytes`. Textual Vault wrappers (e.g. `vault:v1:...`) are decoded to 64 raw bytes and encoded as unpadded base64url strings (86 characters). Unsigned key identifiers are never treated as network lookup URLs.
 
-### Review Key Challenge and Registration Lifecycle
-- **Key Generation:** During device enrollment, the desktop helper (`oryn-sync-helper`) generates a dedicated Ed25519 review keypair in hardware/Secure Enclave with an identifier `key_id`.
-- **Registration and Proof of Possession:** The endpoint submits the public key to Identity Policy along with a challenge signed by the device enrollment credential. Identity Policy validates the challenge, binds `(organization_id, actor_id, device_id, key_id, public_key, registered_at_utc)`, and activates the key.
-- **Sync Authority:** Identity Policy serves as the authoritative trust root for `contribution-sync` (Contract 24). During contribution intake, `control-plane` verifies review attestations against the active public key registered with Identity Policy.
-- **Revocation:** When an employee departs, a device is decommissioned, or a key is suspected of compromise, Identity Policy marks the key revoked (`revoked_at_utc`). Subsequent contributions bearing attestations from revoked keys are rejected immediately with `SYNC_ATTESTATION_KEY_REVOKED`.
-- **Revocation Broadcasts:** Emits `policy.changed`, `access.revoked`, and `consent.revoked` domain events to invalidate distributed caches and terminate active capture or execution leases upon reconnection.
+### Dual Digest Specification
 
-### Process and Security Boundaries
-- **Deployment Location:** Core control-plane service running within the hardened organizational cloud environment.
-- **Security Invariant:** Serves as the primary security policy decision point (PDP). Policy evaluation code is strictly isolated from model execution containers.
-- **Credential Scoping:** Issues short-lived, least-privileged execution tokens to runners, strictly scoped to target case IDs and adapter operations.
+```
++---------------------------------------------------------------------------------------------------+
+|                                      DUAL DIGEST ARCHITECTURE                                     |
+|                                                                                                   |
+|  1. ACTION DIGEST (action_sha256): Underscore prefix, covers exact execution target & arguments    |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | action_id, execution_context, application_profile_id, application_profile_version,          |  |
+|  | document, surface_generation, target_key, record_key, expected_state, environment,           |  |
+|  | operation, argument                                                                         |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|                                               |                                                   |
+|                                               v  RFC 8785 JCS -> SHA-256                          |
+|                                   "sha256_" + 64 lowercase hex                                    |
+|                                                                                                   |
+|  2. PROPOSAL DIGEST (proposal_digest): Hyphen prefix, covers human review diffs & consequences    |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | proposal_id, proposal_revision, organization_id, execution_context, action_id,              |  |
+|  | action_sha256, action_category, application_id, record_key, parameter_diffs, evidence_refs,   |  |
+|  | rule_checks, authority_checks, consequence_summary, reversible, risk_tier, policy_revision, |  |
+|  | access_revision, issued_at, not_after                                                       |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|                                               |                                                   |
+|                                               v  RFC 8785 JCS -> SHA-256                          |
+|                                    "sha256-" + 64 lowercase hex                                   |
++---------------------------------------------------------------------------------------------------+
+```
+
+1. **Action Digest (`action_sha256`):**
+   ```text
+   action_sha256 = "sha256_" + lowercase_hex(SHA256(RFC8785_JCS({
+     action_id, execution_context, application_profile_id,
+     application_profile_version, document, surface_generation,
+     target_key, record_key, expected_state, environment, operation, argument
+   })))
+   ```
+   *Exclusions:* Ephemeral reservation ID, dynamic target handles, authorization references, approval references, and timeout deadlines are explicitly excluded to maintain stability across retries and review sessions.
+   *Adapter Actions:* For external API adapters, `TargetProjectionV1` projects `{kind: "adapter", action_id, execution_context, application_id, adapter_capability_version, record_key, expected_state, environment, operation_id, argument_sha256}`. Enforcing adapters must register typed `ActionPolicyFactsV1` binding this digest to trusted monetary and destination facts.
+
+2. **Proposal Digest (`proposal_digest`):**
+   ```text
+   proposal_digest = "sha256-" + lowercase_hex(SHA256(RFC8785_JCS(
+     proposal_payload_excluding_proposal_digest
+   )))
+   ```
+   Notice the strict convention: `action_sha256` uses an underscore (`sha256_`), while `proposal_digest` uses a hyphen (`sha256-`). Tampering with either breaks cryptographic binding.
+
+### Authentication Flow and Session Admission
+
+#### Native Desktop Flow
+```
++---------------+        +------------------+        +--------------------+        +----------------+
+|    Desktop    |        | Control Plane /  |        |  Auth0 Universal   |        | Identity RLS   |
+| SessionBroker |        | BFF Session Tier |        |    Login Broker    |        | Database Store |
++-------+-------+        +--------+---------+        +---------+----------+        +-------+--------+
+        |                         |                            |                           |
+        | 1. Bind loopback port (127.0.0.1:49152..49183)       |                           |
+        | 2. Browser opens Auth0 Authorization Code + PKCE     |                           |
+        |----------------------------------------------------->|                           |
+        | 3. Auth0 redirects to loopback callback with code    |                           |
+        |<-----------------------------------------------------|                           |
+        | 4. Desktop SessionBroker redeems code + verifier at Auth0                        |
+        |----------------------------------------------------->|                           |
+        | 5. Auth0 returns tokens to Desktop SessionBroker     |                           |
+        |<-----------------------------------------------------|                           |
+        |                                                      |                           |
+        | 6. POST /v1/identity/sessions/exchange (broker-token fields)                     |
+        |------------------------>|                            |                           |
+        |                         | 7. Validate broker tokens  |                           |
+        |                         |    (JWKS / claims / MFA)   |                           |
+        |                         |--------------------------->|                           |
+        |                         |                                                        |
+        |                         | 8. Discard broker tokens; mint Oryn 256-bit secrets    |
+        |                         |    Store SHA-256 token digests in cp_credential_digest |
+        |                         |------------------------------------------------------->|
+        | 9. SessionCredentialsV1 |                            |                           |
+        |    (Oryn bearer tokens) |                            |                           |
+        |<------------------------|                            |                           |
+```
+
+#### Web BFF Flow (Confidential Browser Session)
+Browser clients never receive Auth0 tokens or Oryn bearer credentials:
+1. Web client initiates `POST /v1/session/login` (`WebLoginStartV1`). Control Plane sets 5-minute transaction cookie `__Host-oryn_login`, vault-encrypts the PKCE verifier, and redirects to Auth0.
+2. Auth0 redirects to `GET /v1/identity/auth0/callback`. Control Plane validates transaction cookie, state, and nonce, confidentially redeems the code server-side, validates claims with Identity Policy, discards Auth0 tokens, and sets a 12-hour opaque `__Host-oryn_session` cookie.
+3. Web requests use memory-held CSRF tokens, with 30-minute idle locks managed by `POST /v1/session/activity`.
+
+1. **Client Registration & Loopback Pool:** Native external browser authentication uses Authorization Code + PKCE `S256` with state and OIDC nonce. The native client binds a loopback socket to `127.0.0.1` on a randomly selected available port within the registered range `49152–49183`, path `/callback`. Exactly 32 callback URIs are registered in Auth0; no wildcards, custom schemes, or embedded webviews. Code redemption occurs directly between Desktop SessionBroker and Auth0; Oryn server receives verified broker-token assertions only.
+2. **Login Transactions:** A server-side login transaction lasts 5 minutes, binding client kind, organization ID, state, nonce, and callback URI. Validates issuer, RS256 JWKS signature, audience, and single-use status.
+3. **Oryn Opaque Secrets:** Initial Auth0 tokens are validated and immediately discarded. Oryn issues opaque 256-bit random session and access secrets. Control-plane stores SHA-256 digests only. Rotation occurs atomically; token replay revokes the entire session family.
+4. **Session Lifetimes & Idle Lock:**
+   - Web sessions: Max 12 hours absolute, with a server-enforced 30-minute inactivity lock.
+   - Desktop sessions: Max 7 days absolute.
+   - Child access tokens: Bounded to maximum 5 minutes, scoped to specific audiences (`identity`, `sync`, `guidance`, `execution`, `inference`).
+5. **Step-Up MFA:** Consequential operations (Tier 3 approvals, release approvals, policy modifications, emergency recovery) require verified MFA completed within the previous 5 minutes. Proven via Auth0 Actions emitting namespaced claims: `https://oryn.app/claims/connection_id`, `https://oryn.app/claims/connection_strategy`, and `https://oryn.app/claims/mfa_at`.
+
+### Bridge Delivery Contract (`ExecuteBrowserAction`)
+Browser execution occurs over `browser-bridge.v1` (major 1, minor 3 with capability `identity_authority_v1`):
+```text
+ExecuteBrowserAction.payload.authority = {
+  authorization: SignedActionAuthorizationV1,
+  approval:      SignedActionApprovalV1 | null,
+  admission:     SignedActionAdmissionV1
+}
+```
+`authorization_ref` equals `authorization_id`, and nullable `approval_ref` equals `approval_id`. Both references and the authority bundle remain strictly outside the canonical `action_sha256` digest.
+
+### HTTP Route Specifications
+
+| Method & Route | Scopes Required | Success Payload | Problem Error Mapping |
+|---|---|---|---|
+| `POST /v1/identity/actions/authorize` | `execution:authorize` | `200 OK`: `AuthorizationDecisionV1` | 400 Schema, 401 Auth, 403 Forbidden, 503 Signer |
+| `POST /v1/identity/actions/consume` | `execution:consume` | `200 OK`: `ActionConsumptionV1` | 400 Schema, 403 Forbidden, 409 Conflict/Already Consumed |
+| `GET /v1/identity/actions/{id}` | `execution:read` | `200 OK`: `AuthorizationStatusV1` | 401 Auth, 404 Not Found |
+| `POST /v1/identity/approvals` | `action:approve` | `200 OK`: `ApprovalResultV1` | 400 Schema, 403 Step-Up Required, 409 Conflict |
+| `POST /v1/identity/approvals/bulk` | `action:approve` | `200 OK`: `BulkApprovalResultV1` | 400 Schema, 403 Denied, 409 Atomicity Conflict |
+| `GET /v1/identity/approvals/{id}` | `action:read` | `200 OK`: `ApprovalStatusV1` | 401 Auth, 404 Not Found |
+| `POST /v1/identity/governance-approvals` | `governance:approve`| `200 OK`: `ApprovalResultV1` | 403 Forbidden/Separation, 409 Revision Stale |
+| `POST /v1/identity/login-transactions` | Anonymous | `201 Created`: `LoginTransactionV1` | 400 Bad Request, 503 IdP Down |
+| `POST /v1/identity/sessions/exchange` | Anonymous | `200 OK`: `SessionCredentialsV1` | 401 Invalid Code/Proof, 409 Replayed |
+| `POST /v1/identity/sessions/refresh` | Anonymous | `200 OK`: `SessionCredentialsV1` | 401 Revoked Family, 409 Replay Detected |
+| `POST /v1/identity/sessions/child-token`| Authenticated | `200 OK`: `ChildTokenV1` | 403 Scope Prohibited |
+| `POST /v1/identity/sessions/select-organization` | Authenticated | `200 OK`: `SessionCredentialsV1` | 403 Organization Inactive/Access Denied |
+| `POST /v1/identity/sessions/logout` | Authenticated | `200 OK`: `LogoutResultV1` | 401 Unauthorized |
+| `POST /v1/identity/commands` | `admin:*` | `200 OK`: `IdentityCommandResultV1` | 403 Admin/MFA Required, 409 Revision Conflict |
+| `POST /v1/identity/devices/{id}/review-keys/challenge` | `device:enroll` | `201 Created`: `SignedReviewKeyChallengeV1` | 401 Unauthorized |
+| `POST /v1/identity/devices/{id}/review-keys` | `device:enroll` | `201 Created`: `SignedReviewKeyRegistrationV1` | 400 Bad Proof, 409 Replayed Nonce |
+| `GET /v1/identity/devices/{id}/capture-policy` | `device:read` | `200 OK`: `SignedCapturePolicyLease` | 403 Device Suspended, 503 Signer Down |
+| `GET /v1/identity/devices/{id}/retention-verdict` | `device:read` | `200 OK`: `SignedRetentionVerdict` | 403 Device Suspended, 503 Signer Down |
+| `GET /v1/identity/artifact-policy` | `artifact:read` | `200 OK`: `SignedArtifactPolicy` | 404 Policy Not Active |
+
+---
 
 ## Internal architecture
 
-### Logical Submodules
-- **RBAC and Scoping Engine:** Evaluates actor roles, resource scopes, and tenant memberships.
-- **Action Risk Classifier:** Enforces the Tier 0–4 risk taxonomy and determines approval requirements.
-- **Approval Integrity Verifier:** Cryptographically binds approvals to exact proposed mutation payloads to prevent parameter tampering.
-- **Revocation Coordinator:** Manages revocation broadcasts and coordinates immediate termination of revoked runner tokens.
+### Pure Rust Typed Evaluator
+The authorization decision engine is implemented as a pure, side-effect-free Rust function:
+```rust
+pub fn evaluate_authorization(
+    snapshot: &AuthorizationSnapshotV1,
+    request: &AuthorizationRequestV1,
+    now: UtcInstant,
+) -> PolicyEvaluationV1;
+```
+- `AuthorizationSnapshotV1`: Immutable, strongly typed in-memory aggregate built exclusively from committed PostgreSQL owner records. Callers cannot supply roles, downgrade risk classifications, or assert release readiness.
+- `PolicyEvaluationV1`: Internal evaluation result `{verdict: Allow | Deny | RequireHumanApproval, reason_code: IdentityReason, risk_tier: Option<RiskTier>, policy_revision: U64, access_revision: U64, required_approval: Option<ApprovalRequirementV1>, rule_checks: Vec<RuleCheckV1>, authority_checks: Vec<AuthorityCheckV1>}`.
+- `UtcInstant`: Validated UTC instant with monotonic clock protection against system time manipulation.
+
+### Fixed Evaluation Order
+The evaluator follows a strict, non-bypassable order:
+1. **Workload / Human Authentication & Environment:** Verify token validity, client environment matching (`production` vs `simulation`).
+2. **Organization / Membership / Device / Session Status:** Active tenant check, non-suspended membership, non-revoked device enrollment.
+3. **Tenant Boundary & Resource Equality:** Resource tenant ID matches authenticated organization ID.
+4. **Mandatory Product Exclusions & Tier 4 Prohibition:** Hardcoded code guards unconditionally deny Tier 4 automated actions.
+5. **Scope & Capability Matching:** Compute effective capabilities from granted roles within audience/team/workflow scope.
+6. **Explicit Denials:** Apply capability restrictions (`CapabilityRestrictionV1`); explicit deny unconditionally removes permission.
+7. **Effective Risk Classification:** Pinned owner facts determine action risk floor.
+8. **Release Eligibility & Rule Constraints:** Workflow version eligibility and business rule passage verified.
+9. **Amount / Delegation / Separation Constraints:** Monetary ceilings and initiator separation verified.
+10. **Required Human Approval Resolution:** If otherwise permitted but requiring human sign-off, verify signed `approval_id` receipt. Missing approval yields `RequireHumanApproval`; forbidden actions never return an approvable state.
+
+### Relational Schema (PostgreSQL)
+
+```sql
+-- Global identities (shared infrastructure adapter)
+CREATE TABLE identity_person (
+    person_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
+);
+
+CREATE TABLE identity_login_subject (
+    issuer TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    person_id UUID NOT NULL REFERENCES identity_person(person_id) ON DELETE RESTRICT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    PRIMARY KEY (issuer, subject)
+);
+
+-- Tenant organizations
+CREATE TABLE identity_organization (
+    organization_id UUID PRIMARY KEY,
+    name TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('restricted', 'active', 'suspended', 'deactivated', 'deletion_pending', 'deleted')),
+    current_policy_revision NUMERIC(20,0) NOT NULL DEFAULT 1 CHECK (current_policy_revision >= 1),
+    current_access_revision NUMERIC(20,0) NOT NULL DEFAULT 1 CHECK (current_access_revision >= 1),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
+);
+ALTER TABLE identity_organization ENABLE ROW LEVEL SECURITY;
+
+-- Tenant memberships
+CREATE TABLE identity_membership (
+    organization_id UUID NOT NULL REFERENCES identity_organization(organization_id) ON DELETE RESTRICT,
+    actor_id TEXT NOT NULL,
+    person_id UUID NOT NULL REFERENCES identity_person(person_id) ON DELETE RESTRICT,
+    status TEXT NOT NULL CHECK (status IN ('invited', 'active', 'suspended', 'removed')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    PRIMARY KEY (organization_id, actor_id)
+);
+ALTER TABLE identity_membership ENABLE ROW LEVEL SECURITY;
+
+-- Authority guards (transactionally locked concurrency barriers)
+CREATE TABLE identity_authority_guard (
+    organization_id UUID NOT NULL REFERENCES identity_organization(organization_id) ON DELETE RESTRICT,
+    guard_kind TEXT NOT NULL CHECK (guard_kind IN ('organization', 'member', 'device', 'policy', 'eligibility')),
+    guard_id TEXT NOT NULL,
+    revision NUMERIC(20,0) NOT NULL CHECK (revision >= 1),
+    durability_pending BOOLEAN NOT NULL DEFAULT FALSE,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    PRIMARY KEY (organization_id, guard_kind, guard_id)
+);
+ALTER TABLE identity_authority_guard ENABLE ROW LEVEL SECURITY;
+
+-- Durable action execution fences (linearization points)
+CREATE TABLE identity_action_fence (
+    organization_id UUID NOT NULL REFERENCES identity_organization(organization_id) ON DELETE RESTRICT,
+    execution_context_sha256 TEXT NOT NULL,
+    action_id TEXT NOT NULL,
+    action_sha256 TEXT NOT NULL,
+    state TEXT NOT NULL CHECK (state IN ('prepared', 'admitted', 'reconciled')),
+    winning_authorization_id UUID,
+    winning_attempt_id UUID,
+    revision NUMERIC(20,0) NOT NULL DEFAULT 1 CHECK (revision >= 1),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    PRIMARY KEY (organization_id, execution_context_sha256, action_id)
+);
+ALTER TABLE identity_action_fence ENABLE ROW LEVEL SECURITY;
+
+-- Formal proposals and approvals
+CREATE TABLE identity_approval_proposal (
+    organization_id UUID NOT NULL REFERENCES identity_organization(organization_id) ON DELETE RESTRICT,
+    proposal_id UUID NOT NULL,
+    proposal_revision NUMERIC(20,0) NOT NULL CHECK (proposal_revision >= 1),
+    proposal_digest TEXT NOT NULL,
+    action_id TEXT NOT NULL,
+    action_sha256 TEXT NOT NULL,
+    state TEXT NOT NULL CHECK (state IN ('pending', 'approved', 'rejected', 'changes_requested', 'expired', 'invalidated', 'consumed')),
+    proposal_json JSONB NOT NULL,
+    issued_at TIMESTAMPTZ NOT NULL,
+    not_after TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (organization_id, proposal_id, proposal_revision)
+);
+ALTER TABLE identity_approval_proposal ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE identity_approval (
+    organization_id UUID NOT NULL REFERENCES identity_organization(organization_id) ON DELETE RESTRICT,
+    approval_id UUID PRIMARY KEY,
+    proposal_id UUID NOT NULL,
+    proposal_revision NUMERIC(20,0) NOT NULL,
+    approver_actor_id TEXT NOT NULL,
+    decision TEXT NOT NULL CHECK (decision IN ('approve', 'reject', 'request_changes')),
+    approval_receipt_signature TEXT,
+    decided_at TIMESTAMPTZ NOT NULL,
+    not_after TIMESTAMPTZ NOT NULL,
+    consumed_at TIMESTAMPTZ
+);
+ALTER TABLE identity_approval ENABLE ROW LEVEL SECURITY;
+
+-- Authorizations and consumptions
+CREATE TABLE identity_action_authorization (
+    organization_id UUID NOT NULL REFERENCES identity_organization(organization_id) ON DELETE RESTRICT,
+    authorization_id UUID PRIMARY KEY,
+    action_id TEXT NOT NULL,
+    action_sha256 TEXT NOT NULL,
+    approval_id UUID,
+    nonce TEXT NOT NULL,
+    issued_at TIMESTAMPTZ NOT NULL,
+    not_after TIMESTAMPTZ NOT NULL,
+    state TEXT NOT NULL CHECK (state IN ('issued', 'consumed', 'expired', 'revoked'))
+);
+ALTER TABLE identity_action_authorization ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE identity_action_consumption (
+    organization_id UUID NOT NULL REFERENCES identity_organization(organization_id) ON DELETE RESTRICT,
+    authorization_id UUID NOT NULL REFERENCES identity_action_authorization(authorization_id) ON DELETE RESTRICT,
+    attempt_id UUID NOT NULL,
+    consumed_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    PRIMARY KEY (organization_id, authorization_id),
+    UNIQUE (organization_id, attempt_id)
+);
+ALTER TABLE identity_action_consumption ENABLE ROW LEVEL SECURITY;
+```
+
+### Transactional Linearization & Authority Guards
+To guarantee zero race conditions between permission revocation and action dispatch:
+1. **Sorted Guard Acquisition:** Transactions acquire locks in deterministic sorted order: `(organization_id, guard_kind, guard_id)`.
+2. **Lock Strength:** Authorization and consumption take `SELECT ... FOR SHARE`; role/policy updates and revocations take `SELECT ... FOR UPDATE`.
+3. **The Linearization Point:** The commit of the `POST /v1/identity/actions/consume` transaction is the irreversible authorization linearization point. Once committed, logical fence state advances to `admitted`. Subsequent revocations request best-effort execution abort, but cannot retroactively cancel dispatched mutations.
+
+### Authority Recovery Journal
+PostgreSQL backups are susceptible to snapshot restore rollbacks that could resurrect revoked credentials or unconsume action fences. Oryn mitigates this through an independent durable Authority Recovery Journal:
+- **Append on Commit:** Every state transition, governance consumption, and action admission writes an `AuthorityJournalEntryV1` to the database outbox and appends to an external immutable audit journal before final response release.
+- **Durability Gate:** Transitions commit with `durability_pending = true`. The operation is acknowledged to the client only after receiving a cryptographically signed `SignedAuthorityCheckpointV1` from the journal receipt signer.
+- **Restore Protocol:** Following a database restore from backup, privileged traffic remains completely disabled. The recovery coordinator queries the external journal for the latest signed checkpoint, replays all missing entries into PostgreSQL, and reconstructs action fences and high-water mark revision counters. Any detected gap or unreachable journal returns `IDENTITY_RECOVERY_INCOMPLETE`, keeping the organization restricted.
+
+---
 
 ## State and lifecycle
 
-### State and Persistence
-- **Persisted State:** Tenant accounts, user roles, permission policies, approval audit trails, and signing keys in the central transactional database.
-- **Lifecycle Transitions:** Approvals transition through `Requested → Pending Review → Approved / Rejected / Expired → Committed`.
-- **Policy Immutability:** Policies are versioned immutably; historical executions link to the exact policy version under which they were authorized.
+### Organization Lifecycle
+```
++-------------+      +----------+      +-------------+      +---------------+
+|  restricted | ---> |  active  | <--> |  suspended  | ---> |  deactivated  |
++-------------+      +----------+      +-------------+      +-------+-------+
+                                                                    |
+                                                                    v
++-------------+                                             +---------------+
+|   deleted   | <------------------------------------------ | delet_pending |
++-------------+                                             +---------------+
+```
+- `restricted`: Created by initial workspace administrator; capture, writes, and inference budgets disabled pending policy activation.
+- `active`: Fully operational.
+- `suspended`: Temporarily halted by admin or billing; active tokens and leases immediately revoked; historical audit preserved.
+- `deactivated`: Terminal shutdown; capture terminated, future jobs rejected, retained data preserved under statutory hold periods.
+- `deletion_pending` -> `deleted`: Controlled purge after retention obligations expire; clears sync ledger and tenant keysets.
+
+### Formal Approval Lifecycle
+```
++-----------+       +-------------------+       +----------+
+|  pending  | ----> | changes_requested |       | rejected |
++-----+-----+       +-------------------+       +----+-----+
+      |                                              ^
+      +----------------------------------------------+
+      |
+      +-------------> +----------+ -------------> +----------+
+      |               | approved |                | consumed |
+      v               +----+-----+                +----------+
++-----------+              |
+|  expired  | <------------+ (15-min unconsumed)
++-----------+
+      ^
+      |
++-----+-------+
+| invalidated | (Target generation drift / revocation)
++-------------+
+```
+- `pending`: Awaiting human decision (max 24 hours).
+- `approved`: Validated human sign-off; grants a 15-minute validity window for execution consumption.
+- `changes_requested`: Closes proposal; revised proposal requires a new revision and fresh digest.
+- `invalidated`: Target record revision changes or document generation drifts; approval cannot be recycled.
+- `consumed`: Proposal, approval, and authorization atomically consumed and logical action fence locked in PostgreSQL commit; terminal state. (Not defined at token issuance; dispatch occurs only after verified admission).
+
+---
 
 ## Error and edge-case behavior
 
-### Failure Handling
-- **Policy Engine Unreachable:** Fails closed. If a runner cannot obtain authorization, the action is blocked and held for operator review.
-- **Stale Context:** If the target entity's state changes between approval request and commit, the approval is invalidated and must be re-requested.
-- **Ambiguous Authorization:** Any evaluation resulting in an indeterminate verdict is treated as `Deny`.
+### Reason Code Catalog
+Oryn Identity defines twenty-two exhaustive, standardized reason codes:
+
+| Reason Code | HTTP Status | Description & Remediation |
+|---|---|---|
+| `IDENTITY_OK` | 200 OK | Operation or authorization check succeeded. |
+| `IDENTITY_AUTH_REQUIRED` | 401 Unauthorized | Missing, malformed, or unauthenticated session credentials. |
+| `IDENTITY_SESSION_EXPIRED` | 401 Unauthorized | Session exceeded absolute or idle expiration bounds; re-login required. |
+| `IDENTITY_STEP_UP_REQUIRED` | 403 Forbidden | Consequential action requires fresh MFA completed within past 5 minutes. |
+| `IDENTITY_ACCESS_DENIED` | 403 Forbidden | Calling actor lacks required role, capability, or audience scope. |
+| `IDENTITY_ORGANIZATION_INACTIVE`| 403 Forbidden | Organization is suspended or deactivated; operations paused. |
+| `IDENTITY_DEVICE_REVOKED` | 403 Forbidden | Device enrollment suspended or revoked; new enrollment required. |
+| `IDENTITY_POLICY_STALE` | 409 Conflict | Policy lease expired or local high-water mark behind server; refresh needed. |
+| `IDENTITY_CONTEXT_STALE` | 409 Conflict | Target document generation or record revision drifted; proposal invalidated. |
+| `IDENTITY_TIER4_PROHIBITED` | 403 Forbidden | Operation is classified as Tier 4; automated agent execution unconditionally blocked. |
+| `IDENTITY_APPROVAL_REQUIRED` | 200 OK | Action requires human approval; proposal returned in response. |
+| `IDENTITY_APPROVAL_EXPIRED` | 410 Gone | Approval token expired (exceeded 15-minute consume window). |
+| `IDENTITY_DELEGATION_INVALID` | 403 Forbidden | Approver delegation expired, exceeded amount ceiling, or currency mismatch. |
+| `IDENTITY_SEPARATION_REQUIRED` | 403 Forbidden | Distinct human required; initiator self-approval prohibited. |
+| `IDENTITY_ACTION_CONSUMED` | 409 Conflict | Action fence already consumed for this logical action intent. |
+| `IDENTITY_SIGNER_UNAVAILABLE` | 503 Service Unavail | HashiCorp Vault Transit signer timeout (>500 ms); fail closed. |
+| `IDENTITY_STORE_UNAVAILABLE` | 503 Service Unavail | PostgreSQL database or authority guard timeout (>1s); fail closed. |
+| `IDENTITY_IDEMPOTENCY_CONFLICT`| 409 Conflict | Command ID replayed with conflicting payload or replayed nonce. |
+| `IDENTITY_LAST_ADMIN_REQUIRED` | 409 Conflict | Voluntary removal of last Organization Admin blocked; emergency recovery needed. |
+| `IDENTITY_TRUST_ROLLBACK` | 409 Conflict | Presented keyset generation or clock lower than high-water mark; fail closed. |
+| `IDENTITY_SCHEMA_INVALID` | 400 Bad Request | Payload failed Draft 2020-12 schema validation; extra fields or bad types. |
+| `IDENTITY_RECOVERY_INCOMPLETE` | 503 Service Unavail | Database restored with unverified journal gap; tenant operations held restricted. |
+
+---
 
 ## Observability and audit
 
-### Telemetry and Diagnostics
-- Generates tamper-evident audit records for every authorization check, approval decision, role grant, and policy change (ORY-070).
-- Telemetry logs capture authorization latency, rejection frequencies, and approval turnaround times.
+### Consequential Audit Logging (ORY-070)
+Identity emits structured, immutable audit log events for every privileged decision:
+- **Logged Events:** Role grants/revocations, policy replacements, legal hold activations/releases, action authorizations, formal approval decisions, fence consumptions, emergency account recoveries.
+- **Standard Audit Schema:**
+  - `event_id`: Unique UUIDv4.
+  - `organization_id`: Tenant UUID.
+  - `actor_id` / `worker_id`: Calling principal identifier.
+  - `operation`: Exact operation name (e.g., `identity.action.consume`).
+  - `object_ref`: Pinned target URI or record identifier.
+  - `policy_revision` / `access_revision`: High-water marks.
+  - `proposal_id` / `authorization_id` / `attempt_id`: Correlation lineage.
+  - `outcome`: `Allow`, `Deny`, `RequireHumanApproval`, `Consumed`.
+  - `reason_code`: Standard `IdentityReason`.
+  - `timestamp_utc`: RFC 3339 UTC timestamp.
+- **Privacy Exclusions:** Audit records strictly prohibit raw screen media, audio transcripts, DOM trees, prompts, passwords, bearer tokens, or employee productivity tracking metrics.
+- **Retention Schedule:** Consequential audit events default to 24 months in tamper-evident WORM archive storage. Unapproved candidate proposals are retained for 365 days.
+
+---
 
 ## Security and threat model
 
-### Security and Safety Considerations
-- **Privilege Escalation via Prompt Injection:** Untrusted task data (e.g., invoice text) attempting to command the agent to bypass approvals is thwarted because policy checks occur in the separate deterministic policy engine.
-- **Approval Repurposing:** Approvals are cryptographically bound to payload hashes; an approved token cannot be applied to a modified transaction.
-- **Cross-Tenant Contamination:** Multi-tenant database queries enforce strict tenant ID partitioning on every lookup.
+### Threat Mitigations
+1. **Prompt Injection Escalation:** Malicious untrusted input (e.g., adversarial prompt injections in vendor invoices) attempting to command an agent to execute unauthorized wire transfers or bypass approvals is neutralized because execution authorization is evaluated outside the LLM in the deterministic Rust PDP.
+2. **Approval Repurposing & Parameter Tampering:** Approvals are cryptographically bound to `action_sha256` and `proposal_digest`. An attacker cannot alter target account numbers, payment amounts, or document generations without invalidating the digest and failing preflight verification.
+3. **Replay & Double-Dispatch:** Logical action fences keyed by `(organization_id, execution_context_sha256, action_id)` combined with single-use cryptographic nonces ensure an authorized token can be consumed exactly once.
+4. **Credential Hijacking & Scope Creep:** Short-lived child access tokens (max 5 minutes) bind audience, organization, and narrow scope subsets. Stolen sync tokens cannot be used against guidance or execution endpoints.
+5. **Cross-Tenant Contamination:** Mandatory PostgreSQL RLS on every tenant table combined with transaction-local context configuration prevents multi-tenant data leaks.
+6. **Compromised Administrative Account:** Enforces two registered customer-controlled emergency accounts with independent MFA before allowing enterprise SSO enforcement. Emergency accounts hold narrow `identity.recover` grants without ambient business execution privileges.
+
+---
 
 ## Test strategy
 
-### Acceptance and Verification Scenarios
-- **Acceptance Criteria References:** [PRODUCT.md §31.1: ORY-001; §31.3: ORY-026–030; §31.5: ORY-048; §31.7: ORY-068–069](../../PRODUCT.md).
-- **Concrete Verification Scenario:**
-  - *Input/Condition:* An agent running a PO reconciliation job attempts to submit a Tier 3 payment release without a valid human approval token.
-  - *Expected Observable Result:* The policy engine intercepts the request, returns `Deny (Approval Required)`, transitions the case to `Awaiting Approval`, and emits an approval request notification to the authorized manager.
+### Synthetic Conformance Suite
+Conformance verification references [`identity-policy-v1.fixtures.json`](../architecture/contracts/identity-policy-v1.fixtures.json), containing 34 comprehensive test cases covering unit evaluations, dual-digest invariants, cryptographic signature verification, race condition fencing, and disaster recovery:
+
+```
++---------------------------------------------------------------------------------------------------+
+|                                SYNTHETIC CONFORMANCE TEST SUITE                                   |
+|                                                                                                   |
+|  [Unit Evaluation Matrix]  [Cryptographic Invariants]  [Concurrency & Races]  [Disaster Recovery] |
+|   - Out-of-tenant lookup    - Action digest stability   - 2 tokens race fence  - Journal restore  |
+|   - Union-minus-deny        - Proposal digest tamper    - Revoke vs consume    - Gap detection    |
+|   - Tier 4 unconditional    - Signature byte corruption - Lost consume ack     - Clock rollback   |
+|   - Distinct human rule     - Key purpose mismatch      - Nonce single use     - Keyset rotation  |
++---------------------------------------------------------------------------------------------------+
+```
+
+### Concrete Verification Scenarios
+1. **Scenario 1: Tier 4 Automated Funds Transfer Rejection (ORY-027)**
+   - *Input:* Agent submits authorization request for wire funds transfer (`risk_tier: 4`), presenting a forged human approval receipt.
+   - *Observable Result:* Policy engine evaluates mandatory prohibition guard, returns `Deny` with `IDENTITY_TIER4_PROHIBITED`, transitions action fence to `reconciled` (blocked), and emits security alert.
+2. **Scenario 2: Tier 3 Consequential Action Approval Sequence (ORY-026)**
+   - *Input:* Agent submits invoice payment approval request (`risk_tier: 3`) without approval ID.
+   - *Observable Result:* Engine returns `RequireHumanApproval` with `IDENTITY_APPROVAL_REQUIRED` and signed `SignedApprovalProposalV1`. Human reviewer approves; subsequent authorize call with `approval_id` returns signed `SignedActionAuthorizationV1` (30s TTL). Consume call locks fence, returns `SignedActionAdmissionV1`, and admits single dispatch.
+3. **Scenario 3: Target Generation Drift Invalidation (ORY-041)**
+   - *Input:* Human approves action based on live DOM document generation 2. Prior to dispatch, page navigates to document generation 3.
+   - *Observable Result:* Browser bridge preflight recalculates `action_sha256`, detects digest mismatch against authorization token, returns `Deny` with `IDENTITY_CONTEXT_STALE`, and requires a revised approval proposal.
+
+---
 
 ## Performance and operations
 
-### Operational Characteristics ([TECHNICAL.md §12](../../TECHNICAL.md))
-- High availability for synchronous authorization checks.
-- Low-latency evaluation of cached role and policy rules.
-- Horizontally scalable stateless evaluation engines backed by distributed caches.
+### Operational Targets
+- **Availability Target:** 99.9% control-plane availability.
+- **Evaluation Latency:** Pure typed evaluator p95 <= 1 ms for evaluation against 100 role grants and restrictions.
+- **End-to-End Authorization:** Synchronous `authorize` and `consume` p95 <= 100 ms (excluding external third-party network calls).
+- **Timeouts:** Vault Transit signer timeout is 500 ms (fails closed); PostgreSQL authority guard transaction timeout is 1,000 ms (fails closed).
+- **Barrier Latency:** Connected endpoint restriction propagation <= 2 seconds via 25-second long-poll notifications; disconnected endpoint offline ceiling is 24 hours.
+- **Zero Authoritative Permission Caching:** Every privileged authorization decision checks live, transactionally locked PostgreSQL authority guards.
+
+---
 
 ## Architecture decisions and open questions
 
-### Specific Preserved Implementation Questions
-- What policy specification format (e.g., Cedar, OPA/Rego, or embedded DSL) offers the best balance of expressiveness and formal verifiability?
-- How should approval tokens be cryptographically structured and signed to guarantee tamper-proof binding to action arguments?
-- What revocation distribution protocol ensures minimal latency when revoking permissions across distributed worker nodes?
-- How should fine-grained separation of duties be modeled between workflow builders, domain owners, and job operators?
+### Resolved Architecture Decisions (ADR-0011)
+- **Policy Engine Format:** Implemented as an embedded pure Rust evaluator with typed, schema-validated configuration records. External policy engines (OPA/Rego, Cedar) were rejected to avoid runtime latency overhead, complex dynamic language parsers, and external network failure domains.
+- **Approval Token Structure:** Structured around dual cryptographic digests (`action_sha256` underscore prefix and `proposal_digest` hyphen prefix) signed via Ed25519 over RFC 8785 canonical JSON bytes.
+- **Revocation Propagation:** Transactional authority guard updates emit domain outbox events that immediately wake 25-second long-poll connections, coupled with 500 ms local endpoint acknowledgment barriers.
+- **Review Key Custody:** Stored as software Ed25519 keys within OS-protected credential storage (`com.oryn.device.identity`), rejecting false hardware/Secure Enclave claims (as Apple Secure Enclave does not support Ed25519).
+- **Durable Authority Recovery:** Independent durable authority recovery journal protocol preventing backup restoration from resurrecting revoked permissions or consumed fences.
+- **Authentication Reference Architecture:** Auth0 Universal Login with PKCE `S256` on loopback port range 49152–49183, with Oryn-owned opaque session secrets.
 
 ### Handoff Questions ([TECHNICAL.md §14.2](../../TECHNICAL.md))
-1. *Owns exclusively:* Authoritative user roles, tenant policies, approval records, and action risk classification.
-2. *Data ingress/egress:* Ingests identity assertions and authorization requests; outputs signed authorization decisions and policy events.
-3. *Versions/identities:* Organization ID, actor user ID, policy version hash, and target resource ARN/URI.
-4. *Upstream failure:* If identity provider fails, existing active sessions rely on valid cached tokens until expiration.
-5. *Authority:* The identity-policy component is the sole authority for action permissions and approval validity.
-6. *Testing without private details:* Tested via comprehensive policy test matrices with synthetic roles and scopes.
-7. *Audit and duplicate prevention:* Approval tokens include cryptographic nonces to prevent replay attacks.
-8. *Failure blast radius:* Policy engine failure causes all privileged executions to fail safe and pause.
-9. *v1.0 criteria:* Enables ORY-001, ORY-026, ORY-027, ORY-028, ORY-029, ORY-030, ORY-048, ORY-068, and ORY-069.
+1. *Owns exclusively:* Authoritative user and agent identities, organization memberships, role assignments, action risk tiers, approval delegations, authorization decisions, formal approval clearinghouse, and policy leases.
+2. *Data ingress/egress:* Ingests authentication assertions and action authorization requests; outputs cryptographic authorization tokens, approval proposals, admission receipts, and policy leases.
+3. *Versions/identities:* Organization ID (UUID), actor ID, device ID, profile ID, policy revision (U64), access revision (U64), action digest (`action_sha256`), and proposal digest (`proposal_digest`).
+4. *Upstream failure:* If Auth0 fails, existing valid Oryn sessions continue until expiration; operations requiring fresh MFA are blocked; zero new sessions admitted.
+5. *Authority:* Identity Policy is the sole authority for action permissions, risk autonomy, and approval validity.
+6. *Testing without private details:* Validated via comprehensive synthetic conformance fixtures ([`identity-policy-v1.fixtures.json`](../architecture/contracts/identity-policy-v1.fixtures.json)) without real customer data or private keys.
+7. *Audit and duplicate prevention:* Enforced via durable `identity_action_fence` primary keys, single-use cryptographic nonces, and append-only audit journals.
+8. *Failure blast radius:* Policy engine or signer failure causes all privileged executions to fail safe, blocking external mutations and pausing jobs.
+9. *v1.0 criteria:* Fully satisfies and enables ORY-001, ORY-002–010, ORY-026–030, ORY-041, ORY-045–048, ORY-067–070, and ORY-071–076.

@@ -49,9 +49,10 @@ Observe, Guide, Assist, Run Supervised, and Run Autonomously are distinct advert
 
 ### Cross-Component Contracts
 - **Contract Reference #6 in [Contracts Catalog](../architecture/contracts/README.md):** Advertises supported actions, limitations, and verification capabilities to [agent-factory-ir](agent-factory-ir.md), [job-orchestration](job-orchestration.md), and [agent-runtime](agent-runtime.md).
-- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes authorized external operation requests from [agent-runtime](agent-runtime.md) (for batch jobs) and [local-context-hud](local-context-hud.md) (for HUD assist sessions); binds `ExecutionContextV1` (`job` or `assist`); delegates local browser actions to [browser-extension](browser-extension.md) via `ExecuteBrowserAction` over `browser-bridge.v1` (major 1, minor 2).
+- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes authorized external operation requests from [agent-runtime](agent-runtime.md) (for batch jobs) and [local-context-hud](local-context-hud.md) (for HUD assist sessions); binds `ExecutionContextV1` (`job` or `assist`) and the verified authority bundle `{authorization: ActionAuthorizationV1, approval: SignedApprovalProposalV1|null, admission: SignedActionAdmissionV1}`; delegates local browser actions to [browser-extension](browser-extension.md) via `ExecuteBrowserAction` over `browser-bridge.v1` (major 1, minor 3).
 - **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Emits action submission receipts (`BrowserActionResult` with `submission_state` and `ExecutionContextV1`) and independent readback evidence to [outcome-verification](outcome-verification.md).
 - **Contract Reference #22 Reference:** Adapters remain strictly deterministic; remote model inference under [cloud-inference](../architecture/cloud-inference.md) cannot bypass declared adapter action constraints or invent unsupported capabilities.
+- **Action Preflight & Staging:** When staging actions requiring review, the adapter owns `AdapterStagedActionV1` (canonical argument bytes ≤16 KiB validated against declared operation schema). Supplies `ActionPolicyFactsV1` to [identity-policy](identity-policy.md) (valid ≤30 seconds) and re-verifies live preflight immediately prior to admission consumption.
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries
@@ -77,7 +78,7 @@ Observe, Guide, Assist, Run Supervised, and Run Autonomously are distinct advert
 ## Error and edge-case behavior
 
 ### Failure Handling
-- **Network Timeout / Ambiguous HTTP 504:** The adapter flags the submission as `Submitted (Uncertain)` and prohibits immediate retry.
+- **Network Timeout / Ambiguous HTTP 504:** The adapter flags the submission as `Outcome Unknown` (or `Submitted (Uncertain)`) and prohibits immediate retry. Because the logical action fence in [identity-policy](identity-policy.md) was consumed at admission, duplicate dispatch under the same action ID is blocked.
 - **Authentication Expiration (401/403):** Flags the connection as degraded and alerts administrators to re-authorize credentials.
 - **Schema Drift:** If the external API returns an unexpected payload structure, the adapter aborts and records a compatibility error.
 

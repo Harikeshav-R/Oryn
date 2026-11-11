@@ -5,7 +5,7 @@
 **Deciders:** User-Approved Architecture Session  
 **Authority:** Technical Architecture & Security Engineering  
 **Amends:** [ADR-0001](0001-desktop-runtime-and-presentation.md), [ADR-0002](0002-desktop-capture-lifecycle.md), [ADR-0005](0005-cloud-inference-and-private-evidence.md), [ADR-0007](0007-private-evidence-storage-and-retention.md)  
-**Amended by:** [ADR-0010](0010-contribution-delivery-and-guidance-sync.md)  
+**Amended by:** [ADR-0010](0010-contribution-delivery-and-guidance-sync.md), [ADR-0011](0011-identity-authority-and-approval-fencing.md)  
 **Normative Specification:** [docs/components/local-privacy-storage.md](../components/local-privacy-storage.md)
 
 ---
@@ -35,7 +35,7 @@ However, sharing visual artifacts introduces serious privacy and governance risk
    - If an artifact policy is missing or expired, text-only contribution review remains available, but image attachments are rejected with `PRIVACY_ARTIFACT_POLICY_REQUIRED`.
    - Shared artifact lifetime is independent of the private raw capture retention deadline: when underlying raw private evidence expires or is selectively purged, previously delivered organizational playbooks and their reviewed image derivatives remain governed by the organizational knowledge lifecycle.
 3. **Helper Review Attestation vs. Contribution Sync Gateway Ownership:**
-   - The privacy helper (`oryn-privacy-helper`) exclusively owns the review approval boundary, constructs the `ReviewedContributionV1` payload, signs the Ed25519 review attestation (`rcpt_review_<id>`), and establishes an authoritative local `ReleaseFence`.
+   - The privacy helper (`oryn-privacy-helper`) exclusively owns the review approval boundary, constructs the `ReviewedContributionV1` payload, signs the Ed25519 review attestation (`rcpt_review_<id>`) using its software Ed25519 review key stored in OS-protected credential storage (`com.oryn.device.identity` without central escrow; see [ADR-0011](0011-identity-authority-and-approval-fencing.md)), and establishes an authoritative local `ReleaseFence`.
    - The contribution gateway (`contribution-sync`) verifies the review attestation, manages the encrypted offline queue, handles TLS 1.3 network transport, and emits network delivery receipts (`delivery_receipt_id`). It cannot manufacture employee approval.
 4. **Truthful Deletion and Upload Race Semantics:**
    - **Queued Deletion Race:** If an employee deletes private evidence while a contribution referencing that evidence is queued offline in `contribution-sync`, the privacy helper's local `ReleaseFence` transitions immediately to `cancelled`. The sync gateway drops the queued upload idempotently upon checking the fence; zero bytes leave the endpoint.

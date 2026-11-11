@@ -1,0 +1,1136 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Oryn Control Plane, Synchronization, and Transient Inference API",
+    "version": "1.0.0",
+    "description": "Normative OpenAPI 3.1.0 specification for Oryn Control Plane HTTP/WebSocket transport, BFF session lifecycle, durable operation tracking, management change polling, contribution synchronization, and transient inference admission."
+  },
+  "servers": [
+    {
+      "url": "https://api.oryn.internal",
+      "description": "Internal cluster Ingress gateway"
+    }
+  ],
+  "paths": {
+    "/v1/session/login": {
+      "post": {
+        "operationId": "startWebLogin",
+        "summary": "Initiate confidential BFF Web login or step-up",
+        "description": "Initiates Auth0 OIDC PKCE flow, sets __Host-oryn_login transaction cookie, returns Auth0 authorization URL.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./control-plane-v1.schema.json#/$defs/WebLoginStartV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login transaction created; redirect to Auth0",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "redirect_url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "redirect_url"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid login request or return path",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/identity/auth0/callback": {
+      "get": {
+        "operationId": "handleAuth0Callback",
+        "summary": "Confidential OIDC callback redemption",
+        "description": "Redeems authorization code against Auth0, establishes session, sets __Host-oryn_session cookie.",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects to validated return_path on public origin with session cookie set."
+          },
+          "400": {
+            "description": "Invalid state, nonce, or code redemption failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/session": {
+      "get": {
+        "operationId": "getCurrentWebSession",
+        "summary": "Retrieve active web BFF session presentation",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current web session presentation and active CSRF token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/WebSessionPresentationV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated or session locked",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/session/activity": {
+      "post": {
+        "operationId": "recordWebActivity",
+        "summary": "Record human interaction heartbeat",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./control-plane-v1.schema.json#/$defs/WebSessionActivityRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Inactivity timer updated"
+          },
+          "401": {
+            "description": "Session expired or locked",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/identity/sessions/select-organization": {
+      "post": {
+        "operationId": "selectSessionOrganization",
+        "summary": "Switch active organization scope",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./identity-policy-v1.schema.json#/$defs/OrganizationSelectionV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Organization scope updated with refreshed session credentials or web presentation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./identity-policy-v1.schema.json#/$defs/SessionCredentialsV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Membership inactive or organization access denied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./identity-policy-v1.schema.json#/$defs/IdentityProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/identity/sessions/logout": {
+      "post": {
+        "operationId": "logoutSession",
+        "summary": "Terminate current session and revoke credential family",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./identity-policy-v1.schema.json#/$defs/LogoutV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session revoked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./identity-policy-v1.schema.json#/$defs/LogoutResultV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/operations/{operation_id}": {
+      "get": {
+        "operationId": "getOperation",
+        "summary": "Fetch asynchronous operation status",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./control-plane-v1.schema.json#/$defs/UUIDv4"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation progress and state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Operation not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/operations/{operation_id}/cancellation": {
+      "post": {
+        "operationId": "cancelOperation",
+        "summary": "Request operation cancellation",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./control-plane-v1.schema.json#/$defs/UUIDv4"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./control-plane-v1.schema.json#/$defs/OperationCancellationV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Cancellation requested",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/changes": {
+      "get": {
+        "operationId": "getManagementChanges",
+        "summary": "Long-poll management metadata changes feed",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "wait_seconds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "maximum": 25
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of changed resource references",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ChangePageV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or tampered cursor",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Cursor expired or resync required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/bootstrap": {
+      "post": {
+        "operationId": "syncBootstrap",
+        "summary": "Obtain initial sync control epoch and guidance cursor",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./contribution-sync-v1.schema.json#/$defs/SyncBootstrapRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sync bootstrap parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./contribution-sync-v1.schema.json#/$defs/SyncBootstrapResponseV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/changes": {
+      "get": {
+        "operationId": "syncGetChanges",
+        "summary": "Long-poll sync control changes feed",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "wait_seconds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "maximum": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sync change page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./contribution-sync-v1.schema.json#/$defs/SyncChangePageV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/submissions": {
+      "post": {
+        "operationId": "syncCreateSubmission",
+        "summary": "Ingest employee-reviewed contribution package (Contract 2)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "envelope": {
+                    "type": "string",
+                    "description": "JSON sync.reviewed-contribution.v1 string"
+                  },
+                  "artifacts": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                },
+                "required": [
+                  "envelope"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Contribution accepted into domain intake",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./contribution-sync-v1.schema.json#/$defs/DeliveryReceiptV1"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Identical replay of existing contribution or pruned status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "./contribution-sync-v1.schema.json#/$defs/DeliveryReceiptV1"
+                    },
+                    {
+                      "$ref": "./contribution-sync-v1.schema.json#/$defs/SubmissionStatusV1"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Digest conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./contribution-sync-v1.schema.json#/$defs/SyncProblemV1"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Contribution previously withdrawn",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./contribution-sync-v1.schema.json#/$defs/SyncProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/submissions/{id}/revisions/{rev}": {
+      "get": {
+        "operationId": "syncGetSubmissionStatus",
+        "summary": "Query submission custody status and delivery receipt",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./control-plane-v1.schema.json#/$defs/UUIDv4"
+            }
+          },
+          {
+            "name": "rev",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Custody status presentation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./contribution-sync-v1.schema.json#/$defs/SubmissionStatusV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/submissions/{id}/revisions/{rev}/withdrawals": {
+      "post": {
+        "operationId": "syncWithdrawSubmission",
+        "summary": "Record voluntary withdrawal of contribution custody",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./control-plane-v1.schema.json#/$defs/UUIDv4"
+            }
+          },
+          {
+            "name": "rev",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./contribution-sync-v1.schema.json#/$defs/SubmissionClosureRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Submission withdrawn terminal status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./contribution-sync-v1.schema.json#/$defs/SubmissionStatusV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/guidance/manifest": {
+      "get": {
+        "operationId": "syncGetGuidanceManifest",
+        "summary": "Query active guidance bundle manifest (Contract 3)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Guidance manifest page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./guidance-sync-v1.schema.json#/$defs/GuidanceManifestPageV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/guidance/bundles/{sha256}": {
+      "get": {
+        "operationId": "syncGetGuidanceBundle",
+        "summary": "Download immutable signed guidance bundle",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sha256",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed guidance bundle payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./guidance-sync-v1.schema.json#/$defs/SignedGuidanceBundleV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/guidance/lease": {
+      "post": {
+        "operationId": "syncRequestGuidanceLease",
+        "summary": "Obtain offline guidance access lease",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./guidance-sync-v1.schema.json#/$defs/GuidanceLeaseRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed access lease",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./guidance-sync-v1.schema.json#/$defs/SignedGuidanceAccessLeaseV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/review-keys/challenge": {
+      "post": {
+        "operationId": "syncCreateReviewKeyChallenge",
+        "summary": "Request cryptographic challenge for review key enrollment",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./contribution-sync-v1.schema.json#/$defs/ReviewKeyChallengeRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed review key challenge",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./contribution-sync-v1.schema.json#/$defs/SignedReviewKeyChallengeV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/review-keys/registrations": {
+      "post": {
+        "operationId": "syncRegisterReviewKey",
+        "summary": "Register employee device review public key",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./contribution-sync-v1.schema.json#/$defs/ReviewKeyRegistrationRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Signed registration confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./contribution-sync-v1.schema.json#/$defs/SignedReviewKeyRegistrationV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inference/authorizations": {
+      "post": {
+        "operationId": "createInferenceAuthorization",
+        "summary": "Admit transient inference request and reserve budget (Contract 22)",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "MtlsAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./cloud-inference-v1.schema.json#/$defs/InferenceAuthorizationRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Inference authorization grant and ephemeral session handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./cloud-inference-v1.schema.json#/$defs/InferenceAdmissionResultV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy rejection, stale revision, or uncertified route"
+          },
+          "429": {
+            "description": "Budget limit or concurrency ceiling exceeded"
+          }
+        }
+      }
+    },
+    "/v1/inference/requests": {
+      "post": {
+        "operationId": "executeInferenceRequest",
+        "summary": "Synchronous single-shot inference dispatch",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "MtlsAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Inference-Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64Url JCS SignedInferenceAuthorizationV1 envelope"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./cloud-inference-v1.schema.json#/$defs/InferenceRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inference result and usage accounting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./cloud-inference-v1.schema.json#/$defs/InferenceResultV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inference/streams/{stream_id}": {
+      "get": {
+        "operationId": "upgradeInferenceStream",
+        "summary": "WebSocket upgrade for real-time audio and inference streaming",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "stream_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./control-plane-v1.schema.json#/$defs/UUIDv4"
+            }
+          },
+          {
+            "name": "X-Inference-Session",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Sec-WebSocket-Protocol",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "oryn.inference.v1"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching protocols to WebSocket"
+          }
+        }
+      }
+    },
+    "/v1/inference/streams/{stream_id}/renewals": {
+      "post": {
+        "operationId": "renewInferenceStream",
+        "summary": "Renew authorization quantum for active stream",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "stream_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./control-plane-v1.schema.json#/$defs/UUIDv4"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./cloud-inference-v1.schema.json#/$defs/InferenceAuthorizationRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Renewed grant and handle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./cloud-inference-v1.schema.json#/$defs/InferenceAdmissionResultV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inference/requests/{request_id}/cancellation": {
+      "post": {
+        "operationId": "cancelInferenceRequest",
+        "summary": "Idempotent cancellation of inference request or active stream",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./control-plane-v1.schema.json#/$defs/UUIDv4"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cancellation receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "request_id": {
+                      "$ref": "./control-plane-v1.schema.json#/$defs/UUIDv4"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "cancelled"
+                      ]
+                    },
+                    "cancelled_at": {
+                      "$ref": "./control-plane-v1.schema.json#/$defs/UtcDateTime"
+                    }
+                  },
+                  "required": [
+                    "request_id",
+                    "status",
+                    "cancelled_at"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inference/routes/{operation}": {
+      "get": {
+        "operationId": "getInferenceRouteLimits",
+        "summary": "Query certified route availability and limits",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "MtlsAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "operation",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certified pricing and limit descriptor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./cloud-inference-v1.schema.json#/$defs/InferenceRoutePricingV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BffSessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-oryn_session"
+      },
+      "CsrfHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Secret"
+      },
+      "MtlsAuth": {
+        "type": "mutualTLS"
+      }
+    }
+  }
+}

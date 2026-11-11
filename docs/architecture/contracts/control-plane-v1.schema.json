@@ -1,0 +1,776 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:control-plane:v1",
+  "title": "Oryn Control Plane API, Session, Operation, and Delivery Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for Oryn BFF web sessions, safe problem details, asynchronous operations, transactional domain events, and management change feeds.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/WebLoginStartV1"
+    },
+    {
+      "$ref": "#/$defs/WebSessionPresentationV1"
+    },
+    {
+      "$ref": "#/$defs/WebSessionActivityRequestV1"
+    },
+    {
+      "$ref": "#/$defs/ControlPlaneProblemV1"
+    },
+    {
+      "$ref": "#/$defs/OperationV1"
+    },
+    {
+      "$ref": "#/$defs/OperationCancellationV1"
+    },
+    {
+      "$ref": "#/$defs/DomainEventV1"
+    },
+    {
+      "$ref": "#/$defs/ChangePageV1"
+    },
+    {
+      "$ref": "#/$defs/ControlPlaneFixtureSetV1"
+    }
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "OrganizationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "Revision": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Secret": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 4096
+    },
+    "ResourceKeyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "resource_type": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "resource_id": {
+          "$ref": "#/$defs/Identifier"
+        }
+      },
+      "required": [
+        "organization_id",
+        "resource_type",
+        "resource_id"
+      ]
+    },
+    "InitiatorRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "actor",
+            "workload"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/Identifier"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    "WebLoginStartV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "control-plane.web-login-start.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "login",
+            "step_up",
+            "link_subject"
+          ]
+        },
+        "organization_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "return_path": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^\\/[A-Za-z0-9_.~!$&'()*+,;=:@\\/-]{0,255}$"
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "purpose",
+        "organization_id",
+        "return_path"
+      ]
+    },
+    "WebSessionPresentationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "control-plane.web-session.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "session_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "bootstrap",
+            "active",
+            "locked"
+          ]
+        },
+        "csrf_token": {
+          "$ref": "#/$defs/Secret"
+        },
+        "absolute_not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "mfa_completed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "session_id",
+        "organization_id",
+        "actor_id",
+        "state",
+        "csrf_token",
+        "absolute_not_after",
+        "mfa_completed_at"
+      ]
+    },
+    "WebSessionActivityRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "control-plane.web-session-activity.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id"
+      ]
+    },
+    "ControlPlaneProblemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "control-plane.problem.v1"
+        },
+        "type": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "instance": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "CP_SCHEMA_INVALID",
+            "CP_CREDENTIAL_CONFLICT",
+            "CP_CURSOR_INVALID",
+            "CP_AUTH_REQUIRED",
+            "CP_SESSION_LOCKED",
+            "CP_ACCESS_DENIED",
+            "CP_CSRF_INVALID",
+            "CP_SCOPE_CHANGED",
+            "CP_RESOURCE_NOT_FOUND",
+            "CP_REVISION_CONFLICT",
+            "CP_IDEMPOTENCY_CONFLICT",
+            "CP_RESYNC_REQUIRED",
+            "CP_IDEMPOTENCY_EXPIRED",
+            "CP_OPERATION_EXPIRED",
+            "CP_PAYLOAD_TOO_LARGE",
+            "CP_PRECONDITION_REQUIRED",
+            "CP_RATE_LIMITED",
+            "CP_DEPENDENCY_UNAVAILABLE",
+            "CP_DELIVERY_UNKNOWN",
+            "CP_RECOVERY_REQUIRED"
+          ]
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "retry_safety": {
+          "type": "string",
+          "enum": [
+            "never",
+            "status_only",
+            "idempotent_replay"
+          ]
+        },
+        "retry_after_seconds": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operation_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUIDv4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "invalid_params": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "reason"
+            ]
+          }
+        }
+      },
+      "required": [
+        "schema_id",
+        "type",
+        "title",
+        "status",
+        "detail",
+        "code",
+        "request_id",
+        "retry_safety"
+      ]
+    },
+    "OperationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "control-plane.operation.v1"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "owning_module": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "initiator": {
+          "$ref": "#/$defs/InitiatorRefV1"
+        },
+        "resource_ref": {
+          "$ref": "#/$defs/ResourceKeyV1"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "running",
+            "waiting_for_review",
+            "succeeded",
+            "failed",
+            "cancelled",
+            "outcome_unknown"
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "progress": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "completed": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "total": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "completed",
+                "total"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "problem": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ControlPlaneProblemV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_ref": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "resource_type": {
+                  "$ref": "#/$defs/Identifier"
+                },
+                "resource_id": {
+                  "$ref": "#/$defs/Identifier"
+                },
+                "version": {
+                  "$ref": "#/$defs/Revision"
+                }
+              },
+              "required": [
+                "resource_type",
+                "resource_id",
+                "version"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cancel_requested": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_id",
+        "operation_id",
+        "organization_id",
+        "owning_module",
+        "initiator",
+        "resource_ref",
+        "state",
+        "created_at",
+        "updated_at",
+        "revision",
+        "progress",
+        "problem",
+        "result_ref",
+        "cancel_requested"
+      ]
+    },
+    "OperationCancellationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "control-plane.operation-cancellation.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 1024
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "reason"
+      ]
+    },
+    "DomainEventPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "resource_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "resource_version": {
+          "$ref": "#/$defs/Revision"
+        },
+        "safe_state_label": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "resource_id",
+        "resource_version",
+        "safe_state_label"
+      ]
+    },
+    "DomainEventV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "control-plane.domain-event.v1"
+        },
+        "event_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "contribution.accepted",
+            "workflow.published",
+            "job.requested",
+            "job.case_state_changed",
+            "job.completed",
+            "incident.created",
+            "policy.changed",
+            "access.revoked",
+            "operation.changed"
+          ]
+        },
+        "aggregate_type": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "aggregate_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "aggregate_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "occurred_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "causation_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "correlation_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "schema_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "sensitivity": {
+          "type": "string",
+          "enum": [
+            "shared_procedural",
+            "operational_audit"
+          ]
+        },
+        "payload": {
+          "$ref": "#/$defs/DomainEventPayloadV1"
+        }
+      },
+      "required": [
+        "schema_id",
+        "event_id",
+        "organization_id",
+        "event_type",
+        "aggregate_type",
+        "aggregate_id",
+        "aggregate_revision",
+        "occurred_at",
+        "causation_id",
+        "correlation_id",
+        "schema_revision",
+        "sensitivity",
+        "payload"
+      ]
+    },
+    "ChangeEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "resource_key": {
+          "$ref": "#/$defs/ResourceKeyV1"
+        },
+        "change_kind": {
+          "type": "string",
+          "enum": [
+            "created",
+            "updated",
+            "deleted"
+          ]
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "occurred_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "sequence",
+        "resource_key",
+        "change_kind",
+        "revision",
+        "occurred_at"
+      ]
+    },
+    "ChangePageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "control-plane.change-page.v1"
+        },
+        "epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChangeEntryV1"
+          }
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "high_water_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "has_more": {
+          "type": "boolean"
+        },
+        "server_time": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "schema_id",
+        "epoch",
+        "entries",
+        "next_cursor",
+        "high_water_sequence",
+        "has_more",
+        "server_time"
+      ]
+    },
+    "ControlPlaneFixtureSetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "control-plane.fixture-set.v1"
+        },
+        "public_keys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "purpose": {
+                "type": "string"
+              },
+              "public_key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "key_id",
+              "purpose",
+              "public_key"
+            ]
+          }
+        },
+        "signed_envelope_examples": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "digest_vectors": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "validation_cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "case_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "schema_ref": {
+                "type": "string"
+              },
+              "instance": {
+                "type": [
+                  "object",
+                  "array",
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              },
+              "expected_valid": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "case_id",
+              "schema_ref",
+              "instance",
+              "expected_valid"
+            ]
+          }
+        },
+        "binding_vectors": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "descriptive_cases": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "schema_id",
+        "public_keys",
+        "signed_envelope_examples",
+        "digest_vectors",
+        "validation_cases",
+        "binding_vectors",
+        "descriptive_cases"
+      ]
+    }
+  }
+}

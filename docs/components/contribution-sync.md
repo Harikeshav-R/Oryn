@@ -33,7 +33,8 @@ The Contribution and Synchronization Gateway mediates the boundary between priva
 ### Does Not Own
 - Direct upload or egress of unreviewed or raw screen, audio, video, or full-transcript capture files (strictly prohibited on the contribution path).
 - Routing transient AI inference requests (owned exclusively by [local-privacy-storage](local-privacy-storage.md) edge client and [control-plane](control-plane.md) under Contract 22 / [cloud-inference](../architecture/cloud-inference.md); inference processing is decoupled from organizational contribution).
-- Manufacturing employee approval or creating review attestations (owned exclusively by `oryn-privacy-helper`).
+- Holding endpoint private review keys or manufacturing employee approval (owned exclusively by [local-privacy-storage](local-privacy-storage.md) in `com.oryn.device.identity`; sync verifies public attestations and transports public enrollment registration only per [ADR-0011](../adr/0011-identity-authority-and-approval-fencing.md)).
+- Executing actions or assists offline (offline guidance is strictly read-only under signed `SignedGuidanceAccessLeaseV1` capped at 24 hours; executing autonomous or assisted actions while offline is unconditionally blocked).
 - Deciding whether a candidate workflow should be published across the company (owned by [operational-graph](operational-graph.md)).
 - Central identity, policy evaluation, or credential issuance (owned by [identity-policy](identity-policy.md)).
 - Index compilation or visual highlight rendering (owned by [local-context-hud](local-context-hud.md) and [desktop-shell](desktop-shell.md)).
@@ -124,8 +125,8 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
 | `GET /v1/sync/guidance/manifest?cursor={c}` | Bearer Token (`guidance:read`) | Query params | `200 OK`: `GuidanceManifestPageV1` | Returns access-filtered delta manifest pages. |
 | `GET /v1/sync/guidance/bundles/{sha256}` | Bearer Token (`guidance:read`) | None | `200 OK`: `SignedGuidanceBundleV1` | Returns immutable bundle and publisher signature sidecar. |
 | `POST /v1/sync/guidance/lease` | Bearer Token (`guidance:read`) | `GuidanceLeaseRequestV1` | `200 OK`: `SignedGuidanceAccessLeaseV1` | Issues signed read-only offline lease for authorized hashes. |
-| `POST /v1/identity/devices/{id}/review-keys/challenge` | Bearer Token (`device:register_review_key`) | `ReviewKeyChallengeRequestV1` | `201 Created`: `SignedReviewKeyChallengeV1` | 32-byte nonce challenge valid for <= 5 minutes. |
-| `POST /v1/identity/devices/{id}/review-keys` | Bearer Token (`device:register_review_key`) | `ReviewKeyRegistrationRequestV1` | `201 Created`: `SignedReviewKeyRegistrationV1` | Proof of possession registration over challenge payload. |
+| `POST /v1/identity/devices/{id}/review-keys/challenge` | Bearer Token (`device:enroll`) | `ReviewKeyChallengeRequestV1` | `201 Created`: `SignedReviewKeyChallengeV1` | 32-byte nonce challenge valid for <= 5 minutes. |
+| `POST /v1/identity/devices/{id}/review-keys` | Bearer Token (`device:enroll`) | `ReviewKeyRegistrationRequestV1` | `201 Created`: `SignedReviewKeyRegistrationV1` | Proof of possession registration over challenge payload. |
 
 ### 7. Normative Machine-Readable Fixture Examples
 
@@ -927,8 +928,6 @@ CREATE TABLE sync_submission_identity (
     revision NUMERIC(20,0) NOT NULL CHECK(revision >= 0),
     content_digest TEXT NOT NULL CHECK(length(content_digest) = 64),
     disposition TEXT NOT NULL CHECK(disposition IN ('accepted', 'withdrawn', 'expired')),
-    accepted_at TIMESTAMPTZ,
-    terminal_at TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (organization_id, contribution_id, revision)
 );
 
@@ -1009,26 +1008,23 @@ CREATE TABLE domain_inbox (
 ```
 
 ### PostgreSQL Atomic Acceptance Algorithm
-1. **Pre-Admission Validation:** The HTTP gateway validates TLS client tokens, permissions (`sync:contribute`), message schema structure, cryptographic review signatures, release permit validity, and artifact PNG headers. Reject immediately on malformed bytes or signature failure.
+1. **Pre-Admission Validation:** The HTTP gateway validates TLS client tokens (`sync:contribute`), message schema structure, cryptographic review signatures, release permit validity, and artifact PNG headers. Max total multipart body 5 MiB; max four 8-bit PNGs, each ≤ 1 MiB and ≤ 1920×1080; bounded decode and IHDR/IDAT/IEND-only chunks. Handoffs have empty artifacts and no private meeting identifiers.
 2. **Deterministic Locking Sequence (READ COMMITTED):**
-   - Begin transaction.
-   - Acquire `SELECT ... FOR SHARE` locks in deterministic key order on the organization, actor membership, device review-key, and governing artifact policy rows.
-   - Re-verify current membership status, device enrollment state, and policy revisions after acquiring locks.
-   - Acquire `SELECT ... FOR UPDATE` lock on the submission identity row in `sync_submission_identity`. If absent, insert with `ON CONFLICT DO NOTHING`, then re-query with `FOR UPDATE`.
-3. **Idempotency and Conflict Evaluation:**
-   - If row exists with `disposition = 'withdrawn'` or `'expired'`, roll back and return 410 `SYNC_RELEASE_CANCELLED`.
-   - If row exists with `disposition = 'accepted'`:
-     - If `content_digest` matches, return 200 OK with the original signed `DeliveryReceiptV1`.
-     - If `content_digest` differs, roll back and return 409 `SYNC_DIGEST_CONFLICT`.
-4. **Atomic Intake Commit:**
-   - Record `clock_timestamp()` immediately before write as `accepted_at`.
-   - Insert row into `sync_submission_identity` with `disposition = 'accepted'`.
-   - Insert destination row into `discovery_contribution_intake` (for workflows) or `graph_handoff_intake` (for handoffs).
-   - Insert image rows into `sync_artifact`.
-   - Construct and sign `DeliveryReceiptV1` using the central receipt private key; insert into `sync_delivery_receipt`.
-   - Insert `contribution.accepted` event into `domain_outbox`.
-   - Commit transaction.
-5. **Post-Commit Outbox Publication:** An asynchronous worker publishes the outbox event to internal brokers. Downstream consumers lock and re-verify submission eligibility before starting synthesis.
+   - Begin `READ COMMITTED` transaction.
+   - Acquire `SELECT ... FOR SHARE` locks in established sorted `(organization_id, guard_kind, guard_id)` order on authority guards and recheck current authority.
+3. **Identity Insertion:**
+   - Insert minimal accepted identity using `INSERT INTO sync_submission_identity (organization_id, contribution_id, revision, content_digest, disposition) VALUES ($1, $2, $3, $4, 'accepted') ON CONFLICT DO NOTHING RETURNING ...`. Record whether this transaction inserted the row.
+   - Lock canonical row `FOR UPDATE`. Unique insertion waits serialize missing-row races; no visible reservation disposition or duplicate insertion.
+4. **Idempotency and Conflict Evaluation:**
+   - If row exists with terminal disposition (`withdrawn` or `expired`), return 410 `SYNC_RELEASE_CANCELLED`.
+   - If row exists with differing digest, return 409 `SYNC_DIGEST_CONFLICT`.
+   - If row exists with matching accepted identity and retained receipt, return 200 OK with original receipt (validating current caller access before replay).
+5. **Atomic Intake Commit:**
+   - For newly inserted identity only: insert destination intake rows (`discovery_contribution_intake` or `graph_handoff_intake`), image rows into `sync_artifact`, original signed receipt, audit entries, committed event into `domain_outbox`, and minimal recovery-journal outbox entry in this single transaction. Commit transaction.
+   - Return first-acceptance HTTP 201 only after commit and independent custody checkpoint.
+6. **Receipt Signing:** Construct and sign `DeliveryReceiptV1` via Vault Transit receipt-purpose signing port under 500 ms timeout. Key is not exported. Failure before commit rolls back entire transaction.
+7. **Durability Checkpoint:** Append minimal 5-field custody projection to independent recovery journal after commit. No SQL transaction remains open during independent append. Checkpoint failure returns explicitly unknown/reconcile status; consumers cannot process intake behind a pending custody durability guard.
+8. **Truthful Replay & Reconciliation:** On exact replay, pending checkpoint reconciles idempotently before releasing durable receipt. Downstream synthesis re-verifies live eligibility under lock. If intake was pruned or lost after restore, return 200 `SubmissionStatusV1` with `content_state: 'lost_after_restore'` and nullable receipt.
 
 ### State Machines
 

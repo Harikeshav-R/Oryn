@@ -160,8 +160,11 @@ Meeting intelligence participates in four cross-component contracts:
 ### 3.3 Contract 22: Governed Cloud Inference
 - **Producer:** `MeetingSessionCoordinator` / `CommitmentReviewCoordinator` via `InferenceEgressClient`.
 - **Consumer:** `control-plane` (`InferenceAdmission`) / LiteLLM Gateway.
-- **Envelope:** `InferenceRequest` accompanied by signed `InferenceAuthorization`.
+- **Envelope:** `InferenceRequest` accompanied by signed `InferenceAuthorization` (incorporating `SignedPrivacyAuthorizationContextV1`; see ADR-0011, ADR-0012, and `identity-policy.md`). Live audio uses WebSocket (`oryn.inference.v1`) initiated via `GET /v1/inference/streams/{stream_id}` using `X-Inference-Session` handle.
 - **Operations:** `meeting.transcribe.live`, `meeting.transcribe.chunk`, `meeting.transcribe.final`, `meeting.extract_commitments`.
+- **Streaming & Proof Frames:** Live audio streams in 60-second authorization quanta. Audio chunks (100 ms, 16 kHz mono PCM, max 3,200 bytes) are framed as binary messages with big-endian header length and `SignedInferenceChunkProofV1` (`privacy.inference-chunk.v1`) signed by the enrolled device key.
+- **No Resumption:** Socket disconnect or server termination immediately closes the upstream provider stream; no cross-pod session resumption or audio replay is supported (client must start fresh session).
+- **Caps & Limits:** Preserves maximum 4-hour meeting bound, 128 MiB final audio payload cap for `meeting.transcribe.final` (134,217,728 bytes), 8 MiB local buffer bounds, and mandatory per-meeting consent.
 - **Invariants:** Zero durable cloud content retention, US processing only, route pinning, memory-backed upload spooling.
 
 ### 3.4 Contract 23: Confirmed Commitment Projection
@@ -244,7 +247,7 @@ Transmits incremental projection updates and removals:
 - **Producer:** `CommitmentReviewCoordinator` via `contribution-sync`.
 - **Consumer:** `operational-graph` via `contribution-sync`.
 - **Payload:** `ReviewedContributionV1` containing `MeetingReviewedHandoffV1`.
-- **Invariants:** Sanitized, employee-reviewed business handoff only. Raw audio, full transcripts, raw `meeting_session_id`, unreviewed excerpts, and unverified reference receipts are strictly prohibited. The payload conforms to `urn:oryn:schemas:contribution-sync:v1#/$defs/ReviewedContributionV1`, contains an RFC 8785 canonical content digest, and includes an Ed25519 hardware/Secure Enclave review attestation.
+- **Invariants:** Sanitized, employee-reviewed business handoff only. Raw audio, full transcripts, raw `meeting_session_id`, unreviewed excerpts, and unverified reference receipts are strictly prohibited. The payload conforms to `urn:oryn:schemas:contribution-sync:v1#/$defs/ReviewedContributionV1`, contains an RFC 8785 canonical content digest, and includes an Ed25519 review attestation signed with the software review key in OS-protected credential storage (`com.oryn.device.identity`; see ADR-0011).
 
 ```json
 {
@@ -623,7 +626,8 @@ stateDiagram-v2
     idle --> awaiting_consent: Meeting Detected / Start Command
     awaiting_consent --> preflight: Consent & Policy Verified
     preflight --> recording: Admission & Permit Granted
-    recording --> paused: Screen Pause / Roster Change / Participant Notice
+    recording --> recording: Screen Pause (Screen Halts; Meeting Unaffected)
+    recording --> paused: Pause All (PauseCapture) / Roster Change / Participant Notice
     paused --> recording: Re-verified & Resumed
     recording --> ended: Call Ended / Stop Command
     paused --> ended: Stop Command / Policy Expiry

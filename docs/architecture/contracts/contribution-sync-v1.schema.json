@@ -1545,7 +1545,8 @@
             "delivery_receipt",
             "server_time",
             "issued_at",
-            "not_after"
+            "not_after",
+            "content_state"
           ],
           "additionalProperties": false,
           "properties": {
@@ -1599,6 +1600,15 @@
             },
             "not_after": {
               "$ref": "#/$defs/Utc"
+            },
+            "content_state": {
+              "type": "string",
+              "enum": [
+                "available",
+                "pruned",
+                "lost_after_restore",
+                "not_applicable"
+              ]
             }
           }
         },
@@ -2825,6 +2835,42 @@
           }
         }
       }
+    },
+    "SyncSubmissionIdentityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "contribution_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "revision": {
+          "$ref": "#/$defs/NonNegativeSafeInteger"
+        },
+        "content_digest": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "disposition": {
+          "type": "string",
+          "enum": [
+            "not_found",
+            "accepted",
+            "withdrawn",
+            "expired",
+            "review_required",
+            "retained_under_policy"
+          ]
+        }
+      },
+      "required": [
+        "organization_id",
+        "contribution_id",
+        "revision",
+        "content_digest",
+        "disposition"
+      ]
     }
   }
 }

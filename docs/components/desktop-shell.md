@@ -330,19 +330,23 @@ When an employee reviews a sanitized task demonstration for potential organizati
   - `report_problem` routes one of the defined problem categories from PRODUCT §30.7 (`"wrong_step"`, `"missing_prerequisite"`, `"ui_changed"`, `"policy_blocked"`, `"performance_issue"`) with an employee-reviewed sanitized description.
 #### 3. Consequential Action Approval Interface (`IdentityPort`)
 When a Tier 2 or Tier 3 action requires employee approval:
-- **Proposal Model Ingress:** The shell receives a cryptographically signed proposal including proposal ID, revision, digest, action category, affected system, target entity, parameter diffs (before/after values), supporting evidence references, consequence summary, and expiration UTC timestamp.
-- **Submission (`SubmitApproval`):**
+- **Proposal Model Ingress:** The shell receives a cryptographically signed proposal (`SignedApprovalProposalV1`) including proposal ID, revision, `proposal_digest` (`sha256-...`), action category, affected application, record key, parameter diffs (1–128 before/after values), supporting evidence references, consequence summary, rule checks, authority checks, and expiration UTC timestamp. The underlying execution target is separately bound by canonical `action_sha256` (`sha256_...`).
+- **Submission (`SubmitApprovalV1`):**
   ```json
   {
+    "schema_id": "identity.submit-approval.v1",
     "command_id": "cmd_91a02b3c",
-    "proposal_id": "prop_conseq_7812",
+    "proposal_id": "11111111-1111-4111-8111-111111111111",
     "proposal_revision": "2",
     "proposal_digest": "sha256-8a71b2c400112233445566778899aabbccddeeff00112233445566778899aabb",
-    "decision": "approve"
+    "decision": "approve",
+    "reason": null
   }
   ```
-  - `decision` must be `"approve"` or `"reject"`.
-- **Responses:** Distinguishes `accepted`, `rejected`, `expired`, `stale`, `forbidden`, and `unknown_delivery`. If `unknown_delivery` occurs, the UI displays an ambiguous status and refuses to repeat writes without reconciliation.
+  - `decision` must be `"approve"`, `"reject"`, or `"request_changes"`.
+  - `reason` is required and must be non-empty for `"reject"` or `"request_changes"`.
+  - Step-up MFA completed within the prior 5 minutes is required for Tier 3 actions; if missing or stale, the broker prompts the employee for an independent factor (WebAuthn/TOTP).
+- **Responses:** Distinguishes `accepted`, `rejected`, `expired`, `stale`, `forbidden`, and `unknown_delivery`. If `unknown_delivery` occurs, the UI displays an ambiguous status and reconciles delivery status without repeating writes. Stale proposals resulting from record revision changes or document generation drift require a revised proposal.
 
 #### 4. Local History and Privacy Reads
 History browsing, candidate inspection, and My Privacy data are fetched over the dedicated query channel using cursor-based pagination (capped at 100 items per response). Raw media thumbnails are fetched via short-lived, profile-bound opaque local handles (e.g. `local-media://handle-uuid`), validated by the privacy helper. Arbitrary filesystem path traversal and direct URLs to unredacted captures are strictly prohibited.
@@ -396,12 +400,13 @@ The desktop shell runs under Tauri 2, which enforces explicit capability-based s
   Remote scripts, external styles, and `eval()` are blocked.
 
 ### Credential and Secret Management
-- **Central Authentication Flow:** Authentication uses an external system browser (default OS browser) executing OAuth 2.0 / OIDC Authorization Code Flow with Proof Key for Code Exchange (PKCE, RFC 7636) and OIDC nonce validation. Embedded login WebViews and client secrets are strictly prohibited.
-- **Token Storage:** Refresh tokens, session signing tokens, and active ID tokens are stored exclusively in the OS-provided secure credential store:
-  - macOS: System Keychain Services via the `Security.framework` API.
+- **Central Authentication Flow:** Authentication uses an external system browser (default OS browser) executing OAuth 2.0 / OIDC Authorization Code Flow with Proof Key for Code Exchange (PKCE, RFC 7636) and OIDC nonce validation. Embedded login WebViews and client secrets are strictly prohibited. The native callback binds `127.0.0.1` on an available port dynamically selected from the registered range `49152–49183`, path `/callback`.
+- **Token Storage & Isolation:** Desktop sessions last at most 7 days. Oryn uses opaque 256-bit random session and access secrets, storing SHA-256 token digests in the control-plane session store. Initial Auth0 tokens are discarded following validation. Refresh tokens, session signing tokens, and active credentials are stored exclusively in the OS-provided secure credential store:
+  - macOS: System Keychain Services via the `Security.framework` API (`com.oryn.device.identity`).
   - Windows: Windows Credential Manager via the `CredWriteW` / `CredReadW` API.
+- **Short-Lived Child Tokens:** `SessionBroker` requests short-lived child access tokens (maximum 5 minutes) scoped strictly to intended audiences (`identity`, `sync`, `guidance`, `execution`, `inference`) and narrow scope subsets. Inference child tokens permit only inference-purpose scopes (`inference:authorize`, `inference:submit`, `inference:cancel`, `inference:read_route`) for transient model interactions. Children never receive refresh tokens or cross-audience scopes.
 - **Renderer Isolation:** Central tokens and cryptographic keys are held in Rust memory (`SessionBroker`) and are **never passed into the React WebView**, localStorage, sessionStorage, IndexedDB, or local log files.
-- **Session Scoping:** Exactly one employee session per operating system desktop user account is supported. Switching accounts requires an explicit sign-out that invalidates local session tokens, unloads cached guidance, and locks the local evidence store.
+- **Session Scoping & Organization Switching:** Exactly one employee profile and organization is active per operating system desktop user account. Switching organizations requires an explicit sign-out that invalidates local session tokens, unloads cached guidance, terminates active capture, flushes in-memory credentials, and locks the prior private profile before pairing with the new organization.
 
 ## Internal architecture
 

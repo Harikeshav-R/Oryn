@@ -57,7 +57,8 @@ Job operations must be durable, recoverable, and idempotent. An orchestrator res
 
 ### Cross-Component Contracts
 - **Contract Reference #9 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests eligible active version and scope from [release-governance](release-governance.md).
-- **Contract Reference #10 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches bounded work assignments to [agent-runtime](agent-runtime.md).
+- **Contract Reference #10 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches bounded work assignments to [agent-runtime](agent-runtime.md), supplying `ExecutionContextV1` (`job`).
+- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Synchronizes approval wait states and admission fence status with [identity-policy](identity-policy.md). Tier 3 proposals use `SignedApprovalProposalV1` and are governed by `pending_approval_seconds` bounds.
 - **Contract Reference #14 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests verification verdicts from [outcome-verification](outcome-verification.md) to transition case states.
 - **Contract Reference #22 Reference:** Job orchestration remains deterministic; underlying worker model decisions route through LiteLLM under [cloud-inference](../architecture/cloud-inference.md).
 - **Job Status Events:** Emits `job.requested`, `job.case_state_changed`, and `job.completed` domain events.
@@ -88,7 +89,8 @@ Job operations must be durable, recoverable, and idempotent. An orchestrator res
 ### Failure Handling
 - **Worker Node Crash:** Orchestrator detects heartbeat loss, recovers the case from its last committed checkpoint, and reassigns it without re-executing submitted writes.
 - **Verification Mismatch:** If verification reports a mismatch or policy error, the case is marked `Failed` and an incident signal is generated.
-- **External Submission Timeout:** Transitions case to `Outcome Unknown`, halting retries until manual review or readback succeeds.
+- **External Submission Timeout:** Transitions case to `Outcome Unknown`, halting retries until manual review or readback succeeds. The consumed action fence in `identity-policy` is never automatically unconsumed or replayed under the same action ID. Any retry requires a fresh action intent with a distinct action ID, `retry_of_action_id`, and verified reconciliation evidence.
+- **Approval Expiry / Denial:** If a human reviewer denies a proposal or the `pending_approval_seconds` window expires, the case transitions cleanly to `Expectedly Rejected`.
 
 ## Observability and audit
 

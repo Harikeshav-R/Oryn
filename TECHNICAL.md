@@ -402,31 +402,35 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 5.1 Control Plane API and Domain Coordination
 
-**Responsibility:** Provide a consistent organization-scoped entry point for web/desktop clients, background processing, notifications, and other approved services.
+**Detailed specification:** [docs/components/control-plane.md](docs/components/control-plane.md) | [ADR-0012](docs/adr/0012-control-plane-transport-durability-and-inference.md) | [Wire Schema](docs/architecture/contracts/control-plane-v1.schema.json) | [Inference Schema](docs/architecture/contracts/cloud-inference-v1.schema.json) | [OpenAPI](docs/architecture/contracts/control-plane-v1.openapi.json)
 
-**Owns:** API-level authentication context, request routing, domain-level validation, orchestration of state changes, and publication of domain events once committed.
+**Responsibility:** Provide a unified, secure organization-scoped entry point for web/desktop clients, background processing, change notifications, contribution synchronization, and transient cloud inference streaming.
 
-**Consumes:** Authenticated user/worker requests; central domain data and service results.
+**Owns:** HTTP/REST and WebSocket transport, confidential BFF web session cookies (`__Host-oryn_session`, CSRF validation, 30-minute idle locks) and physical secret digest storage; general command idempotency (UUIDv7, RFC 8785 hashing, 7-day replay, 24-month tombstones); multi-tenant transaction coordination (`TenantTransaction`) with PostgreSQL Row-Level Security (RLS); asynchronous operation tracking (`OperationV1`); PostgreSQL transactional outbox (`domain_outbox`), durable queues (`domain_delivery`), and inbox deduplication (`domain_inbox`); authorized cursor-based management change feeds (`ChangePageV1`) with bounded 25-second long polling; authoritative cloud sync intake endpoints (Contract 2/3); and transient cloud inference admission, budget reservation, and WebSocket streaming coordination (Contract 22).
 
-**Produces:** Scoped responses, durable domain commands, observable state transitions, emitted domain events.
+**Consumes:** Authenticated client requests from web management consoles, desktop shell companions, background workers, and external systems; verified principal contexts from [identity-policy](docs/components/identity-policy.md); domain mutations from authoritative domain owners.
 
-**Does not own:** Low-level browser or OS capture, direct execution of arbitrary agent suggestions, or implicit permission to access all tenant data.
+**Produces:** Scoped REST and WebSocket responses, committed transactional domain events, durable delivery queue rows, asynchronous operation progress projections, authorized metadata change pages, and ephemeral LiteLLM inference requests.
 
-**Boundary requirement:** The API is a gateway to domain owners, not an excuse to duplicate policy and state transitions across unrelated endpoints.
+**Does not own:** Identity policy evaluation or verified principal construction (owned by [identity-policy](docs/components/identity-policy.md)), business state transition validity (owned by domain owners), raw capture storage or media caching (zero raw content retention), or physical infrastructure management (owned by [infrastructure-security](docs/components/infrastructure-security.md)).
+
+**Boundary requirement:** The API is a structured gateway and transaction coordinator, not an arbitrary command endpoint or duplicate policy evaluator. Dedicated external brokers (Kafka/RabbitMQ) are rejected for pilot in favor of atomic PostgreSQL outbox/delivery tables. Public web clients never receive raw bearer tokens. Real-time inference operates ephemerally in memory without disk spooling, and socket disconnects terminate upstream model streams immediately without cross-pod resumption.
 
 ### 5.2 Identity, Organization, Access, and Approval Governance
 
-**Responsibility:** Govern organizations, teams, user and agent identities, membership, business-object access, role assignments, action policies, approved scopes, and formal decisions.
+**Detailed specification:** [docs/components/identity-policy.md](docs/components/identity-policy.md) | [ADR-0011](docs/adr/0011-identity-authority-and-approval-fencing.md) | [Wire Schema](docs/architecture/contracts/identity-policy-v1.schema.json)
 
-**Owns:** Authoritative permissions and roles; approval records; policy versions; consent policy distributed to clients; organization suspension/offboarding constraints.
+**Responsibility:** Govern organizations, memberships, teams, user and service identities, business-object access, role assignments, action risk tiers, approval policies, credential scoping, and formal human approval decisions across Oryn.
 
-**Consumes:** Identity assertions, administrative changes, proposed operations, approval requests, job/agent context, target scope.
+**Owns:** Authoritative permissions, memberships, and roles; pure typed Rust evaluator (`evaluate_authorization`); session admission and lifetime bounds; dual digests (`action_sha256` and `proposal_digest`); formal approval proposals and receipts; policy versions; signed endpoint policy leases (`SignedCapturePolicyLease`, `SignedRetentionVerdict`, `SignedGuidanceAccessLeaseV1`); signed inference authorizations (`InferenceAuthorization`); durable action execution fences (`identity_action_fence`); and authority recovery journal coordination.
 
-**Produces:** Authorization decisions and justifications, approval requirements, policy-change notifications, eligibility restrictions, auditable decisions.
+**Consumes:** External authentication assertions (Auth0 Universal Login), administrative commands, real-time action authorization requests, formal approval decisions, job/assist context (`ExecutionContextV1`), adapter policy facts (`ActionPolicyFactsV1`), and target scope.
 
-**Does not own:** Deciding whether the agent's business recommendation is *correct*. Authorization and business validation are separate.
+**Produces:** Authoritative authorization decisions (`Allow`, `Deny`, `RequireHumanApproval`), cryptographic action authorization tokens, formal approval proposals, signed admission receipts, policy-change/revocation events, and auditable decisions.
 
-**Boundary requirement:** A model may ask for authorization, but cannot issue it. Every consequential action is checked with a trusted enforcement mechanism at the execution boundary. Tier 3 requires a human approval before each consequential commit; Tier 4 is unavailable for v1 agent execution.
+**Does not own:** External identity authentication (Auth0), HTTP session cookie/BFF transport (Control Plane), native credential storage (Desktop SessionBroker), external action execution (Adapters/Browser Extension), or verifying whether an agent's business recommendation is *correct* (Outcome Verification).
+
+**Boundary requirement:** A model may request authorization, but cannot grant it. Inference authorization is strictly distinct from business action authorization. Every consequential action is intercepted and evaluated by the deterministic Rust policy engine at the execution boundary. Tier 3 requires an item-level human approval matching the canonical proposal digest before consequential commit; Tier 4 restricted actions are unconditionally blocked from automated execution across all v1.0 workloads.
 
 ### 5.3 Workflow Discovery and Procedure Synthesis
 
@@ -673,18 +677,18 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | Simulator + Oracle | Release Governance | Evaluation results, coverage and gaps | Evaluation does not authorize deployment |
 | Release Governance | Orchestrator | Eligible active version and scope | Jobs must pin accepted version and obey emergency stops |
 | Orchestrator | Runner | Approved, bounded work assignment | Assignment alone does not grant unrestricted action rights |
-| Runner | Policy Engine | Specific action authorization request | Deny or require review when context/authority is insufficient |
-| Runner | External adapter | Authorized operation | Only defined application actions; narrow credentials |
+| Runner / Local Context HUD | Identity Policy | Specific action authorization request (Contract 11) | Deny or escalate to human review when authority or context is missing; binds `ExecutionContextV1` (`job` or `assist`), canonical proposal digest `action_sha256`, target key, record key, and document/surface generations. Item-level approval for Tier 3; Tier 4 unconditionally denied. Wire schema `identity-policy-v1.schema.json` |
+| Runner / Local Context HUD | External adapter / Browser Extension | Authorized external operation (Contract 12) | Limited strictly to defined application actions with narrow credentials; browser actions execute over `browser-bridge.v1` (major 1, minor 3 with `identity_authority_v1`) via `ExecuteBrowserAction` with full authority bundle `{authorization, approval, admission}` |
 | Runner/adapters | Verifier | Submission and readback evidence | Runner success ≠ business completion |
 | Verifier | Orchestrator/Incident | Verdict and mismatch | Unknown outcome blocks dangerous retries |
 | Incident | Correction/Repair | Failure classification and evidence references | AI diagnosis labeled hypothesis until supported |
 | Correction | Knowledge/Repair | Accepted expert correction or candidate rule | Different owners approve procedures and policies |
 | Repair | Factory/Simulator | New candidate version and regression requirements | No in-place active version mutation |
-| Governance / domain owners | Command Center | Authorized read models, notifications, audit | Frontend is not an authorization authority |
+| Governance / domain owners / Identity Policy | Command Center | Authorized read models, notifications, audit (Contract 18) | Role-scoped read models and immutable audit trails; presentation layer is not an authorization authority |
 | Desktop Shell | Local Privacy Storage | Capture control, visibility lease, and state subscription | Inherited byte-channel control; visibility loss or unrenewed lease immediately stops capture; raw media never crosses control channel; `shell-privacy.v1` minor 2 allocates channel 4 `shell-meeting-audio.v1`; distinct `PauseScreenObservation` and `PauseCapture` controls; typed `MeetingPort` commands |
 | Local Context HUD | Desktop Shell | Guidance cards, highlight targets, and user guidance interactions | Shell hosts all presentation and windows; HUD produces structured models and tracks guide progression; stale context invalidates highlights |
 | Local Context HUD | Browser Extension | Target presence and geometry query | HUD queries target resolution; extension resolves packaged deterministic locators against live DOM and returns desktop coordinates and affine transform; fallback to text-only guidance if geometry unproven |
-| All components / Privacy Helper | Control Plane / LiteLLM Gateway | Governed cloud inference request and authorization | Strict US processing, contractual zero content retention, no model training, route pinning; no local model execution; memory-backed upload spooling only |
+| All components / Privacy Helper | Control Plane / LiteLLM Gateway | Governed cloud inference request and authorization (Contract 22) | Signed `InferenceAuthorization` tokens scoped to tenant, purpose, operation, route, and deletion generation; strict US processing, contractual zero content retention, no model training, route pinning; wire schema `identity-policy-v1.schema.json` |
 | Local Privacy Storage / Meeting Intelligence | Local Context HUD / Desktop Shell | Confirmed personal commitment projections and review commands | Private-local records only; HUD receives only `open` + `confirmed` commitments; 09:00 default working-zone occurrence; source edits require reconfirmation and suspend reminders |
 | Meeting Intelligence / Contribution Sync | Operational Graph | Reviewed meeting handoff contribution (Contract 24) | Sanitized, employee-reviewed handoff proposal (`ReviewedMeetingHandoffProposal`); wire schema `contribution-sync-v1.schema.json`; no raw audio, full transcript, or meeting session IDs upload; Operational Graph owns canonical shared status, deduplication, and recipient authorization |
 | Local Privacy Storage | Local Context HUD | Sanitized observation feed and reverse demonstration proposals | Direct helper-to-helper socketpair/anonymous pipe link passed at launch; length-prefixed protocol `privacy-context.v1`; bounded 128-message / 8 MiB buffer; no raw media or DOM trees; reverse demonstration proposals validated before local storage or contribution review |
@@ -935,7 +939,7 @@ These **version lifecycle states** are distinct from the product's six **autonom
 | 4 | Scoped Autopilot | Tested, verified, explicitly authorized autonomy for eligible Tier 1/2 cases |
 | 5 | Self-Maintaining Autopilot | Controlled repair creation/evaluation and narrowly allowed automatic low-risk releases |
 
-`PRODUCT.md` §14 controls specific gates: Stage 3 defaults include **5 verified demonstrations and 25 representative scenarios**; Stage 4 defaults include **20 consecutive verified supervised cases and 100 representative scenarios** plus other required criteria. These are **minimum gates**, not statistical guarantees, and must be configurable upward where organizational policy demands.
+`PRODUCT.md` §14 controls specific gates: Stage 3 defaults include **5 verified demonstrations and 25 representative scenarios**; Stage 4 defaults include **20 consecutive verified supervised cases and 100 representative scenarios** plus other required criteria. These are **minimum gates**, not statistical guarantees, and must be configurable upward where organizational policy demands. Autonomy progression advances exclusively through formal governance proposals (`SignedGovernanceProposalV1`), requiring independent Workflow Owner and Security Admin approval remits without fabricating execution contexts.
 
 ### 9.3 Action risk tiers
 
@@ -944,10 +948,10 @@ These **version lifecycle states** are distinct from the product's six **autonom
 | 0 | Informational/read-only | No business-state change; still subject to read permissions and privacy |
 | 1 | Low-risk reversible internal change | May be autonomous in approved scope |
 | 2 | Controlled reversible internal change | May be autonomous after stronger evidence and explicit scope authorization |
-| 3 | Consequential/external/monetary or irreversible action | Human approval for each consequential commit |
-| 4 | Restricted action | Not executable by v1.0 agents |
+| 3 | Consequential/external/monetary or irreversible action | Item-level human approval for each consequential commit bound to dual digests (`action_sha256` and `proposal_digest`) |
+| 4 | Restricted action | Unconditionally prohibited from v1.0 automated agent execution |
 
-Workflow risk is at least the maximum risk of any possible action; splitting an operation into smaller steps cannot reduce its risk classification.
+Workflow risk is at least the maximum risk of any possible action; splitting an operation into smaller steps cannot reduce its risk classification. Missing or indeterminate risk inputs evaluate to Deny.
 
 ### 9.4 Job and case lifecycle
 
@@ -1055,24 +1059,24 @@ Email, PDF, browser, transcript, and business-record content are **untrusted tas
 
 ### 11.3 Approval integrity
 
-A human approval is bound to a **specific proposed operation**, target, scope, and material before/after values. If the target state changes substantially between proposal and execution, the request must be revalidated or returned for review. Approval cannot be silently repurposed to a different record, destination, amount, or agent version.
+A human approval is bound to a **specific proposed operation**, target, scope, and material before/after values via dual cryptographic digests: `action_sha256` (underscore prefix) covering the canonical execution projection, and `proposal_digest` (hyphen prefix) covering parameter diffs and consequence summaries over RFC 8785 canonical bytes. If the target state changes substantially between proposal and execution (such as document generation drift or record revision change), authorization preflight invalidates the token and requires a revised proposal. Approval cannot be silently repurposed to a different record, destination, amount, or agent version. Durable action fences (`identity_action_fence`) ensure an approved action token is consumed at most once.
 
 ### 11.4 Side effects and uncertain outcomes
 
-External application calls and UI submissions may not participate in a transaction controlled by Oryn. The runner must distinguish:
+External application calls and UI submissions may not participate in a transaction controlled by Oryn. The commit of `POST /v1/identity/actions/consume` is the irreversible authorization linearization point where logical authority is consumed and dispatch intent persisted before external transmission begins. The runner must distinguish:
 
 1. **Prepared** — proposed action not committed.
 2. **Submitted** — an action may have reached the external system.
 3. **Outcome Verified** — authoritative evidence confirms expected business effect.
 4. **Outcome Unknown** — the system cannot safely determine the external effect.
 
-Retries must be safe under the actual application's idempotency and readback capabilities. An uncertain write must not automatically repeat just because a network timeout occurred. Compensating actions exist only where explicitly supported and authorized.
+Retries must be safe under the actual application's idempotency and readback capabilities. An uncertain write must not automatically repeat just because a network timeout occurred. Consumed action fences reject duplicate dispatch attempts. Compensating actions exist only where explicitly supported and authorized.
 
 ### 11.5 Offline/disconnect behavior
 
 - Desktop observation may continue **only within active consent and local policy**, with private local retention still enforced. Local capture policy validity is capped at an absolute maximum of **24 hours** from issuance while disconnected; upon expiration, capture halts until connectivity is restored and the employee explicitly resumes.
 - **Trusted-time enforcement:** Boot-monotonic deadlines govern in-flight timeouts. Cross-boot retention requires signed trusted-time anchors and a persisted high-water mark. System clock rollback or uncertainty yields `untrusted_clock`, halting capture and denying history reads.
-- Local guidance can use permitted previously synced playbooks, visibly marked when stale where correctness matters.
+- Local guidance can use permitted previously synced playbooks, visibly marked when stale where correctness matters. Offline guidance access is strictly read-only under a signed `SignedGuidanceAccessLeaseV1` (max 24 hours); executing new assisted or autonomous actions while offline is unconditionally blocked.
 - New shared contributions wait for the employee's explicit review; reconnection never turns drafts into automatic uploads.
 - **Deletion racing upload:** If an employee deletes private evidence while an approved contribution is in-flight or queued, an authoritative local release fence cancels queued unsent items immediately. Dispatched network uploads mark delivery state `delivery_unknown`, allow local purge to complete, and reconcile via ID without retransmitting deleted source data.
 - **Storage capacity limits:** When storage quota (10 GiB) or low disk floor (1 GiB) is reached, expired records are purged first. If space remains exhausted, affected capture sources halt cleanly and prompt user action; unexpired records are never evicted early, and capture never silently drops to unencrypted ephemeral mode.
@@ -1181,12 +1185,12 @@ This section distinguishes **decisions that should remain stable** from choices 
 | **Contribution and Synchronization Gateway** | Resolved in [detailed technical specification](docs/components/contribution-sync.md) and [ADR-0010](docs/adr/0010-contribution-delivery-and-guidance-sync.md) (Dedicated Rust child `oryn-sync-helper`, `shell-sync.v1` and `privacy-sync.v1`, SQLCipher 4 + AES-256-GCM offline queue, atomic PostgreSQL domain intake with signed receipts, minimal organization-lifetime replay identity, wire schemas `contribution-sync-v1.schema.json` and `guidance-sync-v1.schema.json`, status-first recovery, signed guidance leases). | Honest review attestation gating, truthful deletion/upload race semantics, immediate unpublished withdrawal exclusion, bounded offline guidance lease, and minimal central replay identity |
 | **Local Context + HUD** | Task segmentation, signature matching, cache layout, suggestion ranking, overlay rendering | No inferred authority, nonintrusive guidance |
 | **Control Plane / APIs** | Language/framework, module boundaries, auth/session mechanisms, endpoints, internal protocols | Domain ownership, tenant scoping, consistent validation |
-| **Messaging + Durable Workflows** | Event contracts, broker, outbox, ordering, job engine, idempotency handling | Durable state and duplicate-safe business effects |
+| **Messaging + Durable Workflows** | Resolved in [detailed technical specification](docs/components/control-plane.md) and [ADR-0012](docs/adr/0012-control-plane-transport-durability-and-inference.md) (PostgreSQL transactional outbox `domain_outbox`, durable queues `domain_delivery`, inbox deduplication `domain_inbox`, FIFO per aggregate, 30s leases, 8-retry exponential backoff, aggregate quarantine, UUIDv7 idempotency with 7-day response replay, and 24-month tombstones). Dedicated message brokers (Kafka/RabbitMQ) rejected for pilot. | Durable state and duplicate-safe business effects |
 | **Database + Search/Graph** | Schema, indexing, relational versus specialized graph, embeddings, partitioning, audit storage | Source-of-truth ownership, provenance, version lineage |
 | **Workflow Discovery** | Clustering, segmentation, evidence weighting, model roles, reviewer workflow | Suggestions never equal approved rules |
 | **Operational IR + Agent Factory** | IR schema, compilation passes, validation, interpreter/compiler split, plan editing | Model-independent constrained behavior with explicit postconditions |
 | **Application Integrations** | API/MCP/browser/desktop adapter SDKs, capability declarations, connection lifecycle | Scope enforcement and separate observe/act/verify capabilities |
-| **Policy/Identity** | Authorization model, policy expression, approval semantics, credential issuance, revocation | Independent enforcement and product risk tiers |
+| **Policy/Identity** | Resolved in [detailed technical specification](docs/components/identity-policy.md) and [ADR-0011](docs/adr/0011-identity-authority-and-approval-fencing.md) (Embedded pure Rust typed evaluator, Auth0 Universal Login broker with PKCE loopback pool 49152–49183, Oryn opaque 256-bit session authority, software Ed25519 review keys in OS-protected storage, dual digests `action_sha256`/`proposal_digest`, HashiCorp Vault Transit signer, durable `identity_action_fence` linearization, independent authority recovery journal, wire schema `identity-policy-v1.schema.json`). | Independent deterministic PDP enforcement, mandatory Tier 4 execution prohibition, item-level human approval for Tier 3, and zero unlinearized dispatch duplicate risk |
 | **Agent Runtime** | Execution state machine, tool protocol, model gateway, sandbox, action tracing | Pinned versions, bounded side effects, external authorization |
 | **Flight Simulator** | Scenario language, environment reset, fixture format, fault injection, test scheduling | Isolation, fidelity disclosure, reproducibility |
 | **Outcome Verification** | Oracle design, authoritative evidence adapters, confidence states, reconciliation | Agent self-report cannot establish business correctness |

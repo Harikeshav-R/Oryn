@@ -219,7 +219,7 @@ Governs supervised execution of approved assist plans (`AssistPlanV1`).
   }))
   ```
   Encoded as string prefix `sha256_` followed by 64 lowercase hex digits.
-- **Execution Flow & Stopping Points:** `start_assist` previews affected fields and stopping points, then reserves the active workspace. Tier 2 mutations require confirmed plan preview; Tier 3 consequential mutations halt at pre-declared stopping points and require a separate item-level `review_and_submit` action displaying exact parameter diffs. Tier 4 restricted actions are unconditionally denied.
+- **Execution Flow & Stopping Points:** `start_assist` previews affected fields and stopping points, then reserves the active workspace. Tier 2 mutations require confirmed plan preview; Tier 3 consequential mutations halt at pre-declared stopping points and require a separate item-level `review_and_submit` action displaying exact parameter diffs and `proposal_digest` (`sha256-...`). Browser actuation executes over `browser-bridge.v1` (major 1, minor 3 with capability `identity_authority_v1`) passing the complete `{authorization, approval, admission}` authority bundle per [ADR-0011](../adr/0011-identity-authority-and-approval-fencing.md). Tier 4 restricted actions are unconditionally denied.
 - **Receipts:** Minimal durable receipts (`action_id`, `execution_context`, `action_sha256`, `authorization_ref`, `approval_ref`, `timestamp_utc`, `submission_state`, `evidence_ref`) contain zero customer business data and survive retention-off mode.
 
 ### Contract 22: Governed Cloud Semantic Reasoning (`text.reason`)

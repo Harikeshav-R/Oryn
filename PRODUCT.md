@@ -335,6 +335,11 @@ A rule or outcome may be backed by: (1) organization-approved authoritative poli
 - An agent operator can approve actions only within an explicit delegated amount, record type, and team scope. Being able to start a job does not confer approval authority.
 - Removing a person's role immediately removes their ability to start new privileged actions and prevents them from giving future approvals; pending approval requests must be rerouted.
 - A suspended member cannot access workspaces or perform approvals; previously published organizational material remains available to authorized colleagues.
+- Membership is strictly organization-specific; membership in one organization grants zero rights or visibility into another organization.
+- Sessions and credential access are strictly time-bounded: web access lasts at most 12 hours with a 30-minute human inactivity lock, and desktop sessions last at most 7 days.
+- Consequential actions (Tier 3 approvals, agent releases, permission expansions, administrative policy changes) require independently verified MFA completed within the prior 5 minutes.
+- Enforcing enterprise SSO requires registering two customer-controlled emergency recovery administrator identities with independent MFA to prevent administrative lockout.
+- Disconnected desktop endpoints operate under bounded leases with an absolute 24-hour offline ceiling; remote revocations take effect upon reconnection or lease expiration.
 
 ### 6.3 Permission-matrix requirements
 
@@ -346,7 +351,7 @@ The user-facing permissions panel must allow administrators to separately grant 
 
 ### 7.1 Organization setup flow
 
-1. The creator names the organization and selects a business region and time zone for deadlines and reporting.
+1. The creator names the organization and selects a business region and time zone for deadlines and reporting. Initial organization setup utilizes managed external authentication with manual member invitation; automated directory provisioning (SCIM) and customer-hosted deployments are out of scope for v1.0.
 2. The organization admin acknowledges Oryn's capture, employee notice, and privacy model.
 3. The security admin selects permitted work applications, mandatory exclusions, retention defaults, meeting recording policy, and allowed workflow risk tiers.
 4. The admin creates or chooses a pilot team and assigns at least one workflow owner.
@@ -712,7 +717,7 @@ The operator sees a live business-level log: item identifier or redacted label, 
 
 ### 16.6 Human approval drawer
 
-For Tier 3 consequential actions and other designated approval gates, Oryn presents a review drawer containing the affected records; proposed before/after values; evidence for those values; rule and authority checks; consequences of confirming; whether the action is reversible; and separate **Approve**, **Reject**, or **Request Changes** actions. Bulk approval is available only for explicitly permitted homogeneous actions and requires item-level visibility. Items with materially different risks or unresolved exceptions cannot be hidden inside a bulk approval.
+For Tier 3 consequential actions and other designated approval gates, Oryn presents a review drawer containing the affected records; proposed before/after values; evidence for those values; rule and authority checks; consequences of confirming; whether the action is reversible; and separate **Approve**, **Reject**, or **Request Changes** actions. Pending approval proposals expire after 24 hours without decision; once approved, human sign-off grants a 15-minute validity window for execution before requiring re-evaluation. Rejection or requesting changes closes the proposal; revisions require fresh review. Bulk approval is default-off, available only for explicitly permitted homogeneous actions (same workflow, application, operation, risk tier, and currency; max 100 visible items), commits all review decisions atomically, and maintains independent per-item dispatch. Items with materially different risks or unresolved exceptions cannot be hidden inside a bulk approval.
 
 ### 16.7 Commit boundaries and uncertain results
 

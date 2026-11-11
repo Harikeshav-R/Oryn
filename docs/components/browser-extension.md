@@ -133,8 +133,8 @@ If any conjunct is unknown, false, or stale, observation for that document or mo
 - **Contract 12 (Authorized External Operation):**
   - **Producer:** [agent-runtime](agent-runtime.md) / [application-adapters](application-adapters.md)
   - **Consumer:** [browser-extension](browser-extension.md)
-  - **Transport:** Routed through Privacy Helper and native broker over `browser-bridge.v1` (negotiated `protocol_major: 1`, `protocol_minor: 2` with `assist_execution_v1` capability).
-  - **Boundary Invariant:** Execution requests (`ExecuteBrowserAction`) must bind `ExecutionContextV1` (`job` or `assist`), cryptographic `authorization_ref`, stable `action_sha256`, target key, record key, live document generation, surface generation, and expected before-state. Operates strictly within an exclusive device reservation (reserved execution tab for jobs, or reserved assist tab for HUD assists).
+  - **Transport:** Routed through Privacy Helper and native broker over `browser-bridge.v1` (negotiated `protocol_major: 1`, `protocol_minor: 3` with `identity_authority_v1` capability).
+  - **Boundary Invariant:** Execution requests (`ExecuteBrowserAction`) must bind `ExecutionContextV1` (`job` or `assist`), cryptographic `authorization_ref`, nullable `approval_ref`, authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1 | null, admission: SignedActionAdmissionV1}`, stable `action_sha256`, target key, record key, live document generation, surface generation, and expected before-state. Both authority bundle and reference IDs remain strictly outside the canonical `action_sha256` digest. Operates strictly within an exclusive device reservation (reserved execution tab for jobs, or reserved assist tab for HUD assists). Extension verifies trust keyset and bundle signatures before DOM actuation; content-free action/nonce ledger prevents replay. Zero direct cloud network connection.
 - **Contract 13 (Submission Records and Readback Evidence):**
   - **Producer:** [browser-extension](browser-extension.md)
   - **Consumer:** [outcome-verification](outcome-verification.md) / [agent-runtime](agent-runtime.md)
@@ -1055,8 +1055,92 @@ Commands execution of a single validated action primitive.
     "operation": "click",
     "argument": null,
     "action_sha256": "sha256_b3f0e1d2c3b4a596877869504132231405162738495a6b7c8d9e0f1a2b3c4d5e",
-    "authorization_ref": "auth_tok_01928374-p256-signed-jwt-token",
-    "approval_ref": "appr_receipt_01928374-operator-signature",
+    "authorization_ref": "22222222-2222-4222-8222-222222222222",
+    "approval_ref": "33333333-3333-4333-8333-333333333333",
+    "authority": {
+      "authorization": {
+        "schema_id": "identity.action-authorization.v1",
+        "key_id": "key_policy_2026_01",
+        "payload": {
+          "authorization_id": "22222222-2222-4222-8222-222222222222",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_operator_01",
+          "worker_id": "wrk_runner_finance_01",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+          "audience": "execution",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_batch_invoice_audit_01",
+            "case_id": "case_inv_99882",
+            "agent_version": "2026.11.08.1"
+          },
+          "action_id": "act_01928374-click-approve-0001",
+          "action_sha256": "sha256_b3f0e1d2c3b4a596877869504132231405162738495a6b7c8d9e0f1a2b3c4d5e",
+          "environment": "production",
+          "risk_tier": 3,
+          "policy_revision": "100",
+          "access_revision": "200",
+          "revocation_generation": "1",
+          "approval_id": "33333333-3333-4333-8333-333333333333",
+          "nonce": "N0nc3S3cr3tV4lu3B4s364Ur132Byt3s00000000000",
+          "issued_at": "2026-11-10T15:05:00Z",
+          "not_after": "2026-11-10T15:05:30Z"
+        },
+        "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1hY3Rpb24tYXV0aG9yaXphdGlvbi1leGFtcGxlMDAwMDAwMDAwMDAwMDAwMA"
+      },
+      "approval": {
+        "schema_id": "identity.action-approval.v1",
+        "key_id": "key_policy_2026_01",
+        "payload": {
+          "approval_id": "33333333-3333-4333-8333-333333333333",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "proposal_id": "11111111-1111-4111-8111-111111111111",
+          "proposal_revision": "1",
+          "proposal_digest": "sha256-8a71b2c400112233445566778899aabbccddeeff00112233445566778899aabb",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_batch_invoice_audit_01",
+            "case_id": "case_inv_99882",
+            "agent_version": "2026.11.08.1"
+          },
+          "action_id": "act_01928374-click-approve-0001",
+          "action_sha256": "sha256_b3f0e1d2c3b4a596877869504132231405162738495a6b7c8d9e0f1a2b3c4d5e",
+          "approver_actor_id": "usr_workflow_owner_01",
+          "decision": "approve",
+          "policy_revision": "100",
+          "access_revision": "200",
+          "decided_at": "2026-11-10T15:04:30Z",
+          "not_after": "2026-11-10T15:19:30Z"
+        },
+        "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1hY3Rpb24tYXBwcm92YWwtZXhhbXBsZTAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw"
+      },
+      "admission": {
+        "schema_id": "identity.action-admission.v1",
+        "key_id": "key_policy_2026_01",
+        "payload": {
+          "authorization_id": "22222222-2222-4222-8222-222222222222",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "attempt_id": "44444444-4444-4444-8444-444444444444",
+          "worker_id": "wrk_runner_finance_01",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_batch_invoice_audit_01",
+            "case_id": "case_inv_99882",
+            "agent_version": "2026.11.08.1"
+          },
+          "action_id": "act_01928374-click-approve-0001",
+          "action_sha256": "sha256_b3f0e1d2c3b4a596877869504132231405162738495a6b7c8d9e0f1a2b3c4d5e",
+          "approval_id": "33333333-3333-4333-8333-333333333333",
+          "nonce": "N0nc3S3cr3tV4lu3B4s364Ur132Byt3s00000000000",
+          "policy_revision": "100",
+          "access_revision": "200",
+          "consumed_at": "2026-11-10T15:05:05Z",
+          "not_after": "2026-11-10T15:05:30Z"
+        },
+        "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1hY3Rpb24tYWRtaXNzaW9uLWV4YW1wbGUwMDAwMDAwMDAwMDAwMDAwMDAwMDAw"
+      }
+    },
     "deadline_ms": 3000
   }
 }

@@ -73,18 +73,37 @@ flowchart LR
 
 ## 3. Shared Operations and Data Contracts
 
+### 3.0 Normative Wire Contracts
+Cloud inference requests, transient streaming sessions, and budget reservations are governed by normative Draft 2020-12 wire schemas and OpenAPI transport definitions:
+- Wire Schema: [`cloud-inference-v1.schema.json`](contracts/cloud-inference-v1.schema.json) (`urn:oryn:schemas:cloud-inference:v1`)
+- Identity Authorization Schema: [`identity-policy-v1.schema.json`](contracts/identity-policy-v1.schema.json) (`urn:oryn:schemas:identity-policy:v1`)
+- Client Transport Specification: [`control-plane-v1.openapi.json`](contracts/control-plane-v1.openapi.json)
+- Component Specification: [Control Plane API and Domain Coordination](../components/control-plane.md)
+
 ### 3.1 InferenceOperation Literals
 
 Every operation submitted to the gateway MUST specify one of the following exact typed operation literals:
 
 - `meeting.transcribe.live`: Bidirectional live audio stream transcription.
 - `meeting.transcribe.chunk`: Bounded audio chunk transcription (near-live mode).
-- `meeting.transcribe.final`: Authoritative final session transcription and diarization.
+- `meeting.transcribe.final`: Authoritative final session transcription and diarization (capped at 128 MiB / 134,217,728 bytes).
 - `meeting.extract_commitments`: Extraction of commitments, obligations, constraints, and dependencies from finalized transcripts.
 - `vision.extract`: OCR and visual structure extraction from privacy-masked screen captures.
 - `text.reason`: General reasoning, structured extraction, workflow synthesis, agent generation, diagnostic hypothesis formation, verification assistance, and repair proposal generation.
 - `text.embed`: Dense vector generation for knowledge retrieval.
 - `text.rerank`: Relevance scoring of candidate documents or nodes.
+
+### 3.1.1 Cryptographic Input Bindings and Stream Proofs
+Inference authorizations strictly link admitted requests to verified input data using cryptographic bindings:
+
+1. **`InputBindingV1` Tagged Union:**
+   - `kind: "batch"`: Binds `input_scope_sha256` (RFC 8785 SHA-256 of transient source references) and `input_manifest_sha256` (SHA-256 of the canonical input parts manifest).
+   - `kind: "stream"`: Binds `stream_scope_sha256` (SHA-256 of `StreamScopeV1`), `stream_id` (UUIDv4), and `stream_epoch` (UUIDv4).
+2. **RAM-Only Source Scopes:** `InputScopeV1` and `StreamScopeV1` contain transient window/segment references verified entirely in memory; they are never persisted to database tables.
+3. **Signed Chunk Proofs (`SignedInferenceChunkProofV1`):** Every 100 ms audio chunk (16 kHz, 16-bit mono PCM, max 3,200 bytes) sent over WebSocket includes a header signed by the enrolled device key (`privacy.inference-chunk.v1`). Server validates `sample_start`, `sample_end`, sequence monotonicity, and consent revision before forwarding bytes to LiteLLM.
+4. **Child Token Audience:** Desktop employee inference uses Identity child tokens with `audience: "inference"` and scopes `inference:authorize`, `inference:submit`, `inference:cancel`, `inference:read_route`.
+5. **Payload Size Caps:** Bounded standard JSON bodies ≤ 256 KiB; general inference input ≤ 10 MiB (10,485,760 bytes). For `meeting.transcribe.final` only, input bodies up to 128 MiB (134,217,728 bytes) are admitted provided the route certifies streaming multipart diarization.
+6. **Budget Accounting & Reservations:** Organizations define `inference_budget_limit_microusd` over `calendar_month_utc` windows in `OrganizationPolicyV1`. Control Plane atomically reserves estimated maximum spend in `inference_reservation` prior to upstream transmission; unknown outcomes remain encumbered until billing reconciliation.
 
 ### 3.2 InferenceRoute
 
@@ -132,24 +151,32 @@ An `InferenceRoute` represents an approved, capability-certified upstream model 
 
 ### 3.3 InferenceAuthorization
 
-Issued and signed by `identity-policy`. Binds an authenticated actor, tenant, purpose, and input generation to a specific route.
+Issued and signed by `identity-policy` under schema `inference.authorization.v1` (with policy key). Binds an authenticated actor, tenant, purpose, and ephemeral input scope hashes to a specific route and policy revision. For edge-initiated inference, incorporates or accompanies `SignedPrivacyAuthorizationContextV1` (`privacy.authorization-context.v1`) signed by the local software review key to prove local consent freshness without exposing raw identifiers.
 
 ```json
 {
-  "authorization_id": "c71a3b4e-9d2a-4efb-8a1c-6d8b9e0f1a23",
-  "organization_id": "org_enterprise_01",
-  "actor_id": "usr_employee_42",
-  "device_id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-  "purpose": "meeting_commitment_extraction",
-  "operation": "meeting.extract_commitments",
-  "input_scope": "meeting_session:8f9a2b1c-4d3e-4b2a-9f1e-8c7b6a5d4e3f:gen_4",
-  "consent_revision": "12",
-  "policy_revision": "104",
-  "route_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "route_revision": "1",
-  "budget_authorization_ref": "bgt_auth_2026_q4_009",
-  "issued_at": "2026-11-10T14:30:00Z",
-  "not_after": "2026-11-10T14:35:00Z"
+  "schema_id": "inference.authorization.v1",
+  "key_id": "key_policy_2026_01",
+  "payload": {
+    "authorization_id": "88888888-8888-4888-8888-888888888888",
+    "organization_id": "00000000-0000-4000-8000-000000000001",
+    "actor_id": "usr_employee_01",
+    "principal_kind": "employee",
+    "device_id": "dev_macbook_01",
+    "profile_id": "prf_default_01",
+    "workload_id": null,
+    "purpose": "hud_context_interpretation",
+    "operation": "text.reason",
+    "route_id": "route_claude_35_sonnet_us",
+    "route_revision": "1",
+    "budget_reservation_id": "99999999-9999-4999-8999-999999999999",
+    "deletion_generation": "1",
+    "input_revision": "1",
+    "audience": "inference-admission",
+    "issued_at": "2026-11-10T15:00:00Z",
+    "not_after": "2026-11-10T15:05:00Z"
+  },
+  "signature": "abevTtsCDuteTNt6Gb55PzhL1jANgzhzN7FN4x1ZJ7RDpytVDeKUjBZOYqJeGfok5ma0GADtgTnxRQANa3pYCA"
 }
 ```
 

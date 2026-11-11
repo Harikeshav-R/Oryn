@@ -53,14 +53,15 @@ The runtime is treated as **less trusted than the authorization, verification, a
 
 ### Cross-Component Contracts
 - **Contract Reference #10 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests bounded work assignments from [job-orchestration](job-orchestration.md).
-- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Submits action authorization requests to [identity-policy](identity-policy.md), binding `ExecutionContextV1` (`job` or `assist`) and canonical `action_sha256`.
-- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches authorized operations bound to `ExecutionContextV1` to [application-adapters](application-adapters.md), which routes local browser operations to [browser-extension](browser-extension.md) over `browser-bridge.v1` (major 1, minor 2) (`ExecuteBrowserAction`) with canonical `action_sha256` proposal digests.
+- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Submits action authorization requests to [identity-policy](identity-policy.md) (`POST /v1/identity/actions/authorize`) and executes one-use admission consumption (`POST /v1/identity/actions/consume`), binding `ExecutionContextV1` (`job` or `assist`) and canonical `action_sha256` (`sha256_...`). Yields signed `ActionAuthorizationV1` (`identity.action-authorization.v1`) and `SignedActionAdmissionV1` (`identity.action-admission.v1`). Before dispatch, the runner binds the verified authority bundle `{authorization, approval, admission}`.
+- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches authorized operations bound to `ExecutionContextV1` and authority bundle to [application-adapters](application-adapters.md), which routes local browser operations to [browser-extension](browser-extension.md) over `browser-bridge.v1` (major 1, minor 3) (`ExecuteBrowserAction`) with canonical `action_sha256` proposal digests.
 - **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers action submission records and UI primitive results (`BrowserActionResult`) to [outcome-verification](outcome-verification.md).
 - **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Routes model-assisted step decisions (`text.reason`) through the LiteLLM gateway under [cloud-inference](../architecture/cloud-inference.md); model completions are untrusted data that must conform strictly to declared IR schema and action constraints.
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries
 - **Deployment Location:** Ephemeral worker containers running in hardened execution clusters or sandboxed local worker processes.
+- **Workload Identity:** Bound to an `identity_execution_principal` via infrastructure-authenticated mTLS, scoped strictly to `organization_id` and `ExecutionContextV1`. Execution principals cannot hold administrator roles or execute without active context.
 - **Least Privilege Sandbox:** Worker processes have no ambient filesystem or network access outside declared adapter endpoints.
 - **Model Ingress Boundary:** Prompts sent to model providers include only sanitized case variables; model completions are parsed strictly into typed IR actions.
 
@@ -68,7 +69,7 @@ The runtime is treated as **less trusted than the authorization, verification, a
 
 ### Logical Submodules
 - **IR Step Interpreter:** Walks the compiled execution graph, managing variable bindings and control flow.
-- **Policy Enforcement Interceptor:** Intercepts every tool call, querying the policy engine before dispatching actions.
+- **Policy Enforcement Interceptor:** Intercepts every tool call, querying [identity-policy](identity-policy.md) via Contract 11 before dispatching actions. Verifies the returned authority bundle (`ActionAuthorizationV1`, `SignedApprovalProposalV1`, `SignedActionAdmissionV1`) before calling adapters.
 - **Model Reasoning Client:** Interacts with LLM providers for extraction or classification steps, enforcing JSON schemas.
 - **Execution Tracer:** Captures fine-grained execution logs, inputs, outputs, timestamps, and tool receipts.
 
@@ -82,7 +83,9 @@ The runtime is treated as **less trusted than the authorization, verification, a
 ## Error and edge-case behavior
 
 ### Failure Handling
+- **Policy / Admission Denial:** When `identity-policy` denies authorization or admission consumption, it returns typed reason codes (`IDENTITY_ACTION_FENCE_CONFLICT`, `IDENTITY_APPROVAL_REQUIRED`, `IDENTITY_MEMBER_REVOKED`, `IDENTITY_RECOVERY_INCOMPLETE`, etc.). The runner halts the step and emits a security exception to job orchestration.
 - **Tool Execution Failure:** Records adapter error details and executes IR error-handling branches if defined.
+- **Ambiguous External Outcome:** If an external adapter call times out or fails ambiguously, the consumed action fence is never automatically replayed or unconsumed. The runner marks step state `Outcome Unknown` and yields to [outcome-verification](outcome-verification.md) or operator review.
 - **Approval Rejection:** If a human reviewer denies a Tier 3 action, the runner marks the case `Expectedly Rejected` and exits cleanly.
 - **Operator Emergency Stop:** Stops step execution immediately, rolls back uncommitted local state, and reports terminal status.
 

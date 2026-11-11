@@ -119,3 +119,43 @@ _Avoid_: Recorded macro, inferred permission
 **Assist Session**:
 One employee-initiated attempt to run an approved assist plan for a defined work item.
 _Avoid_: Background job, blanket approval
+
+**Membership**:
+A person's organization-specific participation and status. Membership in one organization grants no rights in another.
+_Avoid_: Account, login
+
+**Role Assignment**:
+A scoped grant of a named organizational responsibility and its permitted capabilities.
+_Avoid_: Blanket access, identity claim
+
+**Approval Delegation**:
+Explicit authority for a person to approve defined business operations within stated limits.
+_Avoid_: Job-start permission, managerial seniority
+
+**Approval Proposal**:
+The exact business change and evidence presented for a human decision.
+_Avoid_: Agent intent, blanket consent
+
+**Action Authorization**:
+Permission for one defined execution attempt within current policy and scope. It is not proof of submission or a correct outcome.
+_Avoid_: Successful job, inference authorization
+
+**Emergency Administrator**:
+A customer-designated identity with narrow authority to restore identity administration. It does not gain business-action or private-evidence authority.
+_Avoid_: Superuser, universal bypass
+
+**Operation**:
+A tracked request for work, representing transport and progress status; it is not proof that business work completed or succeeded.
+_Avoid_: Job, task result
+
+**Domain Event**:
+A committed organizational fact published once database transactions succeed; it conveys notification of state change, not authority to act.
+_Avoid_: Command trigger, authority grant
+
+**Submission Custody**:
+Organizational acceptance of a reviewed contribution into cloud intake; it establishes custodial tracking, not publication or current content availability.
+_Avoid_: Publication, intake cache
+
+**Inference Reservation**:
+Bounded permission to consume a portion of an organization's configured inference allowance for an admitted request; it is an encumbrance, not confirmed actual cost.
+_Avoid_: Spend invoice, guaranteed charge

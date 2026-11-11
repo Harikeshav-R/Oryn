@@ -1035,96 +1035,124 @@ Transmits local synthesized task demonstration proposals for privacy-storage val
 ```
 
 ### Identity Policy Signed Artifacts
-The privacy helper relies on cryptographic artifacts signed by `identity-policy` using pinned Ed25519 issuer keys. The signature covers the schema domain string, a newline, and RFC 8785 canonical UTF-8 JSON bytes.
+The privacy helper relies on cryptographic artifacts signed by `identity-policy` using pinned Ed25519 issuer keys. The signature covers the exact normative preimage: `UTF-8(schema_id) + 0x0A (LF byte) + RFC_8785_Canonical_JSON(payload)`. Signatures are unpadded base64url-encoded strings (86 characters).
 
-#### SignedCapturePolicyLease Schema
+#### SignedCapturePolicyLease Schema (`privacy.capture-policy.v1`)
 ```json
 {
   "schema_id": "privacy.capture-policy.v1",
-  "key_id": "ed25519_pol_issuer_2026_01",
+  "key_id": "key_policy_2026_01",
   "payload": {
-    "organization_id": "org_enterprise_corp",
+    "organization_id": "00000000-0000-4000-8000-000000000001",
     "actor_id": "usr_emp_harikeshav_r",
     "device_id": "dev_macbook_pro_m3_001",
+    "profile_id": "prf_default_01",
     "enrollment_id": "enr_883a01f9-4b21-4f12-9c10-223344556677",
-    "policy_revision": "pol_rev_20261109_01",
-    "notice_revision": "not_rev_20261109_01",
-    "issued_at": "2026-11-09T08:00:00.000Z",
-    "not_after": "2026-11-10T08:00:00.000Z",
+    "policy_revision": "100",
+    "notice_revision": "10",
     "permitted_categories": [
-      "visual_work_observation",
-      "contextual_work_application_recognition",
-      "personal_history_retention",
-      "organizational_sharing",
-      "meeting_transcription",
-      "meeting_commitment_extraction"
+      "screen",
+      "audio",
+      "accessibility_tree",
+      "browser_dom"
     ],
-    "mandatory_exclusion_catalog_revision": "excl_cat_v12",
+    "mandatory_exclusion_catalog_revision": "cat_excl_v2026_01",
     "excluded_application_ids": [
       "com.1password.1password",
       "com.bitwarden.desktop",
       "KeePass.exe"
     ],
     "excluded_url_patterns": [
-      "*login.microsoftonline.com*",
-      "*accounts.google.com*",
-      "*bankofamerica.com*"
+      "*://login.microsoftonline.com/*",
+      "*://accounts.google.com/*",
+      "*://bankofamerica.com/*"
     ],
     "max_raw_retention_days": 14,
     "research_extension_permitted": true,
-    "revocation_generation": "1"
+    "max_offline_seconds": 86400,
+    "revocation_generation": "1",
+    "issued_at": "2026-11-09T08:00:00Z",
+    "not_after": "2026-11-10T08:00:00Z"
   },
-  "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1jYXB0dXJlLXBvbGljeS1sZWFzZS1leGFtcGxlCg=="
+  "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1jYXB0dXJlLXBvbGljeS1sZWFzZS1leGFtcGxlMDAwMDAwMDAwMDAwMDAwMDAwMDAw"
 }
 ```
 
-#### SignedRetentionVerdict Schema
+#### SignedRetentionVerdict Schema (`privacy.retention-verdict.v1`)
 ```json
 {
   "schema_id": "privacy.retention-verdict.v1",
-  "key_id": "ed25519_hold_issuer_2026_01",
+  "key_id": "key_policy_2026_01",
   "payload": {
-    "organization_id": "org_enterprise_corp",
+    "organization_id": "00000000-0000-4000-8000-000000000001",
     "actor_id": "usr_emp_harikeshav_r",
     "device_id": "dev_macbook_pro_m3_001",
+    "profile_id": "prf_default_01",
     "enrollment_id": "enr_883a01f9-4b21-4f12-9c10-223344556677",
-    "verdict_revision": "verdict_rev_104",
-    "issued_at": "2026-11-09T12:00:00.000Z",
-    "not_after": "2026-11-10T12:00:00.000Z",
+    "verdict_revision": "5",
     "scope_coverage": "complete",
     "active_holds": [
       {
         "hold_id": "hold_litigation_2026_q4",
         "description": "Matter 2026-Q4 Legal Hold",
-        "from_utc": "2026-11-01T00:00:00.000Z",
-        "to_utc": "2026-11-10T00:00:00.000Z",
+        "from_utc": "2026-11-01T00:00:00Z",
+        "to_utc": "2026-11-10T00:00:00Z",
         "affected_sources": ["native_os", "meeting"]
       }
     ],
-    "preservation_conflict": false
+    "preservation_conflict": false,
+    "issued_at": "2026-11-09T12:00:00Z",
+    "not_after": "2026-11-10T12:00:00Z"
   },
-  "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1yZXRlbnRpb24tdmVyZGljdC1leGFtcGxlCg=="
+  "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1yZXRlbnRpb24tdmVyZGljdC1leGFtcGxlMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw"
 }
 ```
 
-#### SignedArtifactPolicy Schema
+#### SignedArtifactPolicy Schema (`privacy.artifact-policy.v1`)
 ```json
 {
   "schema_id": "privacy.artifact-policy.v1",
-  "key_id": "ed25519_art_issuer_2026_01",
+  "key_id": "key_policy_2026_01",
   "payload": {
-    "organization_id": "org_enterprise_corp",
-    "policy_revision": "art_pol_rev_05",
-    "issued_at": "2026-11-09T00:00:00.000Z",
-    "not_after": "2026-11-10T00:00:00.000Z",
-    "approved_purposes": ["procedural_documentation", "peer_training"],
+    "organization_id": "00000000-0000-4000-8000-000000000001",
+    "policy_version": "5",
+    "allowed_purposes": ["procedural_documentation", "peer_training"],
     "allowed_audiences": ["aud_operations_finance", "aud_team_engineering"],
-    "max_artifact_lifetime_days": 365,
-    "max_image_resolution": { "width": 1920, "height": 1080 },
-    "max_image_bytes": 1048576,
-    "max_images_per_contribution": 4
+    "max_lifetime_days": 365,
+    "max_dimensions": { "width": 1920, "height": 1080 },
+    "max_byte_length": 1048576,
+    "max_image_count": 4,
+    "issued_at": "2026-11-09T00:00:00Z",
+    "not_after": "2026-11-10T00:00:00Z"
   },
-  "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1hcnRpZmFjdC1wb2xpY3ktZXhhbXBsZQo="
+  "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1hcnRpZmFjdC1wb2xpY3ktZXhhbXBsZTAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw"
+}
+```
+
+#### SignedPrivacyAuthorizationContextV1 Schema (`privacy.authorization-context.v1`)
+For governed cloud inference under Contract 22, `InferenceEgressClient` validates current employee consent and signs an ephemeral authorization context binding input scope and manifest hashes:
+```json
+{
+  "schema_id": "privacy.authorization-context.v1",
+  "key_id": "key_device_macbook_01",
+  "payload": {
+    "request_id": "66666666-6666-4666-8666-666666666666",
+    "organization_id": "00000000-0000-4000-8000-000000000001",
+    "actor_id": "usr_emp_harikeshav_r",
+    "device_id": "dev_macbook_pro_m3_001",
+    "profile_id": "prf_default_01",
+    "purpose": "hud_context_interpretation",
+    "operation": "text.reason",
+    "consent_revision": "1",
+    "notice_revision": "1",
+    "input_scope_sha256": "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+    "input_manifest_sha256": "1234567812345678123456781234567812345678123456781234567812345678",
+    "input_revision": "1",
+    "deletion_generation": "1",
+    "issued_at": "2026-11-10T15:00:00Z",
+    "not_after": "2026-11-10T15:00:05Z"
+  },
+  "signature": "dGVzdC1zaWduYXR1cmUtZWQyNTUxOS1wcml2YWN5LWF1dGhvcml6YXRpb24tY29udGV4dC1leGFtcGxlMDAwMDAwMDAwMDA="
 }
 ```
 

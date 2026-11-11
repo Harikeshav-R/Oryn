@@ -1,0 +1,1061 @@
+{
+  "schema_id": "inference.fixture-set.v1",
+  "public_keys": [
+    {
+      "key_id": "key_policy_2026_01",
+      "purpose": "policy",
+      "public_key": "zptsxN9KpxNS1RT0Yokwcrix4KnbeCMt-i_eHj89gwg"
+    },
+    {
+      "key_id": "key_device_macbook_01",
+      "purpose": "device",
+      "public_key": "peReSTfaQQIb2gKXQTNpNseXUcamBHiP-mGoRDBgOFo"
+    },
+    {
+      "key_id": "key_receipt_transit_01",
+      "purpose": "receipt",
+      "public_key": "VTjW_SlNcOYvRbCKdQykRInkNBBMncTABuQ-9FTGoEA"
+    },
+    {
+      "key_id": "key_publisher_prod_01",
+      "purpose": "publisher",
+      "public_key": "ubCoaRrgHP0hX_O6EsraylCO3lSACfNjOalfMN4Eq10"
+    },
+    {
+      "key_id": "key_root_2026_01",
+      "purpose": "root",
+      "public_key": "Mh-W_X390GIYpXSIDTPiavhMO58juuYHKlLYZNCbHwA"
+    }
+  ],
+  "signed_envelope_examples": [
+    {
+      "schema_id": "inference.authorization.v1",
+      "key_id": "key_policy_2026_01",
+      "payload": {
+        "authorization_id": "88888888-8888-4888-8888-888888888888",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "actor_id": "usr_employee_01",
+        "principal_kind": "employee",
+        "device_id": "dev_macbook_01",
+        "profile_id": "prf_default_01",
+        "workload_id": null,
+        "request_id": "66666666-6666-4666-8666-666666666666",
+        "purpose": "meeting_transcription",
+        "operation": "meeting.transcribe.live",
+        "route_id": "route_whisper_live_us",
+        "route_revision": "1",
+        "policy_revision": "100",
+        "access_revision": "200",
+        "budget_reservation_id": "99999999-9999-4999-8999-999999999999",
+        "deletion_generation": "1",
+        "input_revision": "1",
+        "privacy_context_sha256": "32054c795229c8384b115a1d69bb74bf4665717b623511afa26d535aafd82f91",
+        "input_binding": {
+          "kind": "stream",
+          "stream_scope_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40",
+          "stream_id": "33333333-3333-4333-8333-333333333333",
+          "stream_epoch": "44444444-4444-4444-8444-444444444444"
+        },
+        "audience": "inference-admission",
+        "issued_at": "2026-11-10T15:00:00Z",
+        "not_after": "2026-11-10T15:05:00Z"
+      },
+      "signature": "Tlb3y5vNmLM7GUw8YolpKeLKRHUXj0RfUEzgtvpieUOxZIxTezJTv94HRtn-VDRrjgvbf2DPMDJXRnhhX2f_AA"
+    },
+    {
+      "schema_id": "privacy.authorization-context.v1",
+      "key_id": "key_device_macbook_01",
+      "payload": {
+        "request_id": "66666666-6666-4666-8666-666666666666",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "actor_id": "usr_employee_01",
+        "device_id": "dev_macbook_01",
+        "profile_id": "prf_default_01",
+        "purpose": "meeting_transcription",
+        "operation": "meeting.transcribe.live",
+        "consent_revision": "1",
+        "notice_revision": "1",
+        "input_scope_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40",
+        "input_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "input_revision": "1",
+        "deletion_generation": "1",
+        "issued_at": "2026-11-10T15:00:00Z",
+        "not_after": "2026-11-10T15:00:05Z"
+      },
+      "signature": "oGWQk0V3tvkol2WqqNxuXMzGuhGgOCQoA2KYj-YpwgxQo0jMFflYj3zvUo3DxH-kblGLgHFi2FKMxYIVCxVOBg"
+    },
+    {
+      "schema_id": "privacy.inference-chunk.v1",
+      "key_id": "key_device_macbook_01",
+      "payload": {
+        "request_id": "66666666-6666-4666-8666-666666666666",
+        "authorization_id": "88888888-8888-4888-8888-888888888888",
+        "stream_id": "33333333-3333-4333-8333-333333333333",
+        "stream_epoch": "44444444-4444-4444-8444-444444444444",
+        "track_id": "track_mic_01",
+        "sequence": "1",
+        "sample_start": "0",
+        "sample_end": "1600",
+        "byte_length": "3200",
+        "sha256": "8fcb3b0751ec1c190d76acbbf716a52a81544c4ae3216428a57cd31256d0ff16",
+        "consent_revision": "1",
+        "notice_revision": "1",
+        "input_revision": "1",
+        "deletion_generation": "1",
+        "issued_at": "2026-11-10T15:00:00Z",
+        "not_after": "2026-11-10T15:00:05Z"
+      },
+      "signature": "3eHebOXcsEmDCCgn8gvG2E7WcnLUsF29xequqRocd0dPThomCxCaiSOr0gX0FtMxGME7OFezSn0UFuYMY7vkAg"
+    }
+  ],
+  "digest_vectors": [
+    {
+      "vector_id": "stream_scope_digest_01",
+      "target": "stream_scope",
+      "input": {
+        "stream_id": "33333333-3333-4333-8333-333333333333",
+        "stream_epoch": "44444444-4444-4444-8444-444444444444",
+        "meeting_session_id": "meeting_sess_001",
+        "segment_id": "seg_001",
+        "track_ids": [
+          "track_mic_01"
+        ],
+        "encoding": "pcm_s16le",
+        "sample_rate": 16000,
+        "channels": 1,
+        "max_bytes": "320000",
+        "max_samples": "160000",
+        "absolute_not_after": "2026-11-10T15:05:00Z"
+      },
+      "expected_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40"
+    },
+    {
+      "vector_id": "input_scope_digest_01",
+      "target": "input_scope",
+      "input": {
+        "purpose": "hud_context_interpretation",
+        "sources": [
+          {
+            "part_id": "part_01",
+            "source_kind": "screen",
+            "source_ref": "scr_active_win_01",
+            "source_revision": "1",
+            "acquired_at": "2026-11-10T15:00:00Z",
+            "expires_at": "2026-11-10T15:00:30Z",
+            "retention_mode": "ephemeral"
+          }
+        ]
+      },
+      "expected_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638"
+    }
+  ],
+  "validation_cases": [
+    {
+      "case_id": "val_auth_req_positive",
+      "schema_ref": "urn:oryn:schemas:cloud-inference:v1#/$defs/InferenceAuthorizationRequestV1",
+      "instance": {
+        "schema_id": "inference.authorization-request.v1",
+        "request_id": "77777777-7777-4777-8777-777777777777",
+        "purpose": "hud_context_interpretation",
+        "operation": "text.reason",
+        "input_revision": "1",
+        "deletion_generation": "1",
+        "input_binding": {
+          "kind": "batch",
+          "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+          "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778"
+        },
+        "privacy_context": {
+          "schema_id": "privacy.authorization-context.v1",
+          "key_id": "key_device_macbook_01",
+          "payload": {
+            "request_id": "77777777-7777-4777-8777-777777777777",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "actor_id": "usr_employee_01",
+            "device_id": "dev_macbook_01",
+            "profile_id": "prf_default_01",
+            "purpose": "hud_context_interpretation",
+            "operation": "text.reason",
+            "consent_revision": "1",
+            "notice_revision": "1",
+            "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+            "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778",
+            "input_revision": "1",
+            "deletion_generation": "1",
+            "issued_at": "2026-11-10T15:00:00Z",
+            "not_after": "2026-11-10T15:00:05Z"
+          },
+          "signature": "4SMFIvHstFWmiIZ6CHtQ-KHxDXrsssOKkL3FGQibrddBIokijbl5DlLKJc8Hg8PiFiTLeGXo6yyx0X7wBfk5Ag"
+        },
+        "input_scope": {
+          "purpose": "hud_context_interpretation",
+          "sources": [
+            {
+              "part_id": "part_01",
+              "source_kind": "screen",
+              "source_ref": "scr_active_win_01",
+              "source_revision": "1",
+              "acquired_at": "2026-11-10T15:00:00Z",
+              "expires_at": "2026-11-10T15:00:30Z",
+              "retention_mode": "ephemeral"
+            }
+          ]
+        },
+        "input_manifest": [
+          {
+            "part_id": "part_01",
+            "media_type": "text/plain",
+            "byte_length": "24",
+            "sha256": "956696ce8f1fc404942c9087d45f91ca658fc72adb935958ff74bc7da0f312c1",
+            "sample_start": null,
+            "sample_end": null
+          }
+        ],
+        "stream_scope": null,
+        "output_schema_id": "inference.hud-suggestion.v1"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_auth_req_negative_missing_id",
+      "schema_ref": "urn:oryn:schemas:cloud-inference:v1#/$defs/InferenceAuthorizationRequestV1",
+      "instance": {
+        "schema_id": "inference.authorization-request.v1",
+        "purpose": "hud_context_interpretation"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "val_chunk_proof_positive",
+      "schema_ref": "urn:oryn:schemas:cloud-inference:v1#/$defs/SignedInferenceChunkProofV1",
+      "instance": {
+        "schema_id": "privacy.inference-chunk.v1",
+        "key_id": "key_device_macbook_01",
+        "payload": {
+          "request_id": "66666666-6666-4666-8666-666666666666",
+          "authorization_id": "88888888-8888-4888-8888-888888888888",
+          "stream_id": "33333333-3333-4333-8333-333333333333",
+          "stream_epoch": "44444444-4444-4444-8444-444444444444",
+          "track_id": "track_mic_01",
+          "sequence": "1",
+          "sample_start": "0",
+          "sample_end": "1600",
+          "byte_length": "3200",
+          "sha256": "8fcb3b0751ec1c190d76acbbf716a52a81544c4ae3216428a57cd31256d0ff16",
+          "consent_revision": "1",
+          "notice_revision": "1",
+          "input_revision": "1",
+          "deletion_generation": "1",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:00:05Z"
+        },
+        "signature": "3eHebOXcsEmDCCgn8gvG2E7WcnLUsF29xequqRocd0dPThomCxCaiSOr0gX0FtMxGME7OFezSn0UFuYMY7vkAg"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_chunk_proof_negative_bad_hash",
+      "schema_ref": "urn:oryn:schemas:cloud-inference:v1#/$defs/SignedInferenceChunkProofV1",
+      "instance": {
+        "schema_id": "privacy.inference-chunk.v1",
+        "key_id": "key_device_macbook_01",
+        "payload": {
+          "request_id": "66666666-6666-4666-8666-666666666666",
+          "authorization_id": "88888888-8888-4888-8888-888888888888",
+          "stream_id": "33333333-3333-4333-8333-333333333333",
+          "stream_epoch": "44444444-4444-4444-8444-444444444444",
+          "track_id": "track_mic_01",
+          "sequence": "1",
+          "sample_start": "0",
+          "sample_end": "1600",
+          "byte_length": "3200",
+          "sha256": "not_a_valid_hex_sha256",
+          "consent_revision": "1",
+          "notice_revision": "1",
+          "input_revision": "1",
+          "deletion_generation": "1",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:00:05Z"
+        },
+        "signature": "bad_sig"
+      },
+      "expected_valid": false
+    }
+  ],
+  "binding_vectors": [
+    {
+      "case_id": "vector_stream_employee_valid",
+      "authorization": {
+        "schema_id": "inference.authorization.v1",
+        "key_id": "key_policy_2026_01",
+        "payload": {
+          "authorization_id": "88888888-8888-4888-8888-888888888888",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_employee_01",
+          "principal_kind": "employee",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_default_01",
+          "workload_id": null,
+          "request_id": "66666666-6666-4666-8666-666666666666",
+          "purpose": "meeting_transcription",
+          "operation": "meeting.transcribe.live",
+          "route_id": "route_whisper_live_us",
+          "route_revision": "1",
+          "policy_revision": "100",
+          "access_revision": "200",
+          "budget_reservation_id": "99999999-9999-4999-8999-999999999999",
+          "deletion_generation": "1",
+          "input_revision": "1",
+          "privacy_context_sha256": "32054c795229c8384b115a1d69bb74bf4665717b623511afa26d535aafd82f91",
+          "input_binding": {
+            "kind": "stream",
+            "stream_scope_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40",
+            "stream_id": "33333333-3333-4333-8333-333333333333",
+            "stream_epoch": "44444444-4444-4444-8444-444444444444"
+          },
+          "audience": "inference-admission",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:05:00Z"
+        },
+        "signature": "Tlb3y5vNmLM7GUw8YolpKeLKRHUXj0RfUEzgtvpieUOxZIxTezJTv94HRtn-VDRrjgvbf2DPMDJXRnhhX2f_AA"
+      },
+      "privacy_context": {
+        "schema_id": "privacy.authorization-context.v1",
+        "key_id": "key_device_macbook_01",
+        "payload": {
+          "request_id": "66666666-6666-4666-8666-666666666666",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_employee_01",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_default_01",
+          "purpose": "meeting_transcription",
+          "operation": "meeting.transcribe.live",
+          "consent_revision": "1",
+          "notice_revision": "1",
+          "input_scope_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40",
+          "input_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "input_revision": "1",
+          "deletion_generation": "1",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:00:05Z"
+        },
+        "signature": "oGWQk0V3tvkol2WqqNxuXMzGuhGgOCQoA2KYj-YpwgxQo0jMFflYj3zvUo3DxH-kblGLgHFi2FKMxYIVCxVOBg"
+      },
+      "request": {
+        "schema_id": "inference.authorization-request.v1",
+        "request_id": "66666666-6666-4666-8666-666666666666",
+        "purpose": "meeting_transcription",
+        "operation": "meeting.transcribe.live",
+        "input_revision": "1",
+        "deletion_generation": "1",
+        "input_binding": {
+          "kind": "stream",
+          "stream_scope_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40",
+          "stream_id": "33333333-3333-4333-8333-333333333333",
+          "stream_epoch": "44444444-4444-4444-8444-444444444444"
+        },
+        "privacy_context": {
+          "schema_id": "privacy.authorization-context.v1",
+          "key_id": "key_device_macbook_01",
+          "payload": {
+            "request_id": "66666666-6666-4666-8666-666666666666",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "actor_id": "usr_employee_01",
+            "device_id": "dev_macbook_01",
+            "profile_id": "prf_default_01",
+            "purpose": "meeting_transcription",
+            "operation": "meeting.transcribe.live",
+            "consent_revision": "1",
+            "notice_revision": "1",
+            "input_scope_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40",
+            "input_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "input_revision": "1",
+            "deletion_generation": "1",
+            "issued_at": "2026-11-10T15:00:00Z",
+            "not_after": "2026-11-10T15:00:05Z"
+          },
+          "signature": "oGWQk0V3tvkol2WqqNxuXMzGuhGgOCQoA2KYj-YpwgxQo0jMFflYj3zvUo3DxH-kblGLgHFi2FKMxYIVCxVOBg"
+        },
+        "input_scope": null,
+        "input_manifest": null,
+        "stream_scope": {
+          "stream_id": "33333333-3333-4333-8333-333333333333",
+          "stream_epoch": "44444444-4444-4444-8444-444444444444",
+          "meeting_session_id": "meeting_sess_001",
+          "segment_id": "seg_001",
+          "track_ids": [
+            "track_mic_01"
+          ],
+          "encoding": "pcm_s16le",
+          "sample_rate": 16000,
+          "channels": 1,
+          "max_bytes": "320000",
+          "max_samples": "160000",
+          "absolute_not_after": "2026-11-10T15:05:00Z"
+        },
+        "output_schema_id": "inference.transcript-stream.v1"
+      },
+      "stream_scope": {
+        "stream_id": "33333333-3333-4333-8333-333333333333",
+        "stream_epoch": "44444444-4444-4444-8444-444444444444",
+        "meeting_session_id": "meeting_sess_001",
+        "segment_id": "seg_001",
+        "track_ids": [
+          "track_mic_01"
+        ],
+        "encoding": "pcm_s16le",
+        "sample_rate": 16000,
+        "channels": 1,
+        "max_bytes": "320000",
+        "max_samples": "160000",
+        "absolute_not_after": "2026-11-10T15:05:00Z"
+      },
+      "chunk_proof": {
+        "schema_id": "privacy.inference-chunk.v1",
+        "key_id": "key_device_macbook_01",
+        "payload": {
+          "request_id": "66666666-6666-4666-8666-666666666666",
+          "authorization_id": "88888888-8888-4888-8888-888888888888",
+          "stream_id": "33333333-3333-4333-8333-333333333333",
+          "stream_epoch": "44444444-4444-4444-8444-444444444444",
+          "track_id": "track_mic_01",
+          "sequence": "1",
+          "sample_start": "0",
+          "sample_end": "1600",
+          "byte_length": "3200",
+          "sha256": "8fcb3b0751ec1c190d76acbbf716a52a81544c4ae3216428a57cd31256d0ff16",
+          "consent_revision": "1",
+          "notice_revision": "1",
+          "input_revision": "1",
+          "deletion_generation": "1",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:00:05Z"
+        },
+        "signature": "3eHebOXcsEmDCCgn8gvG2E7WcnLUsF29xequqRocd0dPThomCxCaiSOr0gX0FtMxGME7OFezSn0UFuYMY7vkAg"
+      },
+      "chunk_base64": "AQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQA",
+      "checked_at": "2026-11-10T15:00:02Z",
+      "expected_valid": true
+    },
+    {
+      "case_id": "vector_batch_employee_valid",
+      "authorization": {
+        "schema_id": "inference.authorization.v1",
+        "key_id": "key_policy_2026_01",
+        "payload": {
+          "authorization_id": "88888888-8888-4888-8888-888888888889",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_employee_01",
+          "principal_kind": "employee",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_default_01",
+          "workload_id": null,
+          "request_id": "77777777-7777-4777-8777-777777777777",
+          "purpose": "hud_context_interpretation",
+          "operation": "text.reason",
+          "route_id": "route_claude_35_sonnet_us",
+          "route_revision": "1",
+          "policy_revision": "100",
+          "access_revision": "200",
+          "budget_reservation_id": "99999999-9999-4999-8999-999999999998",
+          "deletion_generation": "1",
+          "input_revision": "1",
+          "privacy_context_sha256": "388eeb1928dc94c93f0c63a8090859e49ebc1a273013abf77da9dfe20ee13763",
+          "input_binding": {
+            "kind": "batch",
+            "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+            "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778"
+          },
+          "audience": "inference-admission",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:05:00Z"
+        },
+        "signature": "aLyTMbMbrEJDKkLHsVCQbo7ixNeAuopdnomdU8a6niybD4aZ7yv75pfYBav2dyP-7XBST62uJOI5iwQq924BDQ"
+      },
+      "privacy_context": {
+        "schema_id": "privacy.authorization-context.v1",
+        "key_id": "key_device_macbook_01",
+        "payload": {
+          "request_id": "77777777-7777-4777-8777-777777777777",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_employee_01",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_default_01",
+          "purpose": "hud_context_interpretation",
+          "operation": "text.reason",
+          "consent_revision": "1",
+          "notice_revision": "1",
+          "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+          "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778",
+          "input_revision": "1",
+          "deletion_generation": "1",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:00:05Z"
+        },
+        "signature": "4SMFIvHstFWmiIZ6CHtQ-KHxDXrsssOKkL3FGQibrddBIokijbl5DlLKJc8Hg8PiFiTLeGXo6yyx0X7wBfk5Ag"
+      },
+      "request": {
+        "schema_id": "inference.authorization-request.v1",
+        "request_id": "77777777-7777-4777-8777-777777777777",
+        "purpose": "hud_context_interpretation",
+        "operation": "text.reason",
+        "input_revision": "1",
+        "deletion_generation": "1",
+        "input_binding": {
+          "kind": "batch",
+          "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+          "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778"
+        },
+        "privacy_context": {
+          "schema_id": "privacy.authorization-context.v1",
+          "key_id": "key_device_macbook_01",
+          "payload": {
+            "request_id": "77777777-7777-4777-8777-777777777777",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "actor_id": "usr_employee_01",
+            "device_id": "dev_macbook_01",
+            "profile_id": "prf_default_01",
+            "purpose": "hud_context_interpretation",
+            "operation": "text.reason",
+            "consent_revision": "1",
+            "notice_revision": "1",
+            "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+            "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778",
+            "input_revision": "1",
+            "deletion_generation": "1",
+            "issued_at": "2026-11-10T15:00:00Z",
+            "not_after": "2026-11-10T15:00:05Z"
+          },
+          "signature": "4SMFIvHstFWmiIZ6CHtQ-KHxDXrsssOKkL3FGQibrddBIokijbl5DlLKJc8Hg8PiFiTLeGXo6yyx0X7wBfk5Ag"
+        },
+        "input_scope": {
+          "purpose": "hud_context_interpretation",
+          "sources": [
+            {
+              "part_id": "part_01",
+              "source_kind": "screen",
+              "source_ref": "scr_active_win_01",
+              "source_revision": "1",
+              "acquired_at": "2026-11-10T15:00:00Z",
+              "expires_at": "2026-11-10T15:00:30Z",
+              "retention_mode": "ephemeral"
+            }
+          ]
+        },
+        "input_manifest": [
+          {
+            "part_id": "part_01",
+            "media_type": "text/plain",
+            "byte_length": "24",
+            "sha256": "956696ce8f1fc404942c9087d45f91ca658fc72adb935958ff74bc7da0f312c1",
+            "sample_start": null,
+            "sample_end": null
+          }
+        ],
+        "stream_scope": null,
+        "output_schema_id": "inference.hud-suggestion.v1"
+      },
+      "stream_scope": null,
+      "chunk_proof": null,
+      "chunk_base64": null,
+      "checked_at": "2026-11-10T15:00:02Z",
+      "expected_valid": true
+    },
+    {
+      "case_id": "vector_batch_workload_valid",
+      "authorization": {
+        "schema_id": "inference.authorization.v1",
+        "key_id": "key_policy_2026_01",
+        "payload": {
+          "authorization_id": "88888888-8888-4888-8888-888888888890",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "wrk_graph_indexer_01",
+          "principal_kind": "workload",
+          "device_id": null,
+          "profile_id": null,
+          "workload_id": "wrk_graph_indexer_01",
+          "request_id": "55555555-5555-4555-8555-555555555555",
+          "purpose": "graph_indexing",
+          "operation": "text.embed",
+          "route_id": "route_text_embedding_us",
+          "route_revision": "1",
+          "policy_revision": "100",
+          "access_revision": "200",
+          "budget_reservation_id": "99999999-9999-4999-8999-999999999997",
+          "deletion_generation": "1",
+          "input_revision": "1",
+          "privacy_context_sha256": null,
+          "input_binding": {
+            "kind": "batch",
+            "input_scope_sha256": "82076ee483937cc266f3347930ca35b147aaea260715d16326edba075e700f14",
+            "input_manifest_sha256": "ed25c77b56348ab802cac03861b89f72e1cfd5b362f8f3500ee7cbcacd512c73"
+          },
+          "audience": "inference-admission",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:05:00Z"
+        },
+        "signature": "QCsLs6nNgIeRAiggVgtukYNKcwuRrs1WuctyLdF0VSiZ3pbGUmBHLQ9D4ICA9EhJY7FXd5aE5rEwkhhBP-ImCQ"
+      },
+      "privacy_context": null,
+      "request": {
+        "schema_id": "inference.authorization-request.v1",
+        "request_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "graph_indexing",
+        "operation": "text.embed",
+        "input_revision": "1",
+        "deletion_generation": "1",
+        "input_binding": {
+          "kind": "batch",
+          "input_scope_sha256": "82076ee483937cc266f3347930ca35b147aaea260715d16326edba075e700f14",
+          "input_manifest_sha256": "ed25c77b56348ab802cac03861b89f72e1cfd5b362f8f3500ee7cbcacd512c73"
+        },
+        "privacy_context": null,
+        "input_scope": {
+          "purpose": "graph_indexing",
+          "sources": [
+            {
+              "part_id": "part_doc_01",
+              "source_kind": "organizational_artifact",
+              "source_ref": "art_doc_9988",
+              "source_revision": "1",
+              "acquired_at": "2026-11-10T15:00:00Z",
+              "expires_at": "2026-11-10T15:10:00Z",
+              "retention_mode": "retained"
+            }
+          ]
+        },
+        "input_manifest": [
+          {
+            "part_id": "part_doc_01",
+            "media_type": "text/plain",
+            "byte_length": "100",
+            "sha256": "d82c6aa133a0fc25b087f46ad7ed2a3042772e612e015571e61753ff55ba6da8",
+            "sample_start": null,
+            "sample_end": null
+          }
+        ],
+        "stream_scope": null,
+        "output_schema_id": "inference.embedding-vector.v1"
+      },
+      "stream_scope": null,
+      "chunk_proof": null,
+      "chunk_base64": null,
+      "checked_at": "2026-11-10T15:00:02Z",
+      "expected_valid": true
+    },
+    {
+      "case_id": "vector_batch_grant_expired",
+      "authorization": {
+        "schema_id": "inference.authorization.v1",
+        "key_id": "key_policy_2026_01",
+        "payload": {
+          "authorization_id": "88888888-8888-4888-8888-888888888889",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_employee_01",
+          "principal_kind": "employee",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_default_01",
+          "workload_id": null,
+          "request_id": "77777777-7777-4777-8777-777777777777",
+          "purpose": "hud_context_interpretation",
+          "operation": "text.reason",
+          "route_id": "route_claude_35_sonnet_us",
+          "route_revision": "1",
+          "policy_revision": "100",
+          "access_revision": "200",
+          "budget_reservation_id": "99999999-9999-4999-8999-999999999998",
+          "deletion_generation": "1",
+          "input_revision": "1",
+          "privacy_context_sha256": "388eeb1928dc94c93f0c63a8090859e49ebc1a273013abf77da9dfe20ee13763",
+          "input_binding": {
+            "kind": "batch",
+            "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+            "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778"
+          },
+          "audience": "inference-admission",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:05:00Z"
+        },
+        "signature": "aLyTMbMbrEJDKkLHsVCQbo7ixNeAuopdnomdU8a6niybD4aZ7yv75pfYBav2dyP-7XBST62uJOI5iwQq924BDQ"
+      },
+      "privacy_context": {
+        "schema_id": "privacy.authorization-context.v1",
+        "key_id": "key_device_macbook_01",
+        "payload": {
+          "request_id": "77777777-7777-4777-8777-777777777777",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_employee_01",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_default_01",
+          "purpose": "hud_context_interpretation",
+          "operation": "text.reason",
+          "consent_revision": "1",
+          "notice_revision": "1",
+          "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+          "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778",
+          "input_revision": "1",
+          "deletion_generation": "1",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:00:05Z"
+        },
+        "signature": "4SMFIvHstFWmiIZ6CHtQ-KHxDXrsssOKkL3FGQibrddBIokijbl5DlLKJc8Hg8PiFiTLeGXo6yyx0X7wBfk5Ag"
+      },
+      "request": {
+        "schema_id": "inference.authorization-request.v1",
+        "request_id": "77777777-7777-4777-8777-777777777777",
+        "purpose": "hud_context_interpretation",
+        "operation": "text.reason",
+        "input_revision": "1",
+        "deletion_generation": "1",
+        "input_binding": {
+          "kind": "batch",
+          "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+          "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778"
+        },
+        "privacy_context": {
+          "schema_id": "privacy.authorization-context.v1",
+          "key_id": "key_device_macbook_01",
+          "payload": {
+            "request_id": "77777777-7777-4777-8777-777777777777",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "actor_id": "usr_employee_01",
+            "device_id": "dev_macbook_01",
+            "profile_id": "prf_default_01",
+            "purpose": "hud_context_interpretation",
+            "operation": "text.reason",
+            "consent_revision": "1",
+            "notice_revision": "1",
+            "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+            "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778",
+            "input_revision": "1",
+            "deletion_generation": "1",
+            "issued_at": "2026-11-10T15:00:00Z",
+            "not_after": "2026-11-10T15:00:05Z"
+          },
+          "signature": "4SMFIvHstFWmiIZ6CHtQ-KHxDXrsssOKkL3FGQibrddBIokijbl5DlLKJc8Hg8PiFiTLeGXo6yyx0X7wBfk5Ag"
+        },
+        "input_scope": {
+          "purpose": "hud_context_interpretation",
+          "sources": [
+            {
+              "part_id": "part_01",
+              "source_kind": "screen",
+              "source_ref": "scr_active_win_01",
+              "source_revision": "1",
+              "acquired_at": "2026-11-10T15:00:00Z",
+              "expires_at": "2026-11-10T15:00:30Z",
+              "retention_mode": "ephemeral"
+            }
+          ]
+        },
+        "input_manifest": [
+          {
+            "part_id": "part_01",
+            "media_type": "text/plain",
+            "byte_length": "24",
+            "sha256": "956696ce8f1fc404942c9087d45f91ca658fc72adb935958ff74bc7da0f312c1",
+            "sample_start": null,
+            "sample_end": null
+          }
+        ],
+        "stream_scope": null,
+        "output_schema_id": "inference.hud-suggestion.v1"
+      },
+      "stream_scope": null,
+      "chunk_proof": null,
+      "chunk_base64": null,
+      "checked_at": "2026-11-10T15:05:01Z",
+      "expected_valid": false
+    },
+    {
+      "case_id": "vector_batch_tampered_scope",
+      "authorization": {
+        "schema_id": "inference.authorization.v1",
+        "key_id": "key_policy_2026_01",
+        "payload": {
+          "authorization_id": "88888888-8888-4888-8888-888888888889",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_employee_01",
+          "principal_kind": "employee",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_default_01",
+          "workload_id": null,
+          "request_id": "77777777-7777-4777-8777-777777777777",
+          "purpose": "hud_context_interpretation",
+          "operation": "text.reason",
+          "route_id": "route_claude_35_sonnet_us",
+          "route_revision": "1",
+          "policy_revision": "100",
+          "access_revision": "200",
+          "budget_reservation_id": "99999999-9999-4999-8999-999999999998",
+          "deletion_generation": "1",
+          "input_revision": "1",
+          "privacy_context_sha256": "388eeb1928dc94c93f0c63a8090859e49ebc1a273013abf77da9dfe20ee13763",
+          "input_binding": {
+            "kind": "batch",
+            "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+            "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778"
+          },
+          "audience": "inference-admission",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:05:00Z"
+        },
+        "signature": "aLyTMbMbrEJDKkLHsVCQbo7ixNeAuopdnomdU8a6niybD4aZ7yv75pfYBav2dyP-7XBST62uJOI5iwQq924BDQ"
+      },
+      "privacy_context": {
+        "schema_id": "privacy.authorization-context.v1",
+        "key_id": "key_device_macbook_01",
+        "payload": {
+          "request_id": "77777777-7777-4777-8777-777777777777",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_employee_01",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_default_01",
+          "purpose": "hud_context_interpretation",
+          "operation": "text.reason",
+          "consent_revision": "1",
+          "notice_revision": "1",
+          "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+          "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778",
+          "input_revision": "1",
+          "deletion_generation": "1",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:00:05Z"
+        },
+        "signature": "4SMFIvHstFWmiIZ6CHtQ-KHxDXrsssOKkL3FGQibrddBIokijbl5DlLKJc8Hg8PiFiTLeGXo6yyx0X7wBfk5Ag"
+      },
+      "request": {
+        "schema_id": "inference.authorization-request.v1",
+        "request_id": "77777777-7777-4777-8777-777777777777",
+        "purpose": "hud_context_interpretation",
+        "operation": "text.reason",
+        "input_revision": "1",
+        "deletion_generation": "1",
+        "input_binding": {
+          "kind": "batch",
+          "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+          "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778"
+        },
+        "privacy_context": {
+          "schema_id": "privacy.authorization-context.v1",
+          "key_id": "key_device_macbook_01",
+          "payload": {
+            "request_id": "77777777-7777-4777-8777-777777777777",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "actor_id": "usr_employee_01",
+            "device_id": "dev_macbook_01",
+            "profile_id": "prf_default_01",
+            "purpose": "hud_context_interpretation",
+            "operation": "text.reason",
+            "consent_revision": "1",
+            "notice_revision": "1",
+            "input_scope_sha256": "acd719e96c4d4a7978676fd878cf96207fc9f37e7d9c3ccfa7bed60775a87638",
+            "input_manifest_sha256": "a63430dc163cf41ceb563fd72ddc9d84679a35ecc3bda08c9c7d531766a3c778",
+            "input_revision": "1",
+            "deletion_generation": "1",
+            "issued_at": "2026-11-10T15:00:00Z",
+            "not_after": "2026-11-10T15:00:05Z"
+          },
+          "signature": "4SMFIvHstFWmiIZ6CHtQ-KHxDXrsssOKkL3FGQibrddBIokijbl5DlLKJc8Hg8PiFiTLeGXo6yyx0X7wBfk5Ag"
+        },
+        "input_scope": {
+          "purpose": "hud_context_interpretation",
+          "sources": [
+            {
+              "part_id": "part_01",
+              "source_kind": "screen",
+              "source_ref": "scr_tampered_99",
+              "source_revision": "1",
+              "acquired_at": "2026-11-10T15:00:00Z",
+              "expires_at": "2026-11-10T15:00:30Z",
+              "retention_mode": "ephemeral"
+            }
+          ]
+        },
+        "input_manifest": [
+          {
+            "part_id": "part_01",
+            "media_type": "text/plain",
+            "byte_length": "24",
+            "sha256": "956696ce8f1fc404942c9087d45f91ca658fc72adb935958ff74bc7da0f312c1",
+            "sample_start": null,
+            "sample_end": null
+          }
+        ],
+        "stream_scope": null,
+        "output_schema_id": "inference.hud-suggestion.v1"
+      },
+      "stream_scope": null,
+      "chunk_proof": null,
+      "chunk_base64": null,
+      "checked_at": "2026-11-10T15:00:02Z",
+      "expected_valid": false
+    },
+    {
+      "case_id": "vector_stream_epoch_mismatch",
+      "authorization": {
+        "schema_id": "inference.authorization.v1",
+        "key_id": "key_policy_2026_01",
+        "payload": {
+          "authorization_id": "88888888-8888-4888-8888-888888888888",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_employee_01",
+          "principal_kind": "employee",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_default_01",
+          "workload_id": null,
+          "request_id": "66666666-6666-4666-8666-666666666666",
+          "purpose": "meeting_transcription",
+          "operation": "meeting.transcribe.live",
+          "route_id": "route_whisper_live_us",
+          "route_revision": "1",
+          "policy_revision": "100",
+          "access_revision": "200",
+          "budget_reservation_id": "99999999-9999-4999-8999-999999999999",
+          "deletion_generation": "1",
+          "input_revision": "1",
+          "privacy_context_sha256": "32054c795229c8384b115a1d69bb74bf4665717b623511afa26d535aafd82f91",
+          "input_binding": {
+            "kind": "stream",
+            "stream_scope_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40",
+            "stream_id": "33333333-3333-4333-8333-333333333333",
+            "stream_epoch": "44444444-4444-4444-8444-444444444444"
+          },
+          "audience": "inference-admission",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:05:00Z"
+        },
+        "signature": "Tlb3y5vNmLM7GUw8YolpKeLKRHUXj0RfUEzgtvpieUOxZIxTezJTv94HRtn-VDRrjgvbf2DPMDJXRnhhX2f_AA"
+      },
+      "privacy_context": {
+        "schema_id": "privacy.authorization-context.v1",
+        "key_id": "key_device_macbook_01",
+        "payload": {
+          "request_id": "66666666-6666-4666-8666-666666666666",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "actor_id": "usr_employee_01",
+          "device_id": "dev_macbook_01",
+          "profile_id": "prf_default_01",
+          "purpose": "meeting_transcription",
+          "operation": "meeting.transcribe.live",
+          "consent_revision": "1",
+          "notice_revision": "1",
+          "input_scope_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40",
+          "input_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "input_revision": "1",
+          "deletion_generation": "1",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:00:05Z"
+        },
+        "signature": "oGWQk0V3tvkol2WqqNxuXMzGuhGgOCQoA2KYj-YpwgxQo0jMFflYj3zvUo3DxH-kblGLgHFi2FKMxYIVCxVOBg"
+      },
+      "request": {
+        "schema_id": "inference.authorization-request.v1",
+        "request_id": "66666666-6666-4666-8666-666666666666",
+        "purpose": "meeting_transcription",
+        "operation": "meeting.transcribe.live",
+        "input_revision": "1",
+        "deletion_generation": "1",
+        "input_binding": {
+          "kind": "stream",
+          "stream_scope_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40",
+          "stream_id": "33333333-3333-4333-8333-333333333333",
+          "stream_epoch": "44444444-4444-4444-8444-444444444444"
+        },
+        "privacy_context": {
+          "schema_id": "privacy.authorization-context.v1",
+          "key_id": "key_device_macbook_01",
+          "payload": {
+            "request_id": "66666666-6666-4666-8666-666666666666",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "actor_id": "usr_employee_01",
+            "device_id": "dev_macbook_01",
+            "profile_id": "prf_default_01",
+            "purpose": "meeting_transcription",
+            "operation": "meeting.transcribe.live",
+            "consent_revision": "1",
+            "notice_revision": "1",
+            "input_scope_sha256": "700eacabe02f1e5ecca666a8e05c705ec2c418005116686645da638f40d03d40",
+            "input_manifest_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "input_revision": "1",
+            "deletion_generation": "1",
+            "issued_at": "2026-11-10T15:00:00Z",
+            "not_after": "2026-11-10T15:00:05Z"
+          },
+          "signature": "oGWQk0V3tvkol2WqqNxuXMzGuhGgOCQoA2KYj-YpwgxQo0jMFflYj3zvUo3DxH-kblGLgHFi2FKMxYIVCxVOBg"
+        },
+        "input_scope": null,
+        "input_manifest": null,
+        "stream_scope": {
+          "stream_id": "33333333-3333-4333-8333-333333333333",
+          "stream_epoch": "44444444-4444-4444-8444-444444444444",
+          "meeting_session_id": "meeting_sess_001",
+          "segment_id": "seg_001",
+          "track_ids": [
+            "track_mic_01"
+          ],
+          "encoding": "pcm_s16le",
+          "sample_rate": 16000,
+          "channels": 1,
+          "max_bytes": "320000",
+          "max_samples": "160000",
+          "absolute_not_after": "2026-11-10T15:05:00Z"
+        },
+        "output_schema_id": "inference.transcript-stream.v1"
+      },
+      "stream_scope": {
+        "stream_id": "33333333-3333-4333-8333-333333333333",
+        "stream_epoch": "44444444-4444-4444-8444-444444444444",
+        "meeting_session_id": "meeting_sess_001",
+        "segment_id": "seg_001",
+        "track_ids": [
+          "track_mic_01"
+        ],
+        "encoding": "pcm_s16le",
+        "sample_rate": 16000,
+        "channels": 1,
+        "max_bytes": "320000",
+        "max_samples": "160000",
+        "absolute_not_after": "2026-11-10T15:05:00Z"
+      },
+      "chunk_proof": {
+        "schema_id": "privacy.inference-chunk.v1",
+        "key_id": "key_device_macbook_01",
+        "payload": {
+          "request_id": "66666666-6666-4666-8666-666666666666",
+          "authorization_id": "88888888-8888-4888-8888-888888888888",
+          "stream_id": "33333333-3333-4333-8333-333333333333",
+          "stream_epoch": "ffffffff-ffff-4fff-8fff-ffffffffffff",
+          "track_id": "track_mic_01",
+          "sequence": "1",
+          "sample_start": "0",
+          "sample_end": "1600",
+          "byte_length": "3200",
+          "sha256": "8fcb3b0751ec1c190d76acbbf716a52a81544c4ae3216428a57cd31256d0ff16",
+          "consent_revision": "1",
+          "notice_revision": "1",
+          "input_revision": "1",
+          "deletion_generation": "1",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-10T15:00:05Z"
+        },
+        "signature": "b2f78zjxwGFBm-QXqREAUmo6bsF_doUVBX-7nkBAxdN-x3WTmIAn8Up-LUPF0hzllVS--UDuKhQfTJ3dMKviCw"
+      },
+      "chunk_base64": "AQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQABAAEAAQA",
+      "checked_at": "2026-11-10T15:00:02Z",
+      "expected_valid": false
+    }
+  ],
+  "descriptive_cases": [
+    {
+      "case_id": "case_inference_stream_disconnect_termination",
+      "description": "WebSocket owner crash or socket disconnect immediately terminates upstream provider stream, zeros memory, and fails closed without cross-pod resumption.",
+      "expected_behavior": "Immediate provider cancellation, RAM zeroed, no session resumption on another pod."
+    },
+    {
+      "case_id": "case_inference_budget_rollover",
+      "description": "Calendar month rollover halts current reservation usage; continuing streams require new authorization quantum in new month window.",
+      "expected_behavior": "Prior reservation stays in prior month; stream requires re-admission in new month."
+    }
+  ]
+}

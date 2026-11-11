@@ -5,6 +5,7 @@
 **Deciders:** User-Approved Architecture Review  
 **Authority:** Technical Architecture & Security Engineering  
 **Amends:** [ADR-0001](0001-desktop-runtime-and-presentation.md), [ADR-0007](0007-private-evidence-storage-and-retention.md), [ADR-0008](0008-reviewed-still-image-sharing.md), [ADR-0009](0009-local-context-guidance-and-assist-boundaries.md)  
+**Amended by:** [ADR-0011](0011-identity-authority-and-approval-fencing.md)  
 **Normative Specification:** [docs/components/contribution-sync.md](../components/contribution-sync.md)
 
 ---
@@ -51,7 +52,8 @@ Oryn mediates the critical boundary between an employee's private on-device work
 
 ## Rationale and Alternatives
 
-- *Alternative Considered: Merging Sync into Privacy Helper:* Rejected. Giving `oryn-privacy-helper` outbound network access violates least-privilege principles and drastically expands the blast radius of network libraries. Isolating transport in `oryn-sync-helper` ensures private evidence keys and raw capture files remain in a network-isolated process.
+- *Alternative Considered: Merging Knowledge Contribution Sync into Privacy Helper:* Rejected. Giving `oryn-privacy-helper` general asynchronous contribution upload and broad synchronization transport expands the network attack surface. Isolating asynchronous knowledge synchronization in `oryn-sync-helper` ensures offline contribution queues and bulk guidance transfers stay separate from `oryn-privacy-helper` (which maintains strictly bounded, governed inference egress under Contract 22 alongside local evidence keys; see [ADR-0005](0005-cloud-inference-and-private-evidence.md) and [ADR-0011](0011-identity-authority-and-approval-fencing.md)).
+- *Alternative Considered: Hardware Enclave for Review Attestation:* Rejected per [ADR-0011](0011-identity-authority-and-approval-fencing.md). The review key is a software Ed25519 key stored in OS-protected credential storage (`com.oryn.device.identity`).
 - *Alternative Considered: Object Storage Staging for Redacted PNGs:* Rejected. Staging image artifacts in S3/GCS using presigned upload URLs introduces race conditions between image uploads and metadata submission, requires multi-service cleanup upon cancellation, and risks orphaned images. Because still images are strictly bounded (<= 1920x1080, <= 1 MiB, max 4 per contribution), committing them directly to PostgreSQL `bytea` columns inside the domain acceptance transaction guarantees transactional atomicity.
 - *Alternative Considered: gRPC Bidirectional Streaming:* Rejected. gRPC streaming introduces stateful connection maintenance complexities across corporate proxies, VPN reconnects, and laptop sleep cycles. HTTPS REST with bounded long polling provides robust proxy compatibility, simpler connection recovery, and standard cache integration.
 - *Alternative Considered: Full Archival of Withdrawn Contributions:* Rejected. Retaining full copies of withdrawn employee contributions under standard retention schedules violates employee trust. Immediate exclusion of unpublished intake guarantees employee intent is honored while preserving governed review for published procedures.
