@@ -197,18 +197,20 @@ pub trait CandidateReviewPort {
     ) -> Result<CandidatePromotionV1, DiscoveryError>;
 }
 
-pub trait GraphPromotionPort {
-    fn stage_candidate(
-        tx: &mut TenantTransaction,
-        principal: &VerifiedPrincipal,
+pub trait GraphPromotionPort: Send + Sync {
+    fn stage_candidate<'a>(
+        &'a self,
+        tx: &'a mut TenantTransaction,
+        principal: &'a VerifiedPrincipal,
         promotion: CandidatePromotionV1,
-    ) -> Result<GraphCandidateReceiptV1, GraphPromotionError>;
+    ) -> impl Future<Output = Result<GraphCandidateReceiptV1, GraphPromotionError>> + Send + 'a;
 
-    fn get_discovery_context(
-        tx: &mut TenantTransaction,
-        principal: &VerifiedPrincipal,
-        source: &ContributionRevisionRefV1,
-    ) -> Result<GraphDiscoveryContextV1, GraphPromotionError>;
+    fn get_discovery_context<'a>(
+        &'a self,
+        tx: &'a mut TenantTransaction,
+        principal: &'a VerifiedPrincipal,
+        source: &'a ContributionRevisionRefV1,
+    ) -> impl Future<Output = Result<GraphDiscoveryContextV1, GraphPromotionError>> + Send + 'a;
 }
 ```
 
@@ -411,7 +413,7 @@ CREATE TABLE discovery_attempt (
 );
 ALTER TABLE discovery_attempt ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_attempt FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_attempt_tenant ON discovery_attempt USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_attempt_tenant ON discovery_attempt USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 CREATE INDEX idx_discovery_attempt_source ON discovery_attempt (organization_id, canonical_contribution_id, canonical_revision);
 
 -- Discovery Embedding Space
@@ -431,7 +433,7 @@ CREATE TABLE discovery_embedding (
 );
 ALTER TABLE discovery_embedding ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_embedding FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_embedding_tenant ON discovery_embedding USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_embedding_tenant ON discovery_embedding USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Discovery Pairwise Compatibility Verdicts
 CREATE TABLE discovery_pair_verdict (
@@ -451,7 +453,7 @@ CREATE TABLE discovery_pair_verdict (
 );
 ALTER TABLE discovery_pair_verdict ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_pair_verdict FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_pair_verdict_tenant ON discovery_pair_verdict USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_pair_verdict_tenant ON discovery_pair_verdict USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Discovery Cluster Store
 CREATE TABLE discovery_cluster (
@@ -470,7 +472,7 @@ CREATE TABLE discovery_cluster (
 );
 ALTER TABLE discovery_cluster ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_cluster FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_cluster_tenant ON discovery_cluster USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_cluster_tenant ON discovery_cluster USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Discovery Cluster Membership
 CREATE TABLE discovery_cluster_member (
@@ -490,7 +492,7 @@ CREATE TABLE discovery_cluster_member (
 );
 ALTER TABLE discovery_cluster_member ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_cluster_member FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_cluster_member_tenant ON discovery_cluster_member USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_cluster_member_tenant ON discovery_cluster_member USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 CREATE INDEX idx_cluster_member_source ON discovery_cluster_member (organization_id, contribution_id, revision);
 
 -- Discovery Candidate Store
@@ -514,7 +516,7 @@ CREATE TABLE discovery_candidate (
 );
 ALTER TABLE discovery_candidate ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_candidate FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_candidate_tenant ON discovery_candidate USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_candidate_tenant ON discovery_candidate USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Discovery Candidate Revision Store (Immutable)
 CREATE TABLE discovery_candidate_revision (
@@ -535,7 +537,7 @@ CREATE TABLE discovery_candidate_revision (
 );
 ALTER TABLE discovery_candidate_revision ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_candidate_revision FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_candidate_rev_tenant ON discovery_candidate_revision USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_candidate_rev_tenant ON discovery_candidate_revision USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Pinned Source Mapping per Candidate Revision
 CREATE TABLE discovery_candidate_source (
@@ -552,7 +554,7 @@ CREATE TABLE discovery_candidate_source (
 );
 ALTER TABLE discovery_candidate_source ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_candidate_source FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_candidate_source_tenant ON discovery_candidate_source USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_candidate_source_tenant ON discovery_candidate_source USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 CREATE INDEX idx_candidate_source_sync ON discovery_candidate_source (organization_id, contribution_id, source_revision);
 
 -- Discovery Review Audit Records
@@ -572,7 +574,7 @@ CREATE TABLE discovery_review_record (
 );
 ALTER TABLE discovery_review_record ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_review_record FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_review_record_tenant ON discovery_review_record USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_review_record_tenant ON discovery_review_record USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Clarification Questions
 CREATE TABLE discovery_question (
@@ -596,7 +598,7 @@ CREATE TABLE discovery_question (
 );
 ALTER TABLE discovery_question ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_question FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_question_tenant ON discovery_question USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_question_tenant ON discovery_question USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Sanitized Suppression Rules
 CREATE TABLE discovery_suppression (
@@ -619,7 +621,7 @@ CREATE TABLE discovery_suppression (
 );
 ALTER TABLE discovery_suppression ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_suppression FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_suppression_tenant ON discovery_suppression USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_suppression_tenant ON discovery_suppression USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Guidance Promotion Staging Ledger
 CREATE TABLE discovery_promotion (
@@ -637,7 +639,7 @@ CREATE TABLE discovery_promotion (
 );
 ALTER TABLE discovery_promotion ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_promotion FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_promotion_tenant ON discovery_promotion USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_promotion_tenant ON discovery_promotion USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Discovery Configuration Store
 CREATE TABLE discovery_configuration (
@@ -652,7 +654,7 @@ CREATE TABLE discovery_configuration (
 );
 ALTER TABLE discovery_configuration ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_configuration FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_configuration_tenant ON discovery_configuration USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_configuration_tenant ON discovery_configuration USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Discovery Worker Task Queue
 CREATE TABLE discovery_work (
@@ -668,7 +670,7 @@ CREATE TABLE discovery_work (
 );
 ALTER TABLE discovery_work ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_work FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_work_tenant ON discovery_work USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_work_tenant ON discovery_work USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Discovery Review Proposals (Diffs & Branches)
 CREATE TABLE discovery_proposal (
@@ -686,7 +688,7 @@ CREATE TABLE discovery_proposal (
 );
 ALTER TABLE discovery_proposal ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_proposal FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_proposal_tenant ON discovery_proposal USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_proposal_tenant ON discovery_proposal USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Owner Reconsideration Requests
 CREATE TABLE discovery_reconsideration (
@@ -705,7 +707,7 @@ CREATE TABLE discovery_reconsideration (
 );
 ALTER TABLE discovery_reconsideration ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_reconsideration FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_reconsideration_tenant ON discovery_reconsideration USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_reconsideration_tenant ON discovery_reconsideration USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 
 -- Human Demonstration Outcome Verifications
 CREATE TABLE discovery_demonstration_verification (
@@ -728,7 +730,7 @@ CREATE TABLE discovery_demonstration_verification (
 );
 ALTER TABLE discovery_demonstration_verification ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_demonstration_verification FORCE ROW LEVEL SECURITY;
-CREATE POLICY p_discovery_demonstration_verif_tenant ON discovery_demonstration_verification USING (organization_id = current_setting('app.current_organization_id', true)::uuid);
+CREATE POLICY p_discovery_demonstration_verif_tenant ON discovery_demonstration_verification USING (organization_id = current_setting('oryn.organization_id', true)::uuid);
 ```
 
 ### Lock Ordering and Concurrency Guard

@@ -131,7 +131,9 @@ An `InferenceRoute` represents an approved, capability-certified upstream model 
     "repair.patch.v1",
     "hud.context-interpretation.v1",
     "hud.demonstration-summary.v1",
-    "hud.step-explanation.v1"
+    "hud.step-explanation.v1",
+    "knowledge.embedding.v1",
+    "knowledge.rerank.v1"
   ],
   "processing_geography": "US",
   "content_retention": "none_after_processing",
@@ -357,6 +359,26 @@ Workflow Discovery and Procedure Synthesis consumes transient cloud text inferen
 
 All Workflow Discovery inference operations strictly prohibit raw screenshot transmission (images remain reviewer-only verification artifacts). Certified route pinning enforces zero content retention and US geographic processing. Transient transport errors permit at most one same-binding retry prior to response commencement.
 
+### 3.9 Operational Graph and Knowledge Governance Contracts (`text.embed`, `text.rerank`)
+
+The Living Operational Graph consumes cloud inference via the LiteLLM gateway under Contract 22 strictly for semantic knowledge retrieval indexing, interactive search embedding, and cross-encoder candidate reranking. Graph operations never execute `text.reason` (reasoning models cannot establish structural relationships, alter approvals, or resolve conflicts):
+
+1. **`knowledge_search_embed` (Operation: `text.embed`):**
+   - **Purpose:** Generates a dense query embedding vector for interactive employee or agent search queries to perform exact cosine similarity matching (`<=>`) in PostgreSQL `pgvector`.
+   - **Output Schema:** `knowledge.embedding.v1` (enforcing `input_fingerprint`, `embedding_space_id`, `dimensions` 1..4096, and normalized vector array).
+   - **Input Scope:** Interactive search query string capped at 4 KiB. Output capped at 256 KiB. Timeout: 5,000 ms.
+
+2. **`knowledge_document_embed` (Operation: `text.embed`):**
+   - **Purpose:** Generates a dense document embedding vector from authorized capability, playbook, or rule title/objective/summary text projections for background indexing.
+   - **Output Schema:** `knowledge.embedding.v1` (enforcing `input_fingerprint`, `embedding_space_id`, `dimensions` 1..4096, and normalized vector array).
+   - **Input Scope:** Approved document projection text capped at 32 KiB. Output capped at 256 KiB. Timeout: 30,000 ms.
+
+3. **`knowledge_search_rerank` (Operation: `text.rerank`):**
+   - **Purpose:** Re-scores the top 20 pre-filtered candidate document projections against the query text to compute fine-grained relevance rankings before response projection.
+   - **Output Schema:** `knowledge.rerank.v1` (enforcing unique subset/permutation of candidate IDs with finite float scores).
+   - **Input Scope:** At most 20 candidates, total input payload capped at 128 KiB. Output capped at 16 KiB. Timeout: 3,000 ms.
+
+All Operational Graph model requests submit through the standard inference authorization and reservation path. Model output is treated as untrusted: the system revalidates document digests, source eligibility, and caller principal audience access before committing indexes or projecting search pages. No direct provider routing or local model fallback is permitted.
 ---
 
 ## 4. Control Plane and Gateway Interfaces

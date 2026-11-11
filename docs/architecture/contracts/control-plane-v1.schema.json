@@ -295,7 +295,23 @@
             "DISCOVERY_EVIDENCE_UNAVAILABLE",
             "DISCOVERY_MODEL_BLOCKED",
             "DISCOVERY_IDENTITY_CONFLICT",
-            "DISCOVERY_CONFIG_REQUIRED"
+            "DISCOVERY_CONFIG_REQUIRED",
+            "KNOWLEDGE_REVISION_CONFLICT",
+            "KNOWLEDGE_SOURCE_INELIGIBLE",
+            "KNOWLEDGE_INSUFFICIENT_EXAMPLES",
+            "KNOWLEDGE_OWNER_REQUIRED",
+            "KNOWLEDGE_RULE_UNFORMALIZED",
+            "KNOWLEDGE_RULE_OVERLAP",
+            "KNOWLEDGE_RULE_UNPROVEN",
+            "KNOWLEDGE_CONFLICT_UNRESOLVED",
+            "KNOWLEDGE_DEPENDENCY_INCOMPLETE",
+            "KNOWLEDGE_SCOPE_OVERLAP",
+            "KNOWLEDGE_PROJECTION_INVALID",
+            "KNOWLEDGE_EVIDENCE_UNAVAILABLE",
+            "KNOWLEDGE_COMPLETION_UNVERIFIED",
+            "KNOWLEDGE_TRANSITION_INVALID",
+            "KNOWLEDGE_QUERY_INCOMPLETE",
+            "KNOWLEDGE_LIMIT_EXCEEDED"
           ]
         },
         "request_id": {
@@ -562,7 +578,15 @@
             "workflow.candidate_rejected",
             "workflow.candidate_approved",
             "workflow.reconsideration_requested",
-            "workflow.promotion_staged"
+            "workflow.promotion_staged",
+            "rule.approved",
+            "rule.changed",
+            "knowledge.conflict_detected",
+            "knowledge.conflict_resolved",
+            "workflow.revalidation_required",
+            "knowledge.guidance_changed",
+            "knowledge.handoff_changed",
+            "knowledge.dependency_registered"
           ]
         },
         "aggregate_type": {

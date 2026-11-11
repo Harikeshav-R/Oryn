@@ -125,6 +125,7 @@ Operating over an isolated, direct socketpair (macOS) or anonymous pipe pair (Wi
 
 ### Contract 3: Guidance Bundle and Access Lease Interface (`hud.guidance-bundle.v1`)
 Consumes published, access-filtered guidance bundles from [operational-graph](operational-graph.md) via [contribution-sync](contribution-sync.md), and signed access leases from [identity-policy](identity-policy.md).
+Central playbook publication in Operational Graph does not automatically qualify a playbook for HUD bundle delivery (`hud_status = 'not_configured'`). Delivering a guidance bundle to the HUD requires a separately reviewed `GuidanceProjectionDraftV1` mapping procedure steps to certified `ApplicationProfileV1` versions and deterministic predicates, signed by the Vault Ed25519 publisher key (`SignedPublisherSignatureV1`). Any mapping gap or predicate ambiguity leaves HUD status unconfigured or blocked, without emitting an unverified bundle.
 - **`GuidanceBundleV1` Schema:**
   - `schema_id`: `"hud.guidance-bundle.v1"`
   - `bundle_id`: string UUIDv4

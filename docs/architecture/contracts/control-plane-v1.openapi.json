@@ -2549,7 +2549,7 @@
           {
             "name": "Idempotency-Key",
             "in": "header",
-            "required": false,
+            "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -2607,6 +2607,1008 @@
           },
           "409": {
             "description": "Staged revision mismatch or source invalidated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    ,
+    "/v1/knowledge/capabilities": {
+      "get": {
+        "operationId": "listCapabilities",
+        "summary": "List tenant operational capabilities matching caller audience",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of capability projections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["capabilities", "next_cursor"],
+                  "properties": {
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./operational-graph-v1.schema.json#/$defs/CapabilityVersionV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": ["string", "null"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/capabilities/{capability_id}": {
+      "get": {
+        "operationId": "getCapability",
+        "summary": "Retrieve capability details and version summary",
+        "parameters": [
+          {
+            "name": "capability_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Capability details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/CapabilityVersionV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Capability not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/capabilities/{capability_id}/versions/{version_id}": {
+      "get": {
+        "operationId": "getCapabilityVersion",
+        "summary": "Retrieve exact immutable capability version",
+        "parameters": [
+          {
+            "name": "capability_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact capability version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/CapabilityVersionV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Capability version not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/playbooks/{playbook_id}/versions/{playbook_version}": {
+      "get": {
+        "operationId": "getPlaybookVersion",
+        "summary": "Retrieve exact published playbook version",
+        "parameters": [
+          {
+            "name": "playbook_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "playbook_version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact playbook version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/PlaybookVersionV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playbook version not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/playbooks/{playbook_id}/defaults": {
+      "post": {
+        "operationId": "setDefaultPlaybookScope",
+        "summary": "Bind playbook version as default for nonoverlapping audience and application scope",
+        "parameters": [
+          {
+            "name": "playbook_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/SetDefaultScopeCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default scope registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/KnowledgeStatusV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Scope overlap detected",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/playbooks/{playbook_id}/guidance-projections": {
+      "post": {
+        "operationId": "stageGuidanceProjection",
+        "summary": "Stage reviewed HUD guidance projection for qualification and Ed25519 signing",
+        "parameters": [
+          {
+            "name": "playbook_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/GuidanceProjectionDraftV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Guidance projection staged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/KnowledgeStatusV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid step mapping or uncertified profile",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/playbooks/{playbook_id}/retirements": {
+      "post": {
+        "operationId": "retirePlaybook",
+        "summary": "Retire playbook and revoke active guidance bundles",
+        "parameters": [
+          {
+            "name": "playbook_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/RetirePlaybookCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Playbook retired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/KnowledgeStatusV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/rules": {
+      "post": {
+        "operationId": "proposeRule",
+        "summary": "Propose a new business rule version for owner review",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/ProposeRuleCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rule proposed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/KnowledgeStatusV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid rule formalization or overlap",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/rules/{rule_id}/versions/{version_id}": {
+      "get": {
+        "operationId": "getRuleVersion",
+        "summary": "Retrieve exact immutable business rule version",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exact rule version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/BusinessRuleVersionV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Rule version not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/rules/{rule_id}/approvals": {
+      "post": {
+        "operationId": "approveRule",
+        "summary": "Approve proposed business rule into active effectivity",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/ApproveRuleCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rule approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/BusinessRuleVersionV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rule approval authority required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or content mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/rules/{rule_id}/continuations": {
+      "post": {
+        "operationId": "grantPolicyContinuation",
+        "summary": "Grant bounded previous-policy continuation for superseded rule",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/GrantContinuationCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Continuation granted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/PreviousPolicyContinuationV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authority required to grant continuation",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/queries": {
+      "post": {
+        "operationId": "queryKnowledge",
+        "summary": "Execute graph traversal, dependency lookup, impact query, or hybrid search",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/KnowledgeQueryV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Synchronous query result page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/KnowledgeQueryPageV1"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Full impact traversal queued as asynchronous operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/conflicts": {
+      "post": {
+        "operationId": "reportConflict",
+        "summary": "Report material policy conflict across knowledge entities",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/ReportConflictCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Conflict recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/KnowledgeConflictV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Permission denied to report conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/conflicts/{conflict_id}/decisions": {
+      "post": {
+        "operationId": "decideConflict",
+        "summary": "Resolve or dismiss recorded policy conflict",
+        "parameters": [
+          {
+            "name": "conflict_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/ConflictDecisionCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conflict decision recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/KnowledgeConflictV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy owner authority required to resolve conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/revalidations": {
+      "post": {
+        "operationId": "requestRevalidation",
+        "summary": "Submit revalidation assessment for knowledge entity requiring verification",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/RequestRevalidationCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Revalidation recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/KnowledgeStatusV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/handoffs": {
+      "get": {
+        "operationId": "listHandoffs",
+        "summary": "List accessible handoff obligations for caller",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of handoff obligations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["handoffs", "next_cursor"],
+                  "properties": {
+                    "handoffs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./operational-graph-v1.schema.json#/$defs/HandoffV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": ["string", "null"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createHandoffProposal",
+        "summary": "Create handoff proposal from manual entry or review",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/HandoffProposalV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Handoff proposal created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/HandoffV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/handoffs/{handoff_id}": {
+      "get": {
+        "operationId": "getHandoff",
+        "summary": "Retrieve handoff obligation details",
+        "parameters": [
+          {
+            "name": "handoff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Handoff details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/HandoffV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Handoff obligation not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/handoffs/{handoff_id}/commands": {
+      "post": {
+        "operationId": "executeHandoffCommand",
+        "summary": "Execute lifecycle command on handoff obligation",
+        "parameters": [
+          {
+            "name": "handoff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/HandoffCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Command applied to handoff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./operational-graph-v1.schema.json#/$defs/HandoffV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or invalid state transition",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unverified completion assessment",
             "content": {
               "application/problem+json": {
                 "schema": {

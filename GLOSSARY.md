@@ -183,3 +183,35 @@ _Avoid_: Publication, intake cache
 **Inference Reservation**:
 Bounded permission to consume a portion of an organization's configured inference allowance for an admitted request; it is an encumbrance, not confirmed actual cost.
 _Avoid_: Spend invoice, guaranteed charge
+
+**Operational Capability**:
+A distinct, reusable organizational workflow objective and scope governed within a tenant.
+_Avoid_: Playbook copy, workflow umbrella, automation script
+
+**Capability Version**:
+An immutable, approved specification of a capability's procedure, variants, governing rules, inputs, postconditions, audience, and provenance.
+_Avoid_: Draft iteration, editable procedure, generic template
+
+**Playbook Version**:
+An approved, human-facing publication of a procedure bound to exactly one capability version for guidance delivery.
+_Avoid_: Parallel procedure authority, unofficial runbook, editable guide
+
+**Business Rule Version**:
+An immutable, approved statement of organizational policy, scope, and effective interval, optionally paired with a formalized condition or decision table.
+_Avoid_: Runtime permission, code snippet, informal convention
+
+**Knowledge Conflict**:
+A recorded unresolved incompatibility between approved knowledge assets or a credible material reported policy contradiction.
+_Avoid_: Semantic similarity, vector distance, informal dispute
+
+**Handoff**:
+An accountable inter-team operational obligation linking a source workflow state to a required downstream recipient state and verification condition.
+_Avoid_: Transport receipt, private commitment, task notification
+
+**Dependency Manifest**:
+An immutable, ordered declaration of the complete transitive operational knowledge assets required by a consumer.
+_Avoid_: Partial import list, runtime cache, package manifest
+
+**Previous-Policy Continuation**:
+An explicit, approved grant permitting named consumers to continue operating under a superseded rule version for a bounded interval.
+_Avoid_: Indefinite grace period, implicit grandfathering, blanket exemption

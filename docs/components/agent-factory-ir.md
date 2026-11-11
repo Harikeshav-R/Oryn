@@ -48,7 +48,7 @@ The compiler must produce a **model-independent operational representation**, no
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Contract Reference #5 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests approved capabilities, rules, and postconditions from [operational-graph](operational-graph.md).
+- **Contract Reference #5 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests approved capabilities (`knowledge.capability-version.v1`), rules (`knowledge.business-rule-version.v1`), and postconditions from [operational-graph](operational-graph.md). Before making an agent candidate version eligible for evaluation or release, Agent Factory must transactionally register an immutable, complete `DependencyManifestV1` (`knowledge.dependency-manifest.v1`) with Operational Graph, binding the complete transitive closure of required capabilities, playbooks, rules, and application profiles (capped at 4,096 references).
 - **Contract Reference #6 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes supported actions, limitations, and verification support from [application-adapters](application-adapters.md).
 - **Contract Reference #7 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers fixed agent candidates and verification requirements to [flight-simulator](flight-simulator.md).
 - **Contract Reference #17 in [Contracts Catalog](../architecture/contracts/README.md):** Receives new candidate versions and regression requirements from [incident-correction-repair](incident-correction-repair.md).

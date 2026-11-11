@@ -85,14 +85,13 @@ The Contribution and Synchronization Gateway mediates the boundary between priva
 - **Producer:** `meeting-intelligence` via `contribution-sync`
 - **Consumer:** `operational-graph` via HTTPS `POST /v1/sync/submissions`
 - **Payload:** `ReviewedContributionV1` where `kind = "meeting_handoff"` and `content` is `ReviewedMeetingHandoffProposal` (`meeting.reviewed-handoff.v1`).
-- **Invariants:** Text-only excerpt and structured business context. `artifacts` must be empty. Meeting session identifiers remain local and are never transmitted over the wire.
+- **Invariants:** Text-only excerpt and structured business context. `artifacts` must be empty. Meeting session identifiers remain local and are never transmitted over the wire. In `graph_handoff_intake`, `recipient_state` is a coarse intake projection (`proposed`, `accepted`, `rejected`, `cancelled`); detailed assignment, work progression, blockers, and independent completion assessments live solely in Operational Graph's canonical `graph_handoff` table.
 
 ### 3. Contract 3: Published Guidance Bundles (`hud.guidance-bundle.v1`)
 - **Producer:** `operational-graph` via HTTPS `GET /v1/sync/guidance/bundles/{sha256}`
 - **Consumer:** `local-context-hud` via `desktop-shell`
 - **Payload:** `SignedGuidanceBundleV1` (`sync.signed-guidance-bundle.v1`) containing `GuidanceBundleV1` and `SignedPublisherSignatureV1`.
-- **Invariants:** Bundles are strictly immutable and version-pinned by `content_sha256`. Steps declare an explicit DAG via `step_edges` (0..256 unique records). Successor evaluation is fail-closed.
-
+- **Invariants:** Bundles are strictly immutable and version-pinned by `content_sha256`. Steps declare an explicit DAG via `step_edges` (0..256 unique records). Successor evaluation is fail-closed. Manifest generation and bundle retrieval evaluate the full conjunction of Discovery source audiences (`DiscoveryAudienceV1`) live against the requesting principal; coarse role/team metadata inside the bundle payload is non-authoritative display metadata, not an authorization boundary.
 ### 4. Contract 20 Relay: Atomic HUD Guidance Transfer
 Relayed over `shell-hud.v1` data rails using closed IPC types:
 - `BeginGuidanceGeneration`: Declares generation UUID, manifest revision, manifest SHA-256, sorted object hashes, and signed access lease.
