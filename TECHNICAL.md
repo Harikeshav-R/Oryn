@@ -462,18 +462,19 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 5.5 Agent Factory and Operational Capability Compiler
 
-**Responsibility:** Transform a sufficiently specified, approved capability into an executable **agent candidate** and related evaluation requirements.
+**Responsibility:** Transform sufficiently specified, approved capabilities and published playbooks into executable **agent candidates** expressed in a structured, model-independent Intermediate Representation (`AgentIRV1`), register closed dependency closures with Operational Graph, and package publisher-signed evaluation bundles.
 
-**Owns:** Agent candidate generation, business-level execution representation, dependency resolution, action planning, declared inputs/outputs, exception handling, verification requirements, candidate revision history.
+**Implementation:** Modular pure Rust compiler inside the existing Axum/Tokio/SQLx Control Plane API and Durable Worker roles; persists state in PostgreSQL 18 with mandatory Row-Level Security. Wire schemas: [`agent-factory-v1.schema.json`](docs/architecture/contracts/agent-factory-v1.schema.json) (`$id: urn:oryn:schemas:agent-factory:v1`), [`application-capability-v1.schema.json`](docs/architecture/contracts/application-capability-v1.schema.json), and [`outcome-verification-v1.schema.json`](docs/architecture/contracts/outcome-verification-v1.schema.json).
 
-**Consumes:** Published workflow/capability versions, effective business rules, approved integration capabilities, application limits, ownership/risk scope, permitted model assistance.
+**Owns:** Agent candidate generation, closed 10-node DAG IR (`AgentIRV1`), deterministic 8-pass compilation, dataflow dominance and taint tracking, static 10,000 node-execution bounding, draft editing and materiality classification, manifest generation, Vault Ed25519 candidate attestation (`SignedCandidateAttestationV1`), and evaluation bundle packaging (`CandidateEvaluationBundleV1`).
 
-**Produces:** Immutable candidate agent versions, required tool/action contracts, unresolved prerequisites, suggested test coverage, reviewable generated behavior.
+**Consumes:** Approved capability versions (`knowledge.capability-version.v1`), published playbooks (`knowledge.playbook-version.v1`), and formal business rules (`knowledge.business-rule-version.v1`) from Operational Graph; adapter capability snapshots (`application.capability-snapshot.v1`) from Application Adapters; verification specification projections (`verification.spec-projection.v1`) from Outcome Verification; actor remits (`agent.edit`) from Identity Policy; governed AI proposals (`agent_candidate_synthesize`) via LiteLLM under Cloud Inference; repair specifications from Incident Correction.
 
-**Does not own:** Approval to run in production, production credential issuance, or declaring its own evaluation a pass.
+**Produces:** Immutable candidate agent versions (`AgentVersionV1`), canonical RFC 8785 behavior digests (`behavior_sha256`), signed candidate attestations (`SignedCandidateAttestationV1`), structural compilation reports (`CompileReportV1`), and sealed evaluation bundles (`CandidateEvaluationBundleV1`).
 
-**Boundary requirement:** Compile to a **model-independent operational representation**, not only an unconstrained natural-language prompt. Keep business goals, actions, policy, and postconditions conceptually separate. If required capabilities or evidence are missing, produce an explicit blocked/incomplete candidate.
+**Does not own:** Approving agents for production deployment or assigning runtime permissions (owned by [release-governance](docs/components/release-governance.md) and [identity-policy](docs/components/identity-policy.md)); production credential issuance or secret storage; running scenario test suites or populating passing evaluation verdicts (owned by [flight-simulator](docs/components/flight-simulator.md)).
 
+**Boundary requirement:** Compile to a **model-independent operational representation**, not an unconstrained natural-language prompt. Business goals, actions, policy, and postconditions remain conceptually separate. If required capabilities, formal rules, or verifiers are missing, produce an explicitly blocked candidate report. Candidate authenticity proves compiler origin only; it confers zero production write authority.
 ### 5.6 Application Capability Registry and Integration Management
 
 **Responsibility:** Describe which approved external applications and operations Oryn can observe, guide, assist, execute, and verify, and under which conditions.
@@ -672,9 +673,9 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | Operational Graph / Contribution sync | Local Context HUD | Published, access-filtered playbook / peer fix bundles (Contract 3) | Cached only within currently authorized employee session and scope; bundles are version-pinned by content SHA-256 (`hud.guidance-bundle.v1`); wire schema `guidance-sync-v1.schema.json`; offline reads governed by signed access lease (`hud.guidance-access-lease.v1`, max 24 hours); immediate eviction upon revocation |
 | Discovery | Knowledge Governance / Operational Graph | Candidate workflow, observed variants, clarifying questions (Contract 4) | Immutable staging proposal (`CandidatePromotionV1`); staged receipt (`GraphCandidateReceiptV1`); domain owner approval required; Operational Graph exclusively owns separate publication command (`POST /v1/knowledge/candidate-stages/{graph_draft_id}/publications`) and emits `workflow.published`; candidate cannot be auto-published; wire schema `workflow-discovery-v1.schema.json` |
 | Knowledge Governance | Agent Factory | Approved capability, rules, postconditions (Contract 5) | Immutable/versioned references (`knowledge.capability-version.v1` and `knowledge.business-rule-version.v1`); wire schema `operational-graph-v1.schema.json` |
-| Capability Registry | Factory/Orchestrator/Runner | Supported actions, limitations and verification support | Unsupported ability cannot be inferred from model output |
-| Agent Factory | Simulator | Fixed candidate and required tests | Test cannot silently change the candidate under evaluation |
-| Simulator + Oracle | Release Governance | Evaluation results, coverage and gaps | Evaluation does not authorize deployment |
+| Capability Registry / Application Adapters | Factory / Orchestrator / Runner | Supported actions, limitations, and verification support (Contract 6) | Immutable capability snapshots (`application.capability-snapshot.v1`) and live statuses; wire schema `application-capability-v1.schema.json`; unsupported operations cannot be inferred from model output |
+| Agent Factory | Simulator | Signed candidate evaluation bundle, IR, and coverage requirements (Contract 7) | Sealed `CandidateEvaluationBundleV1` with Vault Ed25519 attestation (`SignedCandidateAttestationV1`), `DependencyManifestV1`, and `CompileReportV1`; wire schema `agent-factory-v1.schema.json`; simulator cannot mutate candidate |
+| Outcome Verification | Factory / Simulator / Release Governance | Verification spec projections, oracle verdicts, and mismatch diagnoses (Contract 7 & 8) | Immutable `VerificationSpecProjectionV1` for compilation; wire schema `outcome-verification-v1.schema.json`; independent system evidence or authorized Stage 3 human assessment required before completion; human-only verification cannot qualify unattended Stage 4 completion |
 | Release Governance | Orchestrator | Eligible active version and scope | Jobs must pin accepted version and obey emergency stops |
 | Orchestrator | Runner | Approved, bounded work assignment | Assignment alone does not grant unrestricted action rights |
 | Runner / Local Context HUD | Identity Policy | Specific action authorization request (Contract 11) | Deny or escalate to human review when authority or context is missing; binds `ExecutionContextV1` (`job` or `assist`), canonical proposal digest `action_sha256`, target key, record key, and document/surface generations. Item-level approval for Tier 3; Tier 4 unconditionally denied. Wire schema `identity-policy-v1.schema.json` |
@@ -925,8 +926,13 @@ Detailed transition tables belong in component design documents; the following *
 - Rejected or unresolved candidates cannot be represented as authoritative guidance.
 
 ### 9.2 Agent lifecycle and autonomy
+`Draft Candidate (Stage 1 Product State) → Compiled & Attested Candidate → Simulation Evaluation → Review Requested → Approved Release → Active in Limited Scope → Expanded / Paused / Restricted / Superseded / Retired`
 
-`Draft Candidate → Evaluation → Review Requested → Approved Release → Active in Limited Scope → Expanded / Paused / Restricted / Superseded / Retired`
+Under ADR-0015, candidate qualification, evaluation passage, and release approval are strictly decoupled:
+- **Candidate Qualification:** Proves structural integrity, typed bindings, and prerequisite presence; emits `CompileReportV1` and sealed `CandidateEvaluationBundleV1`.
+- **Evaluation Passage:** Flight Simulator proves empirical correctness across scenario matrices; compilation never self-populates evaluation grades.
+- **Release Approval:** Release Governance grants operational deployment authority. Candidate authenticity confers zero production write permission.
+- **Material Invalidation:** Any edit outside cosmetic `DisplayMetadataV1` increments the immutable version lineage and immediately invalidates downstream evaluation readiness.
 
 These **version lifecycle states** are distinct from the product's six **autonomy stages**:
 
@@ -939,7 +945,7 @@ These **version lifecycle states** are distinct from the product's six **autonom
 | 4 | Scoped Autopilot | Tested, verified, explicitly authorized autonomy for eligible Tier 1/2 cases |
 | 5 | Self-Maintaining Autopilot | Controlled repair creation/evaluation and narrowly allowed automatic low-risk releases |
 
-`PRODUCT.md` §14 controls specific gates: Stage 3 defaults include **5 verified demonstrations and 25 representative scenarios**; Stage 4 defaults include **20 consecutive verified supervised cases and 100 representative scenarios** plus other required criteria. These are **minimum gates**, not statistical guarantees, and must be configurable upward where organizational policy demands. Autonomy progression advances exclusively through formal governance proposals (`SignedGovernanceProposalV1`), requiring independent Workflow Owner and Security Admin approval remits without fabricating execution contexts.
+`PRODUCT.md` §14 controls specific gates: Stage 3 requires **5 verified human examples and 25 distinct scenarios, including 5 edge or negative scenarios**; Stage 4 requires **20 consecutive outcome-verified supervised cases and 100 scenarios, including 20 edge, failure, or negative scenarios**. Stage 5 requires the complete regression suite, affected failures, and five nearby variations. These are **minimum gates**, not statistical guarantees; other criteria remain mandatory. Autonomy progression advances exclusively through formal governance proposals (`SignedGovernanceProposalV1`), requiring independent Workflow Owner and Security Admin approval remits without fabricating execution contexts.
 
 ### 9.3 Action risk tiers
 

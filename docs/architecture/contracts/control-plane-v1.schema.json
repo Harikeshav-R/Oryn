@@ -311,7 +311,23 @@
             "KNOWLEDGE_COMPLETION_UNVERIFIED",
             "KNOWLEDGE_TRANSITION_INVALID",
             "KNOWLEDGE_QUERY_INCOMPLETE",
-            "KNOWLEDGE_LIMIT_EXCEEDED"
+            "KNOWLEDGE_LIMIT_EXCEEDED",
+            "FACTORY_REVISION_CONFLICT",
+            "FACTORY_SOURCE_INELIGIBLE",
+            "FACTORY_UPSTREAM_APPROVAL_REQUIRED",
+            "FACTORY_CAPABILITY_UNAVAILABLE",
+            "FACTORY_RULE_UNQUALIFIED",
+            "FACTORY_VERIFIER_MISSING",
+            "FACTORY_DEPENDENCY_INCOMPLETE",
+            "FACTORY_SCOPE_UNPROVEN",
+            "FACTORY_EVALUATION_NOT_READY",
+            "FACTORY_MODEL_BINDING_UNAVAILABLE",
+            "FACTORY_OPERATION_STALE",
+            "FACTORY_IR_INVALID",
+            "FACTORY_BINDING_INVALID",
+            "FACTORY_RESTRICTED_ACTION",
+            "FACTORY_LIMIT_EXCEEDED",
+            "FACTORY_SIGNING_UNAVAILABLE"
           ]
         },
         "request_id": {
@@ -586,7 +602,13 @@
             "workflow.revalidation_required",
             "knowledge.guidance_changed",
             "knowledge.handoff_changed",
-            "knowledge.dependency_registered"
+            "knowledge.dependency_registered",
+            "agent.draft_created",
+            "agent.draft_changed",
+            "agent.synthesis_proposed",
+            "agent.compilation_completed",
+            "agent.version_created",
+            "agent.qualification_changed"
           ]
         },
         "aggregate_type": {

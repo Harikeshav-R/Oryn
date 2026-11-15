@@ -47,6 +47,25 @@ An independent authoritative readback is preferred over runner self-reporting. A
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
+- **Compile-time verification catalog:** Advertises owner-defined verification specifications, postcondition predicates, and readback bindings to [agent-factory-ir](agent-factory-ir.md). This catalog does not replace Contract 7, the Factory-to-Simulator candidate bundle. Wire schema: [`outcome-verification-v1.schema.json`](../architecture/contracts/outcome-verification-v1.schema.json) (`$id: urn:oryn:schemas:outcome-verification:v1`).
+  - **Projections for Agent Factory Compilation:** Exposes immutable `VerificationSpecProjectionV1` (`verification.spec-projection.v1`) and live `VerificationSpecStatusV1` through pure read interface `VerificationCatalogPort`:
+    ```rust
+    pub trait VerificationCatalogPort: Send + Sync {
+        fn projections<'a>(
+            &'a self,
+            principal: &'a VerifiedPrincipal,
+            references: &'a [KnowledgeVersionRefV1],
+        ) -> impl Future<Output = Result<Vec<VerificationSpecProjectionV1>, VerificationCatalogError>> + Send + 'a;
+
+        fn statuses<'a>(
+            &'a self,
+            principal: &'a VerifiedPrincipal,
+            references: &'a [KnowledgeVersionRefV1],
+        ) -> impl Future<Output = Result<Vec<VerificationSpecStatusV1>, VerificationCatalogError>> + Send + 'a;
+    }
+    ```
+  - **Authoritative Boundary:** Missing or unknown projection references remain explicit qualification blockers. A proposed verification requirement (`VerificationRequirementV1`) may be drafted without a spec reference, but cannot prove execution readiness. Factory never invents an authoritative verification specification.
+  - **Binding and verdicts:** The specification reference has `entity_kind = verification_spec` and hashes the RFC 8785 canonical projection body. Each postcondition ID must exist in the pinned source capability. `system_evidence` requires both readback bindings and no reviewer role; `authorized_reviewer` requires a reviewer role, no readback bindings, and supports Stage 3 only. Approval to commit is not an independent postcondition assessment. Predicates use Graph `BusinessConditionV1`, fact definitions, verified-source requirements, and three-valued evaluation. This projection defines discovery and binding, not polling or checkpoint implementation.
 - **Contract Reference #8 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers oracle verification results to [flight-simulator](flight-simulator.md) and [release-governance](release-governance.md).
 - **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests submission records and readback evidence from [agent-runtime](agent-runtime.md) and [application-adapters](application-adapters.md) (including local browser action results `BrowserActionResult` from [browser-extension](browser-extension.md)), bound to `ExecutionContextV1` (`job` or `assist`). A `BrowserActionResult.status="completed"` confirms only that the local DOM primitive was dispatched; independent readback is required before issuing `Verified Complete`. An action with `submission_state="unknown"` is classified as `Outcome Unknown`, halting execution and preventing blind retries.
 - **Contract Reference #14 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers verification verdicts and mismatch diagnoses to [job-orchestration](job-orchestration.md) (for batch agent jobs) and to the assist owner / [local-context-hud](local-context-hud.md) (for HUD assist sessions) and [incident-correction-repair](incident-correction-repair.md).

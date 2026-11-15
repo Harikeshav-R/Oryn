@@ -1,0 +1,393 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:application-capability:v1",
+  "title": "Oryn Application Capability Projection Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for application adapter capability snapshots, operation declarations, portable data types, and live capability statuses.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/ApplicationCapabilitySnapshotV1"
+    },
+    {
+      "$ref": "#/$defs/ApplicationCapabilityStatusV1"
+    }
+  ],
+  "$defs": {
+    "ApplicationCapabilityRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_id",
+        "capability_id",
+        "version_id",
+        "content_sha256"
+      ],
+      "properties": {
+        "application_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "capability_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "version_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "content_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        }
+      }
+    },
+    "ApplicationCapabilitySnapshotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "ref",
+        "body"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "application.capability-snapshot.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "ref": {
+          "$ref": "#/$defs/ApplicationCapabilityRefV1"
+        },
+        "body": {
+          "$ref": "#/$defs/ApplicationCapabilityBodyV1"
+        }
+      }
+    },
+    "ApplicationCapabilityBodyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_profile_ref",
+        "adapter_id",
+        "adapter_revision",
+        "execution_location",
+        "platform",
+        "supported_stages",
+        "operations"
+      ],
+      "properties": {
+        "application_profile_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1",
+          "properties": { "entity_kind": { "const": "application_profile" } }
+        },
+        "adapter_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "adapter_revision": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "execution_location": {
+          "type": "string",
+          "enum": [
+            "cloud",
+            "employee_device"
+          ]
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "browser",
+            "macos",
+            "windows"
+          ]
+        },
+        "supported_stages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "enum": [3, 4, 5]
+          }
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/OperationDeclarationV1"
+          }
+        }
+      }
+    },
+    "OperationDeclarationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_id",
+        "input_type",
+        "output_type",
+        "effect",
+        "minimum_risk_tier",
+        "record_types",
+        "allowed_stages",
+        "idempotency",
+        "reversibility",
+        "verification_spec_refs",
+        "policy_fact_fields",
+        "max_argument_bytes"
+      ],
+      "properties": {
+        "operation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "input_type": {
+          "$ref": "#/$defs/DataTypeV1"
+        },
+        "output_type": {
+          "$ref": "#/$defs/DataTypeV1"
+        },
+        "effect": {
+          "type": "string",
+          "enum": [
+            "read",
+            "draft",
+            "write"
+          ]
+        },
+        "minimum_risk_tier": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RiskTier"
+        },
+        "record_types": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          }
+        },
+        "allowed_stages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "enum": [3, 4, 5]
+          }
+        },
+        "idempotency": {
+          "type": "string",
+          "enum": [
+            "native_key",
+            "read_reconcile",
+            "none"
+          ]
+        },
+        "reversibility": {
+          "type": "string",
+          "enum": [
+            "reversible",
+            "irreversible",
+            "unknown"
+          ]
+        },
+        "verification_spec_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+          }
+        },
+        "policy_fact_fields": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          }
+        },
+        "max_argument_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        }
+      }
+    },
+    "ApplicationCapabilityStatusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "capability_ref",
+        "generation",
+        "status",
+        "observed_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "application.capability-status.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "capability_ref": {
+          "$ref": "#/$defs/ApplicationCapabilityRefV1"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "available",
+            "degraded",
+            "revoked",
+            "unknown"
+          ]
+        },
+        "observed_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "DataTypeV1": {
+      "description": "Semantic validation rejects recursive type depth greater than eight and duplicate record field names.",
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "decimal" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "date" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "instant" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "max_length"],
+          "properties": {
+            "kind": { "const": "string" },
+            "max_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "values"],
+          "properties": {
+            "kind": { "const": "enum" },
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "maxLength": 64
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "currency"],
+          "properties": {
+            "kind": { "const": "money" },
+            "currency": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/CurrencyCode"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "fields"],
+          "properties": {
+            "kind": { "const": "record" },
+            "fields": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": {
+                "$ref": "#/$defs/FieldDefinitionV1"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "item_type", "max_items"],
+          "properties": {
+            "kind": { "const": "array" },
+            "item_type": {
+              "$ref": "#/$defs/DataTypeV1"
+            },
+            "max_items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            }
+          }
+        }
+      ]
+    },
+    "FieldDefinitionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "type",
+        "nullable"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "type": {
+          "$ref": "#/$defs/DataTypeV1"
+        },
+        "nullable": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -215,3 +215,15 @@ _Avoid_: Partial import list, runtime cache, package manifest
 **Previous-Policy Continuation**:
 An explicit, approved grant permitting named consumers to continue operating under a superseded rule version for a bounded interval.
 _Avoid_: Indefinite grace period, implicit grandfathering, blanket exemption
+
+**Agent Candidate**:
+Proposed executable behavior, declared dependencies, and structural bindings for an automated workflow; it confers no production authority or execution permission.
+_Avoid_: Production agent, released automation, executable authority
+
+**Agent Version**:
+Immutable executable behavior and its declared dependencies; evaluation and release records refer to the version separately.
+_Avoid_: Mutable draft, working branch, rolling release
+
+**Execution Qualification**:
+The verified structural and prerequisite readiness of an agent candidate for a stated execution mode; it establishes neither business correctness nor permission to deploy.
+_Avoid_: Evaluation passage, release approval, deployment certificate

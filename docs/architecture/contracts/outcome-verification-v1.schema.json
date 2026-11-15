@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:outcome-verification:v1",
+  "title": "Oryn Outcome Verification Projection Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for verification specification projections, live verifier status, and verification requirements.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/VerificationSpecProjectionV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationSpecStatusV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationRequirementV1"
+    }
+  ],
+  "$defs": {
+    "VerificationSpecProjectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "spec_ref",
+        "body"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "verification.spec-projection.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "spec_ref": {
+          "allOf": [
+            {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entity_kind": {
+                  "const": "verification_spec"
+                }
+              }
+            }
+          ]
+        },
+        "body": {
+          "$ref": "#/$defs/VerificationSpecProjectionBodyV1"
+        }
+      }
+    },
+    "VerificationSpecProjectionBodyV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "capability_ref",
+            "postcondition_ids",
+            "method",
+            "fact_definitions",
+            "predicate",
+            "readback_capability_ref",
+            "readback_operation_id",
+            "reviewer_role",
+            "supported_stages"
+          ],
+          "properties": {
+            "capability_ref": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            },
+            "postcondition_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+              }
+            },
+            "method": {
+              "const": "system_evidence"
+            },
+            "fact_definitions": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessFactDefinitionV1"
+              }
+            },
+            "predicate": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessConditionV1"
+            },
+            "readback_capability_ref": {
+              "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1"
+            },
+            "readback_operation_id": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+            },
+            "reviewer_role": {
+              "type": "null"
+            },
+            "supported_stages": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 3,
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "enum": [3, 4, 5]
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "capability_ref",
+            "postcondition_ids",
+            "method",
+            "fact_definitions",
+            "predicate",
+            "readback_capability_ref",
+            "readback_operation_id",
+            "reviewer_role",
+            "supported_stages"
+          ],
+          "properties": {
+            "capability_ref": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            },
+            "postcondition_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+              }
+            },
+            "method": {
+              "const": "authorized_reviewer"
+            },
+            "fact_definitions": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessFactDefinitionV1"
+              }
+            },
+            "predicate": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessConditionV1"
+            },
+            "readback_capability_ref": {
+              "type": "null"
+            },
+            "readback_operation_id": {
+              "type": "null"
+            },
+            "reviewer_role": {
+              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RoleId"
+            },
+            "supported_stages": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "const": 3
+              }
+            }
+          }
+        }
+      ]
+    },
+    "VerificationSpecStatusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "spec_ref",
+        "generation",
+        "status",
+        "observed_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "verification.spec-status.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "spec_ref": {
+          "allOf": [
+            {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entity_kind": {
+                  "const": "verification_spec"
+                }
+              }
+            }
+          ]
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "available",
+            "revoked",
+            "unknown"
+          ]
+        },
+        "observed_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "VerificationRequirementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirement_id",
+        "capability_ref",
+        "postcondition_id",
+        "spec_ref",
+        "action_node_ids",
+        "required_before_node_ids",
+        "on_unknown",
+        "on_mismatch"
+      ],
+      "properties": {
+        "requirement_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "capability_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        "postcondition_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "spec_ref": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "entity_kind": {
+                      "const": "verification_spec"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "action_node_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          }
+        },
+        "required_before_node_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          }
+        },
+        "on_unknown": {
+          "const": "pause_case"
+        },
+        "on_mismatch": {
+          "const": "pause_case"
+        }
+      }
+    }
+  }
+}

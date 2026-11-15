@@ -853,7 +853,7 @@
         "peer_fixes": {
           "type": "array",
           "items": {
-            "$ref": "urn:oryn:schemas:guidance-sync:v1#/$defs/PeerFixDescriptorV1"
+            "$ref": "urn:oryn:schemas:guidance-sync:v1#/$defs/PeerFixV1"
           },
           "maxItems": 64
         },
@@ -1710,6 +1710,7 @@
     },
     "DependencyManifestV1": {
       "type": "object",
+      "description": "Immutable declaration of transitive knowledge dependencies. manifest_sha256 is the SHA-256 hash of RFC 8785 canonical JSON of {schema_id, organization_id, consumer_ref, dependencies, completeness, owner_component}, explicitly excluding manifest_sha256 and server-assigned registered_at. Dependencies sort lexicographically by (organization_id, entity_kind, entity_id, version_id, content_sha256) with duplicate identities and conflicting digests rejected.",
       "additionalProperties": false,
       "required": [
         "schema_id",

@@ -170,8 +170,9 @@ All endpoints operate under `/v1/knowledge` within the Axum control-plane servic
   2. Custody & Intake Guards (`(organization_id, contribution_id, revision)` rows locked `FOR UPDATE`)
   3. Discovery Clusters & Candidate rows
   4. Graph Staging rows (`graph_candidate_stage`)
-  5. Tenant `graph_knowledge_guard` (monotonic sequence serialization)
-  6. Canonical Graph Heads, Defaults, and Dependency Manifests
+  5. Factory Candidate Head rows (`factory_draft_revision` / `factory_compile_attempt`)
+  6. Tenant `graph_knowledge_guard` (monotonic sequence serialization)
+  7. Canonical Graph Heads, Defaults, and Dependency Manifests
   *No external network calls, cloud inference requests, cryptographic signing, or full graph scans may be executed while SQL row locks are held.*
 
 ### Central Publication vs. HUD Qualification Boundary
@@ -437,6 +438,24 @@ CREATE INDEX idx_graph_edge_reverse ON graph_edge (
     organization_id, to_entity_kind, to_entity_id, to_version_id,
     from_entity_kind, from_entity_id, from_version_id, relation_type
 );
+
+```
+
+### Canonical Manifest Hashing and Registration
+A `DependencyManifestV1` is an immutable, ordered declaration of the complete transitive operational knowledge assets required by a consumer (capabilities, playbooks, business rules, application profiles, verification specifications, and sub-agents; capped at 4,096 references).
+
+**Canonical Hashing Specification:**
+- Preimage: RFC 8785 canonical JSON encoding of `{schema_id, organization_id, consumer_ref, dependencies, completeness, owner_component}`.
+- Exclusions: `manifest_sha256` and server-assigned `registered_at` are strictly excluded from the hash preimage.
+- Deterministic Ordering: The `dependencies` array must be sorted lexicographically by the 5-tuple `(organization_id, entity_kind, entity_id, version_id, content_sha256)`. Duplicate identities or conflicting digests for the same entity identity cause immediate registration rejection.
+- Consumer Binding: For automated agent consumers, `consumer_ref.entity_kind = "agent"`, `consumer_ref.entity_id = agent_id::text`, `consumer_ref.version_id = agent_version_id::text`, `consumer_ref.content_sha256 = behavior_sha256`, and `owner_component = "agent-factory-ir"`. The agent body includes its dependency list but excludes the manifest self-binding, preventing cryptographic hash cycles.
+- Atomic Registration & Eligibility: `OperationalGraphPort::register_dependencies` and `OperationalGraphPort::resolve_eligibility` verify that all dependencies exist, closures are complete, and active rules have zero unresolved conflicts synchronously within the caller's transaction under the tenant `graph_knowledge_guard`.
+
+Factory scope narrowing reuses the Graph bounded Boolean, interval, and set implication solver over `KnowledgeScopeV1.record_condition` and approved rules. An unproven subset blocks qualification; prose cannot grant scope authority.
+
+Factory obtains its signature outside row locks, then locks its head after custody, discovery, and staging rows and before `graph_knowledge_guard`. In the same transaction it rechecks source eligibility, registers the exact precomputed manifest, compares the returned digest and completeness, and resolves live eligibility. A changed head, catalog generation, source, or rule conflict blocks finalization.
+
+```sql
 
 -- 11. Dependency Manifest and Normalized Members
 CREATE TABLE graph_dependency_manifest (

@@ -52,18 +52,22 @@ The runtime is treated as **less trusted than the authorization, verification, a
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
+- **Executable definition:** Consumes the released, immutable `AgentVersionV1` containing `AgentIRV1` and pinned `RuntimeModelBindingV1` declarations from [agent-factory-ir](agent-factory-ir.md) (wire schema [`agent-factory-v1.schema.json`](../architecture/contracts/agent-factory-v1.schema.json)). Contract 7 governs Factory-to-Simulator candidate admission, not production authority.
+  - **Closed Ten-Node Vocabulary:** Executes strictly within the closed 10-node vocabulary (`read`, `transform`, `reason`, `decision`, `action`, `foreach`, `verify`, `human_input`, `escalate`, `finish`). Dynamic graph modification, recursion, arbitrary loop-until constructs, and scripting are strictly prohibited.
+  - **Model Pins and Taint Tracking:** Invoke `agent_runtime_reason` (`agent.runtime-value.v1`) using the exact pinned route, route revision, model revision, prompt, output schema and limits. Inferred values cannot supply write targets, mandatory policy facts, Tier 2 model-influenced mutation parameters, or Tier 3 parameters without independent validation. A revoked or unavailable binding pauses; no provider or graph fallback is permitted.
+  - **Ambiguous Dispatch Safety:** `submission_unknown` must go directly to case escalation and reconciliation, never another mutation or blind retry. Handle `not_submitted` and `denied` by their explicit safe transitions. A mutating iteration failure preserves exact checkpoint location and previous committed effects; never replay, skip, compensate generically, or claim rollback. Runtime and Orchestrator own durable checkpoint implementation.
 - **Contract Reference #10 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests bounded work assignments from [job-orchestration](job-orchestration.md).
 - **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Submits action authorization requests to [identity-policy](identity-policy.md) (`POST /v1/identity/actions/authorize`) and executes one-use admission consumption (`POST /v1/identity/actions/consume`), binding `ExecutionContextV1` (`job` or `assist`) and canonical `action_sha256` (`sha256_...`). Yields signed `ActionAuthorizationV1` (`identity.action-authorization.v1`) and `SignedActionAdmissionV1` (`identity.action-admission.v1`). Before dispatch, the runner binds the verified authority bundle `{authorization, approval, admission}`.
 - **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches authorized operations bound to `ExecutionContextV1` and authority bundle to [application-adapters](application-adapters.md), which routes local browser operations to [browser-extension](browser-extension.md) over `browser-bridge.v1` (major 1, minor 3) (`ExecuteBrowserAction`) with canonical `action_sha256` proposal digests.
 - **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers action submission records and UI primitive results (`BrowserActionResult`) to [outcome-verification](outcome-verification.md).
-- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Routes model-assisted step decisions (`text.reason`) through the LiteLLM gateway under [cloud-inference](../architecture/cloud-inference.md); model completions are untrusted data that must conform strictly to declared IR schema and action constraints.
+- **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Routes model-assisted step decisions (`agent_runtime_reason`) through LiteLLM under [cloud-inference](../architecture/cloud-inference.md); model completions are untrusted data that must conform strictly to declared IR schema and action constraints.
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries
 - **Deployment Location:** Ephemeral worker containers running in hardened execution clusters or sandboxed local worker processes.
 - **Workload Identity:** Bound to an `identity_execution_principal` via infrastructure-authenticated mTLS, scoped strictly to `organization_id` and `ExecutionContextV1`. Execution principals cannot hold administrator roles or execute without active context.
 - **Least Privilege Sandbox:** Worker processes have no ambient filesystem or network access outside declared adapter endpoints.
-- **Model Ingress Boundary:** Prompts sent to model providers include only sanitized case variables; model completions are parsed strictly into typed IR actions.
+- **Model Ingress Boundary:** Authorized case inputs go through governed inference. Completions are typed, unverified values or bounded branch choices, never executable IR actions.
 
 ## Internal architecture
 

@@ -48,7 +48,25 @@ Observe, Guide, Assist, Run Supervised, and Run Autonomously are distinct advert
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Contract Reference #6 in [Contracts Catalog](../architecture/contracts/README.md):** Advertises supported actions, limitations, and verification capabilities to [agent-factory-ir](agent-factory-ir.md), [job-orchestration](job-orchestration.md), and [agent-runtime](agent-runtime.md).
+- **Contract Reference #6 in [Contracts Catalog](../architecture/contracts/README.md):** Advertises supported actions, limitations, and verification capabilities to [agent-factory-ir](agent-factory-ir.md), [job-orchestration](job-orchestration.md), and [agent-runtime](agent-runtime.md). Wire schema: [`application-capability-v1.schema.json`](../architecture/contracts/application-capability-v1.schema.json) (`$id: urn:oryn:schemas:application-capability:v1`).
+  - **Projections for Agent Factory Compilation:** Exposes immutable `ApplicationCapabilitySnapshotV1` (`application.capability-snapshot.v1`) and live `ApplicationCapabilityStatusV1` through pure read interface `ApplicationCapabilityPort`:
+    ```rust
+    pub trait ApplicationCapabilityPort: Send + Sync {
+        fn snapshot<'a>(
+            &'a self,
+            principal: &'a VerifiedPrincipal,
+            references: &'a [ApplicationCapabilityRefV1],
+        ) -> impl Future<Output = Result<Vec<ApplicationCapabilitySnapshotV1>, CapabilityError>> + Send + 'a;
+
+        fn statuses<'a>(
+            &'a self,
+            principal: &'a VerifiedPrincipal,
+            references: &'a [ApplicationCapabilityRefV1],
+        ) -> impl Future<Output = Result<Vec<ApplicationCapabilityStatusV1>, CapabilityError>> + Send + 'a;
+    }
+    ```
+  - **Metadata Isolation:** Uses authenticated registry metadata only; never contacts production application endpoints during compilation or qualification. Adapter transport and plugin execution remain strictly downstream of compilation.
+  - **Identity and eligibility:** Hash the RFC 8785 canonical snapshot `body` into `ref.content_sha256`; reject duplicate JSON keys. The profile reference must have `entity_kind = application_profile`, and operation IDs must be unique within a snapshot. Status and generation are live metadata outside the immutable hash. Unknown or revoked capabilities block new qualification; degradation is a visible operational restriction, not permission to substitute an adapter. Adapter, profile, and operation definition changes are material dependencies.
 - **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes authorized external operation requests from [agent-runtime](agent-runtime.md) (for batch jobs) and [local-context-hud](local-context-hud.md) (for HUD assist sessions); binds `ExecutionContextV1` (`job` or `assist`) and the verified authority bundle `{authorization: ActionAuthorizationV1, approval: SignedApprovalProposalV1|null, admission: SignedActionAdmissionV1}`; delegates local browser actions to [browser-extension](browser-extension.md) via `ExecuteBrowserAction` over `browser-bridge.v1` (major 1, minor 3).
 - **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Emits action submission receipts (`BrowserActionResult` with `submission_state` and `ExecutionContextV1`) and independent readback evidence to [outcome-verification](outcome-verification.md).
 - **Contract Reference #22 Reference:** Adapters remain strictly deterministic; remote model inference under [cloud-inference](../architecture/cloud-inference.md) cannot bypass declared adapter action constraints or invent unsupported capabilities.

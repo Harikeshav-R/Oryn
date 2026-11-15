@@ -128,6 +128,7 @@ An `InferenceRoute` represents an approved, capability-certified upstream model 
     "workflow.embedding.v1",
     "workflow.compatibility.v1",
     "agent.ir.candidate.v1",
+    "agent.runtime-value.v1",
     "repair.patch.v1",
     "hud.context-interpretation.v1",
     "hud.demonstration-summary.v1",
@@ -186,31 +187,7 @@ Issued and signed by `identity-policy` under schema `inference.authorization.v1`
 
 ### 3.4 InferenceRequest
 
-Submitted by a consuming component to `InferenceAdmission`. Contains bounded content manifests and strictly validated payload data.
-
-```json
-{
-  "request_id": "req_8e2f1a9c-5b3d-4c7e-9f0a-1b2c3d4e5f6a",
-  "authorization_ref": "c71a3b4e-9d2a-4efb-8a1c-6d8b9e0f1a23",
-  "operation": "meeting.extract_commitments",
-  "route_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "route_revision": "1",
-  "schema_id": "meeting.commitments.v1",
-  "input_revision": "4",
-  "deletion_generation": "0",
-  "input_manifest": [
-    {
-      "range_id": "span_win_01",
-      "start_sample": 0,
-      "end_sample": 1600000,
-      "sha256": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a"
-    }
-  ],
-  "content": {
-    "transcript_text": "Speaker 1: I will send the reconciled purchase order to Sarah by Friday afternoon.\nSpeaker 2: Perfect, please tag me on the Jira ticket."
-  }
-}
-```
+Submitted by a consuming component to `InferenceAdmission` using the closed `InferenceRequestV1` schema in [cloud-inference-v1.schema.json](contracts/cloud-inference-v1.schema.json#/$defs/InferenceRequestV1). Its required fields are `schema_id` (`inference.request.v1`), `request_id`, `authorization_ref`, `operation`, `route_id`, `route_revision`, `schema_id_expected`, `input_revision`, `deletion_generation`, `input_manifest`, and `content`. `content` is an array of `InferenceContentPartV1` records, not an arbitrary transcript object; the manifest must match the content and authorization binding. For Factory requests, use `text.reason` and the registered output ID for the authorized purpose.
 
 ### 3.5 InferenceResult
 
@@ -379,6 +356,26 @@ The Living Operational Graph consumes cloud inference via the LiteLLM gateway un
    - **Input Scope:** At most 20 candidates, total input payload capped at 128 KiB. Output capped at 16 KiB. Timeout: 3,000 ms.
 
 All Operational Graph model requests submit through the standard inference authorization and reservation path. Model output is treated as untrusted: the system revalidates document digests, source eligibility, and caller principal audience access before committing indexes or projecting search pages. No direct provider routing or local model fallback is permitted.
+
+### 3.10 Agent Factory and Runtime Semantic Contracts (`text.reason`)
+
+The Agent Factory (`agent-factory-ir`) and Agent Runtime (`agent-runtime`) components consume governed cloud model reasoning via the LiteLLM gateway under Contract 22 for candidate plan synthesis and bounded runtime reasoning. Neither operation can alter business policy authority, bypass Identity checks, or mutate production state:
+
+1. **`agent_candidate_synthesize` (Operation: `text.reason`):**
+   - **Purpose:** Infers candidate step mappings, verification requirements, and runtime model bindings from approved playbooks, formal business rules, and declared adapter schemas.
+   - **Output Schema:** `agent.ir.candidate.v1` (enforcing `AgentIRCandidateProposalV1` with source citations, unresolved questions, assumptions, and typed step mappings).
+   - **Input Scope:** Approved playbook procedure text, business rule statements, and operation schemas; strictly excludes raw observation media, screenshots, audio, transcripts, credentials, and customer data. Input capped at 256 KiB; output capped at 128 KiB. Timeout: 120,000 ms. At most 2 concurrent synthesis requests per tenant within existing worker budgets.
+   - **Governance & Provenance:** The output proposal is advisory only and stored immutably with `SynthesisProvenanceV1` (linking request ID, input/output SHA-256, route/model revision, template SHA-256, and usage). It cannot mutate the authoring head until explicitly accepted by an authorized human holding `agent.edit`.
+
+2. **`agent_runtime_reason` (Operation: `text.reason`):**
+   - **Purpose:** Executes bounded runtime reasoning (extraction, classification, draft formulation, or branch selection) within an active agent execution.
+   - **Output Schema:** `agent.runtime-value.v1` (enforcing `RuntimeModelResultV1` with typed value or explicit unknown reason; numbers excluded from JSON payload).
+   - **Input Scope:** Case variables conforming to declared `RuntimeModelBindingV1`. Input capped at 32 KiB; output capped at 16 KiB. Timeout: 30,000 ms.
+   - **Governance & Taint:** Invokes strictly through pinned model bindings (`route_id`, `route_revision`, `model_revision`, `output_schema_sha256`). Model outputs are untrusted/tainted: they cannot supply write-target IDs, mandatory policy facts, or Tier 3 action arguments without independent verification under source requirements. Revoked or unavailable bindings pause rather than substitute fallback models.
+
+Both purposes require explicit registration under the existing `InferencePurposePolicyV1`, matching certified route operation and output-schema registrations, and normal `InferenceRequestV1` authorization and budget reservation. Registration does not expand generic provider or client permissions. Synthesis timeout is clamped to route and authorization limits; one retry is allowed only after a confirmed transient pre-response failure under the same input, route, and authorization. Provider-interaction uncertainty requires a new explicit request, never automatic replay or cross-provider fallback. Late results cannot update a changed draft.
+
+Persist validated typed proposals and provenance, not raw synthesis prompts, intermediate reasoning, or raw completions. Runtime prompt templates and their digests are material, version-pinned configuration in `RuntimeModelBindingV1`, not synthesis logs. Tier 2 model-influenced mutation parameters also require independent validation; allowed Tier 0/1 classification cannot change population, risk floor, destination, or permissions.
 ---
 
 ## 4. Control Plane and Gateway Interfaces
@@ -564,7 +561,7 @@ This table records all document families across the Oryn repository and their re
 | `docs/components/control-plane.md` | Reconciled | Added InferenceAdmission and InferenceSessionCoordinator modules. |
 | `docs/components/infrastructure-security.md`| Reconciled | Added LiteLLM operation, vault secrets, no-log settings, memory spooling, and US confinement rules. |
 | `docs/components/workflow-discovery.md` | Reconciled | Reconciled model-assisted clustering and playbook synthesis via shared gateway contract. |
-| `docs/components/agent-factory-ir.md` | Reconciled | Reconciled IR synthesis and optimization via shared gateway contract. |
+| `docs/components/agent-factory-ir.md` | Reconciled | Added `agent_candidate_synthesize` (`agent.ir.candidate.v1`) and pinned runtime `agent_runtime_reason` (`agent.runtime-value.v1`); persist validated proposals and runtime templates, not raw synthesis prompts or completions. |
 | `docs/components/agent-runtime.md` | Reconciled | Reconciled bounded agent step decisions via shared gateway contract. |
 | `docs/components/incident-correction-repair.md` | Reconciled | Reconciled diagnostic reasoning and patch generation via shared gateway contract. |
 | `docs/components/operational-graph.md` | Reconciled | Added shared inference pointer for embeddings and graph search. |
