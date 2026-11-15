@@ -227,3 +227,32 @@ _Avoid_: Mutable draft, working branch, rolling release
 **Execution Qualification**:
 The verified structural and prerequisite readiness of an agent candidate for a stated execution mode; it establishes neither business correctness nor permission to deploy.
 _Avoid_: Evaluation passage, release approval, deployment certificate
+
+**Application Capability**:
+Declared supported interactions and limitations for a business application, distinct from an Operational Capability and from permission to act.
+_Avoid_: Blanket compatibility, business workflow
+
+**Application Connection**:
+An approved binding to an external account, environment, and execution identity with a defined resource scope; it is not the credential itself.
+_Avoid_: API key, browser session
+
+**Adapter Pack**:
+A reviewed set of application-specific operation definitions and supported interactions; it grants no customer access or execution authority.
+_Avoid_: Universal connector, customer plugin
+
+**Operation Qualification**:
+Evidence-backed confirmation that a declared operation is supported in a particular application configuration and execution mode; it is not an agent release.
+_Avoid_: Deployment approval, blanket application certification
+
+**Exclusive Target Scope**:
+A customer-enforced resource scope that excludes conflicting writers for a defined period; an Oryn-only reservation does not establish it.
+_Avoid_: Local mutex, best-effort lock
+
+**Submission Receipt**:
+A record describing whether an operation may have reached an external application; it does not establish a correct business outcome.
+_Avoid_: Success verdict, completed case
+
+**Readback Evidence**:
+Independently acquired application state used to assess business postconditions, distinct from a submission acknowledgment or verdict.
+_Avoid_: Response echo, agent self-report
+

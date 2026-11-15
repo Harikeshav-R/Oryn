@@ -210,7 +210,7 @@ Governs supervised execution of approved assist plans (`AssistPlanV1`).
     "playbook_version": "sha256-e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b"
   }
   ```
-- **Exclusive Device Reservation:** Both agent jobs and HUD assists contend for the same device-wide exclusive local execution reservation (`ReserveBrowserExecution`); independent parallel job and assist locks are strictly prohibited.
+- **Exclusive Device Reservation:** Both agent jobs and HUD assists participate in the unified workstation execution reservation managed by `LocalExecutionReservationBroker` in [local-privacy-storage](local-privacy-storage.md), keyed by `(device_id, context, modality, epoch)`. Independent parallel job and assist execution locks are strictly prohibited; competing requests fail closed.
 - **Canonical Action Digest:** Computed identically across adapter, helper, and extension:
   ```
   action_sha256 = SHA256(RFC8785_Canonical_JSON({
@@ -220,8 +220,11 @@ Governs supervised execution of approved assist plans (`AssistPlanV1`).
   }))
   ```
   Encoded as string prefix `sha256_` followed by 64 lowercase hex digits.
-- **Execution Flow & Stopping Points:** `start_assist` previews affected fields and stopping points, then reserves the active workspace. Tier 2 mutations require confirmed plan preview; Tier 3 consequential mutations halt at pre-declared stopping points and require a separate item-level `review_and_submit` action displaying exact parameter diffs and `proposal_digest` (`sha256-...`). Browser actuation executes over `browser-bridge.v1` (major 1, minor 3 with capability `identity_authority_v1`) passing the complete `{authorization, approval, admission}` authority bundle per [ADR-0011](../adr/0011-identity-authority-and-approval-fencing.md). Tier 4 restricted actions are unconditionally denied.
-- **Receipts:** Minimal durable receipts (`action_id`, `execution_context`, `action_sha256`, `authorization_ref`, `approval_ref`, `timestamp_utc`, `submission_state`, `evidence_ref`) contain zero customer business data and survive retention-off mode.
+- **Execution Flow & Stopping Points:** `start_assist` previews affected fields and stopping points, then acquires the common workstation execution reservation. Tier 2 mutations require confirmed plan preview; Tier 3 consequential mutations halt at pre-declared stopping points and require a separate item-level `review_and_submit` action displaying exact parameter diffs and `proposal_digest` (`sha256-...`).
+  - **Browser Actuation:** Dispatches over `browser-bridge.v1` (major 1, minor 4 with capabilities `identity_authority_v1` and `local_execution_reservation_v1`), verifying DNR navigation guards, extension reservation, and passing the complete `{authorization, approval, admission}` authority bundle per [ADR-0011](../adr/0011-identity-authority-and-approval-fencing.md). Result messages return the required `execution_context` (`ExecutionContextV1`).
+  - **Native Stage 3 Semantic Actuation:** Dispatches over private inherited byte channel `shell-adapter.v1` (major 1, minor 0) via Shell-supervised `oryn-adapter-worker`. Closed semantic primitives: `read|invoke|set_value|select|toggle`. Binds signed app identity, process/window, visible foreground workspace, surface generation, exact expected state, and signed authority bundle `{authorization, approval, admission}`. Coordinate/fuzzy fallback, OCR targeting, or keyboard/mouse injection is strictly prohibited.
+  - **Restricted Denial:** Tier 4 restricted actions are unconditionally denied.
+- **Receipts:** Minimal durable receipts (`action_id`, `execution_context`, `action_sha256`, `authorization_ref`, `approval_ref`, `timestamp_utc`, `submission_state`, `evidence_ref`) contain zero customer business data, are content-free, and survive retention-off mode. Raw observations never become a central execution transcript.
 
 ### Contract 22: Governed Cloud Semantic Reasoning (`text.reason`)
 Dispatches semantic interpretation requests to LiteLLM via the Privacy Helper edge client.

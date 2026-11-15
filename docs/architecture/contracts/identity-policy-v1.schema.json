@@ -294,7 +294,10 @@
         "audit.read",
         "security_policy.manage",
         "hold.manage",
-        "identity.recover"
+        "identity.recover",
+        "application.read",
+        "integration.manage",
+        "application.qualify"
       ]
     },
     "RemitId": {
@@ -435,6 +438,127 @@
         "fields"
       ]
     },
+    "AdapterGuardV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "read_only" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "content_sha256"],
+          "properties": {
+            "kind": { "const": "immutable_input" },
+            "content_sha256": { "$ref": "#/$defs/Sha256Hex" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "validator"],
+          "properties": {
+            "kind": { "const": "strong_precondition" },
+            "validator": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope_id", "epoch"],
+          "properties": {
+            "kind": { "const": "exclusive_scope" },
+            "scope_id": { "$ref": "#/$defs/Identifier" },
+            "epoch": { "$ref": "#/$defs/U64" }
+          }
+        }
+      ]
+    },
+    "AdapterExpectedFieldV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field_name", "value"],
+      "properties": {
+        "field_name": { "$ref": "#/$defs/Identifier" },
+        "value": {
+          "type": ["string", "number", "boolean", "null", "array", "object"]
+        }
+      }
+    },
+    "AdapterExpectedStateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "vendor_revision",
+            "before_fields",
+            "guard"
+          ],
+          "properties": {
+            "kind": { "const": "api" },
+            "vendor_revision": { "type": ["string", "null"] },
+            "before_fields": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": { "$ref": "#/$defs/AdapterExpectedFieldV1" },
+                  "maxItems": 128
+                },
+                {
+                  "type": "object"
+                }
+              ]
+            },
+            "guard": { "$ref": "#/$defs/AdapterGuardV1" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "application_id",
+            "process_identity",
+            "window_identity",
+            "surface_generation",
+            "target_key",
+            "before_state",
+            "guard"
+          ],
+          "properties": {
+            "kind": { "const": "native" },
+            "application_id": { "$ref": "#/$defs/Identifier" },
+            "process_identity": { "type": "string" },
+            "window_identity": { "type": "string" },
+            "surface_generation": { "$ref": "#/$defs/U64" },
+            "target_key": { "$ref": "#/$defs/Identifier" },
+            "before_state": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": { "$ref": "#/$defs/AdapterExpectedFieldV1" },
+                  "maxItems": 128
+                },
+                {
+                  "type": "object"
+                }
+              ]
+            },
+            "guard": { "$ref": "#/$defs/AdapterGuardV1" }
+          }
+        }
+      ]
+    },
     "BrowserOperationV1": {
       "type": "string",
       "enum": [
@@ -541,23 +665,38 @@
         "kind": {
           "const": "adapter"
         },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
         "action_id": {
           "$ref": "#/$defs/Identifier"
         },
         "execution_context": {
           "$ref": "#/$defs/ExecutionContextV1"
         },
+        "connection_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "connection_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "vendor_account_id": {
+          "type": "string"
+        },
         "application_id": {
           "$ref": "#/$defs/Identifier"
         },
-        "adapter_capability_version": {
+        "capability_ref": {
+          "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1"
+        },
+        "operation_id": {
           "$ref": "#/$defs/Identifier"
         },
         "record_key": {
           "$ref": "#/$defs/Identifier"
         },
         "expected_state": {
-          "$ref": "#/$defs/BrowserExpectedStateV1"
+          "$ref": "#/$defs/AdapterExpectedStateV1"
         },
         "environment": {
           "type": "string",
@@ -566,23 +705,24 @@
             "simulation"
           ]
         },
-        "operation_id": {
-          "$ref": "#/$defs/Identifier"
-        },
         "argument_sha256": {
           "$ref": "#/$defs/Sha256Hex"
         }
       },
       "required": [
         "kind",
+        "organization_id",
         "action_id",
         "execution_context",
+        "connection_id",
+        "connection_revision",
+        "vendor_account_id",
         "application_id",
-        "adapter_capability_version",
+        "capability_ref",
+        "operation_id",
         "record_key",
         "expected_state",
         "environment",
-        "operation_id",
         "argument_sha256"
       ]
     },
@@ -1094,6 +1234,14 @@
         "action_id": {
           "$ref": "#/$defs/Identifier"
         },
+        "effect": {
+          "type": "string",
+          "enum": [
+            "read",
+            "draft",
+            "write"
+          ]
+        },
         "argument_schema_id": {
           "$ref": "#/$defs/Identifier"
         },
@@ -1111,7 +1259,7 @@
           "items": {
             "$ref": "#/$defs/ParameterDiffV1"
           },
-          "minItems": 1,
+          "minItems": 0,
           "maxItems": 128
         },
         "created_at": {
@@ -1127,6 +1275,7 @@
         "organization_id",
         "execution_context",
         "action_id",
+        "effect",
         "argument_schema_id",
         "argument_canonical_base64url",
         "argument_sha256",
@@ -1134,6 +1283,29 @@
         "parameter_diffs",
         "created_at",
         "not_after"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "effect": { "const": "read" }
+            }
+          },
+          "then": {
+            "properties": {
+              "parameter_diffs": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "parameter_diffs": {
+                "minItems": 1
+              }
+            }
+          }
+        }
       ]
     },
     "CapturePolicyConfigV1": {

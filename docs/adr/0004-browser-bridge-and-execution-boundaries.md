@@ -38,6 +38,9 @@ We establish six foundational architectural decisions for the browser extension 
 
 *(Scope Amendment — 2026-11-09): [ADR-0009](0009-local-context-guidance-and-assist-boundaries.md) amends the browser bridge execution contract: upgrades `browser-bridge.v1` from minor 1 to minor 2, adding capability `assist_execution_v1`. Generalizes execution reservations and actions from jobs only to `ExecutionContextV1` (`job` or `assist`), replaces top-level job/case fields with the closed tagged union, updates canonical `action_sha256` to bind `ExecutionContextV1` and live document/surface generations, and updates minimal execution receipts.*
 
+*(Scope Amendment — 2026-11-14): [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md) amends the browser bridge execution contract: upgrades `browser-bridge.v1` to minor 4, negotiating capability `local_execution_reservation_v1`. Replaces single-job browser reservation with a unified device-wide reservation brokered by `LocalExecutionReservationBroker` across native and browser execution. Requires `execution_context` in all action results and normalizes action IDs to Identity `Identifier` strings. Clarifies that local primitive completion is an execution receipt, not business outcome verification.*
+
+
 ## Rationale and Alternatives
 
 - **Native Messaging vs. Localhost WebSockets:** Localhost listeners expose ports to any unprivileged local process on the machine, creating port-hijacking and cross-site websocket hijacking risks. Native Messaging guarantees browser process provenance and user session binding.

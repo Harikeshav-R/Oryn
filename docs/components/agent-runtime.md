@@ -57,9 +57,10 @@ The runtime is treated as **less trusted than the authorization, verification, a
   - **Model Pins and Taint Tracking:** Invoke `agent_runtime_reason` (`agent.runtime-value.v1`) using the exact pinned route, route revision, model revision, prompt, output schema and limits. Inferred values cannot supply write targets, mandatory policy facts, Tier 2 model-influenced mutation parameters, or Tier 3 parameters without independent validation. A revoked or unavailable binding pauses; no provider or graph fallback is permitted.
   - **Ambiguous Dispatch Safety:** `submission_unknown` must go directly to case escalation and reconciliation, never another mutation or blind retry. Handle `not_submitted` and `denied` by their explicit safe transitions. A mutating iteration failure preserves exact checkpoint location and previous committed effects; never replay, skip, compensate generically, or claim rollback. Runtime and Orchestrator own durable checkpoint implementation.
 - **Contract Reference #10 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests bounded work assignments from [job-orchestration](job-orchestration.md).
-- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Submits action authorization requests to [identity-policy](identity-policy.md) (`POST /v1/identity/actions/authorize`) and executes one-use admission consumption (`POST /v1/identity/actions/consume`), binding `ExecutionContextV1` (`job` or `assist`) and canonical `action_sha256` (`sha256_...`). Yields signed `ActionAuthorizationV1` (`identity.action-authorization.v1`) and `SignedActionAdmissionV1` (`identity.action-admission.v1`). Before dispatch, the runner binds the verified authority bundle `{authorization, approval, admission}`.
-- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches authorized operations bound to `ExecutionContextV1` and authority bundle to [application-adapters](application-adapters.md), which routes local browser operations to [browser-extension](browser-extension.md) over `browser-bridge.v1` (major 1, minor 3) (`ExecuteBrowserAction`) with canonical `action_sha256` proposal digests.
-- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers action submission records and UI primitive results (`BrowserActionResult`) to [outcome-verification](outcome-verification.md).
+- **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Submits action authorization requests to [identity-policy](identity-policy.md) (`POST /v1/identity/actions/authorize`) and executes one-use admission consumption (`POST /v1/identity/actions/consume`), binding `ExecutionContextV1` (`job` or `assist`) and canonical `action_sha256` (`sha256_...`). Yields signed `SignedActionAuthorizationV1` (`identity.action-authorization.v1`) and `SignedActionAdmissionV1` (`identity.action-admission.v1`). Before dispatch, the runner binds the verified authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1 | null, admission: SignedActionAdmissionV1}`.
+- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches authorized operations bound to `ExecutionContextV1` and authority bundle to [application-adapters](application-adapters.md), which routes local browser operations to [browser-extension](browser-extension.md) over `browser-bridge.v1` (major 1, minor 4 with `local_execution_reservation_v1`) (`ExecuteBrowserAction`) with canonical `action_sha256` digests, or dispatches to signed cloud/local workers (`oryn-adapter-worker`) via opaque lease handles; wire schema `application-adapters-v1.schema.json`.
+- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers action submission records (`AdapterSubmissionReceiptV1`) and UI primitive results (`BrowserActionResult`) to [outcome-verification](outcome-verification.md); wire schema `application-adapters-v1.schema.json`.
+
 - **Contract Reference #22 in [Contracts Catalog](../architecture/contracts/README.md):** Routes model-assisted step decisions (`agent_runtime_reason`) through LiteLLM under [cloud-inference](../architecture/cloud-inference.md); model completions are untrusted data that must conform strictly to declared IR schema and action constraints.
 ## Trust and deployment boundaries
 
@@ -73,14 +74,14 @@ The runtime is treated as **less trusted than the authorization, verification, a
 
 ### Logical Submodules
 - **IR Step Interpreter:** Walks the compiled execution graph, managing variable bindings and control flow.
-- **Policy Enforcement Interceptor:** Intercepts every tool call, querying [identity-policy](identity-policy.md) via Contract 11 before dispatching actions. Verifies the returned authority bundle (`ActionAuthorizationV1`, `SignedApprovalProposalV1`, `SignedActionAdmissionV1`) before calling adapters.
+- **Policy Enforcement Interceptor:** Intercepts every tool call, querying [identity-policy](identity-policy.md) via Contract 11 before dispatching actions. Verifies the returned authority bundle (`SignedActionAuthorizationV1`, `SignedActionApprovalV1 | null`, `SignedActionAdmissionV1`) before calling adapters with opaque lease handles.
 - **Model Reasoning Client:** Interacts with LLM providers for extraction or classification steps, enforcing JSON schemas.
 - **Execution Tracer:** Captures fine-grained execution logs, inputs, outputs, timestamps, and tool receipts.
 
 ## State and lifecycle
 
 ### State and Persistence
-- **Persisted State:** In-memory execution state with durable step checkpoints synchronized to [job-orchestration](job-orchestration.md).
+- **Persisted State:** In-memory execution state with durable step checkpoints synchronized to [job-orchestration](job-orchestration.md). Orchestration owns workflow retries and checkpoints; Application Adapters owns the external submission journal (`AdapterSubmissionJournal`); Identity owns fences and recovery durability.
 - **Lifecycle Transitions:** `Spawned → Assigned Case → Executing Step ↔ Awaiting Policy / Approval ↔ Invoking Adapter → Step Verified / Failed → Terminated`.
 - **Stateless Worker Model:** Worker nodes can be destroyed after case completion; all authoritative state resides in central storage.
 
@@ -88,8 +89,9 @@ The runtime is treated as **less trusted than the authorization, verification, a
 
 ### Failure Handling
 - **Policy / Admission Denial:** When `identity-policy` denies authorization or admission consumption, it returns typed reason codes (`IDENTITY_ACTION_FENCE_CONFLICT`, `IDENTITY_APPROVAL_REQUIRED`, `IDENTITY_MEMBER_REVOKED`, `IDENTITY_RECOVERY_INCOMPLETE`, etc.). The runner halts the step and emits a security exception to job orchestration.
-- **Tool Execution Failure:** Records adapter error details and executes IR error-handling branches if defined.
-- **Ambiguous External Outcome:** If an external adapter call times out or fails ambiguously, the consumed action fence is never automatically replayed or unconsumed. The runner marks step state `Outcome Unknown` and yields to [outcome-verification](outcome-verification.md) or operator review.
+- **Tool Execution Failure:** Records adapter error details (`AdapterErrorCodeV1`) and executes IR error-handling branches if defined.
+- **Ambiguous External Outcome:** If an external adapter call times out or fails ambiguously, the consumed action fence is never automatically replayed or unconsumed. The adapter marks `submission_state="unknown"`; the runner marks step state `Outcome Unknown` and yields to [outcome-verification](outcome-verification.md) or operator review. Partial multi-item operations preserve previous committed effects and exact remaining scope; whole-case replay or generic rollback is disallowed.
+
 - **Approval Rejection:** If a human reviewer denies a Tier 3 action, the runner marks the case `Expectedly Rejected` and exits cleanly.
 - **Operator Emergency Stop:** Stops step execution immediately, rolls back uncommitted local state, and reports terminal status.
 

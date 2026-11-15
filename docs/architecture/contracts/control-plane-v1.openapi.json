@@ -2617,8 +2617,7 @@
           }
         }
       }
-    }
-    ,
+    },
     "/v1/knowledge/capabilities": {
       "get": {
         "operationId": "listCapabilities",
@@ -2651,7 +2650,10 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["capabilities", "next_cursor"],
+                  "required": [
+                    "capabilities",
+                    "next_cursor"
+                  ],
                   "properties": {
                     "capabilities": {
                       "type": "array",
@@ -2660,7 +2662,10 @@
                       }
                     },
                     "next_cursor": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     }
                   }
                 }
@@ -3457,7 +3462,10 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["handoffs", "next_cursor"],
+                  "required": [
+                    "handoffs",
+                    "next_cursor"
+                  ],
                   "properties": {
                     "handoffs": {
                       "type": "array",
@@ -3466,7 +3474,10 @@
                       }
                     },
                     "next_cursor": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     }
                   }
                 }
@@ -3624,7 +3635,15 @@
       "get": {
         "operationId": "listAgents",
         "summary": "List accessible agent summaries with optional capability filtering",
-        "security": [{"BffSessionCookie": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "cursor",
@@ -3690,8 +3709,29 @@
       "post": {
         "operationId": "createAgent",
         "summary": "Scaffold a new agent draft from an approved playbook (Contract 5)",
-        "security": [{"BffSessionCookie": [], "CsrfHeader": []}, {"BearerAuth": [], "MtlsAuth": []}],
-        "parameters": [{"name": "Idempotency-Key", "in": "header", "required": true, "description": "UUIDv7 command idempotency key", "schema": {"type": "string", "format": "uuid", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"}}],
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -3750,7 +3790,15 @@
       "get": {
         "operationId": "getAgent",
         "summary": "Retrieve agent detail, active draft, and executable version references",
-        "security": [{"BffSessionCookie": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "agent_id",
@@ -3810,9 +3858,28 @@
       "post": {
         "operationId": "previewAgentEdit",
         "summary": "Preview edit materiality without mutating authoring head",
-        "security": [{"BffSessionCookie": [], "CsrfHeader": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
-          {"name": "Idempotency-Key", "in": "header", "required": true, "description": "UUIDv7 command idempotency key", "schema": {"type": "string", "format": "uuid", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"}},
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
           {
             "name": "agent_id",
             "in": "path",
@@ -3891,9 +3958,28 @@
       "put": {
         "operationId": "replaceAgentDraft",
         "summary": "Replace agent draft under optimistic concurrency",
-        "security": [{"BffSessionCookie": [], "CsrfHeader": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
-          {"name": "Idempotency-Key", "in": "header", "required": true, "description": "UUIDv7 command idempotency key", "schema": {"type": "string", "format": "uuid", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"}},
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
           {
             "name": "agent_id",
             "in": "path",
@@ -3972,9 +4058,28 @@
       "post": {
         "operationId": "synthesizeAgent",
         "summary": "Trigger governed AI proposal synthesis for agent candidate",
-        "security": [{"BffSessionCookie": [], "CsrfHeader": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
-          {"name": "Idempotency-Key", "in": "header", "required": true, "description": "UUIDv7 command idempotency key", "schema": {"type": "string", "format": "uuid", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"}},
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
           {
             "name": "agent_id",
             "in": "path",
@@ -4053,7 +4158,15 @@
       "get": {
         "operationId": "getSynthesisProposal",
         "summary": "Retrieve validated synthesis proposal and provenance",
-        "security": [{"BffSessionCookie": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "agent_id",
@@ -4122,9 +4235,28 @@
       "post": {
         "operationId": "compileAgent",
         "summary": "Trigger deterministic compilation and candidate attestation",
-        "security": [{"BffSessionCookie": [], "CsrfHeader": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
-          {"name": "Idempotency-Key", "in": "header", "required": true, "description": "UUIDv7 command idempotency key", "schema": {"type": "string", "format": "uuid", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"}},
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
           {
             "name": "agent_id",
             "in": "path",
@@ -4203,7 +4335,15 @@
       "get": {
         "operationId": "getCompilationAttempt",
         "summary": "Retrieve compilation attempt report and status",
-        "security": [{"BffSessionCookie": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "agent_id",
@@ -4272,7 +4412,15 @@
       "get": {
         "operationId": "getAgentVersion",
         "summary": "Retrieve immutable compiled agent version",
-        "security": [{"BffSessionCookie": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "agent_id",
@@ -4341,7 +4489,15 @@
       "get": {
         "operationId": "getEvaluationBundle",
         "summary": "Retrieve signed candidate evaluation bundle for Flight Simulator admission",
-        "security": [{"BffSessionCookie": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "agent_id",
@@ -4420,9 +4576,28 @@
       "post": {
         "operationId": "repairCandidate",
         "summary": "Submit incident-bound repair candidate with regression requirements",
-        "security": [{"BffSessionCookie": [], "CsrfHeader": []}, {"BearerAuth": [], "MtlsAuth": []}],
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
         "parameters": [
-          {"name": "Idempotency-Key", "in": "header", "required": true, "description": "UUIDv7 command idempotency key", "schema": {"type": "string", "format": "uuid", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"}},
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
           {
             "name": "agent_id",
             "in": "path",
@@ -4486,6 +4661,1061 @@
           },
           "409": {
             "description": "Base version conflict or incident reference ineligible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/applications/{application_id}/compatibility": {
+      "get": {
+        "operationId": "getApplicationCompatibility",
+        "summary": "Authorized compatibility report",
+        "description": "Retrieve the authorized application compatibility report for the given application.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+$"
+            },
+            "description": "Application identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized compatibility report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/ApplicationCompatibilityReportV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/connections": {
+      "get": {
+        "operationId": "listConnections",
+        "summary": "List scoped connection metadata",
+        "description": "List connection metadata for the tenant.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "environment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "production",
+                "simulation"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connection metadata list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/ConnectionListResponseV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createConnection",
+        "summary": "Create scoped connection metadata",
+        "description": "Create connection metadata for an external application.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./application-adapters-v1.schema.json#/$defs/CreateConnectionRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Connection metadata created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/ConnectionResponseV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/connections/{connection_id}": {
+      "get": {
+        "operationId": "getConnection",
+        "summary": "Redacted connection detail",
+        "description": "Retrieve redacted connection metadata omitting secrets.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Redacted connection details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/ConnectionResponseV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/connections/{connection_id}/authorization-transactions": {
+      "post": {
+        "operationId": "startAuthorizationTransaction",
+        "summary": "Start ownership-checked delegated consent",
+        "description": "Initiate OAuth transaction for preauthorized connection.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./application-adapters-v1.schema.json#/$defs/StartAuthTransactionRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authorization transaction initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/AuthTransactionResponseV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/oauth/callback": {
+      "get": {
+        "operationId": "oauthCallback",
+        "summary": "Single-use transaction redemption and status redirect",
+        "description": "Callback endpoint for OAuth provider authorization code exchange.",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to safe UI status page with connection state",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/connections/{connection_id}/probes": {
+      "post": {
+        "operationId": "probeConnection",
+        "summary": "Explicit nonmutating health/account probe",
+        "description": "Trigger an explicit non-mutating health and account probe for the connection.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./application-adapters-v1.schema.json#/$defs/ConnectionProbeRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Probe result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/ConnectionProbeResponseV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/connections/{connection_id}/suspensions": {
+      "post": {
+        "operationId": "suspendConnection",
+        "summary": "Suspend new use",
+        "description": "Suspend an active connection, preventing new action dispatches.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./application-adapters-v1.schema.json#/$defs/ConnectionSuspensionRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connection suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/ConnectionResponseV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/connections/{connection_id}/revocations": {
+      "post": {
+        "operationId": "revokeConnection",
+        "summary": "Revoke metadata and secret handles",
+        "description": "Permanently revoke connection metadata and Vault secret handles.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "connection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./application-adapters-v1.schema.json#/$defs/ConnectionRevocationRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connection revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/ConnectionResponseV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/qualifications": {
+      "post": {
+        "operationId": "stageQualification",
+        "summary": "Stage immutable definition/evidence",
+        "description": "Stage an immutable operation qualification definition and its attestation.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./application-adapters-v1.schema.json#/$defs/StageQualificationRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Qualification staged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/OperationQualificationDefinitionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/qualifications/{qualification_id}/approvals": {
+      "post": {
+        "operationId": "approveQualification",
+        "summary": "Record authorized qualification approval",
+        "description": "Approve a staged operation qualification by Workflow Owner or Security Admin.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "qualification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./application-adapters-v1.schema.json#/$defs/ApproveQualificationRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Qualification approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/OperationQualificationDefinitionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/integrations/qualifications/{qualification_id}/renewals": {
+      "post": {
+        "operationId": "renewQualification",
+        "summary": "Evidence-only unchanged renewal",
+        "description": "Renew an existing qualification attestation without changing definition body hash.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "qualification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "UUIDv7 command idempotency key",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./application-adapters-v1.schema.json#/$defs/RenewQualificationRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Qualification renewed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./application-adapters-v1.schema.json#/$defs/SignedQualificationAttestationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
             "content": {
               "application/problem+json": {
                 "schema": {

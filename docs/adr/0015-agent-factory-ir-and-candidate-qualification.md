@@ -65,6 +65,9 @@ The Oryn Architecture Guild resolves the core architecture and qualification bou
 - Release Governance evaluates candidate readiness without mutating agent definitions; material edits strictly invalidate downstream readiness.
 - Identity Policy enforces that `workflow_owner` and `automation_builder` can draft and compile agents within their remit, but only operators with approval delegations can execute production jobs.
 
+*(Scope Amendment — 2026-11-14): [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md) amends capability discovery and compilation interfaces: normalizes `ApplicationCapabilityPort` to asynchronous producer-owned methods (`snapshot` and `statuses`). Requires `ApplicationCapabilityBodyV1` to support `platform="api"`, ordered required `qualification_refs`, and per-operation `write_guard`. Factory finalization locks `adapter_registry_guard(organization_id, generation)` before `graph_knowledge_guard`.*
+
+
 ## References
 
 - [PRODUCT.md §§13–14, 15.10, 21, 29.7](../../PRODUCT.md)

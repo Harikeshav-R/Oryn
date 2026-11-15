@@ -67,7 +67,7 @@ An independent authoritative readback is preferred over runner self-reporting. A
   - **Authoritative Boundary:** Missing or unknown projection references remain explicit qualification blockers. A proposed verification requirement (`VerificationRequirementV1`) may be drafted without a spec reference, but cannot prove execution readiness. Factory never invents an authoritative verification specification.
   - **Binding and verdicts:** The specification reference has `entity_kind = verification_spec` and hashes the RFC 8785 canonical projection body. Each postcondition ID must exist in the pinned source capability. `system_evidence` requires both readback bindings and no reviewer role; `authorized_reviewer` requires a reviewer role, no readback bindings, and supports Stage 3 only. Approval to commit is not an independent postcondition assessment. Predicates use Graph `BusinessConditionV1`, fact definitions, verified-source requirements, and three-valued evaluation. This projection defines discovery and binding, not polling or checkpoint implementation.
 - **Contract Reference #8 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers oracle verification results to [flight-simulator](flight-simulator.md) and [release-governance](release-governance.md).
-- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests submission records and readback evidence from [agent-runtime](agent-runtime.md) and [application-adapters](application-adapters.md) (including local browser action results `BrowserActionResult` from [browser-extension](browser-extension.md)), bound to `ExecutionContextV1` (`job` or `assist`). A `BrowserActionResult.status="completed"` confirms only that the local DOM primitive was dispatched; independent readback is required before issuing `Verified Complete`. An action with `submission_state="unknown"` is classified as `Outcome Unknown`, halting execution and preventing blind retries.
+- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests submission records (`SignedAdapterSubmissionReceiptV1`) and readback evidence (`SignedAdapterReadbackEvidenceV1`) from [agent-runtime](agent-runtime.md) and [application-adapters](application-adapters.md) under wire schema [`application-adapters-v1.schema.json`](../architecture/contracts/application-adapters-v1.schema.json) (Contract 13), bound to `ExecutionContextV1` (`job` or `assist`). The verifier alone owns source priority, freshness predicates, bounded polling, and final verdicts. The adapter executes one bounded fetch per request (`AdapterReadbackRequestV1`), returning signed evidence, never an authoritative business completion stamp. A `BrowserActionResult.status="completed"` confirms only that the local DOM primitive was dispatched; independent readback is required before issuing `Verified Complete`. An action with `submission_state="unknown"` is classified as `Outcome Unknown`, halting execution and preventing blind retries.
 - **Contract Reference #14 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers verification verdicts and mismatch diagnoses to [job-orchestration](job-orchestration.md) (for batch agent jobs) and to the assist owner / [local-context-hud](local-context-hud.md) (for HUD assist sessions) and [incident-correction-repair](incident-correction-repair.md).
 - **Contract Reference #22 Reference:** Model assistance (`text.reason`) for verification interpretation routes through LiteLLM under [cloud-inference](../architecture/cloud-inference.md); model judgment alone cannot certify business correctness; authoritative readback and deterministic oracle checks are required.
 - **Human Demonstration Assessment Read-Only Boundary:** Postcondition assessments of human demonstrations (`DemonstrationVerificationV1` under Contract 4) establish whether a historical human Task Instance achieved verified business postconditions during procedural discovery. These assessments provide read-only evidence references in [operational-graph](operational-graph.md) and do NOT substitute for runtime Outcome Verification (Contracts 13 and 14) during autonomous agent execution.
@@ -75,16 +75,16 @@ An independent authoritative readback is preferred over runner self-reporting. A
 
 ### Process and Security Boundaries
 - **Deployment Location:** Core verification service running in the execution control plane, isolated from agent runtime workers.
-- **Independent Query Authority:** Verifier queries external application readback endpoints directly using dedicated read-only credentials, preventing the runner from spoofing readback data.
+- **Independent Query Authority:** Verifier dispatches readback queries using independent readback-role authority with dedicated vendor read-only credentials when supported, or certified L7 read-only enforcement for broader grants. Each poll is an independently authorized bounded read; no mutation fence is reopened.
 - **Model Independence:** Outcome verification is strictly deterministic and rule-based; it does not rely on LLM self-evaluation for numerical or factual postconditions.
 
 ## Internal architecture
 
 ### Logical Submodules
-- **Verification Rule Evaluator:** Evaluates formal predicate assertions against observed business state.
-- **Authoritative Readback Orchestrator:** Triggers post-action data fetches via application adapters.
+- **Verification Rule Evaluator:** Evaluates formal predicate assertions against observed business state using Graph `BusinessConditionV1` and three-valued logic.
+- **Authoritative Readback Orchestrator:** Triggers post-action data fetches via application adapters (`AdapterReadbackRequestV1`).
 - **Discrepancy Analyzer:** Computes numerical deltas, missing field lists, and state divergence reports.
-- **Evidence Bundler:** Compiles cryptographic hashes of raw readback payloads to establish tamper-evident proof.
+- **Evidence Bundler:** Compiles cryptographic hashes of raw readback payloads to establish tamper-evident proof (`SignedAdapterReadbackEvidenceV1`).
 
 ## State and lifecycle
 
@@ -96,8 +96,8 @@ An independent authoritative readback is preferred over runner self-reporting. A
 ## Error and edge-case behavior
 
 ### Failure Handling
-- **Readback Query Timeout:** If the external system cannot be queried after submission, the verifier emits `Outcome Unknown`.
-- **Transient Data Inconsistency:** If an external system exhibits eventual consistency, the verifier supports bounded polling before declaring an outcome unknown.
+- **Readback Query Timeout:** If the external system cannot be queried after submission within operational deadlines (default read/preflight deadline 5 seconds, max 30 seconds), the verifier emits `Outcome Unknown`.
+- **Transient Data Inconsistency:** If an external system exhibits eventual consistency, the verifier supports bounded polling against declared `observed_after` timestamps before declaring an outcome unknown. It does not promise unmediated direct primary-database access; readbacks report the authoritative endpoint, observed version/timestamp, and consistency limits (`authoritative`, `eventual`, `unknown`).
 - **Contradictory Evidence:** If independent readback contradicts adapter receipts, the case is flagged for immediate human review.
 
 ## Observability and audit
@@ -110,8 +110,8 @@ An independent authoritative readback is preferred over runner self-reporting. A
 
 ### Security and Safety Considerations
 - **Runner Collusion Resistance:** The verifier treats the agent runner as untrusted; runner execution logs are never accepted as proof without readback evidence.
-- **Readback Tampering:** Readback evidence is fetched over authenticated, encrypted channels directly to the verification service.
-- **Stale Cache Vulnerability:** Verification queries explicitly bypass application read caches to observe authoritative primary database state.
+- **Readback Tampering:** Readback evidence is fetched over authenticated, encrypted channels directly to the verification service via out-of-process credential egress.
+- **Consistency Boundaries:** Verification queries target certified authoritative endpoints and evaluate provider-versioned timestamps and consistency metadata rather than claiming universal cache bypass.
 
 ## Test strategy
 

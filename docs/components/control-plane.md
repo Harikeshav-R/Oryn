@@ -179,6 +179,21 @@ Control Plane exposes the following canonical endpoints (documented in `docs/arc
 - `GET /v1/discovery/configuration` & `PUT /v1/discovery/configuration`: Manages organization-level discovery configuration, certified embedding spaces, and responsible routing team. Requires `security_policy.manage` authority.
 - `POST /v1/knowledge/candidate-stages/{graph_draft_id}/publications`: Operational Graph-owned publication boundary. Revalidates source fences and staged content hash before publishing immutable playbook.
 
+#### 7. Application Adapters and Integration Management
+- `GET /v1/applications/{application_id}/compatibility`: Authorized compatibility report (`ApplicationCompatibilityReportV1`) reflecting current qualified support across operational modes.
+- `GET /v1/integrations/connections`: Lists connection metadata (`ConnectionListResponseV1`) filtered by application or environment; secrets redacted.
+- `POST /v1/integrations/connections`: Creates scoped connection metadata (`CreateConnectionRequestV1`) in `disconnected` or `testing` state. Requires `integration.manage`.
+- `GET /v1/integrations/connections/{connection_id}`: Retrieves detailed redacted connection metadata (`ConnectionResponseV1`).
+- `POST /v1/integrations/connections/{connection_id}/authorization-transactions`: Starts an ownership-checked delegated OAuth consent transaction with 5-minute TTL.
+- `GET /v1/integrations/oauth/callback`: Single-use OAuth transaction redemption verifying initiating state and PKCE; stores tokens in Vault and redirects to status UI.
+- `POST /v1/integrations/connections/{connection_id}/probes`: Performs an explicit non-mutating health and external account verification probe.
+- `POST /v1/integrations/connections/{connection_id}/suspensions`: Immediately suspends connection, blocking new action admissions.
+- `POST /v1/integrations/connections/{connection_id}/revocations`: Terminal revocation of connection metadata and Vault secret handles. Requires `integration.manage`.
+- `POST /v1/integrations/qualifications`: Stages immutable operation qualification definition and initial attestation. Requires `application.qualify`.
+- `POST /v1/integrations/qualifications/{qualification_id}/approvals`: Records authorized Workflow Owner or Security Admin approval of qualification definition hash.
+- `POST /v1/integrations/qualifications/{qualification_id}/renewals`: Records evidence-backed unchanged 30-day qualification renewal without changing definition body hash.
+
+
 ### Product Requirements and Acceptance Mappings
 Control Plane fulfills core enterprise coordination, tenant isolation, and privacy governance requirements defined in [PRODUCT.md](../../PRODUCT.md):
 

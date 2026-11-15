@@ -36,7 +36,8 @@ Job Orchestration and Scheduling coordinates manually started and approved recur
 - Declaring business correctness without verifier verdicts (owned by [outcome-verification](outcome-verification.md)).
 
 ### Boundary Requirement
-Job operations must be durable, recoverable, and idempotent. An orchestrator restart or crash recovery must never blindly repeat non-idempotent external writes. Scheduling must strictly enforce organizational policies regarding concurrency, budget caps, and emergency stops. Terminal case status requires independent verification.
+Job operations must be durable, recoverable, and idempotent. Orchestration owns workflow retries, checkpoint persistence, and case populations; Application Adapters owns the external submission journal (`AdapterSubmissionJournal`); Identity owns action fences and recovery durability. An orchestrator restart or crash recovery must never blindly repeat non-idempotent external writes or unconsume action fences. Uncertain outcomes (`unknown`) place cases in explicit hold states for workflow reconciliation. Recovery requires issuing a new action intent with distinct action ID, valid authorization, and reconciliation evidence. Scheduling must strictly enforce organizational policies regarding concurrency, budget caps, and emergency stops. Terminal case status requires independent verification.
+
 
 ## Product requirements
 

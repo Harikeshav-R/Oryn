@@ -130,20 +130,23 @@ Oryn defines nine immutable role IDs with standard product display names:
 +---------------------------------------------------------------------------------------------------+
 ```
 
-1. **`employee` (Employee):** `playbook.read`, personal privacy and contribution controls, participation in authorized assist sessions. No production `job.run`.
+1. **`employee` (Employee):** `playbook.read`, personal privacy and contribution controls, participation in authorized assist sessions, `application.read` within allowed application scope. No production `job.run`.
 2. **`sme` (Subject Matter Expert):** Employee permissions plus `workflow.review`. May explain workflows and propose candidate rules, but cannot approve business rules.
 3. **`agent_operator` (Agent Operator):** Employee permissions plus `job.run`, team-scoped `incident.review`, and `action.approve` *only under an active, matching approval delegation*.
-4. **`workflow_owner` (Workflow Owner):** Employee permissions plus assigned `workflow.review`, `rule.approve`, `agent.edit` (remit-scoped authoring and draft edits; grants no `job.run`, action delegation, or production write authority), `incident.review`, `repair.approve`, `release.approve`, and `schedule.manage`. Action approval requires an explicit approval delegation; job execution requires the operator role.
+4. **`workflow_owner` (Workflow Owner):** Employee permissions plus assigned `workflow.review`, `rule.approve`, `agent.edit` (remit-scoped authoring and draft edits; grants no `job.run`, action delegation, or production write authority), `incident.review`, `repair.approve`, `release.approve`, `schedule.manage`, and `application.qualify` (operation qualification staging/approvals in workflow/application remit). Action approval requires an explicit approval delegation; job execution requires the operator role.
 5. **`automation_builder` (Automation Builder):** Employee permissions plus `workflow.review` and `agent.edit`. May propose candidate agents, repairs, and test runs, but cannot approve production releases.
 6. **`operations_manager` (Operations Manager):** Team-scoped `playbook.read`, `analytics.read`, and read-only issue/incident status. Manager status does *not* confer action approval or raw evidence access.
-7. **`security_admin` (Security Admin):** `privacy_policy.manage`, `security_policy.manage`, `audit.read`, `hold.manage`, and security-side permission expansion approval. No implicit business rule or release owner authority.
-8. **`organization_admin` (Organization Admin):** `membership.manage`, team structure administration, and external identity federation configuration. No implicit action approval, business rule approval, or private evidence rights.
-9. **`read_only_stakeholder` (Read-Only Stakeholder):** Scoped `playbook.read` and eligible report/status reads. No write, execution, or export rights by default.
+7. **`security_admin` (Security Admin):** `privacy_policy.manage`, `security_policy.manage`, `audit.read`, `hold.manage`, `integration.manage` (connection creation, scope expansion approval, credential lifecycle in application/team scope), and security-side permission expansion approval. No implicit business rule or release owner authority.
+8. **`organization_admin` (Organization Admin):** `membership.manage`, team structure administration, and external identity federation configuration. No implicit action approval, business rule approval, arbitrary vendor data, or private evidence rights.
+9. **`read_only_stakeholder` (Read-Only Stakeholder):** Scoped `playbook.read`, `application.read`, and eligible report/status reads. No write, execution, or export rights by default.
 
 ### Public Capability Catalog
-The system enforces eighteen strictly bounded capabilities:
-- **Public Capabilities:** `playbook.read`, `workflow.review`, `rule.approve`, `agent.edit`, `job.run`, `action.approve`, `incident.review`, `repair.approve`, `release.approve`, `analytics.read`, `report.export`, `privacy_policy.manage`, `membership.manage`.
-- **Internal Governance Capabilities:** `schedule.manage`, `audit.read`, `security_policy.manage`, `hold.manage`, `identity.recover`.
+The system enforces twenty-one strictly bounded capabilities:
+- **Public Capabilities:** `playbook.read`, `workflow.review`, `rule.approve`, `agent.edit`, `job.run`, `action.approve`, `incident.review`, `repair.approve`, `release.approve`, `analytics.read`, `report.export`, `privacy_policy.manage`, `membership.manage`, `application.read`.
+- **Internal Governance Capabilities:** `schedule.manage`, `audit.read`, `security_policy.manage`, `hold.manage`, `identity.recover`, `integration.manage`, `application.qualify`.
+
+Token scopes map respectively to OAuth claims: `application.read` (`application:read`), `integration.manage` (`integration:manage`), `application.qualify` (`application:qualify`).
+
 
 *Special Policy Guard (`report.export`):* `report.export` requires an explicit grant from an authorized security policy within an existing report-read scope. Its absence denies export even if an actor can view a dashboard.
 
@@ -247,7 +250,30 @@ Signatures are computed via Ed25519 over `PreimageBytes`. Textual Vault wrappers
    })))
    ```
    *Exclusions:* Ephemeral reservation ID, dynamic target handles, authorization references, approval references, and timeout deadlines are explicitly excluded to maintain stability across retries and review sessions.
-   *Adapter Actions:* For external API adapters, `TargetProjectionV1` projects `{kind: "adapter", action_id, execution_context, application_id, adapter_capability_version, record_key, expected_state, environment, operation_id, argument_sha256}`. Enforcing adapters must register typed `ActionPolicyFactsV1` binding this digest to trusted monetary and destination facts.
+   *Adapter Actions:* For external API and native adapters, `TargetProjectionV1` projects:
+   ```text
+   AdapterTargetProjectionV1 {
+     kind: "adapter", organization_id, action_id, execution_context,
+     connection_id, connection_revision, vendor_account_id,
+     application_id, capability_ref, operation_id, record_key,
+     expected_state: AdapterExpectedStateV1, environment, argument_sha256
+   }
+   ```
+   Connection and vendor account fields are mandatory action-digest inputs. `capability_ref` binds the immutable `ApplicationCapabilityRefV1`. `AdapterExpectedStateV1` is a closed API/native tagged union binding vendor revision, declared typed before-fields, and guard identity (`read_only`, `immutable_input`, `strong_precondition`, or `exclusive_scope` with epoch). For native execution, expected state additionally binds signed process identity, window identity, surface generation, and target key.
+   Adapter action digest is strictly:
+   ```text
+   action_sha256 = "sha256_" + lowercase_hex(SHA256(RFC8785_JCS(AdapterTargetProjectionV1)))
+   ```
+   *Action Staging & Trusted Facts:* Identity owns `AdapterStagedActionV1`, which requires `effect=read|draft|write`. Parameter diffs are strictly bounded: reads require exactly 0 diffs; draft and write require 1–128 meaningful diffs. Adapters register trusted policy facts via the internal asynchronous port:
+   ```rust
+   pub async fn register_action_facts(
+       principal: &VerifiedPrincipal,
+       staged: &AdapterStagedActionV1,
+       facts: ActionPolicyFactsV1,
+   ) -> Result<(), IdentityError>;
+   ```
+   Identity verifies staging identity, digest binding, and operation classification floor before storing facts. Expired facts refresh; changed material content invalidates the proposal.
+
 
 2. **Proposal Digest (`proposal_digest`):**
    ```text
@@ -306,7 +332,7 @@ Browser clients never receive Auth0 tokens or Oryn bearer credentials:
 5. **Step-Up MFA:** Consequential operations (Tier 3 approvals, release approvals, policy modifications, emergency recovery) require verified MFA completed within the previous 5 minutes. Proven via Auth0 Actions emitting namespaced claims: `https://oryn.app/claims/connection_id`, `https://oryn.app/claims/connection_strategy`, and `https://oryn.app/claims/mfa_at`.
 
 ### Bridge Delivery Contract (`ExecuteBrowserAction`)
-Browser execution occurs over `browser-bridge.v1` (major 1, minor 3 with capability `identity_authority_v1`):
+Browser execution occurs over `browser-bridge.v1` (major 1, minor 4 with capabilities `identity_authority_v1` and `local_execution_reservation_v1`):
 ```text
 ExecuteBrowserAction.payload.authority = {
   authorization: SignedActionAuthorizationV1,

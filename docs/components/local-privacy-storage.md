@@ -31,10 +31,12 @@ The component governs:
 7. **Employee Review Before Sharing:** Compiles candidate workflows, derives purpose-bound redacted still images, enforces strict image size and count limits, binds final review attestations with Ed25519 device signatures, and emits approved contributions.
 8. **Governed Inference Egress:** Operates the edge `InferenceEgressClient`, attaching signed `InferenceAuthorization` tokens and dispatching transient model inference requests over TLS 1.3 to the LiteLLM gateway with contractual zero content retention, no model training, and strict US geographic confinement.
 9. **Private HUD Context Stream:** Streams sanitized observation events and ingests reverse demonstration proposals over a direct, length-prefixed socketpair/pipe link (`privacy-context.v1`, Contract 25) with `local-context-hud`.
+10. **Unified Local Execution Reservation:** Operates the `LocalExecutionReservationBroker`, maintaining the authoritative workstation execution reservation keyed by `(device_id, context, modality, epoch)` across browser (`browser-bridge.v1` major 1 minor 4) and native (`shell-adapter.v1` major 1 minor 0) modalities to enforce mutual exclusion and prevent competing actuation.
 
 ### Internal Modules and Responsibilities
-`oryn-privacy-helper` is structured into seven decoupled Rust modules:
+`oryn-privacy-helper` is structured into eight decoupled Rust modules:
 - `CaptureGate`: Authoritative consent validation, category state derivation, window and URL admission, ephemeral visibility lease tracking (100 ms lease / 500 ms cutoff), and signed capture policy lease verification. Runs on a high-priority, non-blocking control thread.
+- `LocalExecutionReservationBroker`: Maintains the authoritative local reservation record keyed by `(device_id, context, modality, epoch)`, enforcing mutual exclusion between browser and native actuation, validating session epochs and execution context (`job` vs `assist`), and executing fail-safe cleanup upon disconnect, pause, or completion.
 - `SourceSupervisor`: Spawns and supervises `oryn-observation-worker` and `oryn-meeting-worker`; verifies binary Authenticode / code signatures; enforces 100 ms watchdog heartbeats; tracks per-source health (`ready`, `degraded`, `unavailable`); manages shared-memory slot admission; aggregates browser bridge health; and maintains source-specific recovery blockers. Meeting session coordination logic remains owned by Component 4 inside the helper.
 - `EvidenceStore`: Manages SQLCipher 4 database partitions, independently encrypted media blobs, FTS5 indexes, versioned writes, transactional commits, and keyset-paginated read queries.
 - `RetentionCoordinator`: Tracks retention deadlines, enforces trusted-time constraints across boots, evaluates signed retention/hold verdicts, computes deletion previews, and executes crash-safe selective purge workflows.
@@ -109,7 +111,7 @@ Default local raw retention is strictly **7 days**, employee-selectable between 
    - Screen evidence (visual frames and contextual window metadata) is governed by the configured raw retention deadline (default 7 days).
    - Meeting evidence (audio recordings and transcripts) is governed by the meeting session coordinator under independent retention bounds.
    - Turning off `personal_history_retention` applies strictly to new automatic screen history. Existing screen evidence remains readable and deletable until its unchanged deadline. Separately authorized meeting sessions continue storing audio and transcripts under their explicit retention policy.
-4. **Volatile Processing Guarantees:** When `personal_history_retention=false`, screen frames admitted for live assistance or visual extraction are held in locked, non-swappable volatile memory with a strict 30-second TTL from original acquisition. Buffers are zeroed immediately after extraction. No raw screen pixels, embeddings, or intermediate model outputs touch disk. If cloud inference is unavailable, the request fails without maintaining a deferred upload backlog.
+4. **Volatile Processing Guarantees:** When `personal_history_retention=false`, screen frames and DOM observations admitted for live assistance, visual extraction, or adapter target preparation are held in locked, non-swappable volatile memory with a strict 30-second TTL from original acquisition. Observation-derived preparation buffers expire and are zeroed immediately upon TTL expiration, requiring fresh target resolution if unexecuted. No raw screen pixels, DOM nodes, embeddings, intermediate model outputs, or captured before-values touch disk. Local minimal receipts are content-free and independent of personal-history retention; raw native/browser observations never become a central execution transcript. Signed hashes and action approval records do not justify retaining captured before-values. API-authorized business inputs remain distinct from employee capture. If cloud inference is unavailable, the request fails without maintaining a deferred upload backlog.
 5. **Legal Hold Constraints:** Legal holds block voluntary employee deletion of eligible evidence within its existing configured retention deadline. A legal hold cannot authorize new capture, cannot provide manager or administrative browsing access to raw timelines, and cannot extend retention beyond the original raw retention deadline. Expired records are purged permanently regardless of hold status.
 6. **No Silent Recovery or Backup:** Oryn maintains no central backup, no recovery escrow, no administrator override keys, and no recovery export for private evidence. Lost device encryption keys result in permanent, unrecoverable loss of private history.
 
@@ -1046,6 +1048,32 @@ The Privacy Helper mints a fresh random `demonstration_id` (UUIDv4) once for one
 The central attempt identity is `(organization_id, actor_id, device_id, profile_id, demonstration_id)` because device enrollment authenticates its issuer. A demonstration ID reused with a different issuer does not collapse unrelated employees' attempts. Different contribution IDs for this tuple do not increase support. A helper-controlled identifier prevents accidental duplicate submissions; it does not cryptographically prove independent real-world work against a compromised endpoint or deliberate human collusion.
 
 HUD proposes task-level durations via `task_measurement`, but the Privacy Helper validates them against permitted boundaries, source gaps, and monotonic intervals before presenting them during contribution review. The employee reviewer inspects elapsed duration, wait duration, basis (`observed_task_boundary` vs `reviewer_estimate`), and interval completeness before signing the review attestation. Per-step durations are excluded to prevent unconsented granular surveillance.
+
+### LocalExecutionReservationBroker and Joint Modality Reservation (Contracts 11 & 12)
+
+The `LocalExecutionReservationBroker` inside `oryn-privacy-helper` is the single authoritative broker for local execution reservations on the enrolled workstation across both browser and native desktop adapter execution:
+
+1. **Authoritative Reservation Key:**
+   The broker maintains exactly one active local reservation record keyed by the 4-tuple:
+   $$\text{ReservationKey} = (\text{device\_id}, \text{context}, \text{modality}, \text{epoch})$$
+   where `context` is the tagged `ExecutionContextV1` (`job` with `job_id`, `case_id`, `agent_version`, or `assist` with `assist_session_id`, `user_id`, `window_id`), `modality` is strictly `browser` or `native`, and `epoch` is the workstation session epoch.
+
+2. **Modality Mutual Exclusion:**
+   Workstation execution is mutually exclusive across all modalities, jobs, assists, and employee profiles. At any time $T$, only one execution context may hold an active local reservation. Any reservation request from a competing job, assist session, employee profile, or adapter modality is rejected immediately with a conflict status.
+
+3. **Acquisition & Release Sequence:**
+   - **Browser Execution:** When a browser adapter operation requires actuation, the browser bridge broker first requests the common reservation from `LocalExecutionReservationBroker`. Only after obtaining this workstation reservation does the browser bridge issue an `AcquireReservation` command to the browser extension and arm the DNR navigation guard. If extension reservation fails, the common workstation reservation is immediately released.
+   - **Native Execution:** When native actuation is dispatched to the supervised worker `oryn-adapter-worker` over `shell-adapter.v1` (major 1, minor 0), the worker obtains the same common workstation reservation from `LocalExecutionReservationBroker`. Native actuation cannot proceed without this active grant.
+   - **Fail-Safe Release:** Loss of visibility lease, workstation lock/sleep, employee pause (`PauseCapture` / `PauseScreenObservation`), shell disconnect, window occlusion, or action completion triggers immediate release of the reservation record.
+
+4. **Browser Bridge Negotiation:**
+   The broker preserves existing browser wire reservation messages (`AcquireReservation`, `ReleaseReservation`, `HeartbeatReservation`) on Contract 11 (`browser-bridge.v1`). Execution requires negotiation of major 1, minor 4 and the explicit capability `local_execution_reservation_v1`. Legacy major 1, minor 3 clients cannot claim joint native/browser execution support and cannot interoperate with unified workstation reservations. All browser action results must return typed `execution_context` (`ExecutionContextV1`).
+
+5. **Observation Buffers & Ephemeral Receipts:**
+   - **Content-Free Receipts:** Local execution receipts (`BrowserActionResult`, native action receipts) are content-free metadata envelopes confirming actuation success/failure. They are independent of personal-history retention and do not log or leak captured DOM nodes, element text, or screen pixels.
+   - **No Central Observation Transcript:** Raw native or browser observations never become a central execution transcript.
+   - **Preparation Buffers:** Observation-derived preparation buffers (e.g., target element coordinates or semantic nodes) reside strictly in volatile memory. When `personal_history_retention=false`, they expire under the strict 30-second volatile ceiling. If an authorized action is not dispatched within 30 seconds of observation acquisition, the buffer is zeroed and fresh target preparation is required.
+   - **Distinct Data Classes:** Signed hashes and approval records do not justify retaining captured before-values. API-authorized business inputs remain strictly segregated from employee observation data.
 
 ### Identity Policy Signed Artifacts
 The privacy helper relies on cryptographic artifacts signed by `identity-policy` using pinned Ed25519 issuer keys. The signature covers the exact normative preimage: `UTF-8(schema_id) + 0x0A (LF byte) + RFC_8785_Canonical_JSON(payload)`. Signatures are unpadded base64url-encoded strings (86 characters).

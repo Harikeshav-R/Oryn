@@ -19,12 +19,12 @@
           "organization_id": "018f0000-0000-7000-8000-000000000001",
           "agent_id": "018f0000-0000-7000-8000-000000000100",
           "agent_version_id": "018f0000-0000-7000-8000-000000000101",
-          "behavior_sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
+          "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
           "manifest_sha256": "2e5dd223999710d9472eda60ccfe02d2d8a11c3d782132b89b1aa17bd30d63cd",
           "compiler_revision": "compiler_v1",
           "signed_at": "2026-11-14T12:00:00Z"
         },
-        "signature": "ziT9TpmqVyRxL5I2J22NuoRJm1SGfAqZLA-JciHM7LFd-qCr-3jfFkBlNtHgUqsKgYas6VxFdrx3b1uEGxRWAw"
+        "signature": "YRe89uonF57sd8djIswmwBf4DSiYFaJNaQssyPX3JMc_9rZS4fPb4ywjt0FoHWn8W96sW4qGi6TEvjkRecJqCw"
       },
       "public_key_id": "test_publisher_1",
       "expected_valid": true
@@ -769,7 +769,7 @@
               "application_id": "invoice_app",
               "capability_id": "invoice_operations",
               "version_id": "018f0000-0000-7000-8000-000000000016",
-              "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+              "content_sha256": "7eff04c018eba8c66e8c199a62057dee5cbf3f48317d8c4f33ac6bc8ed6af71e"
             },
             "body": {
               "application_profile_ref": {
@@ -831,7 +831,8 @@
                   "reversibility": "unknown",
                   "verification_spec_refs": [],
                   "policy_fact_fields": [],
-                  "max_argument_bytes": 4096
+                  "max_argument_bytes": 4096,
+                  "write_guard": "strong_precondition"
                 },
                 {
                   "operation_id": "read_invoice",
@@ -906,7 +907,26 @@
                   "reversibility": "unknown",
                   "verification_spec_refs": [],
                   "policy_fact_fields": [],
-                  "max_argument_bytes": 4096
+                  "max_argument_bytes": 4096,
+                  "write_guard": "not_applicable"
+                }
+              ],
+              "qualification_refs": [
+                {
+                  "operation_id": "post_invoice",
+                  "qualification_ref": {
+                    "qualification_id": "qual_post_invoice",
+                    "version_id": "018f0000-0000-7000-8000-000000000020",
+                    "content_sha256": "f39317affb3a53f80857c58d6fd979aa1886eb76e1b40020bf37272df7c8fc6e"
+                  }
+                },
+                {
+                  "operation_id": "read_invoice",
+                  "qualification_ref": {
+                    "qualification_id": "qual_read_invoice",
+                    "version_id": "018f0000-0000-7000-8000-000000000020",
+                    "content_sha256": "8212d9c7e9ee0a5a6cc63e98c092e64f068ebdd65ca92092cad55b120e065ffe"
+                  }
                 }
               ]
             }
@@ -1055,7 +1075,8 @@
           }
         ]
       },
-      "sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44"
+      "sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
+      "expected_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c"
     },
     {
       "case_id": "invoice_manifest",
@@ -5703,7 +5724,7 @@
                   "application_id": "invoice_app",
                   "capability_id": "invoice_operations",
                   "version_id": "018f0000-0000-7000-8000-000000000016",
-                  "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                  "content_sha256": "7eff04c018eba8c66e8c199a62057dee5cbf3f48317d8c4f33ac6bc8ed6af71e"
                 },
                 "body": {
                   "application_profile_ref": {
@@ -5765,7 +5786,8 @@
                       "reversibility": "unknown",
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
-                      "max_argument_bytes": 4096
+                      "max_argument_bytes": 4096,
+                      "write_guard": "strong_precondition"
                     },
                     {
                       "operation_id": "read_invoice",
@@ -5840,7 +5862,26 @@
                       "reversibility": "unknown",
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
-                      "max_argument_bytes": 4096
+                      "max_argument_bytes": 4096,
+                      "write_guard": "not_applicable"
+                    }
+                  ],
+                  "qualification_refs": [
+                    {
+                      "operation_id": "post_invoice",
+                      "qualification_ref": {
+                        "qualification_id": "qual_post_invoice",
+                        "version_id": "018f0000-0000-7000-8000-000000000020",
+                        "content_sha256": "f39317affb3a53f80857c58d6fd979aa1886eb76e1b40020bf37272df7c8fc6e"
+                      }
+                    },
+                    {
+                      "operation_id": "read_invoice",
+                      "qualification_ref": {
+                        "qualification_id": "qual_read_invoice",
+                        "version_id": "018f0000-0000-7000-8000-000000000020",
+                        "content_sha256": "8212d9c7e9ee0a5a6cc63e98c092e64f068ebdd65ca92092cad55b120e065ffe"
+                      }
                     }
                   ]
                 }
@@ -5989,7 +6030,7 @@
               }
             ]
           },
-          "behavior_sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
+          "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
           "compiler_revision": "compiler_v1",
           "created_by": "test_owner",
           "created_at": "2026-11-14T12:00:00Z"
@@ -6060,12 +6101,12 @@
             "organization_id": "018f0000-0000-7000-8000-000000000001",
             "agent_id": "018f0000-0000-7000-8000-000000000100",
             "agent_version_id": "018f0000-0000-7000-8000-000000000101",
-            "behavior_sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
+            "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
             "manifest_sha256": "2e5dd223999710d9472eda60ccfe02d2d8a11c3d782132b89b1aa17bd30d63cd",
             "compiler_revision": "compiler_v1",
             "signed_at": "2026-11-14T12:00:00Z"
           },
-          "signature": "ziT9TpmqVyRxL5I2J22NuoRJm1SGfAqZLA-JciHM7LFd-qCr-3jfFkBlNtHgUqsKgYas6VxFdrx3b1uEGxRWAw"
+          "signature": "YRe89uonF57sd8djIswmwBf4DSiYFaJNaQssyPX3JMc_9rZS4fPb4ywjt0FoHWn8W96sW4qGi6TEvjkRecJqCw"
         },
         "compile_report": {
           "schema_id": "agent.compile-report.v1",
@@ -6898,7 +6939,7 @@
                   "application_id": "order_app",
                   "capability_id": "order_operations",
                   "version_id": "018f0000-0000-7000-8000-000000000016",
-                  "content_sha256": "b993a70fda7fe02202bf8130ebead2b51b47fc92207710e00699de72115cd342"
+                  "content_sha256": "68b77f4da46616fde38b7168ba87f6a8b0a0dd1bcad991c54c946ee0667e613d"
                 },
                 "body": {
                   "application_profile_ref": {
@@ -7027,7 +7068,8 @@
                       "reversibility": "unknown",
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
-                      "max_argument_bytes": 4096
+                      "max_argument_bytes": 4096,
+                      "write_guard": "not_applicable"
                     },
                     {
                       "operation_id": "update_record",
@@ -7071,7 +7113,26 @@
                       "reversibility": "unknown",
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
-                      "max_argument_bytes": 4096
+                      "max_argument_bytes": 4096,
+                      "write_guard": "strong_precondition"
+                    }
+                  ],
+                  "qualification_refs": [
+                    {
+                      "operation_id": "read_record",
+                      "qualification_ref": {
+                        "qualification_id": "qual_read_record",
+                        "version_id": "018f0000-0000-7000-8000-000000000020",
+                        "content_sha256": "7ee59852b320bb82b201bbf5d76eac350d56f937398f480e97c2652325fc93e4"
+                      }
+                    },
+                    {
+                      "operation_id": "update_record",
+                      "qualification_ref": {
+                        "qualification_id": "qual_update_record",
+                        "version_id": "018f0000-0000-7000-8000-000000000020",
+                        "content_sha256": "af8c9152116ca779489f8184b4985360239921a00a5760e4e68c5929012c40a5"
+                      }
                     }
                   ]
                 }
@@ -7220,7 +7281,7 @@
               }
             ]
           },
-          "behavior_sha256": "602c358927a09b71591afb696f93e2de0a1f87458f2b07227c747f2774931a01",
+          "behavior_sha256": "a349d04e28c65dc407a37192c94fa044b6e0bbf1ab1d728fc240b8844270bee5",
           "compiler_revision": "compiler_v1",
           "created_by": "test_owner",
           "created_at": "2026-11-14T12:00:00Z"
@@ -7291,12 +7352,12 @@
             "organization_id": "018f0000-0000-7000-8000-000000000001",
             "agent_id": "018f0000-0000-7000-8000-000000000200",
             "agent_version_id": "018f0000-0000-7000-8000-000000000201",
-            "behavior_sha256": "602c358927a09b71591afb696f93e2de0a1f87458f2b07227c747f2774931a01",
+            "behavior_sha256": "a349d04e28c65dc407a37192c94fa044b6e0bbf1ab1d728fc240b8844270bee5",
             "manifest_sha256": "4a9f44f4e97b63c176470e12421fb6cdd07f33d929861b3c43d4350dda50e085",
             "compiler_revision": "compiler_v1",
             "signed_at": "2026-11-14T12:00:00Z"
           },
-          "signature": "sIPl3J2wFHQ64qB3YU087WHs758r5vtW2iOTeNaATNVrbhZ4bmlJ7bvleq9wydkD7dZC0cw0ABxWVAtuEYzeDg"
+          "signature": "CT-rhHxUtZWF6xKcoFyoYjDVLl4gc4wWUDsjkfEnAMzmUbQz-dUQAeBAzHcWXS9GXmdQj2bRpqlMTGAdrkuXDQ"
         },
         "compile_report": {
           "schema_id": "agent.compile-report.v1",
@@ -8113,7 +8174,7 @@
                   "application_id": "support_app",
                   "capability_id": "support_operations",
                   "version_id": "018f0000-0000-7000-8000-000000000016",
-                  "content_sha256": "61113fc97d6b25de5df206bac7a6a4800954f0932931ee21604841ad3dc763fc"
+                  "content_sha256": "50cc6ae9232d86705f98d82b2de713ee57a65e58aed3a689c68ee1006409fc4a"
                 },
                 "body": {
                   "application_profile_ref": {
@@ -8219,7 +8280,8 @@
                       "reversibility": "unknown",
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
-                      "max_argument_bytes": 4096
+                      "max_argument_bytes": 4096,
+                      "write_guard": "not_applicable"
                     },
                     {
                       "operation_id": "update_record",
@@ -8274,7 +8336,26 @@
                       "reversibility": "unknown",
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
-                      "max_argument_bytes": 4096
+                      "max_argument_bytes": 4096,
+                      "write_guard": "strong_precondition"
+                    }
+                  ],
+                  "qualification_refs": [
+                    {
+                      "operation_id": "read_record",
+                      "qualification_ref": {
+                        "qualification_id": "qual_read_record",
+                        "version_id": "018f0000-0000-7000-8000-000000000020",
+                        "content_sha256": "3ddf38b027e8fd060e39e3f3b509510fbf4962d1596606edf5cc91ba274df2aa"
+                      }
+                    },
+                    {
+                      "operation_id": "update_record",
+                      "qualification_ref": {
+                        "qualification_id": "qual_update_record",
+                        "version_id": "018f0000-0000-7000-8000-000000000020",
+                        "content_sha256": "31903261d5ab822943e968007699cd6e83c91c3b4e348d20429f88fc2f1b2805"
+                      }
                     }
                   ]
                 }
@@ -8478,7 +8559,7 @@
               }
             ]
           },
-          "behavior_sha256": "335c6c25282a8605d3a616b96f5e2ebd9797cbcbd2c1d911f32353e6061df610",
+          "behavior_sha256": "ce5a2e12c91605ccc670dede07989436177a58fd6a3cebbdd070e16d59aaa28d",
           "compiler_revision": "compiler_v1",
           "created_by": "test_owner",
           "created_at": "2026-11-14T12:00:00Z"
@@ -8549,12 +8630,12 @@
             "organization_id": "018f0000-0000-7000-8000-000000000001",
             "agent_id": "018f0000-0000-7000-8000-000000000300",
             "agent_version_id": "018f0000-0000-7000-8000-000000000301",
-            "behavior_sha256": "335c6c25282a8605d3a616b96f5e2ebd9797cbcbd2c1d911f32353e6061df610",
+            "behavior_sha256": "ce5a2e12c91605ccc670dede07989436177a58fd6a3cebbdd070e16d59aaa28d",
             "manifest_sha256": "c54cc62484b05a5bdaace4568a0a516d0dd478095728e2336f43cd739098d11b",
             "compiler_revision": "compiler_v1",
             "signed_at": "2026-11-14T12:00:00Z"
           },
-          "signature": "uTvxpMLBMZqXsGk2mc9A3WRlkFtIuG9RqA1Js8GAx4TjOPWBxeDc9JWVm9twjD875IwTbVNEnskeYINrD8KvDQ"
+          "signature": "6NJXEtsQd-7ZUysOOoxnVv6pFajTDB2lpQZhxaL3Wa5ulI3MLeCaSqiJ34TmAf8cGWSrBlA1qXtgcUO6-ScRDg"
         },
         "compile_report": {
           "schema_id": "agent.compile-report.v1",
@@ -15692,7 +15773,7 @@
                     "application_id": "invoice_app",
                     "capability_id": "invoice_operations",
                     "version_id": "018f0000-0000-7000-8000-000000000016",
-                    "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                    "content_sha256": "7eff04c018eba8c66e8c199a62057dee5cbf3f48317d8c4f33ac6bc8ed6af71e"
                   },
                   "body": {
                     "application_profile_ref": {
@@ -15754,7 +15835,8 @@
                         "reversibility": "unknown",
                         "verification_spec_refs": [],
                         "policy_fact_fields": [],
-                        "max_argument_bytes": 4096
+                        "max_argument_bytes": 4096,
+                        "write_guard": "strong_precondition"
                       },
                       {
                         "operation_id": "read_invoice",
@@ -15829,7 +15911,26 @@
                         "reversibility": "unknown",
                         "verification_spec_refs": [],
                         "policy_fact_fields": [],
-                        "max_argument_bytes": 4096
+                        "max_argument_bytes": 4096,
+                        "write_guard": "not_applicable"
+                      }
+                    ],
+                    "qualification_refs": [
+                      {
+                        "operation_id": "post_invoice",
+                        "qualification_ref": {
+                          "qualification_id": "qual_post_invoice",
+                          "version_id": "018f0000-0000-7000-8000-000000000020",
+                          "content_sha256": "f39317affb3a53f80857c58d6fd979aa1886eb76e1b40020bf37272df7c8fc6e"
+                        }
+                      },
+                      {
+                        "operation_id": "read_invoice",
+                        "qualification_ref": {
+                          "qualification_id": "qual_read_invoice",
+                          "version_id": "018f0000-0000-7000-8000-000000000020",
+                          "content_sha256": "8212d9c7e9ee0a5a6cc63e98c092e64f068ebdd65ca92092cad55b120e065ffe"
+                        }
                       }
                     ]
                   }
@@ -15978,7 +16079,7 @@
                 }
               ]
             },
-            "behavior_sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
+            "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
             "compiler_revision": "compiler_v1",
             "created_by": "test_owner",
             "created_at": "2026-11-14T12:00:00Z"
@@ -16049,12 +16150,12 @@
               "organization_id": "018f0000-0000-7000-8000-000000000001",
               "agent_id": "018f0000-0000-7000-8000-000000000100",
               "agent_version_id": "018f0000-0000-7000-8000-000000000101",
-              "behavior_sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
+              "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
               "manifest_sha256": "2e5dd223999710d9472eda60ccfe02d2d8a11c3d782132b89b1aa17bd30d63cd",
               "compiler_revision": "compiler_v1",
               "signed_at": "2026-11-14T12:00:00Z"
             },
-            "signature": "ziT9TpmqVyRxL5I2J22NuoRJm1SGfAqZLA-JciHM7LFd-qCr-3jfFkBlNtHgUqsKgYas6VxFdrx3b1uEGxRWAw"
+            "signature": "YRe89uonF57sd8djIswmwBf4DSiYFaJNaQssyPX3JMc_9rZS4fPb4ywjt0FoHWn8W96sW4qGi6TEvjkRecJqCw"
           },
           "compile_report": {
             "schema_id": "agent.compile-report.v1",
@@ -16854,7 +16955,7 @@
                     "application_id": "invoice_app",
                     "capability_id": "invoice_operations",
                     "version_id": "018f0000-0000-7000-8000-000000000016",
-                    "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                    "content_sha256": "7eff04c018eba8c66e8c199a62057dee5cbf3f48317d8c4f33ac6bc8ed6af71e"
                   },
                   "body": {
                     "application_profile_ref": {
@@ -16916,7 +17017,8 @@
                         "reversibility": "unknown",
                         "verification_spec_refs": [],
                         "policy_fact_fields": [],
-                        "max_argument_bytes": 4096
+                        "max_argument_bytes": 4096,
+                        "write_guard": "strong_precondition"
                       },
                       {
                         "operation_id": "read_invoice",
@@ -16991,7 +17093,26 @@
                         "reversibility": "unknown",
                         "verification_spec_refs": [],
                         "policy_fact_fields": [],
-                        "max_argument_bytes": 4096
+                        "max_argument_bytes": 4096,
+                        "write_guard": "not_applicable"
+                      }
+                    ],
+                    "qualification_refs": [
+                      {
+                        "operation_id": "post_invoice",
+                        "qualification_ref": {
+                          "qualification_id": "qual_post_invoice",
+                          "version_id": "018f0000-0000-7000-8000-000000000020",
+                          "content_sha256": "f39317affb3a53f80857c58d6fd979aa1886eb76e1b40020bf37272df7c8fc6e"
+                        }
+                      },
+                      {
+                        "operation_id": "read_invoice",
+                        "qualification_ref": {
+                          "qualification_id": "qual_read_invoice",
+                          "version_id": "018f0000-0000-7000-8000-000000000020",
+                          "content_sha256": "8212d9c7e9ee0a5a6cc63e98c092e64f068ebdd65ca92092cad55b120e065ffe"
+                        }
                       }
                     ]
                   }
@@ -17140,7 +17261,7 @@
                 }
               ]
             },
-            "behavior_sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
+            "behavior_sha256": "95ae2cd1fc46a88766bd00c1721778491ce7ec46d51872ade125b5a7a0e270ef",
             "compiler_revision": "compiler_v1",
             "created_by": "test_owner",
             "created_at": "2026-11-14T12:00:00Z"
@@ -18016,7 +18137,7 @@
                     "application_id": "invoice_app",
                     "capability_id": "invoice_operations",
                     "version_id": "018f0000-0000-7000-8000-000000000016",
-                    "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                    "content_sha256": "7eff04c018eba8c66e8c199a62057dee5cbf3f48317d8c4f33ac6bc8ed6af71e"
                   },
                   "body": {
                     "application_profile_ref": {
@@ -18078,7 +18199,8 @@
                         "reversibility": "unknown",
                         "verification_spec_refs": [],
                         "policy_fact_fields": [],
-                        "max_argument_bytes": 4096
+                        "max_argument_bytes": 4096,
+                        "write_guard": "strong_precondition"
                       },
                       {
                         "operation_id": "read_invoice",
@@ -18153,7 +18275,26 @@
                         "reversibility": "unknown",
                         "verification_spec_refs": [],
                         "policy_fact_fields": [],
-                        "max_argument_bytes": 4096
+                        "max_argument_bytes": 4096,
+                        "write_guard": "not_applicable"
+                      }
+                    ],
+                    "qualification_refs": [
+                      {
+                        "operation_id": "post_invoice",
+                        "qualification_ref": {
+                          "qualification_id": "qual_post_invoice",
+                          "version_id": "018f0000-0000-7000-8000-000000000020",
+                          "content_sha256": "f39317affb3a53f80857c58d6fd979aa1886eb76e1b40020bf37272df7c8fc6e"
+                        }
+                      },
+                      {
+                        "operation_id": "read_invoice",
+                        "qualification_ref": {
+                          "qualification_id": "qual_read_invoice",
+                          "version_id": "018f0000-0000-7000-8000-000000000020",
+                          "content_sha256": "8212d9c7e9ee0a5a6cc63e98c092e64f068ebdd65ca92092cad55b120e065ffe"
+                        }
                       }
                     ]
                   }
@@ -18302,7 +18443,7 @@
                 }
               ]
             },
-            "behavior_sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
+            "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
             "compiler_revision": "compiler_v1",
             "created_by": "test_owner",
             "created_at": "2026-11-14T12:00:00Z"
@@ -18373,12 +18514,12 @@
               "organization_id": "018f0000-0000-7000-8000-000000000001",
               "agent_id": "018f0000-0000-7000-8000-000000000100",
               "agent_version_id": "018f0000-0000-7000-8000-000000000101",
-              "behavior_sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
+              "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
               "manifest_sha256": "2e5dd223999710d9472eda60ccfe02d2d8a11c3d782132b89b1aa17bd30d63cd",
               "compiler_revision": "compiler_v1",
               "signed_at": "2026-11-14T12:00:00Z"
             },
-            "signature": "ziT9TpmqVyRxL5I2J22NuoRJm1SGfAqZLA-JciHM7LFd-qCr-3jfFkBlNtHgUqsKgYas6VxFdrx3b1uEGxRWAw"
+            "signature": "YRe89uonF57sd8djIswmwBf4DSiYFaJNaQssyPX3JMc_9rZS4fPb4ywjt0FoHWn8W96sW4qGi6TEvjkRecJqCw"
           },
           "compile_report": {
             "schema_id": "agent.compile-report.v1",
@@ -19168,7 +19309,7 @@
                 "application_id": "invoice_app",
                 "capability_id": "invoice_operations",
                 "version_id": "018f0000-0000-7000-8000-000000000016",
-                "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                "content_sha256": "7eff04c018eba8c66e8c199a62057dee5cbf3f48317d8c4f33ac6bc8ed6af71e"
               },
               "body": {
                 "application_profile_ref": {
@@ -19230,7 +19371,8 @@
                     "reversibility": "unknown",
                     "verification_spec_refs": [],
                     "policy_fact_fields": [],
-                    "max_argument_bytes": 4096
+                    "max_argument_bytes": 4096,
+                    "write_guard": "strong_precondition"
                   },
                   {
                     "operation_id": "read_invoice",
@@ -19305,7 +19447,26 @@
                     "reversibility": "unknown",
                     "verification_spec_refs": [],
                     "policy_fact_fields": [],
-                    "max_argument_bytes": 4096
+                    "max_argument_bytes": 4096,
+                    "write_guard": "not_applicable"
+                  }
+                ],
+                "qualification_refs": [
+                  {
+                    "operation_id": "post_invoice",
+                    "qualification_ref": {
+                      "qualification_id": "qual_post_invoice",
+                      "version_id": "018f0000-0000-7000-8000-000000000020",
+                      "content_sha256": "f39317affb3a53f80857c58d6fd979aa1886eb76e1b40020bf37272df7c8fc6e"
+                    }
+                  },
+                  {
+                    "operation_id": "read_invoice",
+                    "qualification_ref": {
+                      "qualification_id": "qual_read_invoice",
+                      "version_id": "018f0000-0000-7000-8000-000000000020",
+                      "content_sha256": "8212d9c7e9ee0a5a6cc63e98c092e64f068ebdd65ca92092cad55b120e065ffe"
+                    }
                   }
                 ]
               }
@@ -20189,7 +20350,7 @@
                 "application_id": "invoice_app",
                 "capability_id": "invoice_operations",
                 "version_id": "018f0000-0000-7000-8000-000000000016",
-                "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                "content_sha256": "7eff04c018eba8c66e8c199a62057dee5cbf3f48317d8c4f33ac6bc8ed6af71e"
               },
               "body": {
                 "application_profile_ref": {
@@ -20251,7 +20412,8 @@
                     "reversibility": "unknown",
                     "verification_spec_refs": [],
                     "policy_fact_fields": [],
-                    "max_argument_bytes": 4096
+                    "max_argument_bytes": 4096,
+                    "write_guard": "strong_precondition"
                   },
                   {
                     "operation_id": "read_invoice",
@@ -20326,7 +20488,26 @@
                     "reversibility": "unknown",
                     "verification_spec_refs": [],
                     "policy_fact_fields": [],
-                    "max_argument_bytes": 4096
+                    "max_argument_bytes": 4096,
+                    "write_guard": "not_applicable"
+                  }
+                ],
+                "qualification_refs": [
+                  {
+                    "operation_id": "post_invoice",
+                    "qualification_ref": {
+                      "qualification_id": "qual_post_invoice",
+                      "version_id": "018f0000-0000-7000-8000-000000000020",
+                      "content_sha256": "f39317affb3a53f80857c58d6fd979aa1886eb76e1b40020bf37272df7c8fc6e"
+                    }
+                  },
+                  {
+                    "operation_id": "read_invoice",
+                    "qualification_ref": {
+                      "qualification_id": "qual_read_invoice",
+                      "version_id": "018f0000-0000-7000-8000-000000000020",
+                      "content_sha256": "8212d9c7e9ee0a5a6cc63e98c092e64f068ebdd65ca92092cad55b120e065ffe"
+                    }
                   }
                 ]
               }

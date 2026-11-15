@@ -42,3 +42,6 @@ Oryn provides employees with real-time contextual guidance, peer error fixes, co
 - `flight-simulator` and `release-governance` evaluate and gate assist plans using `EvaluationTargetV1` before publishing eligibility to `operational-graph`.
 - `outcome-verification` validates postconditions for both batch jobs and assist sessions using `ExecutionContextV1`.
 - `desktop-shell` renders guidance cards and highlights over `shell-hud.v1` (major 1, minor 0).
+
+*(Scope Amendment — 2026-11-14): [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md) amends execution reservation and native actuation: unifies local execution reservation under `LocalExecutionReservationBroker` managed by Privacy Helper, preventing concurrent browser or native actuation across jobs and assists. Restricts native automation strictly to Stage 3 semantic actuation under Shell supervision via `shell-adapter.v1` (major 1, minor 0).*
+

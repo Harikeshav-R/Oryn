@@ -133,8 +133,9 @@ If any conjunct is unknown, false, or stale, observation for that document or mo
 - **Contract 12 (Authorized External Operation):**
   - **Producer:** [agent-runtime](agent-runtime.md) / [application-adapters](application-adapters.md)
   - **Consumer:** [browser-extension](browser-extension.md)
-  - **Transport:** Routed through Privacy Helper and native broker over `browser-bridge.v1` (negotiated `protocol_major: 1`, `protocol_minor: 3` with `identity_authority_v1` capability).
-  - **Boundary Invariant:** Execution requests (`ExecuteBrowserAction`) must bind `ExecutionContextV1` (`job` or `assist`), cryptographic `authorization_ref`, nullable `approval_ref`, authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1 | null, admission: SignedActionAdmissionV1}`, stable `action_sha256`, target key, record key, live document generation, surface generation, and expected before-state. Both authority bundle and reference IDs remain strictly outside the canonical `action_sha256` digest. Operates strictly within an exclusive device reservation (reserved execution tab for jobs, or reserved assist tab for HUD assists). Extension verifies trust keyset and bundle signatures before DOM actuation; content-free action/nonce ledger prevents replay. Zero direct cloud network connection.
+  - **Transport:** Routed through Privacy Helper and native broker over `browser-bridge.v1` (negotiated `protocol_major: 1`, `protocol_minor: 4` with `identity_authority_v1` and `local_execution_reservation_v1` capabilities).
+  - **Boundary Invariant:** Execution requests (`ExecuteBrowserAction`) must bind `ExecutionContextV1` (`job` or `assist`), cryptographic `authorization_ref`, nullable `approval_ref`, authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1 | null, admission: SignedActionAdmissionV1}`, stable `action_sha256`, target key, record key, live document generation, surface generation, and expected before-state. Both authority bundle and reference IDs remain strictly outside the canonical `action_sha256` digest. Operates strictly within an exclusive device reservation managed by `LocalExecutionReservationBroker` (reserved execution tab for jobs, or reserved assist tab for HUD assists) preventing concurrent native or browser actuation. Extension verifies trust keyset and bundle signatures before DOM actuation; content-free action/nonce ledger prevents replay. Zero direct cloud network connection.
+
 - **Contract 13 (Submission Records and Readback Evidence):**
   - **Producer:** [browser-extension](browser-extension.md)
   - **Consumer:** [outcome-verification](outcome-verification.md) / [agent-runtime](agent-runtime.md)
@@ -1163,7 +1164,13 @@ Reports immediate dispatch and local submission status.
   "connection_token": "tok_99aabbccddeeff00112233445566778899aabbccddeeff001122334455667788",
   "type": "BrowserActionResult",
   "payload": {
-    "action_id": "act_01928374-click-approve-0001",
+    "action_id": "act_invoice_approve_0001",
+    "execution_context": {
+      "kind": "job",
+      "job_id": "job_01928374_0001",
+      "case_id": "case_01928374_0002",
+      "agent_version": "v1"
+    },
     "reservation_id": "res_exec_01928374-0001",
     "status": "completed",
     "submission_state": "application_acknowledged",
@@ -1444,7 +1451,7 @@ The subsystem operates across three strictly orthogonal state axes:
 | `awaiting_approval` | Before-values changed or operator rejects | Extension / Runtime | Discards proposal. Re-resolves target. | `idle` / `released` | Re-evaluate task plan or escalate to operator. |
 | `running` | Employee moves mouse, types, or switches tab | BrowserCoordinator | Detects user interference. Suspends dispatch immediately. | `paused` | Operator resolves conflict and resumes job. |
 | `running` | Port drops after action handed to browser | Host / Broker | Marks submission state `unknown`. Prohibits retry. | `outcome_unknown` | Readback verification or operator manual check. |
-| `running` | Action completed; postconditions verified | DomExecutor | Emits `BrowserActionResult(status="completed")`. | `running` / `released` | Proceed to next step or release reservation. |
+| `running` | Action primitive dispatched; postconditions pending | DomExecutor | Emits `BrowserActionResult(status="completed", submission_state="application_acknowledged")`. Business verification deferred to independent readback. | `running` / `released` | Proceed to next step or release reservation. |
 
 ### Crash Recovery and Blocker Persistence
 

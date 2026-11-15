@@ -72,6 +72,9 @@ Oryn governs the execution boundary between autonomous AI agents, desktop human 
 - **Rollback Resilience:** Authority Recovery Journal ensures database disaster recovery cannot re-open consumed fences or restore revoked access.
 - **Cryptographic Clarity:** Clear, unpadded base64url Ed25519 signatures over RFC 8785 canonical bytes across all schemas.
 
+*(Scope Amendment — 2026-11-14): [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md) amends action targets and policy facts: updates `AdapterTargetProjectionV1` to bind `connection_id`, `connection_revision`, `vendor_account_id`, `record_key`, `expected_state: AdapterExpectedStateV1`, `environment`, and `argument_sha256`. Differentiates action effects (`read`, `draft`, `write`), where reads require 0 parameter diffs and draft/write require 1–128 diffs. Introduces `register_action_facts` for trusted adapter-derived facts and adds capabilities `application.read`, `integration.manage`, and `application.qualify`.*
+
+
 ### Negative / Tradeoffs
 - **Fixed Role Matrix:** Custom, user-defined role creation is unavailable in v1.0, requiring organizations to map responsibilities into the nine fixed roles.
 - **Irreversible External Admissions:** Once an action consumption is committed, revocation cannot guarantee external recall if the adapter has already begun network transmission.

@@ -351,6 +351,13 @@ When a Tier 2 or Tier 3 action requires employee approval:
 #### 4. Local History and Privacy Reads
 History browsing, candidate inspection, and My Privacy data are fetched over the dedicated query channel using cursor-based pagination (capped at 100 items per response). Raw media thumbnails are fetched via short-lived, profile-bound opaque local handles (e.g. `local-media://handle-uuid`), validated by the privacy helper. Arbitrary filesystem path traversal and direct URLs to unredacted captures are strictly prohibited.
 
+#### 5. Local Native Adapter Worker Supervision (`shell-adapter.v1`, Contract 12)
+Desktop Shell supervises the signed first-party unprivileged child process `oryn-adapter-worker` over two inherited private length-prefixed byte channels (`shell-adapter.v1`, major 1, minor 0: max frame size 262,144 bytes / 256 KiB; no public TCP or named-pipe rendezvous):
+- **Supervision & Gating:** Shell relays execution context and authority bundle (`{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1 | null, admission: SignedActionAdmissionV1}`), while Privacy Helper gates local observation-derived inputs and device-wide reservations via `LocalExecutionReservationBroker`.
+- **Deterministic OS Primitives:** Executes native Stage 3 semantic actuation using Windows UI Automation supported patterns and macOS Accessibility actions behind deterministic platform bridges without privilege elevation. Closed primitive set: `read | invoke | set_value | select | toggle`.
+- **Target & Safety Invariants:** Binds signed app identity, process/window ID, permitted workspace, target key, surface generation, exact expected before-state, and monotonic admission deadline. Screen pause, Pause All, desktop lock, focus loss, window occlusion, or generation drift immediately halts pending native dispatch. Prior submitted effects are preserved without pretending rollback occurred.
+
+
 ## Trust and deployment boundaries
 
 ### Process Isolation and Execution Hierarchy

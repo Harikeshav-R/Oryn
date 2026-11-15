@@ -190,7 +190,7 @@ pub trait CandidateBundlePort: Send + Sync {
 
 ### Producer-owned discovery projections
 
-Application Adapters owns `ApplicationCapabilityRefV1 {application_id, capability_id, version_id, content_sha256}` and `ApplicationCapabilitySnapshotV1 {schema_id:"application.capability-snapshot.v1", organization_id, ref, body}`. The body is `{application_profile_ref, adapter_id, adapter_revision, execution_location, platform, supported_stages, operations}`. Location is `cloud` or `employee_device`, platform is `browser`, `macos` or `windows`, and supported stages are unique values from 3, 4 and 5. The profile reference has entity kind `application_profile`. An operation is `{operation_id, input_type, output_type, effect, minimum_risk_tier, record_types, allowed_stages, idempotency, reversibility, verification_spec_refs, policy_fact_fields, max_argument_bytes}`. Effect is `read`, `draft` or `write`; idempotency is `native_key`, `read_reconcile` or `none`; reversibility is `reversible`, `irreversible` or `unknown`. Operation IDs are unique per snapshot; argument limit is 1–16384 bytes. Snapshot reference digest hashes RFC 8785 canonical body. `ApplicationCapabilityStatusV1 {organization_id, capability_ref, generation, status, observed_at}` reports `available`, `degraded`, `revoked` or `unknown` separately from immutable hash.
+Application Adapters owns `ApplicationCapabilityRefV1 {application_id, capability_id, version_id, content_sha256}` and `ApplicationCapabilitySnapshotV1 {schema_id:"application.capability-snapshot.v1", organization_id, ref, body}`. The body is `{application_profile_ref, adapter_id, adapter_revision, execution_location, platform, supported_stages, operations, qualification_refs}`. Location is `cloud` or `employee_device`, platform is `api`, `browser`, `macos` or `windows`, and supported stages are unique values from 3, 4 and 5. The profile reference has entity kind `application_profile`. An operation is `{operation_id, input_type, output_type, effect, minimum_risk_tier, record_types, allowed_stages, idempotency, reversibility, write_guard, verification_spec_refs, policy_fact_fields, max_argument_bytes}`. Effect is `read`, `draft` or `write`; idempotency is `native_key`, `read_reconcile` or `none`; reversibility is `reversible`, `irreversible` or `unknown`; `write_guard` is `not_applicable`, `immutable_input`, `strong_precondition`, or `exclusive_scope`. Qualification references is an ordered array of closed 1:1 `{operation_id, qualification_ref}` bindings ordered by operation ID. Operation IDs are unique per snapshot; argument limit is 1–16384 bytes. Snapshot reference digest hashes RFC 8785 canonical body. `ApplicationCapabilityStatusV1 {schema_id:"application.capability-status.v1", organization_id, capability_ref, generation, status, observed_at, operation_statuses}` reports coarse status and per-operation statuses separately from immutable body hash.
 
 Outcome Verification owns `VerificationSpecProjectionV1 {schema_id:"verification.spec-projection.v1", organization_id, spec_ref, body}`. Its body is `{capability_ref, postcondition_ids, method, fact_definitions, predicate, readback_capability_ref, readback_operation_id, reviewer_role, supported_stages}`. `spec_ref` is a `verification_spec` and its digest hashes canonical body; all postconditions exist in the pinned source capability. `system_evidence` requires both readback fields and null reviewer role. `authorized_reviewer` requires a reviewer role, null readback fields and Stage 3 only. Approval to commit an action is not a postcondition assessment. Reuse Graph fact definitions, conditions, verified-source requirements and three-valued evaluation; no SQL or second rule DSL.
 
@@ -198,10 +198,17 @@ Outcome Verification owns `VerificationSpecProjectionV1 {schema_id:"verification
 
 ```rust
 pub trait ApplicationCapabilityPort: Send + Sync {
-    fn snapshot(&self, principal: &VerifiedPrincipal, references: &[ApplicationCapabilityRefV1])
-        -> Result<Vec<ApplicationCapabilitySnapshotV1>, CapabilityError>;
-    fn statuses(&self, principal: &VerifiedPrincipal, references: &[ApplicationCapabilityRefV1])
-        -> Result<Vec<ApplicationCapabilityStatusV1>, CapabilityError>;
+    fn snapshot<'a>(
+        &'a self,
+        principal: &'a VerifiedPrincipal,
+        capability_ref: &'a ApplicationCapabilityRefV1,
+    ) -> impl Future<Output = Result<ApplicationCapabilitySnapshotV1, CapabilityError>> + Send + 'a;
+
+    fn statuses<'a>(
+        &'a self,
+        principal: &'a VerifiedPrincipal,
+        capability_ref: &'a ApplicationCapabilityRefV1,
+    ) -> impl Future<Output = Result<ApplicationCapabilityStatusV1, CapabilityError>> + Send + 'a;
 }
 pub trait VerificationCatalogPort: Send + Sync {
     fn projections(&self, principal: &VerifiedPrincipal, references: &[KnowledgeVersionRefV1])
@@ -210,6 +217,7 @@ pub trait VerificationCatalogPort: Send + Sync {
         -> Result<Vec<VerificationSpecStatusV1>, VerificationCatalogError>;
 }
 ```
+
 
 These are pure authenticated registry reads, not production application calls or adapter plugin execution. Missing and unknown references are explicit blockers. New adapter, profile or operation definitions are material dependency changes.
 
@@ -684,9 +692,10 @@ The existing non-BYPASSRLS application roles must receive explicit `SELECT, INSE
 ### Finalization Protocol (5-Step Transactional Sequence)
 1. **In-Memory Compilation:** Read expected draft revision, source capability, published playbook, active rules, and adapter snapshots. Allocate UUIDs and execute Passes 1–8 in memory outside row locks. Compute preimages for `ExecutableAgentBodyV1`, `behavior_sha256`, and `DependencyManifestV1`.
 2. **Cryptographic Attestation:** Request Ed25519 signature from Vault Transit service outside database locks. Preimage: `UTF8("agent.candidate-attestation.v1") + LF + RFC8785(payload)`. If Vault fails, mark attempt `failed`; never publish unsigned candidates.
-3. **TenantTransaction Acquisition:** Open `TenantTransaction`. Respect the existing identity, custody, discovery and staging lock order; lock Factory head after those rows and before `graph_knowledge_guard`. Re-verify identity and owner remit and:
+3. **TenantTransaction Acquisition:** Open `TenantTransaction`. Respect the existing identity, custody, discovery and staging lock order; lock Factory head after those rows, then acquire shared `adapter_registry_guard(organization_id, generation)` before `graph_knowledge_guard`. Call asynchronous internal `guard_catalog_generation(tx: &mut TenantTransaction, principal: &VerifiedPrincipal, expected_generation: u64) -> Result<(), CapabilityError>`, verify catalog generation matches compile input, and perform no external calls under locks. Re-verify identity and owner remit and:
    - Draft head revision has not advanced.
    - Pinned source versions remain approved/published.
+   - Adapter qualification attestations remain valid and unexpired (<= 30 days).
    - Catalog generations match compile input.
    - No active knowledge conflicts exist against pinned rules.
 4. **Manifest Registration & Live Guard:** Register the exact precomputed manifest through `OperationalGraphPort::register_dependencies` in the same transaction; compare returned digest and completeness and call `resolve_eligibility`. Recheck source status, catalog generations and digests, rule and conflict eligibility. If anything changed, roll back, discard the prepared signature, and record the stale/dependency blocker without advancing the head.

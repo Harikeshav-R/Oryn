@@ -1,0 +1,1524 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:application-adapters:v1",
+  "title": "Oryn Application Adapters Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for application adapter packs, qualification definitions, attestations, connection management, execution mediation, submission receipts, readback evidence, and simulation bindings.",
+  "oneOf": [
+    { "$ref": "#/$defs/AdapterPackV1" },
+    { "$ref": "#/$defs/OperationQualificationDefinitionV1" },
+    { "$ref": "#/$defs/QualificationAttestationV1" },
+    { "$ref": "#/$defs/SignedQualificationAttestationV1" },
+    { "$ref": "#/$defs/ApplicationCompatibilityReportV1" },
+    { "$ref": "#/$defs/ApplicationConnectionV1" },
+    { "$ref": "#/$defs/CredentialLeaseRequestV1" },
+    { "$ref": "#/$defs/CredentialLeaseV1" },
+    { "$ref": "#/$defs/AdapterEgressRequestV1" },
+    { "$ref": "#/$defs/AdapterEgressResultV1" },
+    { "$ref": "#/$defs/AdapterPrepareRequestV1" },
+    { "$ref": "#/$defs/AdapterPreparedOperationV1" },
+    { "$ref": "#/$defs/AdapterExecuteRequestV1" },
+    { "$ref": "#/$defs/AdapterSubmissionReceiptV1" },
+    { "$ref": "#/$defs/AdapterSubmissionQueryV1" },
+    { "$ref": "#/$defs/AdapterReadbackRequestV1" },
+    { "$ref": "#/$defs/AdapterReadbackEvidenceV1" },
+    { "$ref": "#/$defs/SignedAdapterReadbackEvidenceV1" },
+    { "$ref": "#/$defs/AdapterEnvironmentBindingV1" },
+    { "$ref": "#/$defs/CreateConnectionRequestV1" },
+    { "$ref": "#/$defs/ConnectionResponseV1" },
+    { "$ref": "#/$defs/ConnectionListResponseV1" },
+    { "$ref": "#/$defs/StartAuthTransactionRequestV1" },
+    { "$ref": "#/$defs/AuthTransactionResponseV1" },
+    { "$ref": "#/$defs/ConnectionProbeRequestV1" },
+    { "$ref": "#/$defs/ConnectionProbeResponseV1" },
+    { "$ref": "#/$defs/ConnectionSuspensionRequestV1" },
+    { "$ref": "#/$defs/ConnectionRevocationRequestV1" },
+    { "$ref": "#/$defs/StageQualificationRequestV1" },
+    { "$ref": "#/$defs/ApproveQualificationRequestV1" },
+    { "$ref": "#/$defs/RenewQualificationRequestV1" }
+  ],
+  "$defs": {
+    "AdapterErrorCodeV1": {
+      "type": "string",
+      "enum": [
+        "ADAPTER_SCHEMA_INVALID",
+        "ADAPTER_LIMIT_EXCEEDED",
+        "ADAPTER_SCOPE_DENIED",
+        "ADAPTER_CONNECTION_UNAVAILABLE",
+        "ADAPTER_AUTH_REQUIRED",
+        "ADAPTER_ACCOUNT_MISMATCH",
+        "ADAPTER_CAPABILITY_UNAVAILABLE",
+        "ADAPTER_QUALIFICATION_EXPIRED",
+        "ADAPTER_CONFIGURATION_CHANGED",
+        "ADAPTER_RECORD_NOT_FOUND",
+        "ADAPTER_RECORD_AMBIGUOUS",
+        "ADAPTER_STATE_STALE",
+        "ADAPTER_EXCLUSIVE_SCOPE_REQUIRED",
+        "ADAPTER_AUTHORITY_INVALID",
+        "ADAPTER_ADMISSION_UNCONFIRMED",
+        "ADAPTER_ALREADY_DISPATCHED",
+        "ADAPTER_RATE_LIMITED",
+        "ADAPTER_UNSUPPORTED",
+        "ADAPTER_RESPONSE_INVALID",
+        "ADAPTER_ARTIFACT_CHANGED",
+        "ADAPTER_CANCELLED",
+        "ADAPTER_OUTCOME_UNKNOWN",
+        "ADAPTER_READBACK_UNAVAILABLE"
+      ]
+    },
+    "OperationQualificationRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualification_id",
+        "version_id",
+        "content_sha256"
+      ],
+      "properties": {
+        "qualification_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "version_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "content_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        }
+      }
+    },
+    "OperationQualificationBodyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_id",
+        "pack_ref",
+        "application_profile_ref",
+        "operation_id",
+        "platform",
+        "execution_location",
+        "environment",
+        "external_account_id",
+        "configuration_sha256",
+        "resource_scope",
+        "allowed_stages",
+        "verification_binding",
+        "write_guard",
+        "automation_effects_sha256"
+      ],
+      "properties": {
+        "application_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "pack_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "application_profile_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1",
+          "properties": { "entity_kind": { "const": "application_profile" } }
+        },
+        "operation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["api", "browser", "macos", "windows"]
+        },
+        "execution_location": {
+          "type": "string",
+          "enum": ["cloud", "employee_device"]
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["production", "simulation"]
+        },
+        "external_account_id": {
+          "type": "string"
+        },
+        "configuration_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "resource_scope": {
+          "type": "string"
+        },
+        "allowed_stages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "enum": [3, 4, 5]
+          }
+        },
+        "verification_binding": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        "write_guard": {
+          "type": "string",
+          "enum": [
+            "not_applicable",
+            "immutable_input",
+            "strong_precondition",
+            "exclusive_scope"
+          ]
+        },
+        "automation_effects_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        }
+      }
+    },
+    "OperationQualificationDefinitionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "ref",
+        "body"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "application.operation-qualification.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "ref": {
+          "$ref": "#/$defs/OperationQualificationRefV1"
+        },
+        "body": {
+          "$ref": "#/$defs/OperationQualificationBodyV1"
+        }
+      }
+    },
+    "QualificationAttestationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualification_ref",
+        "configuration_sha256",
+        "evidence_refs",
+        "evidence_sha256",
+        "generation",
+        "issued_at",
+        "not_after"
+      ],
+      "properties": {
+        "qualification_ref": {
+          "$ref": "#/$defs/OperationQualificationRefV1"
+        },
+        "configuration_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+          }
+        },
+        "evidence_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "issued_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        },
+        "not_after": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "SignedQualificationAttestationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "application.qualification-attestation.v1"
+        },
+        "key_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/QualificationAttestationV1"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        }
+      }
+    },
+    "AdapterPackV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "pack_id",
+        "revision",
+        "implementation_sha256",
+        "operation_definitions",
+        "supported_api_versions",
+        "profile_refs",
+        "validation_evidence_refs"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.pack.v1"
+        },
+        "pack_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "revision": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "implementation_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "operation_definitions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/OperationDeclarationV1"
+          }
+        },
+        "supported_api_versions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "profile_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+          }
+        },
+        "validation_evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+          }
+        }
+      }
+    },
+    "ApplicationCompatibilityEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_id",
+        "mode",
+        "support",
+        "qualification_ref",
+        "verification_support",
+        "reason_codes",
+        "evidence_refs"
+      ],
+      "properties": {
+        "operation_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["observe", "guide", "assist", "run_supervised", "run_autonomously"]
+        },
+        "support": {
+          "type": "string",
+          "enum": ["supported", "restricted", "unsupported", "unverified"]
+        },
+        "qualification_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/OperationQualificationRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "verification_support": {
+          "type": "string",
+          "enum": ["system_evidence", "authorized_reviewer", "unavailable"]
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+          }
+        }
+      }
+    },
+    "ApplicationCompatibilityReportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "application_id",
+        "configuration_sha256",
+        "observed_at",
+        "entries"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "application.compatibility-report.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "application_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "configuration_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "observed_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ApplicationCompatibilityEntryV1"
+          }
+        }
+      }
+    },
+    "ApplicationConnectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "connection_id",
+        "revision",
+        "application_id",
+        "identity_kind",
+        "owner_actor_id",
+        "vendor_account_id",
+        "vendor_subject_id",
+        "environment",
+        "endpoint_ref",
+        "granted_scopes",
+        "approved_resource_scope",
+        "configuration_sha256",
+        "secret_ref",
+        "secret_generation",
+        "state",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.connection.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "application_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "identity_kind": {
+          "type": "string",
+          "enum": ["employee_delegated", "integration_identity"]
+        },
+        "owner_actor_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "vendor_account_id": {
+          "type": "string"
+        },
+        "vendor_subject_id": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["production", "simulation"]
+        },
+        "endpoint_ref": {
+          "type": "string"
+        },
+        "granted_scopes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "approved_resource_scope": {
+          "type": "string"
+        },
+        "configuration_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "secret_ref": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "secret_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "disconnected",
+            "testing",
+            "active",
+            "degraded",
+            "rate_limited",
+            "suspended",
+            "revoked",
+            "deprecated"
+          ]
+        },
+        "created_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        },
+        "updated_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "CredentialLeaseRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "connection_id",
+        "connection_revision",
+        "execution_context",
+        "caller_workload",
+        "environment",
+        "credential_role",
+        "capability_id",
+        "operation_id",
+        "resource_scope",
+        "deadline_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.credential-lease-request.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "caller_workload": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["production", "simulation"]
+        },
+        "credential_role": {
+          "type": "string",
+          "enum": ["actuation", "readback"]
+        },
+        "capability_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "operation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "resource_scope": {
+          "type": "string"
+        },
+        "deadline_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "CredentialLeaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "lease_id",
+        "connection_id",
+        "connection_revision",
+        "vendor_subject_id",
+        "vendor_account_id",
+        "credential_role",
+        "environment",
+        "allowed_operation_digest",
+        "allowed_resource_digest",
+        "issued_at",
+        "expires_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.credential-lease.v1"
+        },
+        "lease_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "vendor_subject_id": {
+          "type": "string"
+        },
+        "vendor_account_id": {
+          "type": "string"
+        },
+        "credential_role": {
+          "type": "string",
+          "enum": ["actuation", "readback"]
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["production", "simulation"]
+        },
+        "allowed_operation_digest": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "allowed_resource_digest": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "issued_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        },
+        "expires_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "AdapterEgressRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "lease_id",
+        "attempt_id",
+        "prepared_action_ref",
+        "request_template_id",
+        "request_data"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.egress-request.v1"
+        },
+        "lease_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "attempt_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "prepared_action_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "request_template_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "request_data": {
+          "type": "object"
+        }
+      }
+    },
+    "AdapterEgressResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "receipt_id",
+        "bounded_response_ref",
+        "external_status",
+        "correlation_metadata",
+        "submission_state"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.egress-result.v1"
+        },
+        "receipt_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "bounded_response_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "external_status": {
+          "type": "integer"
+        },
+        "correlation_metadata": {
+          "type": "object"
+        },
+        "submission_state": {
+          "type": "string",
+          "enum": [
+            "not_dispatched",
+            "dispatched",
+            "application_acknowledged",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "AdapterRetryContextV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retry_of_action_id",
+        "reconciliation_ref"
+      ],
+      "properties": {
+        "retry_of_action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "reconciliation_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        }
+      }
+    },
+    "AdapterPrepareRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "execution_context",
+        "action_id",
+        "connection_id",
+        "expected_connection_revision",
+        "capability_ref",
+        "operation_id",
+        "record_key",
+        "argument_canonical_base64url",
+        "retry_context"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.prepare-request.v1"
+        },
+        "request_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "expected_connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "capability_ref": {
+          "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1"
+        },
+        "operation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "record_key": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "argument_canonical_base64url": {
+          "type": "string"
+        },
+        "retry_context": {
+          "oneOf": [
+            { "$ref": "#/$defs/AdapterRetryContextV1" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "AdapterPreparedOperationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "staged",
+        "target",
+        "policy_facts_id",
+        "qualification_ref",
+        "preflight_not_after"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.prepared-operation.v1"
+        },
+        "staged": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/AdapterStagedActionV1"
+        },
+        "target": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/TargetProjectionV1"
+        },
+        "policy_facts_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "qualification_ref": {
+          "$ref": "#/$defs/OperationQualificationRefV1"
+        },
+        "preflight_not_after": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "AdapterAuthorityBundleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorization",
+        "approval",
+        "admission"
+      ],
+      "properties": {
+        "authorization": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/SignedActionAuthorizationV1"
+        },
+        "approval": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/SignedActionApprovalV1" },
+            { "type": "null" }
+          ]
+        },
+        "admission": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/SignedActionAdmissionV1"
+        }
+      }
+    },
+    "AdapterExecuteRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "staged_action_id",
+        "staged_action_revision",
+        "attempt_id",
+        "authority"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.execute-request.v1"
+        },
+        "request_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "staged_action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "staged_action_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "attempt_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "authority": {
+          "$ref": "#/$defs/AdapterAuthorityBundleV1"
+        }
+      }
+    },
+    "AdapterSubmissionReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "receipt_id",
+        "organization_id",
+        "execution_context",
+        "action_id",
+        "action_sha256",
+        "attempt_id",
+        "connection_id",
+        "connection_revision",
+        "capability_ref",
+        "operation_id",
+        "authorization_ref",
+        "approval_ref",
+        "submission_state",
+        "timestamp_utc",
+        "external_correlation_ref",
+        "evidence_ref",
+        "error_code"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.submission-receipt.v1"
+        },
+        "receipt_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "action_sha256": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ActionDigest"
+        },
+        "attempt_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "capability_ref": {
+          "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1"
+        },
+        "operation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "authorization_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "approval_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "submission_state": {
+          "type": "string",
+          "enum": [
+            "not_dispatched",
+            "dispatched",
+            "application_acknowledged",
+            "unknown"
+          ]
+        },
+        "timestamp_utc": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        },
+        "external_correlation_ref": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "evidence_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "error_code": {
+          "oneOf": [
+            { "$ref": "#/$defs/AdapterErrorCodeV1" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "AdapterSubmissionQueryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "execution_context",
+        "action_id"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.submission-query.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        }
+      }
+    },
+    "AdapterReadbackRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "subject_action_id",
+        "verification_spec_ref",
+        "prepared_read",
+        "observed_after",
+        "max_bytes",
+        "deadline_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.readback-request.v1"
+        },
+        "request_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "subject_action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "verification_spec_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        "prepared_read": {
+          "$ref": "#/$defs/AdapterExecuteRequestV1"
+        },
+        "observed_after": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        },
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        },
+        "deadline_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "AdapterReadbackEvidenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "organization_id",
+        "execution_context",
+        "subject_action_id",
+        "read_action_id",
+        "verification_spec_ref",
+        "connection_id",
+        "connection_revision",
+        "vendor_account_id",
+        "environment",
+        "capability_ref",
+        "operation_id",
+        "record_key",
+        "source_version",
+        "observed_at",
+        "queried_after",
+        "consistency",
+        "data_sha256",
+        "content_ref",
+        "field_provenance",
+        "limitations"
+      ],
+      "properties": {
+        "evidence_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "subject_action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "read_action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "verification_spec_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        "connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "vendor_account_id": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["production", "simulation"]
+        },
+        "capability_ref": {
+          "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1"
+        },
+        "operation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "record_key": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "source_version": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "observed_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        },
+        "queried_after": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        },
+        "consistency": {
+          "type": "string",
+          "enum": ["authoritative", "eventual", "unknown"]
+        },
+        "data_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "content_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "field_provenance": {
+          "type": "object"
+        },
+        "limitations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "SignedAdapterReadbackEvidenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.readback-evidence.v1"
+        },
+        "key_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/AdapterReadbackEvidenceV1"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        }
+      }
+    },
+    "AdapterEnvironmentBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "candidate_hash",
+        "behavior_hash",
+        "manifest_hash",
+        "capability_ref",
+        "operation_id",
+        "pack_ref",
+        "production_qualification_ref",
+        "simulation_qualification_ref",
+        "simulation_connection_id",
+        "simulation_account_id",
+        "simulation_environment",
+        "configuration_equivalence_evidence_ref",
+        "fidelity_gaps"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.environment-binding.v1"
+        },
+        "candidate_hash": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "behavior_hash": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "manifest_hash": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "capability_ref": {
+          "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1"
+        },
+        "operation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "pack_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "production_qualification_ref": {
+          "$ref": "#/$defs/OperationQualificationRefV1"
+        },
+        "simulation_qualification_ref": {
+          "$ref": "#/$defs/OperationQualificationRefV1"
+        },
+        "simulation_connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "simulation_account_id": {
+          "type": "string"
+        },
+        "simulation_environment": {
+          "type": "string",
+          "const": "simulation"
+        },
+        "configuration_equivalence_evidence_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        "fidelity_gaps": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "CreateConnectionRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_id",
+        "identity_kind",
+        "vendor_account_id",
+        "environment",
+        "endpoint_ref",
+        "requested_scopes",
+        "approved_resource_scope"
+      ],
+      "properties": {
+        "application_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "identity_kind": {
+          "type": "string",
+          "enum": ["employee_delegated", "integration_identity"]
+        },
+        "vendor_account_id": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["production", "simulation"]
+        },
+        "endpoint_ref": {
+          "type": "string"
+        },
+        "requested_scopes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "approved_resource_scope": {
+          "type": "string"
+        }
+      }
+    },
+    "ConnectionResponseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connection_id",
+        "organization_id",
+        "revision",
+        "application_id",
+        "identity_kind",
+        "owner_actor_id",
+        "vendor_account_id",
+        "vendor_subject_id",
+        "environment",
+        "endpoint_ref",
+        "granted_scopes",
+        "approved_resource_scope",
+        "configuration_sha256",
+        "secret_generation",
+        "state",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "application_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "identity_kind": {
+          "type": "string",
+          "enum": ["employee_delegated", "integration_identity"]
+        },
+        "owner_actor_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "vendor_account_id": {
+          "type": "string"
+        },
+        "vendor_subject_id": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["production", "simulation"]
+        },
+        "endpoint_ref": {
+          "type": "string"
+        },
+        "granted_scopes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "approved_resource_scope": {
+          "type": "string"
+        },
+        "configuration_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "secret_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "disconnected",
+            "testing",
+            "active",
+            "degraded",
+            "rate_limited",
+            "suspended",
+            "revoked",
+            "deprecated"
+          ]
+        },
+        "created_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        },
+        "updated_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "ConnectionListResponseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["connections"],
+      "properties": {
+        "connections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConnectionResponseV1"
+          }
+        }
+      }
+    },
+    "StartAuthTransactionRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["redirect_uri"],
+      "properties": {
+        "redirect_uri": {
+          "type": "string"
+        }
+      }
+    },
+    "AuthTransactionResponseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transaction_id", "authorization_url", "expires_at"],
+      "properties": {
+        "transaction_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "authorization_url": {
+          "type": "string"
+        },
+        "expires_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "ConnectionProbeRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_revision"],
+      "properties": {
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        }
+      }
+    },
+    "ConnectionProbeResponseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["connection_id", "healthy", "observed_account_id", "state", "probed_at"],
+      "properties": {
+        "connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "healthy": {
+          "type": "boolean"
+        },
+        "observed_account_id": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "disconnected",
+            "testing",
+            "active",
+            "degraded",
+            "rate_limited",
+            "suspended",
+            "revoked",
+            "deprecated"
+          ]
+        },
+        "probed_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "ConnectionSuspensionRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_revision", "reason"],
+      "properties": {
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "ConnectionRevocationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_revision", "reason"],
+      "properties": {
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "StageQualificationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["definition", "attestation"],
+      "properties": {
+        "definition": {
+          "$ref": "#/$defs/OperationQualificationDefinitionV1"
+        },
+        "attestation": {
+          "$ref": "#/$defs/SignedQualificationAttestationV1"
+        }
+      }
+    },
+    "ApproveQualificationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_definition_sha256", "approval_note"],
+      "properties": {
+        "expected_definition_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "approval_note": {
+          "type": "string"
+        }
+      }
+    },
+    "RenewQualificationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attestation"],
+      "properties": {
+        "attestation": {
+          "$ref": "#/$defs/SignedQualificationAttestationV1"
+        }
+      }
+    }
+  }
+}

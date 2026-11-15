@@ -1,147 +1,406 @@
-# Application Capability Registry and Integration Management Component Brief
+# Application Adapters and Integration Management Component Specification
 
-Status: Baseline brief — detailed design pending
+Status: Detailed technical specification — implementation pending
 
-## Purpose and ownership
+## 1. Purpose and ownership
 
-**Source references:** [TECHNICAL.md §§5.6, 6.3](../../TECHNICAL.md) | [PRODUCT.md §§3.3–6, 13.5, 16.4–7, 17; ORY-028, ORY-041, ORY-043–044](../../PRODUCT.md)
+**Source references:** [TECHNICAL.md §§4.1, 4.3, 4.5, 4.7, 5.6, 6.3, 7.2 Contracts 6/11–13, 11.4](../../TECHNICAL.md) | [PRODUCT.md §§3.3–6, 13.5, 16.4–7, 17; ORY-028, ORY-041, ORY-043–044](../../PRODUCT.md) | [GLOSSARY.md](../../GLOSSARY.md) | [ADR-0016](../adr/0016-application-adapter-qualification-and-dispatch-boundaries.md)
 
 ### Core Responsibility
-The Application Capability Registry and Integration Management component describes, manages, and executes permitted interactions with external business applications (ERPs, CRMs, web portals, desktop tools), advertising granular capabilities and enforcing scoped, least-privileged connection lifecycles.
+The Application Adapters and Integration Management component defines, qualifies, brokers, and deterministically executes permitted interactions across external business applications (cloud SaaS APIs, web portals, and local desktop applications). It maintains immutable capability snapshots, brokers least-privileged credential leases via an out-of-process egress broker, enforces device-wide local execution reservations, executes operations with strict one-shot submission journaling, and provides independent readback evidence for downstream verification.
 
-### Owns
-- The authoritative Application Capability Registry declaring supported observe, guide, assist, run, and verify capabilities per application.
-- Standardized adapter interface definitions and connection lifecycle management.
-- Actuation and data readback protocols across diverse modalities (structured REST/GraphQL APIs, browser automation, desktop accessibility).
-- Side-effect semantics declarations (idempotency, reversibility, transactionality).
-- Adapter-level error categorization and credential isolation.
+### Authoritative Units and Ownership Boundaries
 
-### Consumes
-- Customer-approved enterprise application connection credentials from [infrastructure-security](infrastructure-security.md).
-- Authorized operation requests with target parameters from [agent-runtime](agent-runtime.md).
-- Verification readback requests from [outcome-verification](outcome-verification.md).
-- Scope restrictions and authorization grants from [identity-policy](identity-policy.md).
+| Unit | Location / Component Owner | Responsibility |
+|---|---|---|
+| `ApplicationCapabilityRegistry` | Rust module in existing Axum/Tokio/SQLx Control Plane | Immutable capability definitions, live status, qualification records, compatibility projections |
+| `ConnectionManager` | Rust module in existing Control Plane | Connection metadata, OAuth transaction orchestration, account/environment verification, health probes, and revocation |
+| `AdapterPreparation` | Adapter component; executed in cloud worker or local worker | Validates declared arguments against schema, resolves exact records, captures expected before-state, stages diffs, and registers trusted policy facts with Identity |
+| `AdapterSubmissionJournal` | Adapter component; PostgreSQL 18 for cloud, local execution audit for device dispatch | Durable external dispatch identity, attempt claims, and submission receipts; never acts as case checkpoints or authority fences |
+| `oryn-adapter-worker` | Signed first-party Rust executable; cloud container or unprivileged Shell-supervised local child | Deterministic operation implementation; zero model inference, arbitrary scripts, or runtime third-party plugins |
+| `AdapterEgressBroker` | Infrastructure-owned credential/egress enforcement process | Vault credential custody and injection; enforces HTTP method, registered vendor origin, URL path template, resource scope, environment, and operation restrictions independently of worker requests |
+| `AdapterReadback` | Separate worker/credential role | Fetches independently requested application evidence; never issues business verdicts or outcome assessments |
+| `LocalExecutionReservationBroker` | Privacy Helper; relayed by Desktop Shell / browser broker | Manages one device-wide reservation across browser and native execution modalities, covering both batch jobs and HUD assists |
 
-### Produces
-- Capability discovery metadata delivered to [agent-factory-ir](agent-factory-ir.md) and [job-orchestration](job-orchestration.md).
-- External action submission receipts, error classifications, and observed readback data delivered to [agent-runtime](agent-runtime.md) and [outcome-verification](outcome-verification.md).
-- Integration health, latency, and connection status indicators delivered to [control-plane](control-plane.md).
+### Cloud Worker Isolation Key
+Cloud worker processes are strictly isolated by the tuple:
+```text
+(organization_id, connection_id, environment, credential_role)
+```
+Bounded worker reuse is permitted only within this exact tuple. Credential roles are strictly segregated into `actuation` and `readback`. Workers and runners receive opaque, operation-scoped handles, never vendor access tokens or client secrets. No AI model or provider networking belongs in this component; local deterministic processing and cloud LiteLLM inference boundaries remain decoupled.
 
-### Does Not Own
-- Deciding whether an action is authorized under business policy (owned by [identity-policy](identity-policy.md)).
-- High-level business workflow logic or retry strategy (owned by [job-orchestration](job-orchestration.md)).
-- Determining final business verification verdict based on readback (owned by [outcome-verification](outcome-verification.md)).
+---
 
-### Boundary Requirement
-Observe, Guide, Assist, Run Supervised, and Run Autonomously are distinct advertised capabilities. An adapter may support read operations without supporting automated writes. Verification support is strictly separate from action execution. Unsupported capabilities cannot be inferred or hallucinated from model output. Production and test connections are never interchangeable by default.
+## 2. Product requirements
 
-## Product requirements
+### Key Product Requirements ([PRODUCT.md §§3.3–6, 13.5, 16.4–7, 17](../../PRODUCT.md))
+- **Strict Scope Boundaries (ORY-028):** Adapters enforce that an agent or assist session cannot access applications, endpoints, records, or fields outside its approved resource scope and customer allowlist.
+- **Preflight Connection & Qualification Validation (ORY-041):** Verifies connection health, account binding, and renewable 30-day operation qualification before job execution or action dispatch begins.
+- **Independent Readback Evidence Generation (ORY-043):** Provides independently acquired readback evidence following action submission; prevents unverified actions from being marked complete.
+- **Ambiguous Submission Protection (ORY-044):** When an external request times out, drops connection, or returns an ambiguous status, the adapter records the submission outcome as `unknown`, halting automated retries and requiring workflow-level reconciliation.
 
-### Key Product Requirements ([PRODUCT.md §§3.3–6, 13.5, 16.4–7, 17; ORY-028, ORY-041, ORY-043–044](../../PRODUCT.md))
-- **Strict Scope Boundaries:** Adapters enforce that an agent cannot access applications or records outside its approved scope (ORY-028).
-- **Preflight Connection Validation:** Verifies application connection health and permissions before job execution begins (ORY-041).
-- **Readback Evidence Generation:** Provides independent readback evidence following action submission; prevents unverified actions from being marked complete (ORY-043).
-- **Ambiguous Submission Protection:** When an external action times out or fails ambiguously, the adapter reports the outcome as uncertain to prevent blind duplicate retries (ORY-044).
+---
 
-## Upstream and downstream contracts
+## 3. Upstream and downstream contracts
 
-**Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
+**Catalog references:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md) (Contracts 6, 11, 12, 13)
 
-### Cross-Component Contracts
-- **Contract Reference #6 in [Contracts Catalog](../architecture/contracts/README.md):** Advertises supported actions, limitations, and verification capabilities to [agent-factory-ir](agent-factory-ir.md), [job-orchestration](job-orchestration.md), and [agent-runtime](agent-runtime.md). Wire schema: [`application-capability-v1.schema.json`](../architecture/contracts/application-capability-v1.schema.json) (`$id: urn:oryn:schemas:application-capability:v1`).
-  - **Projections for Agent Factory Compilation:** Exposes immutable `ApplicationCapabilitySnapshotV1` (`application.capability-snapshot.v1`) and live `ApplicationCapabilityStatusV1` through pure read interface `ApplicationCapabilityPort`:
-    ```rust
-    pub trait ApplicationCapabilityPort: Send + Sync {
-        fn snapshot<'a>(
-            &'a self,
-            principal: &'a VerifiedPrincipal,
-            references: &'a [ApplicationCapabilityRefV1],
-        ) -> impl Future<Output = Result<Vec<ApplicationCapabilitySnapshotV1>, CapabilityError>> + Send + 'a;
+### Upstream Consumed Contracts
+- **Identity & Authority (Contract 11):** Consumes `VerifiedPrincipal`, `SignedActionAuthorizationV1`, `SignedActionApprovalV1`, and `SignedActionAdmissionV1` from [identity-policy](identity-policy.md). Consumes consumed-fence receipts; registers trusted `ActionPolicyFactsV1`.
+- **Infrastructure Security:** Consumes credential leases from HashiCorp Vault via `AdapterEgressBroker` under [infrastructure-security](infrastructure-security.md).
+- **Desktop Shell & Privacy Helper:** Consumes local reservation state (`local_execution_reservation_v1`) and supervised process channels (`shell-adapter.v1` major 1, minor 0) from [desktop-shell](desktop-shell.md) and [local-privacy-storage](local-privacy-storage.md).
 
-        fn statuses<'a>(
-            &'a self,
-            principal: &'a VerifiedPrincipal,
-            references: &'a [ApplicationCapabilityRefV1],
-        ) -> impl Future<Output = Result<Vec<ApplicationCapabilityStatusV1>, CapabilityError>> + Send + 'a;
-    }
-    ```
-  - **Metadata Isolation:** Uses authenticated registry metadata only; never contacts production application endpoints during compilation or qualification. Adapter transport and plugin execution remain strictly downstream of compilation.
-  - **Identity and eligibility:** Hash the RFC 8785 canonical snapshot `body` into `ref.content_sha256`; reject duplicate JSON keys. The profile reference must have `entity_kind = application_profile`, and operation IDs must be unique within a snapshot. Status and generation are live metadata outside the immutable hash. Unknown or revoked capabilities block new qualification; degradation is a visible operational restriction, not permission to substitute an adapter. Adapter, profile, and operation definition changes are material dependencies.
-- **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes authorized external operation requests from [agent-runtime](agent-runtime.md) (for batch jobs) and [local-context-hud](local-context-hud.md) (for HUD assist sessions); binds `ExecutionContextV1` (`job` or `assist`) and the verified authority bundle `{authorization: ActionAuthorizationV1, approval: SignedApprovalProposalV1|null, admission: SignedActionAdmissionV1}`; delegates local browser actions to [browser-extension](browser-extension.md) via `ExecuteBrowserAction` over `browser-bridge.v1` (major 1, minor 3).
-- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Emits action submission receipts (`BrowserActionResult` with `submission_state` and `ExecutionContextV1`) and independent readback evidence to [outcome-verification](outcome-verification.md).
-- **Contract Reference #22 Reference:** Adapters remain strictly deterministic; remote model inference under [cloud-inference](../architecture/cloud-inference.md) cannot bypass declared adapter action constraints or invent unsupported capabilities.
-- **Action Preflight & Staging:** When staging actions requiring review, the adapter owns `AdapterStagedActionV1` (canonical argument bytes ≤16 KiB validated against declared operation schema). Supplies `ActionPolicyFactsV1` to [identity-policy](identity-policy.md) (valid ≤30 seconds) and re-verifies live preflight immediately prior to admission consumption.
-## Trust and deployment boundaries
+### Downstream Produced Contracts
+- **Contract 6 (`application-capability-v1.schema.json`):** Produces immutable `ApplicationCapabilitySnapshotV1` and live `ApplicationCapabilityStatusV1` via `ApplicationCapabilityPort`:
+  ```rust
+  pub trait ApplicationCapabilityPort: Send + Sync {
+      fn snapshot<'a>(
+          &'a self,
+          principal: &'a VerifiedPrincipal,
+          capability_ref: &'a ApplicationCapabilityRefV1,
+      ) -> impl Future<Output = Result<ApplicationCapabilitySnapshotV1, AdapterError>> + Send + 'a;
 
-### Process and Security Boundaries
-- **Deployment Location:** Deployed as isolated worker services or secure local connectors with network access to external business systems.
-- **Credential Segregation:** Operates using narrow, scoped API keys or OAuth tokens; production credentials are never passed to simulation environments or client UIs.
-- **Modality Hierarchy:** Prioritizes structured APIs first, validated browser automation second, and native desktop accessibility actions third.
+      fn statuses<'a>(
+          &'a self,
+          principal: &'a VerifiedPrincipal,
+          capability_ref: &'a ApplicationCapabilityRefV1,
+      ) -> impl Future<Output = Result<ApplicationCapabilityStatusV1, AdapterError>> + Send + 'a;
+  }
+  ```
+- **Contract 12 (`application-adapters-v1.schema.json`):** Consumes authorized prepare and execute requests (`AdapterPrepareRequestV1`, `AdapterExecuteRequestV1`) from [agent-runtime](agent-runtime.md) and [local-context-hud](local-context-hud.md).
+- **Contract 13 (`application-adapters-v1.schema.json`):** Produces immutable submission receipts (`AdapterSubmissionReceiptV1`) and signed readback evidence (`SignedAdapterReadbackEvidenceV1`) to [outcome-verification](outcome-verification.md).
 
-## Internal architecture
+---
 
-### Logical Submodules
-- **Capability Registry:** Maintains catalog of applications, supported operations, risk tiers, and verification support.
-- **Connection Manager:** Handles OAuth2 token refresh, connection pooling, rate limiting, and mTLS connections.
-- **Actuation Engine:** Translates standardized IR action requests into concrete HTTP calls, DOM manipulations, or OS events.
-- **Readback Adapter:** Executes authoritative queries against external systems to capture post-action state for independent verification.
+## 4. Trust and deployment boundaries
 
-## State and lifecycle
+### Process Isolation and Credential Custody
+```
++---------------------------------------------------------------------------------------------------------+
+|                                        Control Plane (Axum / Tokio / SQLx)                               |
+|  +------------------------------------+  +--------------------+  +-----------------------------------+  |
+|  |   ApplicationCapabilityRegistry    |  | ConnectionManager  |  |      adapter_registry_guard       |  |
+|  +------------------------------------+  +--------------------+  +-----------------------------------+  |
++---------------------------------------------------|-----------------------------------------------------+
+                                                    |
+                                    Opaque Lease    |
+                                    Handle (No Key) |
+                                                    v
++---------------------------------------------------------------------------------------------------------+
+|                                     Cloud / Local Execution Worker                                      |
+|                                         oryn-adapter-worker                                             |
+|  +---------------------------------------------------------------------------------------------------+  |
+|  | Isolation Key: (organization_id, connection_id, environment, credential_role)                     |  |
+|  | - Deterministic pack operations (Gmail, Outlook, Sheets, Excel, Salesforce, HubSpot, NetSuite)   |  |
+|  | - Local UI Automation / macOS Accessibility (Native Stage 3) via shell-adapter.v1                 |  |
+|  | - Direct Vendor Network Access: STRICTLY BLOCKED                                                  |  |
+|  +---------------------------------------------------------------------------------------------------+  |
++---------------------------------------------------|-----------------------------------------------------+
+                                                    |
+                           AdapterEgressRequestV1   | (Template ID, Lease ID, Bounded Body)
+                                                    v
++---------------------------------------------------------------------------------------------------------+
+|                                       AdapterEgressBroker                                               |
+|  +---------------------------------------------------------------------------------------------------+  |
+|  | Out-of-process mediation process:                                                                 |  |
+|  | 1. Verifies lease validity, attempt claim, role (actuation vs readback), environment              |  |
+|  | 2. Enforces registered vendor origin, URL template, HTTP method, and schema                       |  |
+|  | 3. Injects Vault credential token at egress boundary                                              |  |
+|  | 4. Blocks arbitrary URLs, query overrides, DNS rebinding, and cross-account references             |  |
+|  +---------------------------------------------------------------------------------------------------+  |
++---------------------------------------------------|-----------------------------------------------------+
+                                                    | HTTPS TLS 1.3
+                                                    v
+                                    External SaaS Vendor Endpoints
+```
 
-### State and Persistence
-- **Persisted State:** Adapter registration metadata, endpoint configurations, and connection status in central storage.
-- **Lifecycle Transitions:** `Disconnected → Testing Connection → Active ↔ Degraded / Rate-Limited ↔ Suspended → Deprecated`.
-- **Connection Isolation:** Connection sessions are ephemeral and scoped to specific job executions.
+### Network and Host Constraints
+- Cloud workers run in unprivileged containers with zero default external network routes; all outbound traffic is routed strictly through Unix domain sockets or internal mTLS to `AdapterEgressBroker`.
+- Production and simulation connections operate on segregated network namespaces, Vault paths, and account credentials. Shared hostnames across environments require account-level and credential-level validation.
 
-## Error and edge-case behavior
+---
 
-### Failure Handling
-- **Network Timeout / Ambiguous HTTP 504:** The adapter flags the submission as `Outcome Unknown` (or `Submitted (Uncertain)`) and prohibits immediate retry. Because the logical action fence in [identity-policy](identity-policy.md) was consumed at admission, duplicate dispatch under the same action ID is blocked.
-- **Authentication Expiration (401/403):** Flags the connection as degraded and alerts administrators to re-authorize credentials.
-- **Schema Drift:** If the external API returns an unexpected payload structure, the adapter aborts and records a compatibility error.
+## 5. Internal architecture
 
-## Observability and audit
+### Execution Port Interface
+```rust
+pub trait AdapterExecutionPort: Send + Sync {
+    fn prepare<'a>(
+        &'a self,
+        principal: &'a VerifiedPrincipal,
+        request: AdapterPrepareRequestV1,
+    ) -> impl Future<Output = Result<AdapterPreparedOperationV1, AdapterError>> + Send + 'a;
 
-### Telemetry and Diagnostics
-- Captures API response status codes, external latency, rate limit quotas, and payload byte counts.
-- Redacts sensitive request/response payload fields (passwords, PII, financial amounts) from operational logs.
+    fn execute<'a>(
+        &'a self,
+        principal: &'a VerifiedPrincipal,
+        request: AdapterExecuteRequestV1,
+    ) -> impl Future<Output = Result<AdapterSubmissionReceiptV1, AdapterError>> + Send + 'a;
 
-## Security and threat model
+    fn status<'a>(
+        &'a self,
+        principal: &'a VerifiedPrincipal,
+        query: AdapterSubmissionQueryV1,
+    ) -> impl Future<Output = Result<AdapterSubmissionReceiptV1, AdapterError>> + Send + 'a;
 
-### Security and Safety Considerations
-- **Credential Leakage:** Credentials reside in encrypted vaults and are injected into adapters as short-lived tokens; never logged or exposed to LLM prompts.
-- **Blind Duplicate Retries:** Protects against duplicate billing or shipping actions by enforcing idempotency keys on external API requests.
-- **Test / Production Boundary Crossing:** Physical network separation prevents test adapters from communicating with production endpoints.
+    fn readback<'a>(
+        &'a self,
+        principal: &'a VerifiedPrincipal,
+        request: AdapterReadbackRequestV1,
+    ) -> impl Future<Output = Result<SignedAdapterReadbackEvidenceV1, AdapterError>> + Send + 'a;
+}
+```
 
-## Test strategy
+### Ordered Action Lifecycle
+1. **Validation & Resolution:** Worker verifies principal, execution context, exact capability reference, qualification validity, and connection health. Resolves unique target record (returns `ADAPTER_RECORD_NOT_FOUND` or `ADAPTER_RECORD_AMBIGUOUS` on zero or multiple matches).
+2. **State Capture & Diff Staging:** Resolves current before-state, vendor revision, strong precondition validator, or exclusive scope epoch. Stages canonical arguments (≤16 KiB) and diffs (0 for read, 1–128 for mutations) in `AdapterStagedActionV1`. Registers trusted `ActionPolicyFactsV1` with Identity via internal async port `register_action_facts`.
+3. **Authority Acquisition:** Calling runner obtains `SignedActionAuthorizationV1`, required human `SignedActionApprovalV1`, and commits fence consumption to acquire `SignedActionAdmissionV1`.
+4. **Preflight Verification:** Worker rechecks target before-state and verifies admission monotonic deadline before external dispatch.
+5. **Attempt Journaling:** Atomically claims attempt in `AdapterSubmissionJournal`, setting state to `dispatching`. Old worker epochs are revoked.
+6. **Egress Mediation:** Broker verifies winning attempt and lease parameters, injects tokens, and transmits single HTTP request or UI primitive. Automatic retry loops are disabled.
+7. **Receipt Delivery:** Journal records final submission state (`application_acknowledged`, `unknown`, or `not_dispatched`) and delivers `AdapterSubmissionReceiptV1` to Runtime and Verifier.
 
-### Acceptance and Verification Scenarios
-- **Acceptance Criteria References:** [PRODUCT.md §31.3: ORY-028; §31.5: ORY-041, ORY-043, ORY-044](../../PRODUCT.md).
-- **Concrete Verification Scenario:**
-  - *Input/Condition:* An agent invokes an invoice submission adapter; the external ERP gateway accepts the connection but drops the socket after 30 seconds without returning an HTTP status code.
-  - *Expected Observable Result:* The adapter returns a `Submission Uncertain` status with evidence of socket timeout; it does not issue an automatic duplicate HTTP POST; the job coordinator holds the case for readback verification.
+### Storage Architecture and Schema DDL
+The component uses PostgreSQL 18 with Row-Level Security (RLS) under existing `TenantTransaction` boundaries:
 
-## Performance and operations
+```sql
+-- Adapter pack publication metadata
+CREATE TABLE adapter_pack_version (
+    organization_id UUID NOT NULL,
+    pack_id TEXT NOT NULL,
+    revision TEXT NOT NULL,
+    implementation_sha256 BYTEA NOT NULL,
+    supported_api_versions TEXT[] NOT NULL,
+    body JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (organization_id, pack_id, revision)
+);
 
-### Operational Characteristics ([TECHNICAL.md §12](../../TECHNICAL.md))
-- Connection pooling and keep-alive optimization for high-throughput ERP endpoints.
-- Configurable rate-limiting buckets respecting external vendor API limits.
+-- Connection configuration and health
+CREATE TABLE adapter_connection (
+    organization_id UUID NOT NULL,
+    connection_id TEXT NOT NULL,
+    revision BIGINT NOT NULL DEFAULT 1,
+    application_id TEXT NOT NULL,
+    identity_kind TEXT NOT NULL CHECK (identity_kind IN ('employee_delegated', 'integration_identity')),
+    owner_actor_id UUID,
+    vendor_account_id TEXT NOT NULL,
+    vendor_subject_id TEXT NOT NULL,
+    environment TEXT NOT NULL CHECK (environment IN ('production', 'simulation')),
+    endpoint_ref TEXT NOT NULL,
+    granted_scopes TEXT[] NOT NULL,
+    approved_resource_scope TEXT NOT NULL,
+    configuration_sha256 BYTEA NOT NULL,
+    secret_ref TEXT,
+    secret_generation BIGINT NOT NULL DEFAULT 1,
+    state TEXT NOT NULL CHECK (state IN ('disconnected', 'testing', 'active', 'degraded', 'rate_limited', 'suspended', 'revoked', 'deprecated')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (organization_id, connection_id)
+);
 
-## Architecture decisions and open questions
+-- Immutable operation qualification definitions
+CREATE TABLE adapter_qualification_definition (
+    organization_id UUID NOT NULL,
+    qualification_id TEXT NOT NULL,
+    version_id UUID NOT NULL,
+    content_sha256 BYTEA NOT NULL,
+    application_id TEXT NOT NULL,
+    pack_ref TEXT NOT NULL,
+    operation_id TEXT NOT NULL,
+    environment TEXT NOT NULL,
+    body JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (organization_id, qualification_id, version_id),
+    UNIQUE (organization_id, content_sha256)
+);
 
-### Specific Preserved Implementation Questions
-- What standardized adapter plugin interface (e.g., gRPC service plugins, WebAssembly, or TypeScript modules) allows rapid integration development?
-- How should adapters handle external applications with no public APIs or accessibility support?
-- What idempotency key patterns best prevent duplicate mutations across legacy ERP systems?
-- How should readback adapters query authoritative state when external systems exhibit replication lag?
+-- Renewable qualification attestations (max 30-day validity)
+CREATE TABLE adapter_qualification_attestation (
+    organization_id UUID NOT NULL,
+    qualification_id TEXT NOT NULL,
+    version_id UUID NOT NULL,
+    generation BIGINT NOT NULL,
+    configuration_sha256 BYTEA NOT NULL,
+    evidence_sha256 BYTEA NOT NULL,
+    attestation_signature BYTEA NOT NULL,
+    issued_at TIMESTAMPTZ NOT NULL,
+    not_after TIMESTAMPTZ NOT NULL,
+    is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (organization_id, qualification_id, version_id, generation),
+    FOREIGN KEY (organization_id, qualification_id, version_id)
+        REFERENCES adapter_qualification_definition (organization_id, qualification_id, version_id),
+    CONSTRAINT chk_attestation_ttl CHECK (not_after <= issued_at + INTERVAL '30 days')
+);
 
-### Handoff Questions ([TECHNICAL.md §14.2](../../TECHNICAL.md))
-1. *Owns exclusively:* External application interaction, capability declarations, connection lifecycles, and readback fetching.
-2. *Data ingress/egress:* Ingests authorized operation requests; outputs submission receipts and external readback evidence.
-3. *Versions/identities:* Adapter version, Application vendor version, Connection ID, and Tenant ID.
-4. *Upstream failure:* If external system is down, adapter returns structured error; does not attempt unverified retries.
-5. *Authority:* [identity-policy](identity-policy.md) authorizes action execution; [outcome-verification](outcome-verification.md) determines business outcome.
-6. *Testing without private details:* Tested using mock API servers (WireMock/Prism) and synthetic sandbox tenants.
-7. *Audit and duplicate prevention:* Transmits client-generated idempotency keys to external APIs where supported.
-8. *Failure blast radius:* Adapter failure pauses dependent job cases; unrelated adapters and platform services continue normally.
-9. *v1.0 criteria:* Enables ORY-028, ORY-041, ORY-043, and ORY-044 verified through timeout and readback verification tests.
+-- Live registry synchronization guard
+CREATE TABLE adapter_registry_guard (
+    organization_id UUID NOT NULL PRIMARY KEY,
+    generation BIGINT NOT NULL DEFAULT 1,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Durable external submission journal
+CREATE TABLE adapter_submission (
+    organization_id UUID NOT NULL,
+    execution_context_sha256 BYTEA NOT NULL,
+    action_id TEXT NOT NULL,
+    attempt_id TEXT NOT NULL,
+    connection_id TEXT NOT NULL,
+    connection_revision BIGINT NOT NULL,
+    capability_ref JSONB NOT NULL,
+    operation_id TEXT NOT NULL,
+    action_sha256 TEXT NOT NULL,
+    authorization_ref TEXT NOT NULL,
+    approval_ref TEXT,
+    submission_state TEXT NOT NULL CHECK (submission_state IN ('not_dispatched', 'dispatched', 'application_acknowledged', 'unknown')),
+    external_correlation_ref TEXT,
+    evidence_ref JSONB,
+    error_code TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (organization_id, execution_context_sha256, action_id, attempt_id)
+);
+
+ALTER TABLE adapter_pack_version ENABLE ROW LEVEL SECURITY;
+ALTER TABLE adapter_connection ENABLE ROW LEVEL SECURITY;
+ALTER TABLE adapter_qualification_definition ENABLE ROW LEVEL SECURITY;
+ALTER TABLE adapter_qualification_attestation ENABLE ROW LEVEL SECURITY;
+ALTER TABLE adapter_registry_guard ENABLE ROW LEVEL SECURITY;
+ALTER TABLE adapter_submission ENABLE ROW LEVEL SECURITY;
+```
+
+---
+
+## 6. State and lifecycle
+
+### Connection Lifecycle State Machine
+```
+   [disconnected] --------> [testing] --------> [active]
+         ^                     |                  |   |
+         |                     v                  |   v
+         |               [degraded] <-------------+   [rate_limited]
+         |                     |                          |
+         |                     v                          v
+         +---------------- [suspended] <------------------+
+                               |
+                               v
+                           [revoked] (Terminal for revision)
+```
+- **testing:** Non-mutating probe verifies external account, environment, and granted scopes against approved configuration.
+- **active:** All qualification and health probes pass; permits action dispatch.
+- **degraded:** External API returned 401/403 or health probe failed. New actuation blocked; safe readback permitted if credential role allows.
+- **rate_limited:** Vendor returned 429; worker exposes backoff delay without internal retries.
+- **suspended:** Administrative hold; immediate block of new dispatches.
+- **revoked:** Terminal. Re-authorization requires minting a new connection identity and revision.
+
+### Submission Journal State Machine
+```
+[prepared] ---> [admitted] ---> [dispatching] ---> [application_acknowledged]
+     |              |                 |
+     |              |                 +----------> [unknown] (timeout / crash / lost response)
+     |              |
+     +--------------+----------------------------> [not_dispatched] (preflight fail / positive no-send)
+```
+- Consumed Identity fences are NEVER unconsumed.
+- Recovery from `unknown` requires out-of-band workflow reconciliation and a new action intent (`AdapterPrepareRequestV1.retry_context`).
+
+---
+
+## 7. Error and edge-case behavior
+
+### Closed Error Codes (`AdapterErrorCodeV1`)
+1. `ADAPTER_SCHEMA_INVALID`: Canonical argument does not match operation schema or exceeds 16 KiB limit.
+2. `ADAPTER_LIMIT_EXCEEDED`: Collection size (>1,000 items), body size (>256 KiB), or attachment cap exceeded.
+3. `ADAPTER_SCOPE_DENIED`: Operation requested outside customer-approved resource or field allowlist.
+4. `ADAPTER_CONNECTION_UNAVAILABLE`: Connection in disconnected, degraded, suspended, or revoked state.
+5. `ADAPTER_AUTH_REQUIRED`: Expired or invalid vendor credential token; re-authorization required.
+6. `ADAPTER_ACCOUNT_MISMATCH`: Target account does not match bound connection account ID.
+7. `ADAPTER_CAPABILITY_UNAVAILABLE`: Operation not published in active capability snapshot.
+8. `ADAPTER_QUALIFICATION_EXPIRED`: 30-day qualification attestation expired without passing renewal.
+9. `ADAPTER_CONFIGURATION_CHANGED`: Field set, automation rule, or permission configuration changed in external tenant.
+10. `ADAPTER_RECORD_NOT_FOUND`: Target record does not exist in target application.
+11. `ADAPTER_RECORD_AMBIGUOUS`: Search filter returned multiple candidate records.
+12. `ADAPTER_STATE_STALE`: Preflight check detected target record version or field mismatch before dispatch.
+13. `ADAPTER_EXCLUSIVE_SCOPE_REQUIRED`: Mutation requires customer-enforced writer exclusion, which was absent or expired.
+14. `ADAPTER_AUTHORITY_INVALID`: Signed authorization bundle invalid, expired, or tampered.
+15. `ADAPTER_ADMISSION_UNCONFIRMED`: Identity admission fence not durably confirmed before dispatch attempt.
+16. `ADAPTER_ALREADY_DISPATCHED`: Action ID already has a recorded attempt in submission journal.
+17. `ADAPTER_RATE_LIMITED`: External application rate limit (HTTP 429); retry delayed.
+18. `ADAPTER_UNSUPPORTED`: Requested modality or operation unsupported on this platform or tier.
+19. `ADAPTER_RESPONSE_INVALID`: Vendor response could not be parsed according to declared template schema.
+20. `ADAPTER_ARTIFACT_CHANGED`: Opaque business artifact attachment changed digest between approval and send.
+21. `ADAPTER_CANCELLED`: Cooperative operation cancellation received prior to dispatch.
+22. `ADAPTER_OUTCOME_UNKNOWN`: Network dropped or timed out after transmission began; outcome ambiguous.
+23. `ADAPTER_READBACK_UNAVAILABLE`: Independent readback endpoint or certified egress enforcement unavailable.
+
+---
+
+## 8. Observability and audit
+
+### Content-Free Execution Telemetry
+- All journal entries and public API responses contain zero plaintext customer records, raw DOM payloads, email bodies, or credentials.
+- Telemetry emits structured audit events:
+  - `adapter.connection.probed`
+  - `adapter.qualification.attested`
+  - `adapter.action.prepared`
+  - `adapter.action.dispatched`
+  - `adapter.action.acknowledged`
+  - `adapter.action.unknown`
+  - `adapter.readback.acquired`
+- Audit retention strictly adheres to the 24-month compliance schedule; staging buffers expire after 24 hours (or 30 seconds for local unconsented volatile observations).
+
+---
+
+## 9. Security and threat model
+
+### Threat Mitigations
+- **Cross-Account Substitution:** Bound `vendor_account_id` and `vendor_subject_id` enter `AdapterTargetProjectionV1` preimage; changing connection or account invalidates cryptographic authorization.
+- **Zombie Dispatch / Worker Crash:** Broker validates caller attempt ID and worker epoch before egress transmission. Recovering an action revokes old worker epochs before issuing fresh admission.
+- **Broader Token Scope Misuse:** Egress broker verifies requested HTTP verb and path template against declared operation role. Tokens held by `readback` role cannot transmit mutating verbs (POST/PUT/PATCH/DELETE) even if underlying OAuth grant permits them.
+- **Draft Overwrite / Mailbox Race:** Approved emails are transmitted as immutable snapshots via `messages.send` or `sendMail`. Employee drafts are never overwritten or deleted.
+- **Shared Hostname Contamination:** Multi-tenant providers sharing endpoints require strict account ID matching and L7 header enforcement; hostname checks alone are insufficient.
+
+---
+
+## 10. Test strategy
+
+### Contract Fixtures and Deterministic Evaluators
+The test harness validates contract compliance via `docs/architecture/contracts/application-adapters-v1.fixtures.json`, providing deterministic evaluators for:
+1. `scope_binding`: Verifies requested fields and record keys against customer allowlists.
+2. `qualification_lifecycle`: Asserts 30-day expiry and definition body immutability across renewals.
+3. `submission_transition`: Simulates crash, response loss, and duplicate attempt blocking.
+4. `write_guard`: Enforces preconditions, immutable inputs, and exclusive scopes.
+5. `readback_binding`: Verifies independent verifier role, querying time, and SHA-256 data matching.
+6. `environment_binding`: Verifies sandbox vs. production account isolation.
+7. `cell_normalization`: Deterministic matrix normalization, formula injection protection, and skip/clear semantics.
+8. `mail_snapshot`: Verifies exact payload matching and independent sent-copy evidence.
+9. `reservation`: Enforces device-wide mutually exclusive local execution.
+
+---
+
+## 11. Performance and operations
+
+### Configured Operational Limits
+- **Read & Preflight Deadline:** Default 5.0 seconds; maximum 30.0 seconds per request.
+- **Submission Deadline:** Monotonic deadline capped at 30.0 seconds, bounded by authority token expiry.
+- **Canonical Argument Cap:** 16 KiB maximum canonical RFC 8785 JSON bytes.
+- **Batch / Collection Cap:** Maximum 1,000 items and 256 KiB typed JSON per response.
+- **Email Bounds:** Body text ≤4,096 characters, subject ≤255 characters, recipients ≤50, attachments ≤4 (each ≤512 KiB, total ≤2 MiB).
+- **Spreadsheet Bounds:** Explicit finite rectangle matrices; scalar broadcasting rejected.
+
+---
+
+## 12. Architecture decisions and open questions
+
+### Resolved Decisions
+- **Signed First-Party Workers:** Rust executables only; third-party WASM or interpreted script plugins rejected.
+- **Renewable 30-Day Qualification:** Layered, per-account, per-operation qualification with mandatory evidence renewal.
+- **Out-of-Process Egress Broker:** Workers hold opaque handles; Vault tokens injected only by isolated broker.
+- **One-Shot Durable Journaling:** Ambiguous submissions transition to `unknown`; consumed Identity fences stay consumed.
+- **Unified Device Reservation:** Managed by Privacy Helper across native and browser execution modalities.
+
+### Implementation and Certification Obligations
+1. **Google Workspace API Client Review:** Production deployment requires completing Google Cloud Restricted Scope security assessment for Gmail and Drive scopes.
+2. **Microsoft Partner Center Application Certification:** Graph application registration requires publisher domain verification and tenant admin consent flows.
+3. **Synthetic OS Fixtures:** Local native execution requires signed synthetic fixture applications on macOS (Accessibility API) and Windows (UI Automation) to certify pattern bridges prior to release.
+4. **Vault Broker Transit Key Custody:** Infrastructure must certify KMS-backed root-of-trust for Vault credential egress brokers.

@@ -326,7 +326,7 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 **Does not own:** Organizational sharing policy, direct cloud networking, speech-to-text processing, independent autonomous job scheduling, action authorization issuance, business outcome verification, or in-browser overlay rendering (shell hosts all presentation windows).
 
-**Boundary requirement:** Browser and OS observations are arbitrated per modality. When connected, the extension is authoritative for web semantics while native OS observation provides window geometry, lifecycle, and optional extension-bound masked snapshots. Downstream visual extraction routes through the governed cloud inference gateway; the extension maintains zero direct cloud connectivity. Tab audio capture is strictly audio-only (`video: false`) via an offscreen document, initiated by an explicit user toolbar gesture bound to a helper-issued challenge, and restores audible local playback. Native fallback requires certified enterprise-managed browser profiles with verified disabled private browsing. User screen-observation pause immediately stops local browser actions at a safe boundary. Local execution requires exclusive device-wide reservation and `declarativeNetRequest` session navigation guard.
+**Boundary requirement:** Browser and OS observations are arbitrated per modality. When connected, the extension is authoritative for web semantics while native OS observation provides window geometry, lifecycle, and optional extension-bound masked snapshots. Downstream visual extraction routes through the governed cloud inference gateway; the extension maintains zero direct cloud connectivity. Tab audio capture is strictly audio-only (`video: false`) via an offscreen document, initiated by an explicit user toolbar gesture bound to a helper-issued challenge, and restores audible local playback. Native fallback requires certified enterprise-managed browser profiles with verified disabled private browsing. User screen-observation pause immediately stops local browser actions at a safe boundary. Local execution requires exclusive device-wide reservation via `LocalExecutionReservationBroker` across native and browser execution (negotiating `browser-bridge.v1` major 1, minor 4 with `local_execution_reservation_v1`), action receipts binding `ExecutionContextV1`, and `declarativeNetRequest` session navigation guard.
 
 ### 4.4 Meeting and Audio Intelligence
 
@@ -479,15 +479,16 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 **Responsibility:** Describe which approved external applications and operations Oryn can observe, guide, assist, execute, and verify, and under which conditions.
 
-**Owns:** Per-application/per-operation eligibility, connection status, declared read/write/verify capabilities, known limitations, permitted execution modes, adapter compatibility versions.
+**Owns:** Immutable capability snapshots (`ApplicationCapabilitySnapshotV1`) and live statuses (`ApplicationCapabilityStatusV1`) via pure async `ApplicationCapabilityPort`, per-operation qualification definitions (`OperationQualificationDefinitionV1`) with 30-day renewable attestations, connection lifecycles, write guards (`write_guard`), declared side-effect semantics, and synchronization via `adapter_registry_guard`.
 
-**Consumes:** Customer-approved application connections, adapter declarations, validation evidence, policy restrictions, availability state.
+**Consumes:** Customer-approved application connections, signed first-party adapter packs (`adapter.pack.v1`), qualification evidence, policy restrictions, availability state.
 
-**Produces:** Capability discovery for the Agent Factory, preflight eligibility, runner action routing, simulator compatibility constraints, customer-visible compatibility status.
+**Produces:** Capability discovery for the Agent Factory, preflight eligibility, runner action routing, simulator compatibility constraints, customer-visible compatibility reports (`ApplicationCompatibilityReportV1`).
 
 **Does not own:** Grants of user authority, customer-wide policy decisions, or guarantees of support for all custom application configurations.
 
-**Boundary requirement:** Observe/Guide/Assist/Run Supervised/Run Autonomously are distinct advertised capabilities. An adapter may support one without supporting the others. Verification support is separate from action support.
+**Boundary requirement:** Observe/Guide/Assist/Run Supervised/Run Autonomously are distinct advertised capabilities. An adapter may support one without supporting the others. Verification support is separate from action support. Capability snapshots require ordered, 1:1 operation qualification references (`qualification_refs`), write guards, and operation statuses. Production and simulation connections remain strictly isolated by account and credential binding.
+
 
 ### 5.7 Command Center, Notifications, and Analytics
 
@@ -536,19 +537,20 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 6.3 Application Action Adapters and Credential Access
 
-**Responsibility:** Translate a declared business operation into a permitted application interaction and return structured observations/results.
+**Responsibility:** Translate a declared business operation into a permitted application interaction and return structured observations/results via signed first-party Rust workers (`oryn-adapter-worker`).
 
-**Owns:** Application-specific actuation and readback, declared side-effect semantics, capability limitations, adapter-level failure classification, safe use of scoped connections.
+**Owns:** Application-specific deterministic actuation and readback across bounded vendor packs (Gmail, Outlook, Google Sheets, Excel Web, Salesforce, HubSpot, NetSuite), preparation and state capture (`AdapterPreparation`), durable attempt claims in `AdapterSubmissionJournal`, and error classification under closed `AdapterErrorCodeV1`.
 
-**Consumes:** Validated operation with arguments and target identity, capability/adapter version, least-privileged connection, job authorization decision.
+**Consumes:** Validated operation requests (`AdapterPrepareRequestV1`, `AdapterExecuteRequestV1`), authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1|null, admission: SignedActionAdmissionV1}`, and opaque credential lease handles from `AdapterEgressBroker`.
 
-**Produces:** Submission receipt or failure, observed application state, readback data, evidence or uncertainty indicators.
+**Produces:** Bounded submission receipts (`AdapterSubmissionReceiptV1`) and signed independent readback evidence (`SignedAdapterReadbackEvidenceV1`) to outcome verification.
 
-**Does not own:** Policy approval, business objective interpretation, cross-job orchestration, or the assumption that a timeout means the action did not occur.
+**Does not own:** Policy approval, business objective interpretation, cross-job orchestration, direct vendor credential custody, or the assumption that a timeout means the action did not occur.
 
-**Execution modality preference:** Approved structured APIs/integrations first; validated browser automation when structured integrations are unavailable; native desktop accessibility actions where the specific workflow is supported. This is an architectural preference, not a mandate for any particular SDK or tool protocol.
+**Execution modality preference:** Approved structured APIs/integrations first with pinned transports; validated browser automation when structured integrations are unavailable; native desktop accessibility actions (Stage 3 semantic actuation only) where the specific workflow is supported. This is an architectural preference, not a mandate for any particular SDK or tool protocol.
 
-**Boundary requirement:** External credentials are not copied indiscriminately from employee sessions to remote runners. The design must keep connection authority scoped to the current job and application. Production and test connections are never interchangeable by default.
+**Boundary requirement:** Execution is restricted to signed first-party Rust binaries; third-party plugins and arbitrary scripts are blocked. Cloud worker isolation key is `(organization_id, connection_id, environment, credential_role)` with roles segregated into `actuation` and `readback`. Direct worker vendor networking is blocked; out-of-process `AdapterEgressBroker` injects Vault tokens and enforces registered origin, URL template, and HTTP method. At most one mutation attempt is journaled per action intent; ambiguous drops yield `submission_state="unknown"` and consumed fences remain consumed. Production and simulation connections are strictly separated.
+
 
 ### 6.4 Agent Flight Simulator and Evaluation Coordinator
 
@@ -673,14 +675,15 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | Operational Graph / Contribution sync | Local Context HUD | Published, access-filtered playbook / peer fix bundles (Contract 3) | Cached only within currently authorized employee session and scope; bundles are version-pinned by content SHA-256 (`hud.guidance-bundle.v1`); wire schema `guidance-sync-v1.schema.json`; offline reads governed by signed access lease (`hud.guidance-access-lease.v1`, max 24 hours); immediate eviction upon revocation |
 | Discovery | Knowledge Governance / Operational Graph | Candidate workflow, observed variants, clarifying questions (Contract 4) | Immutable staging proposal (`CandidatePromotionV1`); staged receipt (`GraphCandidateReceiptV1`); domain owner approval required; Operational Graph exclusively owns separate publication command (`POST /v1/knowledge/candidate-stages/{graph_draft_id}/publications`) and emits `workflow.published`; candidate cannot be auto-published; wire schema `workflow-discovery-v1.schema.json` |
 | Knowledge Governance | Agent Factory | Approved capability, rules, postconditions (Contract 5) | Immutable/versioned references (`knowledge.capability-version.v1` and `knowledge.business-rule-version.v1`); wire schema `operational-graph-v1.schema.json` |
-| Capability Registry / Application Adapters | Factory / Orchestrator / Runner | Supported actions, limitations, and verification support (Contract 6) | Immutable capability snapshots (`application.capability-snapshot.v1`) and live statuses; wire schema `application-capability-v1.schema.json`; unsupported operations cannot be inferred from model output |
+| Capability Registry / Application Adapters | Factory / Orchestrator / Runner | Supported actions, limitations, and verification support (Contract 6) | Immutable capability snapshots (`application.capability-snapshot.v1`) with ordered `qualification_refs`, per-operation `write_guard`, and live statuses (`application.capability-status.v1`) with `operation_statuses`; wire schema `application-capability-v1.schema.json`; unsupported operations cannot be inferred from model output |
 | Agent Factory | Simulator | Signed candidate evaluation bundle, IR, and coverage requirements (Contract 7) | Sealed `CandidateEvaluationBundleV1` with Vault Ed25519 attestation (`SignedCandidateAttestationV1`), `DependencyManifestV1`, and `CompileReportV1`; wire schema `agent-factory-v1.schema.json`; simulator cannot mutate candidate |
 | Outcome Verification | Factory / Simulator / Release Governance | Verification spec projections, oracle verdicts, and mismatch diagnoses (Contract 7 & 8) | Immutable `VerificationSpecProjectionV1` for compilation; wire schema `outcome-verification-v1.schema.json`; independent system evidence or authorized Stage 3 human assessment required before completion; human-only verification cannot qualify unattended Stage 4 completion |
 | Release Governance | Orchestrator | Eligible active version and scope | Jobs must pin accepted version and obey emergency stops |
 | Orchestrator | Runner | Approved, bounded work assignment | Assignment alone does not grant unrestricted action rights |
 | Runner / Local Context HUD | Identity Policy | Specific action authorization request (Contract 11) | Deny or escalate to human review when authority or context is missing; binds `ExecutionContextV1` (`job` or `assist`), canonical proposal digest `action_sha256`, target key, record key, and document/surface generations. Item-level approval for Tier 3; Tier 4 unconditionally denied. Wire schema `identity-policy-v1.schema.json` |
-| Runner / Local Context HUD | External adapter / Browser Extension | Authorized external operation (Contract 12) | Limited strictly to defined application actions with narrow credentials; browser actions execute over `browser-bridge.v1` (major 1, minor 3 with `identity_authority_v1`) via `ExecuteBrowserAction` with full authority bundle `{authorization, approval, admission}` |
-| Runner/adapters | Verifier | Submission and readback evidence | Runner success ≠ business completion |
+| Runner / Local Context HUD | External adapter / Browser Extension | Authorized external operation (Contract 12) | Limited strictly to defined application actions with narrow credentials; browser actions execute over `browser-bridge.v1` (major 1, minor 4 with `local_execution_reservation_v1`) via `ExecuteBrowserAction` with full authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1|null, admission: SignedActionAdmissionV1}`; wire schema `application-adapters-v1.schema.json` |
+| Runner / Application Adapters | Outcome Verification | Submission receipt and readback evidence (Contract 13) | Produces `AdapterSubmissionReceiptV1` (`submission_state`: `not_dispatched`, `dispatched`, `application_acknowledged`, `unknown`) and signed readback evidence (`SignedAdapterReadbackEvidenceV1`); wire schema `application-adapters-v1.schema.json`; runner success ≠ business completion |
+
 | Verifier | Orchestrator/Incident | Verdict and mismatch | Unknown outcome blocks dangerous retries |
 | Incident | Correction/Repair | Failure classification and evidence references | AI diagnosis labeled hypothesis until supported |
 | Correction | Knowledge/Repair | Accepted expert correction or candidate rule (Contract 16) | Independent domain owners must approve procedural and policy changes (`ProposeRuleCommandV1`); wire schema `operational-graph-v1.schema.json` |
@@ -1069,14 +1072,15 @@ A human approval is bound to a **specific proposed operation**, target, scope, a
 
 ### 11.4 Side effects and uncertain outcomes
 
-External application calls and UI submissions may not participate in a transaction controlled by Oryn. The commit of `POST /v1/identity/actions/consume` is the irreversible authorization linearization point where logical authority is consumed and dispatch intent persisted before external transmission begins. The runner must distinguish:
+External application calls and UI submissions may not participate in a transaction controlled by Oryn. The commit of `POST /v1/identity/actions/consume` is the irreversible authorization linearization point where logical authority is consumed and dispatch intent persisted before external transmission begins. At most one mutation attempt is claimed in `AdapterSubmissionJournal` before egress or OS dispatch. The runner and adapter distinguish:
 
-1. **Prepared** — proposed action not committed.
-2. **Submitted** — an action may have reached the external system.
-3. **Outcome Verified** — authoritative evidence confirms expected business effect.
-4. **Outcome Unknown** — the system cannot safely determine the external effect.
+1. **Prepared** (`not_dispatched`) — proposed action validated; zero external transmission.
+2. **Dispatched** (`dispatched`) — transient in-flight transmission state; broker/worker has sent bytes or UI primitive.
+3. **Application Acknowledged** (`application_acknowledged`) — external vendor HTTP 20x response received; submission receipt recorded.
+4. **Outcome Unknown** (`unknown`) — network dropped, timeout expired, response malformed, or worker crashed after dispatch.
 
-Retries must be safe under the actual application's idempotency and readback capabilities. An uncertain write must not automatically repeat just because a network timeout occurred. Consumed action fences reject duplicate dispatch attempts. Compensating actions exist only where explicitly supported and authorized.
+Retries must be safe under the actual application's idempotency and readback capabilities. An uncertain write must not automatically repeat just because a network timeout occurred. Consumed action fences reject duplicate dispatch attempts; a consumed fence is never unconsumed. Zombie worker epochs are explicitly revoked. Recovery requires out-of-band workflow reconciliation and a new action intent with a distinct action ID and fresh authorization. Compensating actions exist only where explicitly supported and authorized.
+
 
 ### 11.5 Offline/disconnect behavior
 
