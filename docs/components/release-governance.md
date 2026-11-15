@@ -53,7 +53,20 @@ Automatic Stage 5 release is strictly limited to narrow, pre-authorized Tier 0/1
 
 ### Cross-Component Contracts
 - **Contract Reference #8 in [Contracts Catalog](../architecture/contracts/README.md):** Ingest evaluation results, coverage metrics, and gap evidence bound to `EvaluationTargetV1` from [flight-simulator](flight-simulator.md). For agents, bind the independently owned evaluation and release to the exact immutable `(agent_id, agent_version_id, behavior_sha256, manifest_sha256)` in the Factory's `CandidateEvaluationBundleV1`. Publisher authenticity is not deployment approval. A material edit produces a new version without inherited readiness. Stage 3 requires at least five verified human examples and 25 distinct scenarios including five edge/negative cases; Stage 4 requires 20 consecutive outcome-verified supervised cases and 100 scenarios including 20 edge/failure/negative cases. Stage 5 requires the complete regression suite, affected failures, and five nearby variations. Counts alone do not establish readiness. Stage 3 assist plans also require all known branches covered, all mandatory checks passing, and owner approval.
-- **Contract Reference #9 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers eligible active version and scope assignments to [job-orchestration](job-orchestration.md) for agent jobs, and publishes signed `assist_eligibility` records to [operational-graph](operational-graph.md) for HUD assist plans.
+- **Contract Reference #9 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers eligible active version and scope assignments to [job-orchestration](job-orchestration.md) for agent jobs via `ReleaseJobAdmissionPort::resolve`:
+  ```rust
+  #[async_trait]
+  pub trait ReleaseJobAdmissionPort: Send + Sync {
+      async fn resolve(
+          &self,
+          principal: &VerifiedPrincipal,
+          agent_id: &str,
+          requested_version_id: Option<Uuid>,
+          selection_scope: &ScopeV1,
+      ) -> Result<JobReleaseEligibilityV1, JobProblemV1>;
+  }
+  ```
+  Produces `JobReleaseEligibilityV1` (`job.release-eligibility.v1`) binding release ID, release revision, agent version UUID, behavior SHA-256, manifest SHA-256, allowed scope (`ScopeV1`), autonomy stage (3..5), optional canary bucket, and eligibility generation. Jobs pin their admitted release and version permanently; future releases never automatically repin running jobs. Publishes signed `assist_eligibility` records to [operational-graph](operational-graph.md) for HUD assist plans.
 - **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Submits and validates `SignedGovernanceProposalV1` (`identity.governance-proposal.v1`) with [identity-policy](identity-policy.md) for Tier 3 releases, role grants, and policy changes, enforcing Workflow Owner remits and strict proposer-approver separation.
 - **Contract Reference #12 in [Contracts Catalog](../architecture/contracts/README.md):** Verifies active operation qualifications (`SignedQualificationAttestationV1` under [`application-adapters-v1.schema.json`](../architecture/contracts/application-adapters-v1.schema.json)). Candidates bound to application capabilities require active, unexpired 30-day operation qualifications across all targeted connection environments before production rollout can be authorized.
 - **Operational Graph Live Knowledge Guard and Policy Fencing:** Before approving release readiness or deploying a new active agent or assist plan version, Release Governance verifies that the candidate has transactionally registered a complete `DependencyManifestV1` with [operational-graph](operational-graph.md) and validates live eligibility (`resolve_eligibility`). Releases serialize on the tenant `graph_knowledge_guard`. If any underlying business rule is superseded or conflicted, the release is restricted unless an active, approved `PreviousPolicyContinuationV1` covers the candidate for a bounded interval.
@@ -86,7 +99,7 @@ Automatic Stage 5 release is strictly limited to narrow, pre-authorized Tier 0/1
 ### Failure Handling
 - **Canary Error Spike:** If an active canary exceeds predefined error thresholds, rollout automatically halts, pauses cases, and alerts operators.
 - **Contradictory Release Approval:** Conflicting sign-offs freeze the release in an unapproved state awaiting administrative resolution.
-- **Orchestrator Desynchronization:** If an orchestrator fails to acknowledge an emergency stop, workers are terminated via identity token revocation.
+- **Orchestrator Desynchronization:** If an emergency containment fence is issued, synchronous safety fences (`OrchestrationSafetyFenceV1`) in PostgreSQL and Identity authority journals invalidate future dispatches. Running workers acknowledge containment at safe primitive boundaries; however, release revocation does not guarantee the recall or rollback of external vendor requests already transmitted over the network.
 
 ## Observability and audit
 

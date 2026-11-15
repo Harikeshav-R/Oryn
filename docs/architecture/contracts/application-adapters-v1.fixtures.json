@@ -198,7 +198,7 @@
         },
         "action_id": "act_test_001",
         "action_sha256": "sha256_1122334455667788990011223344556677889900112233445566778899001122",
-        "attempt_id": "att_001",
+        "attempt_id": "a0000000-0000-4000-8000-000000000001",
         "connection_id": "conn_salesforce_prod",
         "connection_revision": 1,
         "capability_ref": {
@@ -233,7 +233,7 @@
         },
         "action_id": "act_test_001",
         "action_sha256": "badprefix_1122",
-        "attempt_id": "att_001",
+        "attempt_id": "a0000000-0000-4000-8000-000000000001",
         "connection_id": "conn_salesforce_prod",
         "connection_revision": 1,
         "capability_ref": {

@@ -133,7 +133,7 @@ If any conjunct is unknown, false, or stale, observation for that document or mo
 - **Contract 12 (Authorized External Operation):**
   - **Producer:** [agent-runtime](agent-runtime.md) / [application-adapters](application-adapters.md)
   - **Consumer:** [browser-extension](browser-extension.md)
-  - **Transport:** Routed through Privacy Helper and native broker over `browser-bridge.v1` (negotiated `protocol_major: 1`, `protocol_minor: 4` with `identity_authority_v1` and `local_execution_reservation_v1` capabilities).
+  - **Transport:** Routed through Privacy Helper and native broker over `browser-bridge.v1` (negotiated `protocol_major: 1`, `protocol_minor: 5` with `identity_authority_v1`, `local_execution_reservation_v1`, and `execution_reservation_lease_v1` capabilities).
   - **Boundary Invariant:** Execution requests (`ExecuteBrowserAction`) must bind `ExecutionContextV1` (`job` or `assist`), cryptographic `authorization_ref`, nullable `approval_ref`, authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1 | null, admission: SignedActionAdmissionV1}`, stable `action_sha256`, target key, record key, live document generation, surface generation, and expected before-state. Both authority bundle and reference IDs remain strictly outside the canonical `action_sha256` digest. Operates strictly within an exclusive device reservation managed by `LocalExecutionReservationBroker` (reserved execution tab for jobs, or reserved assist tab for HUD assists) preventing concurrent native or browser actuation. Extension verifies trust keyset and bundle signatures before DOM actuation; content-free action/nonce ledger prevents replay. Zero direct cloud network connection.
 
 - **Contract 13 (Submission Records and Readback Evidence):**
@@ -435,8 +435,17 @@ Sent immediately upon native port connection. Pre-pair message; omits paired env
   "type": "BridgeHello",
   "protocol_version": "browser-bridge.v1",
   "protocol_major": 1,
-  "protocol_minor": 2,
-  "capabilities": ["dom_observation_v1", "action_execution_v1", "assist_execution_v1", "target_resolution_v1", "meeting_audio_v1"],
+  "protocol_minor": 5,
+  "capabilities": [
+    "dom_observation_v1",
+    "action_execution_v1",
+    "assist_execution_v1",
+    "target_resolution_v1",
+    "meeting_audio_v1",
+    "identity_authority_v1",
+    "local_execution_reservation_v1",
+    "execution_reservation_lease_v1"
+  ],
   "extension_id": "com.oryn.extension.chrome",
   "extension_version": "1.0.0",
   "browser_family": "chrome",
@@ -954,6 +963,13 @@ Requests exclusive device-wide browser execution reservation.
   "type": "ReserveBrowserExecution",
   "payload": {
     "reservation_id": "res_exec_01928374-0001",
+    "holder": {
+      "kind": "job",
+      "assignment_id": "asgn_01928374-abcd-7000-8000-000000000001",
+      "assignment_epoch": "ep_01928374-abcd-7000-8000-000000000001"
+    },
+    "lease_duration_seconds": 30,
+    "renewal_cadence_seconds": 10,
     "execution_context": {
       "kind": "job",
       "job_id": "job_batch_invoice_audit_01",
@@ -989,7 +1005,14 @@ Acknowledges reservation and reports reserved window/tab IDs.
   "type": "BrowserExecutionReservation",
   "payload": {
     "reservation_id": "res_exec_01928374-0001",
+    "holder": {
+      "kind": "job",
+      "assignment_id": "asgn_01928374-abcd-7000-8000-000000000001",
+      "assignment_epoch": "ep_01928374-abcd-7000-8000-000000000001"
+    },
     "status": "reserved",
+    "issued_at": "2026-11-09T10:00:00.000Z",
+    "not_after": "2026-11-09T10:00:30.000Z",
     "browser_instance_id": "ins_12345678-abcd-ef01-2345-6789abcdef01",
     "window_id": 1045,
     "tab_id": 490,

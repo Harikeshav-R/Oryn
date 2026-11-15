@@ -12,6 +12,21 @@
     },
     {
       "$ref": "#/$defs/VerificationRequirementV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationRunRequestV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationRunResultV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationStatusQueryV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationRunStatusV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationErrorV1"
     }
   ],
   "$defs": {
@@ -299,6 +314,254 @@
         },
         "on_mismatch": {
           "const": "pause_case"
+        }
+      }
+    },
+    "UUID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$"
+    },
+    "RequirementResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirement_id",
+        "verdict",
+        "evidence_refs",
+        "limitations"
+      ],
+      "properties": {
+        "requirement_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": ["verified", "mismatch", "unknown"]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          },
+          "maxItems": 256
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 1024
+          },
+          "maxItems": 32
+        }
+      }
+    },
+    "VerificationRunRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "organization_id",
+        "execution_context",
+        "agent_version_id",
+        "behavior_sha256",
+        "requirement_ids",
+        "action_ids",
+        "checkpoint_revision",
+        "environment"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.run-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "agent_version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "behavior_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "requirement_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          },
+          "maxItems": 256
+        },
+        "action_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          },
+          "maxItems": 256
+        },
+        "checkpoint_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["production", "simulation"]
+        }
+      }
+    },
+    "VerificationRunResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "verification_id",
+        "organization_id",
+        "execution_context",
+        "behavior_sha256",
+        "requirement_results",
+        "verdict",
+        "evidence_refs",
+        "verified_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.run-result.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "verification_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "behavior_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "requirement_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RequirementResultV1"
+          },
+          "maxItems": 256
+        },
+        "verdict": {
+          "type": "string",
+          "enum": ["verified", "mismatch", "unknown"]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          },
+          "maxItems": 256
+        },
+        "verified_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "VerificationStatusQueryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "execution_context",
+        "request_id"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.status-query.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        }
+      }
+    },
+    "VerificationRunStatusV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema_id", "state", "request_id"],
+          "properties": {
+            "schema_id": {
+              "const": "verification.run-status.v1"
+            },
+            "state": {
+              "const": "pending"
+            },
+            "request_id": {
+              "$ref": "#/$defs/UUIDv4"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema_id", "state", "result"],
+          "properties": {
+            "schema_id": {
+              "const": "verification.run-status.v1"
+            },
+            "state": {
+              "const": "complete"
+            },
+            "result": {
+              "$ref": "#/$defs/VerificationRunResultV1"
+            }
+          }
+        }
+      ]
+    },
+    "VerificationErrorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "request_id"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "VERIFICATION_NOT_AUTHORIZED",
+            "VERIFICATION_INPUT_INVALID",
+            "VERIFICATION_UNAVAILABLE",
+            "VERIFICATION_REQUEST_CONFLICT"
+          ]
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
         }
       }
     }

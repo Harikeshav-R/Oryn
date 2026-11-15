@@ -35,7 +35,7 @@ Control Plane strictly delineates transport, transaction mechanics, and durable 
 ### Planned Rust Module Architecture
 Control Plane is architected as an Axum/Tokio/Tower modular Rust application. Domain logic remains strictly independent of the HTTP framework.
 
-The component is partitioned into ten internal modules:
+The component is partitioned into eleven internal modules:
 1. `HttpIngress`: TLS termination metadata validation, request/trace ID propagation, body streaming limits, rate limiting, and CORS/Origin enforcement.
 2. `SessionTransport`: Web BFF cookie lifecycle, PKCE verifier vaulting, Auth0 callback handling, CSRF token validation, and activity tracking.
 3. `CommandDispatcher`: Generic typed command routing, RFC 8785 canonical hashing, idempotency locking, and response projection sanitization.
@@ -44,8 +44,9 @@ The component is partitioned into ten internal modules:
 6. `DomainDelivery`: PostgreSQL durable queue processor, outbox fanout, consumer leases, exponential backoff, and poisoned aggregate quarantine.
 7. `ChangeFeed`: Per-organization committed sequence counter, signed cursor generation, and 25-second long-poll notification dispatch.
 8. `AuditWriter`: Transactionally co-located audit logging, ensuring mandatory audit entries commit atomically with domain state changes.
-9. `InferenceAdmission`: Verification of signed policy/privacy grants, route pricing validation, and atomic budget reservation.
+9. `InferenceAdmission`: Verification of signed policy/privacy grants, route pricing validation, atomic monthly budget reservation, and job budget reservation linkage (`JobBudgetReservationV1`).
 10. `InferenceSessionCoordinator`: WebSocket connection affinity, chunk proof verification, and streaming proxying to LiteLLM.
+11. `JobOrchestration`: Coordinates job previews, starts, controls, case reconciliations, schedules, activations, sponsor confirmations, employee local consents, and internal trigger events via `JobOrchestrationPort` under `control-plane-v1.openapi.json`.
 
 ```rust
 // Core Domain Command & Handler Interfaces (Specification Reference)
@@ -108,16 +109,17 @@ Control Plane sits at the central crossroads of Oryn multi-tenant operations, se
 ```
 
 ### Upstream and Downstream Contract Inventory
-Control Plane coordinates transport across eight authoritative platform contracts:
+Control Plane coordinates transport across ten authoritative platform contracts:
 1. **Contract 2 (Workflow Contributions):** Ingests reviewed workflow contributions (`sync.reviewed-contribution.v1`) over `POST /v1/sync/submissions`. Enforces 5 MiB body cap, max 4 PNG artifacts (≤ 1 MiB each, ≤ 1920x1080), and returns `DeliveryReceiptV1` or `SubmissionStatusV1`.
 2. **Contract 3 (Guidance Distribution):** Serves signed guidance manifests and immutable guidance bundles over `/v1/sync/guidance/*` for employee working set sync.
 3. **Contract 4 (Candidate Guidance Staging):** Stages approved workflow candidates (`CandidatePromotionV1`) into [operational-graph](operational-graph.md) over `POST /v1/discovery/candidates/{candidate_id}/approvals`, returning `GraphCandidateReceiptV1`. Operational Graph separately publishes playbooks over `POST /v1/knowledge/candidate-stages/{graph_draft_id}/publications`.
-4. **Contract 11 (Action Execution Credentials):** Validates child tokens and mTLS workload principals for autonomous execution.
-5. **Contract 18 (Authorized Management Projections):** Serves `ChangePageV1` metadata feeds and `OperationV1` progress projections to administrative consoles.
-6. **Local Presentation Decoupling:** Control Plane does not participate in endpoint UI presentation; local HUD display and coordinate highlighting use Contract 20 (`shell-hud.v1`) entirely on-device, while central guidance distribution uses Contract 3.
-7. **Contract 22 (Cloud Inference):** Transports transient single-shot requests and real-time audio WebSocket streams to LiteLLM under signed chunk proofs.
-8. **Contract 24 (Reviewed Meeting Handoffs):** Coordinates reviewed meeting action handoffs without private audio or meeting identifiers.
-9. **Contract 25 (Privacy Context Feed):** Ingests signed local privacy authorization proofs from Desktop Privacy Helper.
+4. **Contract 10 (Agent Runtime Execution):** Transports internal execution commands, snapshots, and encrypted typed checkpoint values for [agent-runtime](agent-runtime.md) workers over `/internal/v1/runtime/*`.
+5. **Contract 11 (Action Execution Credentials):** Validates child tokens and mTLS workload principals for autonomous execution.
+6. **Contract 18 (Authorized Management Projections):** Serves `ChangePageV1` metadata feeds and `OperationV1` progress projections to administrative consoles.
+7. **Local Presentation Decoupling:** Control Plane does not participate in endpoint UI presentation; local HUD display and coordinate highlighting use Contract 20 (`shell-hud.v1`) entirely on-device, while central guidance distribution uses Contract 3.
+8. **Contract 22 (Cloud Inference):** Transports transient single-shot requests and real-time audio WebSocket streams to LiteLLM under signed chunk proofs.
+9. **Contract 24 (Reviewed Meeting Handoffs):** Coordinates reviewed meeting action handoffs without private audio or meeting identifiers.
+10. **Contract 25 (Privacy Context Feed):** Ingests signed local privacy authorization proofs from Desktop Privacy Helper.
 
 ### Canonical HTTP Route Specifications
 Control Plane exposes the following canonical endpoints (documented in `docs/architecture/contracts/control-plane-v1.openapi.json`):
@@ -192,6 +194,12 @@ Control Plane exposes the following canonical endpoints (documented in `docs/arc
 - `POST /v1/integrations/qualifications`: Stages immutable operation qualification definition and initial attestation. Requires `application.qualify`.
 - `POST /v1/integrations/qualifications/{qualification_id}/approvals`: Records authorized Workflow Owner or Security Admin approval of qualification definition hash.
 - `POST /v1/integrations/qualifications/{qualification_id}/renewals`: Records evidence-backed unchanged 30-day qualification renewal without changing definition body hash.
+
+#### 8. Internal Agent Runtime Execution Transport
+- `POST /internal/v1/runtime/assignments/{assignment_id}/commands`: Execution dispatcher command transport (`RuntimeCommandV1`), accepting commands (`claim`, `advance`, `yield`, `heartbeat`) under authenticated workload mTLS or child execution token. Enforces 256 KiB body cap and RFC 8785 canonical digest validation. Returns `RuntimeCommandResultV1`.
+- `GET /internal/v1/runtime/assignments/{assignment_id}/snapshot`: Retrieves current active execution snapshot (`RuntimeSnapshotV1`) containing assignment metadata, current checkpoint revision, and unconsumed control signals.
+- `PUT /internal/v1/runtime/assignments/{assignment_id}/values/{binding_id}`: Uploads encrypted typed checkpoint value ciphertext (`RuntimeMaterializedValueV1`), bounded to 256 KiB. AAD cryptographically binds organization, execution ID, binding ID, value revision, and behavior digest.
+- `GET /internal/v1/runtime/assignments/{assignment_id}/values/{binding_id}`: Retrieves encrypted typed checkpoint value ciphertext for active execution or authorized review. Access is denied if source expired, terminal 7-day retention elapsed, or retention fence recorded.
 
 
 ### Product Requirements and Acceptance Mappings

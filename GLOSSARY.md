@@ -256,3 +256,48 @@ _Avoid_: Success verdict, completed case
 Independently acquired application state used to assess business postconditions, distinct from a submission acknowledgment or verdict.
 _Avoid_: Response echo, agent self-report
 
+**Execution Assignment**:
+Bounded responsibility to continue one case under a fixed agent version and declared scope. It does not itself authorize a business action.
+_Avoid_: Blanket permission, job launch
+
+**Execution Checkpoint**:
+A recorded continuation point and necessary case context that preserve completed effects without treating them as permission to repeat work.
+_Avoid_: Rollback snapshot, success receipt
+
+**Reconciliation**:
+An evidence-backed determination of what happened after an uncertain business action, used to decide safe next work. It does not itself authorize another action.
+_Avoid_: Automatic retry, assumed rollback
+
+**Job**:
+One confirmed or approved scheduled request to execute a fixed agent version against a defined population.
+_Avoid_: Task runner, pipeline, batch script
+
+**Case**:
+One business item within a Job, retaining its own progress, outcomes, and execution history.
+_Avoid_: Record row, loop iteration, worker thread
+
+**Work Queue**:
+An approved source and selection rule for eligible business items; not an execution assignment or transport queue.
+_Avoid_: Message queue, dispatch buffer, broker topic
+
+**Schedule**:
+An owner-approved recurring, timed, or event-driven rule with bounded scope and an accountable execution sponsor; not blanket action approval.
+_Avoid_: Cron job, background timer, periodic daemon
+
+**Schedule Occurrence**:
+One intended triggering of a Schedule, including a recorded skipped or missed triggering.
+_Avoid_: Scheduled task, event pulse, tick
+
+**Execution Sponsor**:
+The named person whose current job-execution remit supports a Schedule; not its action approver by default.
+_Avoid_: Schedule owner, system account, bot principal
+
+**Frozen Population**:
+The exact confirmed membership of a Job; later source changes do not add replacement items.
+_Avoid_: Dynamic queue, auto-refill batch, rolling query
+
+**Continuation Execution**:
+A linked attempt to perform proven-safe remaining work for a Case; not a replay of prior effects.
+_Avoid_: Automatic retry, replay, loopback
+
+

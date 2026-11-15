@@ -137,16 +137,27 @@ Oryn defines nine immutable role IDs with standard product display names:
 5. **`automation_builder` (Automation Builder):** Employee permissions plus `workflow.review` and `agent.edit`. May propose candidate agents, repairs, and test runs, but cannot approve production releases.
 6. **`operations_manager` (Operations Manager):** Team-scoped `playbook.read`, `analytics.read`, and read-only issue/incident status. Manager status does *not* confer action approval or raw evidence access.
 7. **`security_admin` (Security Admin):** `privacy_policy.manage`, `security_policy.manage`, `audit.read`, `hold.manage`, `integration.manage` (connection creation, scope expansion approval, credential lifecycle in application/team scope), and security-side permission expansion approval. No implicit business rule or release owner authority.
-8. **`organization_admin` (Organization Admin):** `membership.manage`, team structure administration, and external identity federation configuration. No implicit action approval, business rule approval, arbitrary vendor data, or private evidence rights.
+8. **`organization_admin` (Organization Admin):** `membership.manage`, `execution_limits.manage`, team structure administration, and external identity federation configuration. No implicit action approval, business rule approval, arbitrary vendor data, or private evidence rights.
 9. **`read_only_stakeholder` (Read-Only Stakeholder):** Scoped `playbook.read`, `application.read`, and eligible report/status reads. No write, execution, or export rights by default.
 
 ### Public Capability Catalog
-The system enforces twenty-one strictly bounded capabilities:
+The system enforces twenty-two strictly bounded capabilities:
 - **Public Capabilities:** `playbook.read`, `workflow.review`, `rule.approve`, `agent.edit`, `job.run`, `action.approve`, `incident.review`, `repair.approve`, `release.approve`, `analytics.read`, `report.export`, `privacy_policy.manage`, `membership.manage`, `application.read`.
-- **Internal Governance Capabilities:** `schedule.manage`, `audit.read`, `security_policy.manage`, `hold.manage`, `identity.recover`, `integration.manage`, `application.qualify`.
+- **Internal Governance Capabilities:** `schedule.manage`, `audit.read`, `security_policy.manage`, `hold.manage`, `identity.recover`, `integration.manage`, `application.qualify`, `execution_limits.manage`.
 
-Token scopes map respectively to OAuth claims: `application.read` (`application:read`), `integration.manage` (`integration:manage`), `application.qualify` (`application:qualify`).
+Token scopes map respectively to OAuth claims: `application.read` (`application:read`), `integration.manage` (`integration:manage`), `application.qualify` (`application:qualify`), `execution_limits.manage` (`execution_limits:manage`).
 
+*Organization Execution Limits Policy (`execution_limits`):*
+Configured via `OrganizationPolicyV1.execution_limits` using `ExecutionLimitsPolicyV1`:
+- `max_active_cases`: integer 1..4 (default: 4)
+- `max_active_cases_per_job`: integer 1..2 (default: 2)
+- `max_active_cases_per_connection`: integer 1 (default: 1)
+- `default_max_active_ms`: integer 1..900000 (default: 900,000 ms = 15 minutes)
+- `job_spend_limit_microusd`: decimal integer string or null
+Managed exclusively by Organization Admin via `execution_limits.manage`. Security Admin retains `security_policy.manage` for mandatory ceilings, not runtime job limits.
+
+*Scheduled Execution Authority (`ScheduledExecutionAuthorityV1`):*
+Scheduler execution uses an internal evaluated record `ScheduledExecutionAuthorityV1` binding `schedule_id`, `schedule_revision`, `owner_actor_id`, `sponsor_actor_id`, `approved_scope`, `policy_revision`, `owner_role_revision`, and `sponsor_role_revision`. The scheduler's authenticated WorkloadPrincipal queries this evaluation; Identity verifies that the sponsor holds current `job.run` and the owner holds `schedule.manage` without fabricating human session MFA or WebMember identities. Tier 3 steps within scheduled jobs still require real human approval.
 
 *Special Policy Guard (`report.export`):* `report.export` requires an explicit grant from an authorized security policy within an existing report-read scope. Its absence denies export even if an actor can view a dashboard.
 
@@ -329,10 +340,21 @@ Browser clients never receive Auth0 tokens or Oryn bearer credentials:
    - Web sessions: Max 12 hours absolute, with a server-enforced 30-minute inactivity lock.
    - Desktop sessions: Max 7 days absolute.
    - Child access tokens: Bounded to maximum 5 minutes, scoped to specific audiences (`identity`, `sync`, `guidance`, `execution`, `inference`).
-5. **Step-Up MFA:** Consequential operations (Tier 3 approvals, release approvals, policy modifications, emergency recovery) require verified MFA completed within the previous 5 minutes. Proven via Auth0 Actions emitting namespaced claims: `https://oryn.app/claims/connection_id`, `https://oryn.app/claims/connection_strategy`, and `https://oryn.app/claims/mfa_at`.
+5. **Execution Principal Registration & Scopes:**
+   Runtime dispatchers require authenticated execution principal registration (`ExecutionPrincipalRegistrationV1`):
+   - Binds `organization_id`, `execution_context`, `host`, `assignment_id`, `assignment_epoch`, `recovery_epoch`, and `allowed_scopes`. Authenticated via cloud workload mTLS or enrolled local device execution child credential.
+   - Child access tokens under audience `execution` are strictly bounded to 5 minutes maximum and limited to closed execution scopes:
+     - `runtime:claim`: Atomically claim assignment and CAS progress
+     - `runtime:read`: Retrieve authorized typed state and dependency values
+     - `runtime:advance`: Commit validated checkpoint transitions
+     - `runtime:heartbeat`: Renew assignment lease
+     - `runtime:yield`: Relinquish execution at human wait, approval, or completion
+   - Execution scopes grant zero rights to launch jobs, issue approvals, alter policy, or access vendor credentials.
+   - Guard checks verify matching tenant, execution principal, assignment ID/epoch, and recovery epoch, rejecting superseded, expired, or cancelled dispatchers before action admission.
+6. **Step-Up MFA:** Consequential operations (Tier 3 approvals, release approvals, policy modifications, emergency recovery) require verified MFA completed within the previous 5 minutes. Proven via Auth0 Actions emitting namespaced claims: `https://oryn.app/claims/connection_id`, `https://oryn.app/claims/connection_strategy`, and `https://oryn.app/claims/mfa_at`.
 
 ### Bridge Delivery Contract (`ExecuteBrowserAction`)
-Browser execution occurs over `browser-bridge.v1` (major 1, minor 4 with capabilities `identity_authority_v1` and `local_execution_reservation_v1`):
+Browser execution occurs over `browser-bridge.v1` (major 1, minor 5 with capabilities `identity_authority_v1`, `local_execution_reservation_v1`, and `execution_reservation_lease_v1`):
 ```text
 ExecuteBrowserAction.payload.authority = {
   authorization: SignedActionAuthorizationV1,
@@ -526,9 +548,11 @@ To guarantee zero race conditions between permission revocation and action dispa
 
 ### Authority Recovery Journal
 PostgreSQL backups are susceptible to snapshot restore rollbacks that could resurrect revoked credentials or unconsume action fences. Oryn mitigates this through an independent durable Authority Recovery Journal:
-- **Append on Commit:** Every state transition, governance consumption, and action admission writes an `AuthorityJournalEntryV1` to the database outbox and appends to an external immutable audit journal before final response release.
+- **Append on Commit:** Every state transition, governance consumption, action admission, runtime retention fence, and orchestration safety fence writes an `AuthorityJournalEntryV1` to the database outbox and appends to an external immutable audit journal before final response release. This includes:
+  - `kind: "runtime_retention_fenced"` with after-images in `orchestration_retention_fence` using `RuntimeRetentionFenceV1`.
+  - `kind: "orchestration_safety_fenced"` with after-images in `orchestration_safety_fence` using `OrchestrationSafetyFenceV1`, binding monotonic generations for subjects `job`, `schedule`, `case`, `action_intent`, `budget`, and `occurrence`.
 - **Durability Gate:** Transitions commit with `durability_pending = true`. The operation is acknowledged to the client only after receiving a cryptographically signed `SignedAuthorityCheckpointV1` from the journal receipt signer.
-- **Restore Protocol:** Following a database restore from backup, privileged traffic remains completely disabled. The recovery coordinator queries the external journal for the latest signed checkpoint, replays all missing entries into PostgreSQL, and reconstructs action fences and high-water mark revision counters. Any detected gap or unreachable journal returns `IDENTITY_RECOVERY_INCOMPLETE`, keeping the organization restricted.
+- **Restore Protocol:** Following a database restore from backup, privileged traffic remains completely disabled. The recovery coordinator queries the external journal for the latest signed checkpoint, replays all missing entries into PostgreSQL, and reconstructs action fences, retention fences, orchestration safety fences, and high-water mark revision counters. All recorded occurrence keys are reconstructed from journaled occurrence entries before any scheduler or slot allocation runs. Retention fences must be replayed before DEK unwrapping or owner review; missing or gapped reconciliation denies value reads. Surviving fences are not proof that a lost receipt means no dispatch was sent. Any detected gap or unreachable journal returns `IDENTITY_RECOVERY_INCOMPLETE`, keeping the organization restricted.
 
 ---
 

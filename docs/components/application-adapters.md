@@ -48,7 +48,7 @@ Bounded worker reuse is permitted only within this exact tuple. Credential roles
 ### Upstream Consumed Contracts
 - **Identity & Authority (Contract 11):** Consumes `VerifiedPrincipal`, `SignedActionAuthorizationV1`, `SignedActionApprovalV1`, and `SignedActionAdmissionV1` from [identity-policy](identity-policy.md). Consumes consumed-fence receipts; registers trusted `ActionPolicyFactsV1`.
 - **Infrastructure Security:** Consumes credential leases from HashiCorp Vault via `AdapterEgressBroker` under [infrastructure-security](infrastructure-security.md).
-- **Desktop Shell & Privacy Helper:** Consumes local reservation state (`local_execution_reservation_v1`) and supervised process channels (`shell-adapter.v1` major 1, minor 0) from [desktop-shell](desktop-shell.md) and [local-privacy-storage](local-privacy-storage.md).
+- **Desktop Shell & Privacy Helper:** Consumes local reservation state (`local_execution_reservation_v1`, `execution_reservation_lease_v1` under `browser-bridge.v1` major 1, minor 5) and supervised process channels (`shell-adapter.v1` major 1, minor 1) from [desktop-shell](desktop-shell.md) and [local-privacy-storage](local-privacy-storage.md).
 
 ### Downstream Produced Contracts
 - **Contract 6 (`application-capability-v1.schema.json`):** Produces immutable `ApplicationCapabilitySnapshotV1` and live `ApplicationCapabilityStatusV1` via `ApplicationCapabilityPort`:
@@ -67,7 +67,20 @@ Bounded worker reuse is permitted only within this exact tuple. Credential roles
       ) -> impl Future<Output = Result<ApplicationCapabilityStatusV1, AdapterError>> + Send + 'a;
   }
   ```
-- **Contract 12 (`application-adapters-v1.schema.json`):** Consumes authorized prepare and execute requests (`AdapterPrepareRequestV1`, `AdapterExecuteRequestV1`) from [agent-runtime](agent-runtime.md) and [local-context-hud](local-context-hud.md).
+  Operations with read effects declare optional `selection` capabilities referencing `RecordSelectionCapabilityV1` (`record_type`, `ordering_ids`, `stable_snapshot`, `explicit_resolution`, `max_page_items`).
+- **Record Selection Contract (`application-adapters-v1.schema.json`):** Produces bounded, ordered candidate record selection pages via `AdapterRecordSelectionPort`:
+  ```rust
+  #[async_trait]
+  pub trait AdapterRecordSelectionPort: Send + Sync {
+      async fn select(
+          &self,
+          principal: &VerifiedPrincipal,
+          request: AdapterRecordSelectionRequestV1,
+      ) -> Result<AdapterRecordSelectionPageV1, AdapterErrorV1>;
+  }
+  ```
+  Returns `ApplicationRecordRefV1` items containing canonical `record_identity_sha256 = SHA256(RFC8785({application_id, vendor_account_id, environment, record_type, native_record_id}))`. Cross-connection canonical mapping guarantees that multiple distinct connections targeting the same underlying vendor account and native record produce the exact same identity digest.
+- **Contract 12 (`application-adapters-v1.schema.json`):** Consumes authorized prepare, execute, and value query requests (`AdapterPrepareRequestV1`, `AdapterExecuteRequestV1`, `AdapterValueQueryV1`) from [agent-runtime](agent-runtime.md) and [local-context-hud](local-context-hud.md). Produces typed operation output values (`AdapterOperationValueV1`) capped at 256 KiB. Attempt identifiers (`attempt_id`) across Identity admission and submission journals are valid UUIDv4.
 - **Contract 13 (`application-adapters-v1.schema.json`):** Produces immutable submission receipts (`AdapterSubmissionReceiptV1`) and signed readback evidence (`SignedAdapterReadbackEvidenceV1`) to [outcome-verification](outcome-verification.md).
 
 ---
@@ -92,7 +105,7 @@ Bounded worker reuse is permitted only within this exact tuple. Credential roles
 |  +---------------------------------------------------------------------------------------------------+  |
 |  | Isolation Key: (organization_id, connection_id, environment, credential_role)                     |  |
 |  | - Deterministic pack operations (Gmail, Outlook, Sheets, Excel, Salesforce, HubSpot, NetSuite)   |  |
-|  | - Local UI Automation / macOS Accessibility (Native Stage 3) via shell-adapter.v1                 |  |
+|  | - Local UI Automation / macOS Accessibility (Native Stage 3) via shell-adapter.v1 (major 1, minor 1)|  |
 |  | - Direct Vendor Network Access: STRICTLY BLOCKED                                                  |  |
 |  +---------------------------------------------------------------------------------------------------+  |
 +---------------------------------------------------|-----------------------------------------------------+
@@ -148,6 +161,12 @@ pub trait AdapterExecutionPort: Send + Sync {
         principal: &'a VerifiedPrincipal,
         request: AdapterReadbackRequestV1,
     ) -> impl Future<Output = Result<SignedAdapterReadbackEvidenceV1, AdapterError>> + Send + 'a;
+
+    fn value<'a>(
+        &'a self,
+        principal: &'a VerifiedPrincipal,
+        query: AdapterValueQueryV1,
+    ) -> impl Future<Output = Result<AdapterOperationValueV1, AdapterError>> + Send + 'a;
 }
 ```
 
@@ -159,6 +178,36 @@ pub trait AdapterExecutionPort: Send + Sync {
 5. **Attempt Journaling:** Atomically claims attempt in `AdapterSubmissionJournal`, setting state to `dispatching`. Old worker epochs are revoked.
 6. **Egress Mediation:** Broker verifies winning attempt and lease parameters, injects tokens, and transmits single HTTP request or UI primitive. Automatic retry loops are disabled.
 7. **Receipt Delivery:** Journal records final submission state (`application_acknowledged`, `unknown`, or `not_dispatched`) and delivers `AdapterSubmissionReceiptV1` to Runtime and Verifier.
+
+### Typed Output Value Retrieval (`AdapterExecutionPort::value`)
+The standard `AdapterExecutionPort` produces receipts (`AdapterSubmissionReceiptV1`), which confirm transmission or rejection but contain zero customer data. To provide downstream workflow nodes with output values without issuing duplicate external vendor reads, adapters expose the producer-owned internal `AdapterExecutionPort::value` method.
+
+- **Query (`AdapterValueQueryV1`):** `{organization_id, execution_context, action_id, receipt_id}`.
+- **Result (`AdapterOperationValueV1`):** `{schema_id: "adapter.operation-value.v1", organization_id, execution_context, action_id, receipt_id, output_type, value, value_sha256, evidence, expires_at}`.
+- **Constraints:**
+  - Carries only declared typed business fields, strictly bounded to 256 KiB.
+  - References Factory-owned portable JSON/evidence and application-owned type schemas.
+  - Represents retrieval of an already authorized and completed operation result; never performs another vendor read or acts as a self-verified business verdict.
+  - Telemetry and public receipt responses remain strictly content-free.
+  - Missing or expired results yield unknown or hold if an earlier mutation requires reconciliation.
+  - Values originating in private local observations cannot be promoted through this route.
+
+### Execution Delegation and Execution Guard
+- **Dispatching Principal vs Delegate:** The worker ID in signed authority identifies the authenticated dispatching principal (e.g. `oryn-runtime-worker`). The adapter process identity is a separate delegate recorded in the trusted dispatch journal. The adapter and egress broker validate the delegate against the server-owned winning action/attempt and the active execution guard. Tenant matching alone is never treated as valid delegation.
+- **Execution Guard Checks:** Guard checks reject stopped, superseded, expired, and wrong-epoch dispatchers before new admission or dispatch acceptance. Adapter preparation and Identity authorization/consumption resolve the committed pending effect under the execution guard:
+  - Exact match of execution principal, assignment ID/epoch, node/path, effect kind, stable action ID, attempt, capability, operation, and canonical staged argument digest.
+  - Dispatch accepted before stop/takeover may already be in-flight; cancellation is best-effort and does not promise recall of external network transmission. Replacement workers cannot perform mutations while prior accepted effects remain uncertain.
+- **Connection Revisions:** Stable connection revisions bind external vendor accounts and subjects. Any change requires a new revision and invalidates staging. Distinguish internal journal phase `dispatching` from terminal wire state `application_acknowledged`. Preserves single mutation attempt on HTTP 429/5xx unless positive no-send evidence exists (which still never unconsumes an admitted fence).
+
+### Local Execution Reservation Broker
+Local UI and browser actuation require exclusive single-tenant lock ownership via the Privacy-Helper-owned `LocalExecutionReservationBroker`:
+- **Lease Parameters:** 30-second renewable reservation with 10-second renewal cadence. Bound to `(organization_id, device_id, profile_id, execution_context, workstation_session_epoch)` and a closed holder union:
+  - `{kind: "job", assignment_id, assignment_epoch}`
+  - `{kind: "assist", assist_session_id, assist_incarnation}`
+- **Context Validation:** Checked strictly against canonical `ExecutionContextV1`.
+- **Revocation & Quiescence:** Helper restart, session epoch change, pause, lock/sleep, window visibility loss, or disconnect immediately revokes local actuation. Revocation moves the reservation to `quiescing`, denying new primitives.
+- **Safe Boundary Acknowledgment (`ExecutionReservationBoundaryAckV1`):** Verified executor acknowledgment with `primitive_stopped = true` transitions the lease to `released`. If acknowledgment is missing, the reservation enters `exclusion_hold`, denying competing actuation until process termination or owner reconciliation completes.
+- **Protocol Versions:** Negotiates `browser-bridge.v1` major 1, minor 5 (requiring `execution_reservation_lease_v1` alongside `identity_authority_v1` and `local_execution_reservation_v1`). Native macOS actuation uses `shell-adapter.v1` major 1, minor 1.
 
 ### Storage Architecture and Schema DDL
 The component uses PostgreSQL 18 with Row-Level Security (RLS) under existing `TenantTransaction` boundaries:
@@ -332,6 +381,10 @@ ALTER TABLE adapter_submission ENABLE ROW LEVEL SECURITY;
 21. `ADAPTER_CANCELLED`: Cooperative operation cancellation received prior to dispatch.
 22. `ADAPTER_OUTCOME_UNKNOWN`: Network dropped or timed out after transmission began; outcome ambiguous.
 23. `ADAPTER_READBACK_UNAVAILABLE`: Independent readback endpoint or certified egress enforcement unavailable.
+24. `ADAPTER_SELECTION_UNSUPPORTED`: Record selection requested on an operation without qualified `selection` declaration; maps to `JOB_SELECTION_UNSUPPORTED`.
+25. `ADAPTER_SELECTION_STALE`: Source record snapshot changed or session expired during selection pagination; maps to `JOB_SELECTION_STALE`.
+26. `ADAPTER_SELECTION_INCOMPLETE`: Selection stream truncated or incomplete without definitive end-of-queue; maps to `JOB_SELECTION_INCOMPLETE`.
+27. `ADAPTER_SELECTION_LIMIT_EXCEEDED`: Selection query exceeded page limit (100) or population cap (1,000); maps to `JOB_SELECTION_LIMIT_EXCEEDED`.
 
 ---
 

@@ -24,7 +24,7 @@ The Incident Detection, Correction, and Repair Engine converts execution failure
 - Governed cloud reasoning operations (`text.reason`) via [cloud-inference](../architecture/cloud-inference.md).
 ### Produces
 - Governed incident records with observed facts and labeled diagnostic hypotheses.
-- Immediate containment instructions dispatched to [job-orchestration](job-orchestration.md) and [release-governance](release-governance.md).
+- Immediate containment instructions dispatched to [job-orchestration](job-orchestration.md) via synchronous safety fences (`OrchestrationSafetyFenceV1`) and to [release-governance](release-governance.md).
 - Proposed business rule changes delivered to [operational-graph](operational-graph.md).
 - New candidate agent repair bundles and regression test requirements delivered to [agent-factory-ir](agent-factory-ir.md) and [flight-simulator](flight-simulator.md).
 
@@ -97,7 +97,7 @@ Containment actions must be scoped to the actual failure blast radius (case, wor
 
 ### Security and Safety Considerations
 - **Poisoned Repair Attacks:** Repairs generated from malicious or compromised expert accounts cannot bypass regression evaluation gates.
-- **Containment Denial:** High-severity containment commands bypass asynchronous queues and execute synchronously to halt damage immediately.
+- **Containment Denial:** High-severity containment commands bypass asynchronous queues and execute synchronously via `OrchestrationSafetyFenceV1`, committing directly to PostgreSQL and Identity authority journals to halt dispatch immediately. Durable database fence acknowledgment is sub-second; connected workers acknowledge safe primitive boundaries (measured target <=2s) while unresponsive workers remain in an explicit pending/uncertain acknowledgment state. Incident Engine owns failure severity classification and containment scoping across case, job, connection, schedule, or agent version.
 - **Scope Creep in Patches:** Synthesizer strictly constrains patch diffs to the affected sub-branch; unauthorized permission expansions are rejected.
 
 ## Test strategy

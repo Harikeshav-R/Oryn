@@ -352,10 +352,27 @@ When a Tier 2 or Tier 3 action requires employee approval:
 History browsing, candidate inspection, and My Privacy data are fetched over the dedicated query channel using cursor-based pagination (capped at 100 items per response). Raw media thumbnails are fetched via short-lived, profile-bound opaque local handles (e.g. `local-media://handle-uuid`), validated by the privacy helper. Arbitrary filesystem path traversal and direct URLs to unredacted captures are strictly prohibited.
 
 #### 5. Local Native Adapter Worker Supervision (`shell-adapter.v1`, Contract 12)
-Desktop Shell supervises the signed first-party unprivileged child process `oryn-adapter-worker` over two inherited private length-prefixed byte channels (`shell-adapter.v1`, major 1, minor 0: max frame size 262,144 bytes / 256 KiB; no public TCP or named-pipe rendezvous):
+Desktop Shell supervises the signed first-party unprivileged child process `oryn-adapter-worker` over two inherited private length-prefixed byte channels (`shell-adapter.v1`, major 1, minor 1: max frame size 262,144 bytes / 256 KiB; no public TCP or named-pipe rendezvous):
 - **Supervision & Gating:** Shell relays execution context and authority bundle (`{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1 | null, admission: SignedActionAdmissionV1}`), while Privacy Helper gates local observation-derived inputs and device-wide reservations via `LocalExecutionReservationBroker`.
 - **Deterministic OS Primitives:** Executes native Stage 3 semantic actuation using Windows UI Automation supported patterns and macOS Accessibility actions behind deterministic platform bridges without privilege elevation. Closed primitive set: `read | invoke | set_value | select | toggle`.
 - **Target & Safety Invariants:** Binds signed app identity, process/window ID, permitted workspace, target key, surface generation, exact expected before-state, and monotonic admission deadline. Screen pause, Pause All, desktop lock, focus loss, window occlusion, or generation drift immediately halts pending native dispatch. Prior submitted effects are preserved without pretending rollback occurred.
+
+#### 6. Local Agent Runtime Worker Supervision (`shell-runtime.v1`, Contract 10)
+Desktop Shell supervises the signed first-party unprivileged child process `oryn-runtime-worker` over private inherited duplex byte channels (`shell-runtime.v1`, major 1, minor 0):
+- **Framing & Limits:** Uses 4-byte little-endian length-prefixed JSON frames, maximum frame size 256 KiB (262,144 bytes). Inherited at spawn; zero public TCP or named-pipe sockets. Handshake binds `(organization_id, device_id, profile_id, assignment_id, assignment_epoch)`.
+- **Queue Bounds:** Channel buffers are capped at 64 frames / 4 MiB, with 8 reserved control slots for immediate processing of pause, stop, and cancellation commands. Value transfers use chunks at most 64 KiB.
+- **Security Boundaries:** No new public listener, accessibility permission, browser renderer, or direct vendor connection. `SessionBroker` provides only the short-lived (<= 5 min) audience-bound execution child credential (`audience: "execution"`).
+- **Transport Client:** Integrates a narrowly allowlisted Rust `RuntimeControlPlaneClient` in the local host for internal Runtime transport endpoints (`/internal/v1/runtime/*`). Receives no refresh token or raw vendor credential.
+- **State & Cloud Baseline:** Worker memory is strictly ephemeral; central Job Orchestrator owns durable job checkpoints. Model effects execute through central `RuntimeCoordinator` and governed cloud LiteLLM inference interfaces, never through a local provider client.
+- **Safety Stops:** Screen pause or Pause All halts local action dispatch at a safe boundary without disturbing independently authorized meeting capture. Offline execution remains strictly prohibited.
+
+#### 7. Local Schedule Execution Consent Binding (Contract 18)
+Desktop Shell provides the presentation and registration surface for employee consent when a recurring scheduled job targets local workstation execution:
+- **Registration Surface:** The authenticated employee reviews proposed schedule parameters (agent, workflow, recurrence, permitted hours, target application scope) and explicitly confirms local execution via `POST /v1/job-schedules/{schedule_id}/local-consents`.
+- **Binding Contract (`LocalScheduleBindingV1`):** Binds `device_id`, `profile_id`, `employee_actor_id`, `consent_revision`, `consented_at`, and `not_after`.
+- **Session-Capped Expiry:** Validity is strictly capped at the employee's current desktop session (maximum 7 days). Session renewal alone never silently extends consent.
+- **Immediate Invalidation:** Workstation lock, system sleep, user logout, profile switch, manual pause, or shell visibility loss immediately revokes local dispatch availability. Scheduled occurrences encountering an unavailable device are recorded as `blocked` with reason `JOB_DEVICE_UNAVAILABLE`.
+- **Reservation Ownership:** Local execution leases and browser/OS actuation reservations remain owned exclusively by `LocalExecutionReservationBroker` under `shell-runtime.v1` and `browser-bridge.v1`. This registration creates no new capture-consent category and grants no unattended background capture rights.
 
 
 ## Trust and deployment boundaries

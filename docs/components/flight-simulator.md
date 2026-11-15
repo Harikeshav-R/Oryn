@@ -85,12 +85,17 @@ Tests must execute using the **exact behaviorally relevant agent definition** in
 - **Lifecycle Transitions:** `Suite Created → Running Scenarios → Evaluating Outcomes → Run Completed → Report Published`.
 - **Environment Reset:** Test sandboxes are completely destroyed and reprovisioned between scenario runs to guarantee isolation.
 
+### Simulation Execution Modes
+Simulation invokes the same pure Rust interpreter core and agent body hash, parameterized by `AdapterEnvironmentBindingV1` outside executable identity:
+- **`live` Mode:** Executes with certified pinned model inference to establish authoritative release coverage and readiness assessment. Adapters run against isolated synthetic packs or designated staging sandboxes.
+- **`recorded_diagnostic` Mode:** Injects previously validated, typed model results bound to exact `(node, path, model_binding_id, input_digest)`. Used for rapid regression analysis and diagnostic replay. It **never** establishes release coverage or readiness certification for model reasoning. Replay cannot dispatch production mutations, upgrade inferred evidence, or conceal fidelity gaps. The absence of retained sensitive values makes replay incomplete rather than silently passed.
+
 ## Error and edge-case behavior
 
 ### Failure Handling
 - **Environment Provisioning Failure:** Scenarios are marked `Inconclusive (Environment Error)` and rescheduled.
 - **Run Timeout:** Agent runs exceeding execution time limits are terminated, scored as failures, and captured for replay.
-- **Unexpected Crash:** The runner captures container logs and core dumps, reporting an unhandled execution exception.
+- **Unexpected Crash:** Dumps are strictly disabled (`core_dumps = false`) to prevent memory leakage across sandbox boundaries. The runner records sanitized diagnostic metadata (signal, step cursor, node path, and error code without customer data), reporting an unhandled execution exception.
 
 ## Observability and audit
 

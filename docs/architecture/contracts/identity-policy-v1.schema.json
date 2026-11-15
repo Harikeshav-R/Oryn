@@ -129,6 +129,15 @@
     },
     {
       "$ref": "#/$defs/SignedTrustKeysetV1"
+    },
+    {
+      "$ref": "#/$defs/ExecutionPrincipalRegistrationV1"
+    },
+    {
+      "$ref": "#/$defs/ScheduledExecutionAuthorityV1"
+    },
+    {
+      "$ref": "#/$defs/ExecutionLimitsPolicyV1"
     }
   ],
   "$defs": {
@@ -297,7 +306,8 @@
         "identity.recover",
         "application.read",
         "integration.manage",
-        "application.qualify"
+        "application.qualify",
+        "execution_limits.manage"
       ]
     },
     "RemitId": {
@@ -1860,6 +1870,16 @@
         },
         "inference_budget_window": {
           "const": "calendar_month_utc"
+        },
+        "execution_limits": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ExecutionLimitsPolicyV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -1877,8 +1897,105 @@
         "artifact",
         "federation",
         "inference_budget_limit_microusd",
-        "inference_budget_window"
+        "inference_budget_window",
+        "execution_limits"
       ]
+    },
+    "ExecutionLimitsPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_active_cases",
+        "max_active_cases_per_job",
+        "max_active_cases_per_connection",
+        "default_max_active_ms",
+        "job_spend_limit_microusd"
+      ],
+      "properties": {
+        "max_active_cases": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "max_active_cases_per_job": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "max_active_cases_per_connection": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1
+        },
+        "default_max_active_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 900000
+        },
+        "job_spend_limit_microusd": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DecimalString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ScheduledExecutionAuthorityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "schedule_id",
+        "schedule_revision",
+        "owner_actor_id",
+        "sponsor_actor_id",
+        "approved_scope",
+        "policy_revision",
+        "owner_role_revision",
+        "sponsor_role_revision",
+        "checked_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "identity.scheduled-execution-authority.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "schedule_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "schedule_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "owner_actor_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "sponsor_actor_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "approved_scope": {
+          "$ref": "#/$defs/ScopeV1"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "owner_role_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "sponsor_role_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "checked_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
     },
     "PublicKeyV1": {
       "type": "object",
@@ -1975,7 +2092,9 @@
             "identity_emergency_account",
             "sync_submission_identity",
             "identity_recovery_overlay",
-            "identity_recovery_epoch_state"
+            "identity_recovery_epoch_state",
+            "orchestration_retention_fence",
+            "orchestration_safety_fence"
           ]
         },
         "record_id": {
@@ -1994,6 +2113,38 @@
         "record_id",
         "present",
         "state_after"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "orchestration_retention_fence" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeRetentionFenceV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "orchestration_safety_fence" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:job-orchestration:v1#/$defs/OrchestrationSafetyFenceV1"
+              }
+            }
+          }
+        }
       ]
     },
     "AdminCommandVariantV1": {
@@ -4379,6 +4530,28 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "audience": {
+                "const": "execution"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "scopes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ExecutionTokenScopeV1"
+                },
+                "minItems": 1,
+                "maxItems": 32,
+                "uniqueItems": true
+              }
+            }
+          }
         }
       ]
     },
@@ -4717,7 +4890,9 @@
             "action_admitted",
             "governance_consumed",
             "organization_deleted",
-            "sync_custody_changed"
+            "sync_custody_changed",
+            "runtime_retention_fenced",
+            "orchestration_safety_fenced"
           ]
         },
         "record_after_images": {
@@ -5670,6 +5845,77 @@
         "control_sequence",
         "revocation_generation"
       ]
+    },
+    "ExecutionTokenScopeV1": {
+      "type": "string",
+      "enum": [
+        "execution:authorize",
+        "execution:consume",
+        "execution:read",
+        "runtime:claim",
+        "runtime:read",
+        "runtime:advance",
+        "runtime:heartbeat",
+        "runtime:yield"
+      ]
+    },
+    "ExecutionPrincipalRegistrationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "worker_id",
+        "execution_context",
+        "host",
+        "assignment_id",
+        "assignment_epoch",
+        "recovery_epoch",
+        "allowed_scopes",
+        "registered_at",
+        "expires_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.execution-principal-registration.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "worker_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "host": {
+          "$ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHostV1"
+        },
+        "assignment_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "assignment_epoch": {
+          "$ref": "#/$defs/U64"
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "allowed_scopes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExecutionTokenScopeV1"
+          },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "registered_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "expires_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
     }
   }
 }

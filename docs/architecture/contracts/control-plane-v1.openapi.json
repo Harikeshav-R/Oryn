@@ -5726,6 +5726,1867 @@
           }
         }
       }
+    },
+    "/internal/v1/runtime/assignments/{assignment_id}/commands": {
+      "post": {
+        "operationId": "submitRuntimeCommand",
+        "summary": "Submit an internal runtime worker command (claim, heartbeat, commit, yield, control ack)",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "MtlsAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authoritative command result snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeCommandResultV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed command",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale or conflicting revision / control generation",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeProblemV1"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Oversized payload exceeding 256 KiB cap",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/runtime/assignments/{assignment_id}": {
+      "get": {
+        "operationId": "getRuntimeAssignmentSnapshot",
+        "summary": "Fetch the authoritative assignment and execution checkpoint snapshot",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "MtlsAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authoritative assignment and checkpoint snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeSnapshotV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Assignment not found or inaccessible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/runtime/assignments/{assignment_id}/values/{binding_id}": {
+      "put": {
+        "operationId": "uploadRuntimeValue",
+        "summary": "Upload a separately bounded encrypted value blob",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "MtlsAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "binding_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeValueUploadV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Value blob reference recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeValueBlobRefV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or stale CAS",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeProblemV1"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Oversized value exceeding envelope or cumulative caps",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "getMaterializedRuntimeValue",
+        "summary": "Fetch authenticated internal projection of a materialized runtime binding value",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "MtlsAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "binding_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "epoch",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "value_revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Materialized binding and portable value",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeMaterializedValueV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Value unavailable, expired, or stale",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Assignment or restore fence mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./agent-runtime-v1.schema.json#/$defs/RuntimeProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/previews": {
+      "post": {
+        "operationId": "createJobPreview",
+        "summary": "Create a candidate job preview for confirmation",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/JobPreviewRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job preview sealed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobPreviewV1"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Bounded enumeration underway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid preview request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or qualification stale",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable selection or unbounded cost",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/previews/{preview_id}": {
+      "get": {
+        "operationId": "getJobPreview",
+        "summary": "Fetch a sealed job preview",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "preview_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job preview detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobPreviewV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Preview not found or expired",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/previews/{preview_id}/members": {
+      "get": {
+        "operationId": "getJobPreviewMembers",
+        "summary": "Page through sealed members of a preview",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "preview_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of preview members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobMemberPageV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Preview not found or expired",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs": {
+      "post": {
+        "operationId": "startJob",
+        "summary": "Confirm and start an admitted job from a valid preview",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/StartJobCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job admitted and queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobViewV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed start command",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision mismatch, preview consumed, or authority changed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Population digest mismatch or unprocessable preview",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listJobs",
+        "summary": "Page through jobs for the organization",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of jobs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobPageV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{job_id}": {
+      "get": {
+        "operationId": "getJob",
+        "summary": "Fetch an individual job view",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job view",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobViewV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{job_id}/limits": {
+      "post": {
+        "operationId": "updateJobLimits",
+        "summary": "Change limits for a paused job",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/JobLimitChangeV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Job limits updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobViewV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid limit change",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Job not paused or revision mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{job_id}/controls": {
+      "post": {
+        "operationId": "controlJob",
+        "summary": "Pause, resume, or cancel a job or specific cases",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/JobControlCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Control intent recorded and synchronous fence applied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobViewV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed control command",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{job_id}/cases": {
+      "get": {
+        "operationId": "listJobCases",
+        "summary": "Page through cases for a job",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of cases",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/CasePageV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{job_id}/cases/{case_id}": {
+      "get": {
+        "operationId": "getJobCase",
+        "summary": "Fetch view of an individual case",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Case view",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/CaseViewV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Case not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{job_id}/cases/{case_id}/reconciliations": {
+      "post": {
+        "operationId": "reconcileJobCase",
+        "summary": "Reconcile an uncertain case and schedule safe continuation or handoff",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/CaseReconciliationCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Case reconciled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/CaseViewV1"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Reconciliation owner evidence intake underway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed reconciliation command",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Case not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Case revision mismatch or unproven safe dispatch state",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid reconciliation disposition or remaining nodes",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/job-schedules": {
+      "post": {
+        "operationId": "createJobSchedule",
+        "summary": "Create a new draft job schedule",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleMutationV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Schedule created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleDefinitionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid schedule mutation",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable schedule definition",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listJobSchedules",
+        "summary": "Page through schedules for the organization",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of schedule definitions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/SchedulePageV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/job-schedules/{schedule_id}": {
+      "get": {
+        "operationId": "getJobSchedule",
+        "summary": "Fetch an individual schedule definition",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Schedule definition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleDefinitionV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateJobSchedule",
+        "summary": "Update an existing schedule definition",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleMutationV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Schedule updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleDefinitionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid schedule mutation",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable schedule definition",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/job-schedules/{schedule_id}/activations": {
+      "post": {
+        "operationId": "activateJobSchedule",
+        "summary": "Owner activation of an approved schedule",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleActivationV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Schedule activated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleDefinitionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid activation",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision mismatch, scope mismatch, or sponsor confirmation pending",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/job-schedules/{schedule_id}/sponsor-confirmations": {
+      "post": {
+        "operationId": "confirmScheduleSponsor",
+        "summary": "Sponsor confirmation of execution remit for an approved schedule",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleActivationV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sponsor confirmation recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleDefinitionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid confirmation command",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Principal is not the named execution sponsor",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or confirmed scope mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/job-schedules/{schedule_id}/local-consents": {
+      "post": {
+        "operationId": "registerLocalScheduleConsent",
+        "summary": "Register authenticated employee device consent for local schedule placement",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/LocalScheduleBindingV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Local consent registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleDefinitionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid consent binding",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Session or consent revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "revokeLocalScheduleConsent",
+        "summary": "Revoke employee device consent and fence affected local dispatch",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Local consent revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleDefinitionV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/job-schedules/{schedule_id}/controls": {
+      "post": {
+        "operationId": "controlJobSchedule",
+        "summary": "Pause or retire a schedule",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleControlCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Schedule control applied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/ScheduleDefinitionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid schedule control command",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/job-schedules/{schedule_id}/occurrences": {
+      "get": {
+        "operationId": "listScheduleOccurrences",
+        "summary": "Page through recorded occurrences of a schedule",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of occurrences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/OccurrencePageV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schedule not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/job-trigger-events": {
+      "post": {
+        "operationId": "receiveJobTriggerEvent",
+        "summary": "Ingest an authenticated business trigger event for schedule matching",
+        "security": [
+          {
+            "MtlsAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./job-orchestration-v1.schema.json#/$defs/BusinessTriggerEventV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Event ingested and queued for matching",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed event payload",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workload principal not authorized for source",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale event or conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unregistered event type or future skew exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./job-orchestration-v1.schema.json#/$defs/JobProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

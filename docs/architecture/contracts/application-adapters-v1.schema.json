@@ -34,7 +34,18 @@
     { "$ref": "#/$defs/ConnectionRevocationRequestV1" },
     { "$ref": "#/$defs/StageQualificationRequestV1" },
     { "$ref": "#/$defs/ApproveQualificationRequestV1" },
-    { "$ref": "#/$defs/RenewQualificationRequestV1" }
+    { "$ref": "#/$defs/RenewQualificationRequestV1" },
+    { "$ref": "#/$defs/AdapterValueQueryV1" },
+    { "$ref": "#/$defs/AdapterOperationValueV1" },
+    { "$ref": "#/$defs/LocalExecutionReservationV1" },
+    { "$ref": "#/$defs/AcquireExecutionReservationRequestV1" },
+    { "$ref": "#/$defs/RenewExecutionReservationRequestV1" },
+    { "$ref": "#/$defs/ReleaseExecutionReservationRequestV1" },
+    { "$ref": "#/$defs/RevokeExecutionReservationRequestV1" },
+    { "$ref": "#/$defs/ExecutionReservationBoundaryAckV1" },
+    { "$ref": "#/$defs/ApplicationRecordRefV1" },
+    { "$ref": "#/$defs/AdapterRecordSelectionRequestV1" },
+    { "$ref": "#/$defs/AdapterRecordSelectionPageV1" }
   ],
   "$defs": {
     "AdapterErrorCodeV1": {
@@ -62,7 +73,11 @@
         "ADAPTER_ARTIFACT_CHANGED",
         "ADAPTER_CANCELLED",
         "ADAPTER_OUTCOME_UNKNOWN",
-        "ADAPTER_READBACK_UNAVAILABLE"
+        "ADAPTER_READBACK_UNAVAILABLE",
+        "ADAPTER_SELECTION_UNSUPPORTED",
+        "ADAPTER_SELECTION_STALE",
+        "ADAPTER_SELECTION_INCOMPLETE",
+        "ADAPTER_SELECTION_LIMIT_EXCEEDED"
       ]
     },
     "OperationQualificationRefV1": {
@@ -1517,6 +1532,527 @@
       "properties": {
         "attestation": {
           "$ref": "#/$defs/SignedQualificationAttestationV1"
+        }
+      }
+    },
+    "AdapterValueQueryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "execution_context",
+        "action_id",
+        "receipt_id"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "adapter.value-query.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "receipt_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        }
+      }
+    },
+    "AdapterOperationValueV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "execution_context",
+        "action_id",
+        "receipt_id",
+        "output_type",
+        "value",
+        "value_sha256",
+        "evidence",
+        "expires_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "adapter.operation-value.v1"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "receipt_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "output_type": {
+          "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1"
+        },
+        "value": {
+          "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/PortableJsonValueV1"
+        },
+        "value_sha256": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/Sha256Hex"
+        },
+        "evidence": {
+          "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/ValueEvidenceV1"
+        },
+        "expires_at": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "LocalExecutionReservationHolderV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "assignment_id", "assignment_epoch"],
+          "properties": {
+            "kind": { "const": "job" },
+            "assignment_id": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+            },
+            "assignment_epoch": {
+              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/U64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "assist_session_id", "assist_incarnation"],
+          "properties": {
+            "kind": { "const": "assist" },
+            "assist_session_id": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+            },
+            "assist_incarnation": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+            }
+          }
+        }
+      ]
+    },
+    "LocalExecutionReservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "reservation_id",
+        "organization_id",
+        "device_id",
+        "profile_id",
+        "execution_context",
+        "workstation_session_epoch",
+        "holder",
+        "modality",
+        "state",
+        "issued_at",
+        "not_after"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "execution.reservation.v1"
+        },
+        "reservation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "device_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "workstation_session_epoch": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/U64"
+        },
+        "holder": {
+          "$ref": "#/$defs/LocalExecutionReservationHolderV1"
+        },
+        "modality": {
+          "type": "string",
+          "enum": ["browser", "native"]
+        },
+        "state": {
+          "type": "string",
+          "enum": ["reserved", "quiescing", "exclusion_hold", "released"]
+        },
+        "issued_at": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "AcquireExecutionReservationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "command_id",
+        "organization_id",
+        "device_id",
+        "profile_id",
+        "execution_context",
+        "workstation_session_epoch",
+        "holder",
+        "modality"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "execution.reservation-acquire.v1"
+        },
+        "command_id": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "device_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "execution_context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        },
+        "workstation_session_epoch": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/U64"
+        },
+        "holder": {
+          "$ref": "#/$defs/LocalExecutionReservationHolderV1"
+        },
+        "modality": {
+          "type": "string",
+          "enum": ["browser", "native"]
+        }
+      }
+    },
+    "RenewExecutionReservationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "command_id",
+        "reservation_id",
+        "workstation_session_epoch",
+        "holder"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "execution.reservation-renew.v1"
+        },
+        "command_id": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/UUIDv4"
+        },
+        "reservation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "workstation_session_epoch": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/U64"
+        },
+        "holder": {
+          "$ref": "#/$defs/LocalExecutionReservationHolderV1"
+        }
+      }
+    },
+    "ReleaseExecutionReservationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "command_id",
+        "reservation_id",
+        "workstation_session_epoch",
+        "holder"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "execution.reservation-release.v1"
+        },
+        "command_id": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/UUIDv4"
+        },
+        "reservation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "workstation_session_epoch": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/U64"
+        },
+        "holder": {
+          "$ref": "#/$defs/LocalExecutionReservationHolderV1"
+        }
+      }
+    },
+    "RevokeExecutionReservationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "command_id",
+        "reservation_id",
+        "workstation_session_epoch",
+        "holder",
+        "reason_code"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "execution.reservation-revoke.v1"
+        },
+        "command_id": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/UUIDv4"
+        },
+        "reservation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "workstation_session_epoch": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/U64"
+        },
+        "holder": {
+          "$ref": "#/$defs/LocalExecutionReservationHolderV1"
+        },
+        "reason_code": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        }
+      }
+    },
+    "ExecutionReservationBoundaryAckV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "reservation_id",
+        "holder",
+        "executor_incarnation",
+        "action_id",
+        "dispatch_state",
+        "primitive_stopped"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "execution.reservation-boundary-ack.v1"
+        },
+        "reservation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "holder": {
+          "$ref": "#/$defs/LocalExecutionReservationHolderV1"
+        },
+        "executor_incarnation": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "action_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "dispatch_state": {
+          "type": "string"
+        },
+        "primitive_stopped": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ApplicationRecordRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "application_id",
+        "connection_id",
+        "connection_revision",
+        "vendor_account_id",
+        "environment",
+        "record_type",
+        "record_key",
+        "record_identity_sha256",
+        "source_revision"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "application_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "vendor_account_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "production",
+            "simulation"
+          ]
+        },
+        "record_type": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "record_key": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "record_identity_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "source_revision": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "AdapterRecordSelectionRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "selection_session_id",
+        "selection",
+        "cursor",
+        "page_size"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.record-selection-request.v1"
+        },
+        "request_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "selection_session_id": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "selection": {
+          "$ref": "urn:oryn:schemas:job-orchestration:v1#/$defs/JobSelectionSpecV1"
+        },
+        "cursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "AdapterRecordSelectionPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "selection_session_id",
+        "query_sha256",
+        "source_snapshot_ref",
+        "ordering_id",
+        "items",
+        "next_cursor",
+        "selection_complete",
+        "more_available",
+        "expires_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.record-selection-page.v1"
+        },
+        "request_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "selection_session_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "query_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "source_snapshot_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "ordering_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/ApplicationRecordRefV1"
+          }
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "selection_complete": {
+          "type": "boolean"
+        },
+        "more_available": {
+          "type": "boolean"
+        },
+        "expires_at": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
         }
       }
     }

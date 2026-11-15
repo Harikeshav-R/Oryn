@@ -67,7 +67,7 @@ An independent authoritative readback is preferred over runner self-reporting. A
   - **Authoritative Boundary:** Missing or unknown projection references remain explicit qualification blockers. A proposed verification requirement (`VerificationRequirementV1`) may be drafted without a spec reference, but cannot prove execution readiness. Factory never invents an authoritative verification specification.
   - **Binding and verdicts:** The specification reference has `entity_kind = verification_spec` and hashes the RFC 8785 canonical projection body. Each postcondition ID must exist in the pinned source capability. `system_evidence` requires both readback bindings and no reviewer role; `authorized_reviewer` requires a reviewer role, no readback bindings, and supports Stage 3 only. Approval to commit is not an independent postcondition assessment. Predicates use Graph `BusinessConditionV1`, fact definitions, verified-source requirements, and three-valued evaluation. This projection defines discovery and binding, not polling or checkpoint implementation.
 - **Contract Reference #8 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers oracle verification results to [flight-simulator](flight-simulator.md) and [release-governance](release-governance.md).
-- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests submission records (`SignedAdapterSubmissionReceiptV1`) and readback evidence (`SignedAdapterReadbackEvidenceV1`) from [agent-runtime](agent-runtime.md) and [application-adapters](application-adapters.md) under wire schema [`application-adapters-v1.schema.json`](../architecture/contracts/application-adapters-v1.schema.json) (Contract 13), bound to `ExecutionContextV1` (`job` or `assist`). The verifier alone owns source priority, freshness predicates, bounded polling, and final verdicts. The adapter executes one bounded fetch per request (`AdapterReadbackRequestV1`), returning signed evidence, never an authoritative business completion stamp. A `BrowserActionResult.status="completed"` confirms only that the local DOM primitive was dispatched; independent readback is required before issuing `Verified Complete`. An action with `submission_state="unknown"` is classified as `Outcome Unknown`, halting execution and preventing blind retries.
+- **Contract Reference #13 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests submission records (`AdapterSubmissionReceiptV1`) and readback evidence (`SignedAdapterReadbackEvidenceV1`) from [agent-runtime](agent-runtime.md) and [application-adapters](application-adapters.md) under wire schema [`application-adapters-v1.schema.json`](../architecture/contracts/application-adapters-v1.schema.json) (Contract 13), bound to `ExecutionContextV1` (`job` or `assist`). The verifier alone owns source priority, freshness predicates, bounded polling, and final verdicts. The adapter executes one bounded fetch per request (`AdapterReadbackRequestV1`), returning signed evidence, never an authoritative business completion stamp. A `BrowserActionResult.status="completed"` confirms only that the local DOM primitive was dispatched; independent readback is required before issuing `Verified Complete`. An action with `submission_state="unknown"` is classified as `Outcome Unknown`, halting execution and preventing blind retries.
 - **Contract Reference #14 in [Contracts Catalog](../architecture/contracts/README.md):** Delivers verification verdicts and mismatch diagnoses to [job-orchestration](job-orchestration.md) (for batch agent jobs) and to the assist owner / [local-context-hud](local-context-hud.md) (for HUD assist sessions) and [incident-correction-repair](incident-correction-repair.md).
 - **Contract Reference #22 Reference:** Model assistance (`text.reason`) for verification interpretation routes through LiteLLM under [cloud-inference](../architecture/cloud-inference.md); model judgment alone cannot certify business correctness; authoritative readback and deterministic oracle checks are required.
 - **Human Demonstration Assessment Read-Only Boundary:** Postcondition assessments of human demonstrations (`DemonstrationVerificationV1` under Contract 4) establish whether a historical human Task Instance achieved verified business postconditions during procedural discovery. These assessments provide read-only evidence references in [operational-graph](operational-graph.md) and do NOT substitute for runtime Outcome Verification (Contracts 13 and 14) during autonomous agent execution.
@@ -86,12 +86,47 @@ An independent authoritative readback is preferred over runner self-reporting. A
 - **Discrepancy Analyzer:** Computes numerical deltas, missing field lists, and state divergence reports.
 - **Evidence Bundler:** Compiles cryptographic hashes of raw readback payloads to establish tamper-evident proof (`SignedAdapterReadbackEvidenceV1`).
 
+### Runtime Verification Execution Port (`VerificationExecutionPort`)
+Agent Runtime workers submit and poll verification requests via the asynchronous `VerificationExecutionPort`:
+
+```rust
+pub trait VerificationExecutionPort: Send + Sync {
+    fn request<'a>(
+        &'a self,
+        principal: &'a VerifiedPrincipal,
+        request: VerificationRunRequestV1,
+    ) -> impl Future<Output = Result<VerificationRunStatusV1, VerificationErrorV1>> + Send + 'a;
+
+    fn status<'a>(
+        &'a self,
+        principal: &'a VerifiedPrincipal,
+        query: VerificationStatusQueryV1,
+    ) -> impl Future<Output = Result<VerificationRunStatusV1, VerificationErrorV1>> + Send + 'a;
+}
+```
+
+#### Protocol Exchange & Schemas
+- **Run Request (`VerificationRunRequestV1`):**
+  `{schema_id: "verification.run-request.v1", request_id, organization_id, execution_context, agent_version_id, behavior_sha256, requirement_ids, action_ids, checkpoint_revision, environment}`.
+- **Status Query (`VerificationStatusQueryV1`):**
+  `{schema_id: "verification.status-query.v1", organization_id, execution_context, request_id}`.
+- **Status Response (`VerificationRunStatusV1`):** Closed union:
+  - `{schema_id: "verification.run-status.v1", state: "pending", request_id}`
+  - `{schema_id: "verification.run-status.v1", state: "complete", result: VerificationRunResultV1}`
+- **Run Result (`VerificationRunResultV1`):**
+  `{schema_id: "verification.run-result.v1", request_id, verification_id, organization_id, execution_context, behavior_sha256, requirement_results, verdict, evidence_refs, verified_at}`.
+  - Each item in `requirement_results` (`RequirementResultV1`): `{requirement_id, verdict, evidence_refs, limitations}`. Verdicts: `verified`, `mismatch`, `unknown`.
+  - **Aggregate Verdict Rule:** `mismatch` if any required result is `mismatch`; `unknown` if none mismatch but any is `unknown`; otherwise `verified`. Missing requirements cannot produce `verified`.
+- **Closed Error Codes (`VerificationErrorV1`):** `{code, request_id}` with closed variants `VERIFICATION_NOT_AUTHORIZED`, `VERIFICATION_INPUT_INVALID`, `VERIFICATION_UNAVAILABLE`, `VERIFICATION_REQUEST_CONFLICT`.
+- **Bounds:** `requirement_ids`, `action_ids`, and `evidence_refs` cap at 256 items. `limitations` caps at 32 strings of at most 1024 characters.
+- **Idempotency & Orchestrator Governance:** The Verifier owns durable request deduplication by `request_id`. Job Orchestration retrieves verifier-owned records rather than accepting a worker's self-claimed verdict. Mandatory `on_unknown`/`on_mismatch` triggers `pause_case` (halting runner execution to prevent subsequent mutations) while setting the case's authoritative wire state to `Failed` (for mismatch) or `Outcome Unknown` (for unknown), reconciling honest batch reporting with immediate execution safety.
+
 ## State and lifecycle
 
 ### State and Persistence
 - **Persisted State:** Verification specifications, verdict records, readback evidence digests, and mismatch logs in central persistence.
 - **Lifecycle Transitions:** `Awaiting Verification → Fetching Readback → Evaluating Rules → Verdict Issued (Verified / Mismatch / Unknown)`.
-- **Verdict Immutability:** Once a verdict is recorded for a case execution, it is immutable; corrections generate new execution records.
+- **Verdict Immutability & Readback Records:** Once a verdict (`VerificationRunResultV1`) is recorded, it is immutable; it is never overwritten or deleted. Subsequent readback evaluations generate distinct verification-run records (`VerificationRunRequestV1` -> `VerificationRunResultV1`) with new request and result IDs for read-only re-evaluation. An actual new mutation attempt additionally requires an owner-authorized runtime continuation with a new action generation. If a later readback proves that the original mutation effect is verified correct, Job Orchestration may project the case's current state to `Verified Complete` based on that later verdict without rewriting earlier immutable verdict history.
 
 ## Error and edge-case behavior
 

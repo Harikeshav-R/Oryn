@@ -51,12 +51,13 @@ The frontend UI is strictly a presentation and interaction layer; it is never an
 **Catalog reference:** [Cross-Component Contracts Catalog](../architecture/contracts/README.md)
 
 ### Cross-Component Contracts
-- **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes authorized read models, notifications, and audit records from [control-plane](control-plane.md), [operational-graph](operational-graph.md), [workflow-discovery](workflow-discovery.md), and [release-governance](release-governance.md).
+- **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Consumes authorized read models, notifications, and audit records from [control-plane](control-plane.md), [job-orchestration](job-orchestration.md), [operational-graph](operational-graph.md), [workflow-discovery](workflow-discovery.md), and [release-governance](release-governance.md).
+  - **Job & Case Projections:** Ingests `JobViewV1`, `CaseViewV1`, `JobPageV1`, `CasePageV1`, `ScheduleDefinitionV1`, `SchedulePageV1`, and `OccurrencePageV1` via REST endpoints. Renders accurate batch progress counters (verified complete, expectedly rejected, needs clarification, blocked, failed, outcome unknown) derived strictly from authoritative case states without false 100% completion claims.
+  - **Transport & Change Feeds:** Consumes live status changes and urgent notification signals via Control Plane's bounded 25-second HTTP long-polling change feed (`GET /v1/changes`); dedicated job-management WebSockets are not used.
 - **Operational Graph Projections and Operations Map Presentation:** Consumes authorized graph queries (`KnowledgeQueryV1` -> `KnowledgeQueryPageV1`), capability lists, playbook details, business rule histories, and handoff obligations (`HandoffV1`) from [operational-graph](operational-graph.md). Renders the Operations Map visualization with explicit distinction between approved and suggested assets, highlights active conflict restrictions, and presents cross-team handoffs using authorized summaries without disclosing restricted source workflow evidence.
 - **Workflow Discovery and Candidate Review Presentation:** Consumes candidate review models (`workflow.candidate.v1`, `workflow.candidate-revision.v1`) and opportunity projections (`workflow.opportunity.v1`) from [control-plane](control-plane.md) via Contract 18 read endpoints. Presents candidate revision diffs, step graphs, and clarification question inboxes (`ClarificationQuestionV1`). Renders opportunity projections with disclosed financial assumptions (`OpportunityAssumptionsV1`) and applies cohort privacy suppression when contributor cohort size is below threshold. Dispatches reviewer commands (`CandidateEditV1`, `CandidateApprovalV1`, `CandidateRejectionV1`) with optimistic concurrency (`expected_revision`).
 - **Contract Reference #22 Reference:** Command center reporting excludes private raw captures, audio, and transcripts; any model-assisted analytical synthesis routes through LiteLLM under [cloud-inference](../architecture/cloud-inference.md).
-- **Command Dispatch Contract:** Submits user commands (job triggers, approval actions) to [control-plane](control-plane.md) using strongly typed API contracts.
-- **Notification WebSocket:** Subscribes to real-time notification streams for urgent approval requests and incident alerts.
+- **Command Dispatch Contract:** Submits user commands (job start, pause, resume, cancel, schedule mutations, approval actions) to [control-plane](control-plane.md) using strongly typed API contracts with UUIDv7 Idempotency-Key headers.
 ## Trust and deployment boundaries
 
 ### Process and Security Boundaries
@@ -77,7 +78,7 @@ The frontend UI is strictly a presentation and interaction layer; it is never an
 
 ### State and Persistence
 - **Persisted State:** Minimal client-side session cache; all authoritative state resides in backend control plane databases.
-- **Lifecycle Transitions:** Reacts to real-time WebSocket events to update dashboard states without full page reloads.
+- **Lifecycle Transitions:** Reacts to bounded long-polling change feed updates (`GET /v1/changes`) to update dashboard states without full page reloads.
 - **Session Expiration:** Automatically clears local caches and redirects to login upon session expiration or token revocation.
 
 ## Error and edge-case behavior
