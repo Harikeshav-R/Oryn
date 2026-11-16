@@ -340,6 +340,7 @@
           "version_id": "018f0000-0000-7000-8000-000000000017",
           "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
         },
+        "production_equivalence_status": "established",
         "fidelity_gaps": [
           "sandbox_email_suppressed"
         ]

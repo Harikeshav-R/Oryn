@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-14
+- **Amended by:** [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md)
 - **Deciders:** Oryn Architecture Guild, Application Adapters Owner, Identity Policy Owner, Agent Runtime Owner, Control Plane Owner, Infrastructure Security Lead
 - **Consulted:** Desktop Shell Owner, Browser Extension Owner, Outcome Verification Owner, Agent Factory Owner
 - **Informed:** All Engineering Teams
@@ -98,3 +99,5 @@ This decision explicitly amends relevant execution, credential, and reservation 
 - Operational overhead of 30-day qualification renewals and evidence verification.
 - Increased latency from out-of-process credential egress mediation.
 - Stricter failure modes: ambiguous network drops require explicit workflow reconciliation rather than automatic transparent retries.
+
+*(Scope Amendment — 2026-11-15): [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md) amends `AdapterEnvironmentBindingV1` with nullable `production_qualification_ref`, nullable `configuration_equivalence_evidence_ref`, and `production_equivalence_status: "established" | "not_established"`. Missing production qualification allows behavioral evaluation in Flight Simulator, but Release Governance strictly denies production readiness until equivalence is established and verified. Bumps local IPC baselines: `browser-bridge.v1` major 1, minor 6 and `shell-adapter.v1` major 1, minor 2 negotiating `evaluation_execution_v1`.*

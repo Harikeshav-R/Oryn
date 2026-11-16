@@ -23,6 +23,9 @@
       "$ref": "#/$defs/GuidanceManifestPageV1"
     },
     {
+      "$ref": "#/$defs/AssistEvaluationBundleV1"
+    },
+    {
       "$ref": "urn:oryn:schemas:contribution-sync:v1#/$defs/SyncProblemV1"
     }
   ],
@@ -429,9 +432,43 @@
         }
       }
     },
+    "AssistPlanActionBindingV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "literal" },
+            "value": { "$ref": "#/$defs/Scalar" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "variable_name"],
+          "properties": {
+            "kind": { "const": "variable" },
+            "variable_name": { "$ref": "#/$defs/Identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "source_action_id", "json_pointer"],
+          "properties": {
+            "kind": { "const": "read_result" },
+            "source_action_id": { "$ref": "#/$defs/Identifier" },
+            "json_pointer": { "type": "string" }
+          }
+        }
+      ]
+    },
     "AssistPlanActionV1": {
       "type": "object",
       "required": [
+        "action_id",
         "step_id",
         "action_order",
         "operation",
@@ -440,10 +477,18 @@
         "declared_effects",
         "stopping_point",
         "timeout_ms",
-        "expected_state"
+        "expected_state",
+        "argument_bindings",
+        "result_bindings",
+        "capability_ref",
+        "adapter_operation_id",
+        "verification_requirement_ids"
       ],
       "additionalProperties": false,
       "properties": {
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
         "step_id": {
           "$ref": "#/$defs/Identifier"
         },
@@ -492,6 +537,36 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 30000
+        },
+        "argument_bindings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/AssistPlanActionBindingV1"
+          }
+        },
+        "result_bindings": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capability_ref": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "adapter_operation_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "verification_requirement_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 64
         },
         "expected_state": {
           "type": "object",
@@ -646,23 +721,27 @@
         }
       }
     },
-    "AssistPlanV1": {
+    "AssistExecutableBodyV1": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
+        "organization_id",
         "assist_plan_id",
         "assist_plan_version",
-        "plan_sha256",
         "playbook_version",
-        "owner_approval_ref",
         "allowed_applications",
         "allowed_transitions",
         "allowed_record_types",
         "variables",
         "actions",
-        "eligibility"
+        "guidance_semantics",
+        "verification_requirements",
+        "dependencies"
       ],
-      "additionalProperties": false,
       "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
         "assist_plan_id": {
           "$ref": "#/$defs/Identifier"
         },
@@ -671,16 +750,8 @@
           "minLength": 1,
           "maxLength": 64
         },
-        "plan_sha256": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128
-        },
         "playbook_version": {
           "$ref": "#/$defs/PlaybookVersion"
-        },
-        "owner_approval_ref": {
-          "$ref": "#/$defs/Identifier"
         },
         "allowed_applications": {
           "type": "array",
@@ -747,8 +818,189 @@
             "$ref": "#/$defs/AssistPlanActionV1"
           }
         },
+        "guidance_semantics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "step_edges",
+            "application_profiles",
+            "rule_versions"
+          ],
+          "properties": {
+            "step_edges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "from_step_id",
+                  "to_step_id"
+                ],
+                "properties": {
+                  "from_step_id": {
+                    "$ref": "#/$defs/Identifier"
+                  },
+                  "to_step_id": {
+                    "$ref": "#/$defs/Identifier"
+                  }
+                }
+              }
+            },
+            "application_profiles": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            },
+            "rule_versions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            }
+          }
+        },
+        "verification_requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "dependency_id",
+              "kind",
+              "version_id",
+              "content_sha256"
+            ],
+            "properties": {
+              "dependency_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "version_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "content_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "maxItems": 256
+        }
+      }
+    },
+    "AssistPlanV1": {
+      "type": "object",
+      "required": [
+        "body",
+        "plan_sha256",
+        "owner_approval_ref",
+        "eligibility"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "$ref": "#/$defs/AssistExecutableBodyV1"
+        },
+        "plan_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "owner_approval_ref": {
+          "$ref": "#/$defs/Identifier"
+        },
         "eligibility": {
           "$ref": "#/$defs/AssistPlanEligibilityV1"
+        }
+      }
+    },
+    "AssistEvaluationBundleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "body",
+        "plan_sha256",
+        "dependency_manifest",
+        "attestation",
+        "evaluation_target"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "hud.assist-evaluation-bundle.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "body": {
+          "$ref": "#/$defs/AssistExecutableBodyV1"
+        },
+        "plan_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "dependency_manifest": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entity_kind",
+              "entity_id",
+              "version_id",
+              "content_sha256"
+            ],
+            "properties": {
+              "entity_kind": {
+                "type": "string"
+              },
+              "entity_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "version_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "content_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        "attestation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key_id",
+            "signature",
+            "signed_at"
+          ],
+          "properties": {
+            "key_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "signature": {
+              "$ref": "#/$defs/Signature"
+            },
+            "signed_at": {
+              "$ref": "#/$defs/Utc"
+            }
+          }
+        },
+        "evaluation_target": {
+          "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetV1"
         }
       }
     },

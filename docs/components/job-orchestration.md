@@ -73,7 +73,7 @@ Job operations must be durable, recoverable, and idempotent. Orchestration owns 
   }))
   ```
 - **Contract Reference #9 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests eligible active version and scope from [release-governance](release-governance.md) via `ReleaseJobAdmissionPort::resolve`, returning `JobReleaseEligibilityV1`.
-- **Contract Reference #10 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches bounded work assignments (`RuntimeAssignmentV1`) to [agent-runtime](agent-runtime.md) supplying `ExecutionContextV1`. Receives checkpoint commits via `RuntimeCheckpointPort` and value uploads/queries via `RuntimeValuePort`.
+- **Contract Reference #10 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches bounded work assignments (`RuntimeAssignmentV1`) to [agent-runtime](agent-runtime.md) supplying `ExecutionContextV1`. Receives checkpoint commits via `RuntimeCheckpointPort` and value uploads/queries via `RuntimeValuePort`. For production jobs, `orchestration_execution` is owned by an `orchestration_case` (`environment = 'production'`). For Flight Simulator evaluations ([flight-simulator](flight-simulator.md)), `orchestration_execution` is owned by a `simulation_attempt` (`environment = 'simulation'`) without fabricating dummy jobs or cases; both environments share the same checkpoint, encrypted value custody, action generation CAS, and runtime worker seams.
 - **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Synchronizes approval wait states and admission fence status with [identity-policy](identity-policy.md). Ingests `ScheduledExecutionAuthorityV1` for recurring runs. Tier 3 proposals use `SignedApprovalProposalV1` and are governed by `pending_approval_seconds` bounds. Synchronous safety containment writes `OrchestrationSafetyFenceV1` to Identity authority recovery journals.
 - **Contract Reference #14 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests independent verification verdicts from [outcome-verification](outcome-verification.md) to transition case states. Immutable historical verdicts are preserved; subsequent readback evaluations generate distinct verifier request and result records.
 - **Contract Reference #18 in [Contracts Catalog](../architecture/contracts/README.md):** Normative wire contract `urn:oryn:schemas:job-orchestration:v1` ([job-orchestration-v1.schema.json](../architecture/contracts/job-orchestration-v1.schema.json)) and associated conformance suite ([job-orchestration-v1.fixtures.json](../architecture/contracts/job-orchestration-v1.fixtures.json)).
@@ -596,8 +596,10 @@ CREATE TABLE orchestration_action_intent (
 CREATE TABLE orchestration_execution (
     organization_id UUID NOT NULL,
     execution_id UUID NOT NULL,
-    job_id TEXT NOT NULL,
-    case_id TEXT NOT NULL,
+    environment TEXT NOT NULL,
+    job_id TEXT,
+    case_id TEXT,
+    evaluation_attempt_id UUID,
     execution_context JSONB NOT NULL,
     execution_context_sha256 TEXT NOT NULL,
     agent_version_id UUID NOT NULL,
@@ -623,6 +625,13 @@ CREATE TABLE orchestration_execution (
     PRIMARY KEY (organization_id, execution_id),
     CONSTRAINT fk_exec_case FOREIGN KEY (organization_id, case_id)
         REFERENCES orchestration_case (organization_id, case_id) ON DELETE CASCADE,
+    CONSTRAINT fk_exec_sim_attempt FOREIGN KEY (organization_id, evaluation_attempt_id)
+        REFERENCES simulation_attempt (organization_id, attempt_id) ON DELETE CASCADE,
+    CONSTRAINT ck_orchestration_execution_owner CHECK (
+        (environment = 'production' AND job_id IS NOT NULL AND case_id IS NOT NULL AND evaluation_attempt_id IS NULL) OR
+        (environment = 'simulation' AND job_id IS NULL AND case_id IS NULL AND evaluation_attempt_id IS NOT NULL)
+    ),
+    CONSTRAINT ck_orchestration_execution_env CHECK (environment IN ('production', 'simulation')),
     CONSTRAINT ck_orchestration_phase CHECK (phase IN ('ready', 'effect_pending', 'waiting', 'held', 'completion_requested', 'stopped'))
 );
 

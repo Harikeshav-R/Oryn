@@ -25,7 +25,7 @@ The helper ingests sanitized, permitted screen observations from [local-privacy-
 - Published, access-filtered guidance bundles (`GuidanceBundleV1`) from [operational-graph](operational-graph.md) via [contribution-sync](contribution-sync.md) under Contract 3.
 - Signed guidance access leases (`SignedGuidanceAccessLeaseV1`, schema `hud.guidance-access-lease.v1`) issued by [identity-policy](identity-policy.md) governing offline and online cache read eligibility (capped at 24 hours).
 - Confirmed personal commitment projections (`CommitmentReminderProjection`) and projection changes (`CommitmentProjectionChangeV1`) from [meeting-intelligence](meeting-intelligence.md) via Contract 23.
-- Employee guidance interactions (`GuidanceInteraction`) and presentation lifecycle events from [desktop-shell](desktop-shell.md) via Contract 20 (`shell-hud.v1`, major 1, minor 0).
+- Employee guidance interactions (`GuidanceInteraction`) and presentation lifecycle events from [desktop-shell](desktop-shell.md) via Contract 20 (`shell-hud.v1`, major 1, minor 1).
 - Live target presence and physical desktop coordinate rectangles (`BrowserTargetResult`) from [browser-extension](browser-extension.md) relayed via the privacy gate (Contract 21).
 - Action authorization tokens and item-level approval receipts from [identity-policy](identity-policy.md) bound to canonical `action_sha256` proposal digests (Contract 11).
 - Semantic reasoning results (`hud.context-interpretation.v1`, `hud.demonstration-summary.v1`, `hud.step-explanation.v1`) from the governed LiteLLM cloud gateway via the privacy helper edge client under Contract 22 (`text.reason`).
@@ -174,7 +174,7 @@ Central playbook publication in Operational Graph does not automatically qualify
   - Offline rules: Employees may continue reading locally cached playbooks offline under a valid, unexpired access lease. Executing new assisted or autonomous actions is strictly prohibited while offline. Missing or expired leases hide restricted guidance and block resume.
 
 ### Contract 20: Desktop Shell Guidance Presentation Interface (`shell-hud.v1`)
-The desktop shell host creates two private inherited byte channels at launch (`shell-hud.v1`, major 1, minor 0):
+The desktop shell host creates two private inherited byte channels at launch (`shell-hud.v1`, major 1, minor 1, negotiating `assist_executable_body_v1` and `evaluation_execution_v1`):
 1. **Control/Presentation Channel:** Max 256 KiB frame, 64 queued messages / 1 MiB. Carries `PresentGuidance`, `ClearGuidance`, and content-free heartbeats every 100 ms. 500 ms silence or EOF invalidates presentation and pauses pending assists.
 2. **Data Channel:** Max 1 MiB frame, 16 queued messages / 8 MiB. Carries bulk bundle transfers, manual search queries, interaction feedback receipts, and streaming generation chunk intake (`HudGenerationChunkV1`).
 - **Generation Chunk Intake (`HudGenerationChunkV1`):** Streams semantic explanations and long-form summaries progressively across the Data Channel. Each chunk specifies `generation_id`, `chunk_index`, `is_last`, and `text_delta`. The desktop shell renders text progressively as chunks arrive without interrupting control heartbeats or highlight refreshes on the control channel.
@@ -198,8 +198,21 @@ Consumes confirmed personal obligations from [meeting-intelligence](meeting-inte
 - **Updates (`CommitmentProjectionChangeV1`):** Supports `upsert` and `remove` changes. Supporting transcript edits that trigger `needs_reconfirmation` immediately remove the projection until reconfirmed. Removals carry no obligation title.
 - **Feedback (`ApplyReminderInteractionV1`):** Dispatches occurrence-bound commands (`delivered`, `dismiss`, `snooze`, `complete`, `cancel`) to update meeting storage transactionally.
 
-### Contracts 11–13: Assisted Execution and Authorization Interfaces
-Governs supervised execution of approved assist plans (`AssistPlanV1`).
+### Contracts 11–13: Assisted Execution, Executable Bodies, and Authorization Interfaces
+Governs supervised execution of approved assist plans (`AssistPlanV1`) and their candidate evaluation under Flight Simulator:
+- **Assist Executable Body (`AssistExecutableBodyV1`):**
+  Defined under schema `guidance.assist-executable-body.v1` as the canonical immutable behavior definition:
+  `{organization_id, assist_plan_id, assist_plan_version, playbook_version, allowed_applications, allowed_transitions, allowed_record_types, variables, actions, guidance_semantics, verification_requirements, dependencies}`.
+  - `guidance_semantics`: Pinned step predicates, edges, application profile definitions, and rule versions used by the deterministic reducer; excludes display copy, eligibility, and signatures.
+  - `actions`: Extended with `action_id`, `argument_bindings`, `result_bindings`, `capability_ref`, `adapter_operation_id`, and `verification_requirement_ids`. Bindings use a closed union of approved literal, declared input variable, or prior read-result JSON pointer.
+- **Canonical Behavior Hash:**
+  `plan_sha256 = SHA256(RFC8785(AssistExecutableBodyV1))` (lowercase 64-character hex).
+- **Published Assist Plan (`AssistPlanV1`):**
+  Structure: `{body: AssistExecutableBodyV1, plan_sha256, owner_approval_ref, eligibility: AssistPlanEligibilityV1}`. Release-owned eligibility binds the exact `plan_sha256` and evaluation report; adding eligibility cannot alter behavior identity.
+- **Evaluation Bundle (`AssistEvaluationBundleV1`):**
+  Schema `hud.assist-evaluation-bundle.v1`: `{schema_id, organization_id, body, plan_sha256, dependency_manifest, attestation, evaluation_target}`. Submitted to Flight Simulator for assist candidate evaluation before release.
+- **Dual-Engine Simulation Seam:**
+  In `simulation` environment, the identical deterministic reducer seam `reduce(state, input, now)` evaluates assist candidates against scripted presentation inputs and generation-bound synthetic effects on enrolled lab devices. No forked assist interpreter exists.
 - **Closed Execution Context Union (`ExecutionContextV1`):** Used uniformly across reservation requests, action requests, authorization tokens, receipts, and verifier queries:
   ```json
   {
@@ -210,7 +223,7 @@ Governs supervised execution of approved assist plans (`AssistPlanV1`).
     "playbook_version": "sha256-e9102c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b"
   }
   ```
-- **Exclusive Device Reservation:** Both agent jobs and HUD assists participate in the unified workstation execution reservation managed by `LocalExecutionReservationBroker` in [local-privacy-storage](local-privacy-storage.md), keyed by `(device_id, context, modality, epoch)`. Assist sessions acquire reservations with holder variant `{kind: "assist", assist_session_id, assist_incarnation}` (where `assist_incarnation` is a fresh UUID per HUD assist executor), distinct from batch runtime jobs (`{kind: "job", assignment_id, assignment_epoch}`). Independent parallel job and assist execution locks are strictly prohibited; competing requests fail closed.
+- **Exclusive Device Reservation:** Both agent jobs and HUD assists participate in the unified workstation execution reservation managed by `LocalExecutionReservationBroker` in [local-privacy-storage](local-privacy-storage.md), keyed by `(device_id, context, modality, epoch)`. Assist sessions acquire reservations with holder variant `{kind: "assist", assist_session_id, assist_incarnation}` (where `assist_incarnation` is a fresh UUID per HUD assist executor), distinct from batch runtime jobs (`{kind: "job", assignment_id, assignment_epoch}`) and evaluation attempts (`{kind: "evaluation", attempt_id, assignment_id, assignment_epoch}`). Independent parallel job, assist, and evaluation execution locks are strictly prohibited; competing requests fail closed.
 - **Reducer vs Runtime Separation:** The HUD assist session lifecycle and step progression are owned entirely by `oryn-hud-helper`'s single deterministic local reducer, whereas batch autonomous jobs are owned centrally by Job Orchestration and evaluated by `oryn-runtime-worker`. Neither system impersonates the other or bypasses the common reservation broker.
 - **Canonical Action Digest:** Computed identically across adapter, helper, and extension:
   ```
@@ -222,8 +235,8 @@ Governs supervised execution of approved assist plans (`AssistPlanV1`).
   ```
   Encoded as string prefix `sha256_` followed by 64 lowercase hex digits.
 - **Execution Flow & Stopping Points:** `start_assist` previews affected fields and stopping points, then acquires the common workstation execution reservation. Tier 2 mutations require confirmed plan preview; Tier 3 consequential mutations halt at pre-declared stopping points and require a separate item-level `review_and_submit` action displaying exact parameter diffs and `proposal_digest` (`sha256-...`).
-  - **Browser Actuation:** Dispatches over `browser-bridge.v1` (major 1, minor 5 with capabilities `identity_authority_v1`, `local_execution_reservation_v1`, and `execution_reservation_lease_v1`), verifying DNR navigation guards, extension reservation, and passing the complete `{authorization, approval, admission}` authority bundle per [ADR-0011](../adr/0011-identity-authority-and-approval-fencing.md). Result messages return the required `execution_context` (`ExecutionContextV1`).
-  - **Native Stage 3 Semantic Actuation:** Dispatches over private inherited byte channel `shell-adapter.v1` (major 1, minor 1) via Shell-supervised `oryn-adapter-worker`. Closed semantic primitives: `read|invoke|set_value|select|toggle`. Binds signed app identity, process/window, visible foreground workspace, surface generation, exact expected state, and signed authority bundle `{authorization, approval, admission}`. Coordinate/fuzzy fallback, OCR targeting, or keyboard/mouse injection is strictly prohibited.
+  - **Browser Actuation:** Dispatches over `browser-bridge.v1` (major 1, minor 6 with capabilities `identity_authority_v1`, `local_execution_reservation_v1`, `execution_reservation_lease_v1`, and `evaluation_execution_v1`), verifying DNR navigation guards, extension reservation, and passing the complete `{authorization, approval, admission}` authority bundle per [ADR-0011](../adr/0011-identity-authority-and-approval-fencing.md). Result messages return the required `execution_context` (`ExecutionContextV1`).
+  - **Native Stage 3 Semantic Actuation:** Dispatches over private inherited byte channel `shell-adapter.v1` (major 1, minor 2) via Shell-supervised `oryn-adapter-worker`. Closed semantic primitives: `read|invoke|set_value|select|toggle`. Binds signed app identity, process/window, visible foreground workspace, surface generation, exact expected state, and signed authority bundle `{authorization, approval, admission}`. Coordinate/fuzzy fallback, OCR targeting, or keyboard/mouse injection is strictly prohibited.
   - **Restricted Denial:** Tier 4 restricted actions are unconditionally denied.
 - **Receipts:** Minimal durable receipts (`action_id`, `execution_context`, `action_sha256`, `authorization_ref`, `approval_ref`, `timestamp_utc`, `submission_state`, `evidence_ref`) contain zero customer business data, are content-free, and survive retention-off mode. Raw observations never become a central execution transcript.
 
@@ -395,7 +408,7 @@ Assisted execution coordinates bounded macros under explicit employee supervisio
 
 | Error Code Literal | Category | Trigger Condition | System Behavior & Safe Outcome |
 |---|---|---|---|
-| `HUD_PROTOCOL_INCOMPATIBLE` | Fatal | Peer advertises protocol version or minor other than `privacy-context.v1` (1.2) or `shell-hud.v1` (1.0). | Helper terminates connection immediately; logs fatal diagnostic; fails closed without fallback. |
+| `HUD_PROTOCOL_INCOMPATIBLE` | Fatal | Peer advertises protocol version or minor other than `privacy-context.v1` (1.2) or `shell-hud.v1` (1.1). | Helper terminates connection immediately; logs fatal diagnostic; fails closed without fallback. |
 | `HUD_INVALID_MESSAGE` | Fatal | Malformed JSON, frame exceeding 1 MiB, invalid UTF-8, or missing required envelope fields. | Closes affected channel; invalidates session state; requests clean reconnection. |
 | `HUD_CONTEXT_UNAVAILABLE` | Transient | Active application window is excluded, minimized, or obscured by unpermitted windows. | Clears guidance cards and highlights; transitions guide to `Suspended`; suspends inference. |
 | `HUD_CONTEXT_STALE` | Transient | Observation sequence mismatch, superseded surface generation, or document generation change. | Discards pending suggestions; suppresses coordinate highlights; requests fresh baseline. |

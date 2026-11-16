@@ -75,15 +75,72 @@
         "RUNTIME_SANDBOX_UNAVAILABLE"
       ]
     },
-    "ExecutionContextJobV1": {
-      "allOf": [
-        { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1" },
+    "RuntimeExecutionContextV1": {
+      "oneOf": [
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "job_id",
+            "case_id",
+            "agent_version"
+          ],
           "properties": {
-            "kind": { "const": "job" }
-          },
-          "required": ["kind"]
+            "kind": {
+              "const": "job"
+            },
+            "job_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "case_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "agent_version": {
+              "$ref": "#/$defs/Identifier"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "evaluation_id",
+            "scenario_version_id",
+            "attempt_id",
+            "evaluation_target"
+          ],
+          "properties": {
+            "kind": {
+              "const": "evaluation"
+            },
+            "evaluation_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "scenario_version_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "attempt_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "evaluation_target": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "agent_version"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "agent"
+                },
+                "agent_version": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              }
+            }
+          }
         }
       ]
     },
@@ -140,7 +197,7 @@
         "assignment_id": { "$ref": "#/$defs/UUID" },
         "assignment_epoch": { "$ref": "#/$defs/U64" },
         "worker_id": { "$ref": "#/$defs/Identifier" },
-        "execution_context": { "$ref": "#/$defs/ExecutionContextJobV1" },
+        "execution_context": { "$ref": "#/$defs/RuntimeExecutionContextV1" },
         "environment": { "type": "string", "enum": ["production", "simulation"] },
         "agent_version_id": { "$ref": "#/$defs/UUID" },
         "behavior_sha256": { "$ref": "#/$defs/Sha256Hex" },
@@ -170,6 +227,36 @@
         "limits",
         "issued_at",
         "lease_not_after"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "execution_context": {
+                "properties": { "kind": { "const": "job" } }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "environment": { "const": "production" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "execution_context": {
+                "properties": { "kind": { "const": "evaluation" } }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "environment": { "const": "simulation" }
+            }
+          }
+        }
       ]
     },
     "RuntimeIterationFrameV1": {
@@ -388,7 +475,7 @@
         "schema_id": { "const": "runtime.checkpoint.v1" },
         "organization_id": { "$ref": "#/$defs/UUID" },
         "execution_id": { "$ref": "#/$defs/UUID" },
-        "execution_context": { "$ref": "#/$defs/ExecutionContextJobV1" },
+        "execution_context": { "$ref": "#/$defs/RuntimeExecutionContextV1" },
         "agent_version_id": { "$ref": "#/$defs/UUID" },
         "behavior_sha256": { "$ref": "#/$defs/Sha256Hex" },
         "revision": { "$ref": "#/$defs/U64" },

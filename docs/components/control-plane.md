@@ -201,6 +201,31 @@ Control Plane exposes the following canonical endpoints (documented in `docs/arc
 - `PUT /internal/v1/runtime/assignments/{assignment_id}/values/{binding_id}`: Uploads encrypted typed checkpoint value ciphertext (`RuntimeMaterializedValueV1`), bounded to 256 KiB. AAD cryptographically binds organization, execution ID, binding ID, value revision, and behavior digest.
 - `GET /internal/v1/runtime/assignments/{assignment_id}/values/{binding_id}`: Retrieves encrypted typed checkpoint value ciphertext for active execution or authorized review. Access is denied if source expired, terminal 7-day retention elapsed, or retention fence recorded.
 
+#### 9. Flight Simulator and Scenario Evaluation Management
+Operates the 21 canonical simulation management endpoints under BFF authentication, CSRF, scoped `VerifiedPrincipal`, UUIDv7 command idempotency, and 256 KiB JSON envelope limits:
+- `POST /v1/simulator/suites`: Creates an owner-scoped suite draft (`CreateSuiteDraftRequestV1`). Requires `simulation.edit`.
+- `GET /v1/simulator/suites`: Authorized cursor-paginated suite selector (100-entry / 256 KiB limit). Requires `simulation.read`.
+- `GET /v1/simulator/suites/{suite_id}`: Retrieves authorized draft, revisions, coverage, and seal status. Requires `simulation.read`.
+- `POST /v1/simulator/suites/{suite_id}/scenarios`: Appends an immutable scenario version under expected draft revision (`ScenarioVersionV1`). Requires `simulation.edit`.
+- `POST /v1/simulator/suites/{suite_id}/scenario-decisions`: Accepts/rejects scenario version with reason (`ScenarioDecisionRequestV1`). Requires `simulation.edit` or `simulation.review`.
+- `POST /v1/simulator/suites/{suite_id}/generations`: Requests bounded draft scenario generation; returns 202 `OperationV1`. Requires `simulation.edit`.
+- `POST /v1/simulator/suites/{suite_id}/seals`: Workflow Owner or delegate seals exact revision and digest after validation (`SealSuiteRequestV1`); returns `SuiteSealReceiptV1`. Requires `simulation.review`.
+- `POST /v1/simulator/fixtures`: Creates immutable fixture metadata and bounded upload intent (`CreateFixtureIntentRequestV1`). Requires `simulation.edit`.
+- `GET /v1/simulator/fixtures/{fixture_id}`: Retrieves authorized provenance, typed review projection, content digest, and artifact reference (`FixtureResponseV1`). Requires `simulation.read`.
+- `GET /v1/simulator/artifacts/{artifact_id}/content`: Independently authorized purpose/audience-bound artifact content (at most 1 MiB). Requires `simulation.read`.
+- `PUT /v1/simulator/fixtures/{fixture_id}/content`: Uploads binary fixture payload (<= 1 MiB `application/octet-stream`) with declared SHA-256 and length; quarantined until validation passes. Requires `simulation.edit`.
+- `POST /v1/simulator/evaluations`: Starts exact target/suite/mode evaluation with bounded resource/spend request (`StartEvaluationRequestV1`); returns 202 `OperationV1`. Requires `simulation.evaluate`.
+- `GET /v1/simulator/evaluations`: Authorized cursor-paginated evaluation history, filterable by target and suite. Requires `simulation.read`.
+- `GET /v1/simulator/evaluations/{evaluation_id}`: Bounded evaluation progress summary, trial counts, and blockers (`EvaluationProgressResponseV1`). Requires `simulation.read`.
+- `POST /v1/simulator/evaluations/{evaluation_id}/cancellations`: Requests cooperative evaluation cancellation (`CancelEvaluationRequestV1`); executes synchronous control fence before 202 acknowledgment. Requires `simulation.evaluate`.
+- `GET /v1/simulator/evaluations/{evaluation_id}/report`: Retrieves immutable `SignedEvaluationReportV1` and live computed eligibility projection. Requires `simulation.read`.
+- `GET /v1/simulator/evaluations/{evaluation_id}/scenario-results`: Authorized cursor pages of immutable result records (at most 100 entries / 256 KiB). Requires `simulation.read`.
+- `GET /v1/simulator/evaluations/{evaluation_id}/scenarios/{scenario_version_id}/replay`: Authorized paginated replay metadata (`ReplayPageResponseV1`). Requires `simulation.read`.
+- `POST /v1/simulator/comparisons`: Evaluates comparative performance between two visible fixed reports (`CreateComparisonRequestV1`); returns `EvaluationComparisonV1`. Requires `simulation.read`.
+- `POST /v1/simulator/regression-requirements`: Incident/repair owner submits a versioned regression requirement (`SimulationRegressionRequirementV1`). Requires `simulation.edit`.
+- `PUT /v1/simulator/policy`: Configures tenant simulator concurrency and spend limits (`SimulatorPolicyRequestV1`) with optimistic concurrency. Requires `simulation.manage_policy`.
+- **Error Mapping:** Error responses return RFC 7807 problem details containing `SimulationProblemV1` codes (`SIMULATION_NOT_AUTHORIZED`, `SIMULATION_REVISION_CONFLICT`, `SIMULATION_TARGET_INVALID`, `SIMULATION_SUITE_INCOMPLETE`, `SIMULATION_SOURCE_UNAVAILABLE`, `SIMULATION_POLICY_CONFLICT`, `SIMULATION_ENVIRONMENT_UNAVAILABLE`, `SIMULATION_FIDELITY_GAP`, `SIMULATION_RESET_UNVERIFIED`, `SIMULATION_INPUT_RESTRICTED`, `SIMULATION_LIMIT_EXCEEDED`, `SIMULATION_BUDGET_EXCEEDED`, `SIMULATION_ASSIGNMENT_STALE`, `SIMULATION_EVIDENCE_EXPIRED`, `SIMULATION_NOT_COMPARABLE`).
+
 
 ### Product Requirements and Acceptance Mappings
 Control Plane fulfills core enterprise coordination, tenant isolation, and privacy governance requirements defined in [PRODUCT.md](../../PRODUCT.md):

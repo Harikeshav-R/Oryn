@@ -107,7 +107,9 @@ pub trait VerificationExecutionPort: Send + Sync {
 
 #### Protocol Exchange & Schemas
 - **Run Request (`VerificationRunRequestV1`):**
-  `{schema_id: "verification.run-request.v1", request_id, organization_id, execution_context, agent_version_id, behavior_sha256, requirement_ids, action_ids, checkpoint_revision, environment}`.
+  `{schema_id: "verification.run-request.v1", request_id, organization_id, execution_context, evaluation_target, behavior_sha256, requirement_ids, action_ids, checkpoint_revision, environment, scenario_expectation_ref}`.
+  - `evaluation_target`: Required `EvaluationTargetV1` (closed union: `{ kind: "agent", agent_version: UUID }` or `{ kind: "assist_plan", assist_plan_id, assist_plan_version, plan_sha256, playbook_version }`). Replaces the obsolete request-only `agent_version_id` field.
+  - `scenario_expectation_ref`: Nullable `ScenarioExpectationRefV1` (`{ suite_version_id, scenario_version_id, expected_result_sha256, attempt_id }`). Production callers pass `null`; simulation callers pass the exact sealed expectation issued by Flight Simulator. The Verifier independently resolves expectations from authoritative owner sources rather than trusting runner-asserted values.
 - **Status Query (`VerificationStatusQueryV1`):**
   `{schema_id: "verification.status-query.v1", organization_id, execution_context, request_id}`.
 - **Status Response (`VerificationRunStatusV1`):** Closed union:

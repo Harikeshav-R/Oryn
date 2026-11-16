@@ -199,7 +199,11 @@
           "case_id": "case_inv_101",
           "agent_version": "2026.11.15.1"
         },
-        "agent_version_id": "33333333-3333-4333-8333-333333333333",
+        "evaluation_target": {
+          "kind": "agent",
+          "agent_version": "33333333-3333-4333-8333-333333333333"
+        },
+        "scenario_expectation_ref": null,
         "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "requirement_ids": [
           "req_post_invoice_reconciled"

@@ -376,6 +376,18 @@ The Agent Factory (`agent-factory-ir`) and Agent Runtime (`agent-runtime`) compo
 Both purposes require explicit registration under the existing `InferencePurposePolicyV1`, matching certified route operation and output-schema registrations, and normal `InferenceRequestV1` authorization and budget reservation. Registration does not expand generic provider or client permissions. Synthesis timeout is clamped to route and authorization limits; one retry is allowed only after a confirmed transient pre-response failure under the same input, route, and authorization. Provider-interaction uncertainty requires a new explicit request, never automatic replay or cross-provider fallback. Late results cannot update a changed draft.
 
 Persist validated typed proposals and provenance, not raw synthesis prompts, intermediate reasoning, or raw completions. Runtime prompt templates and their digests are material, version-pinned configuration in `RuntimeModelBindingV1`, not synthesis logs. Tier 2 model-influenced mutation parameters also require independent validation; allowed Tier 0/1 classification cannot change population, risk floor, destination, or permissions.
+
+### 3.11 Flight Simulator Scenario Generation Semantic Contracts (`text.reason`)
+
+The Flight Simulator (`flight-simulator`) component consumes governed cloud model reasoning via the LiteLLM gateway under Contract 22 for bounded draft scenario generation from procedure rules and approved reference patterns:
+
+1. **`simulation_scenario_generate` (Operation: `text.reason`):**
+   - **Purpose:** Proposes candidate scenario drafts (boundary conditions, exception cases, input quality variations, fault injection setups) from authorized procedure rules, published playbooks, and verified synthetic reference patterns.
+   - **Output Schema:** `simulation.scenario-proposal.v1` (enforcing `ScenarioProposalV1` with proposal ID, category, purpose, application context, proposed inputs, expected disposition, stop conditions, and fault plans).
+   - **Input Scope:** Authorized minimized rule/procedure/exception projections and approved synthetic/anonymized patterns; strictly excludes private employee observations, credentials, live customer data, production mailbox contents, and raw meeting transcripts. Input capped at 256 KiB; output capped at 128 KiB. Timeout: 120,000 ms.
+   - **Concurrency & Rate Ceilings:** At most 2 concurrent scenario generation calls per tenant; at most 16 proposed cases per call and at most 8 calls per explicit generation operation.
+   - **Governance & Provenance:** Persists validated typed draft cases and reusable `SynthesisProvenanceV1`, not raw prompts, completions, or model reasoning. Scenario generation cannot seal suites, establish authoritative expectations, or grade outcomes; candidate proposals require Workflow Owner or delegate review before suite inclusion.
+   - **Route Pinning & Retries:** Reuses existing route pinning, US-only/ZDR/no-training agreements, budget reservations, single same-binding pre-response retry, late-result rejection, and zero provider fallback.
 ---
 
 ## 4. Control Plane and Gateway Interfaces
@@ -567,7 +579,7 @@ This table records all document families across the Oryn repository and their re
 | `docs/components/operational-graph.md` | Reconciled | Added shared inference pointer for embeddings and graph search. |
 | `docs/components/application-adapters.md`| Reconciled | Added shared inference pointer; confirmed deterministic action constraints. |
 | `docs/components/job-orchestration.md` | Reconciled | Added shared inference pointer; confirmed durable execution state. |
-| `docs/components/flight-simulator.md` | Reconciled | Reconciled synthetic scenario generation via shared gateway contract. |
+| `docs/components/flight-simulator.md` | Reconciled | Added `simulation_scenario_generate` (`simulation.scenario-proposal.v1`) under `text.reason`; validated proposals and `SynthesisProvenanceV1` persisted; raw prompts, completions, and model reasoning excluded; no local inference fallback. |
 | `docs/components/outcome-verification.md`| Reconciled | Reconciled model-assisted verification; preserved independent deterministic checks. |
 | `docs/components/release-governance.md` | Reconciled | Reconciled change analysis via shared gateway contract; preserved human release gates. |
 | `docs/components/command-center-analytics.md` | Reconciled | Preserved role-scoped views and prohibition of employee surveillance data. |

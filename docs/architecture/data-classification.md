@@ -95,12 +95,16 @@ Every interaction with a language model, speech engine, or AI reasoning service 
 
 ---
 
-## Simulation Artifact Sensitivity (TECHNICAL.md §10.1)
+## Simulation Artifact Sensitivity and Retention (TECHNICAL.md §10.1)
 
-Although simulation environments run against synthetic data and application replicas, simulation artifacts retain sensitivity restrictions:
-- Scenario definitions may encode proprietary business logic, operational edge cases, and confidential workflow structures.
-- Simulation execution traces, regression reports, and replay recordings are protected under tenant-isolation policies identical to production operational knowledge.
-- Test environments must never borrow production write authority or expose real customer PII in test fixtures.
+Although simulation environments run against synthetic data and application replicas, simulation artifacts retain strict sensitivity and governance restrictions:
+- **Proprietary Knowledge Boundaries:** Scenario definitions (`ScenarioVersionV1`) encode proprietary operational business logic, edge cases, and confidential workflow structures. They are tenant-isolated under Row-Level Security (RLS) identical to production operational knowledge.
+- **Fixture Data Sanitization:** Test fixtures (`FixtureManifestV1`) must be synthetic or approved-anonymized data (capped at 1 MiB per object, 16 MiB total per suite). Anonymized imports require reviewed provenance and automated secret/PII detection; raw employee screen media, production credentials, and real customer PII are unconditionally rejected.
+- **Evaluation Report Retention (24 Months):** Immutable signed evaluation reports (`SignedEvaluationReportV1`), suite seals (`SuiteSealReceiptV1`), and content-free approval/review history are retained for **24 months** under the enterprise compliance and audit schedule.
+- **Fixture Lifecycle Retention:** Fixture payloads are retained while a scenario suite is current and for **24 months** after suite retirement, unless earlier source or policy deadlines apply.
+- **Detailed Replay Retention (30 Days):** Detailed execution traces, step divergence records, and diff artifacts (`ReplayEntryV1`) are retained for **30 days**, bounded by earlier source or tenant policy deadlines. The 30-day replay ceiling cannot extend a shorter private-source deadline.
+- **Dedicated Lab Capture Rules:** Browser and native scenarios executed on dedicated enrolled lab devices (`identity_simulation_lab_device`) remain subject to ordinary local-private retention and employee review before sharing. Central replay receives metadata or separately reviewed redacted still excerpts, never raw unredacted local screenshots.
+- **Test-Realm Actor Authority:** Scripted actors in the Identity-owned test realm hold simulation authority only; simulated approvals are labeled as such and never count as verified human examples or supervised production history. Real production credentials, write authority, and live vendor data are strictly excluded from simulation.
 
 ---
 

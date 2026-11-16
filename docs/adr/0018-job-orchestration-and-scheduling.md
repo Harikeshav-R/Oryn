@@ -7,6 +7,7 @@ Date: 2026-11-15
 Accepted
 
 Amends [0017-agent-runtime-execution-and-recovery.md](0017-agent-runtime-execution-and-recovery.md) (value custody, continuation executions, wide owner identifiers, and synchronous containment fencing).
+Amended by [0019-flight-simulator-isolation-and-evaluation-evidence.md](0019-flight-simulator-isolation-and-evaluation-evidence.md) (evaluation-owned execution persistence in `orchestration_execution`).
 
 ## Context
 
@@ -79,3 +80,13 @@ Emergency stops and high/critical security containment commands execute synchron
 - Requires maintaining detailed PostgreSQL state machines, indexes, and lock ordering across seven core orchestration tables and supporting control tables.
 - Conservative record exclusions block concurrent cases targeting the same record until uncertainty is manually or automatically reconciled.
 - Disallowing catch-up runs after schedule pauses requires explicit operator confirmation for backlog processing.
+
+## Amendment: Evaluation-Owned Execution Persistence (ADR-0019)
+
+[ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md) amends the `orchestration_execution` table DDL:
+1. Adds `environment TEXT NOT NULL CHECK (environment IN ('production', 'simulation'))`.
+2. Adds nullable `evaluation_attempt_id UUID`.
+3. Makes `job_id` and `case_id` nullable, adding composite foreign key `fk_exec_sim_attempt` referencing `simulation_attempt (organization_id, attempt_id)`.
+4. Enforces check constraint `ck_orchestration_execution_owner`: requires either `(environment = 'production' AND job_id IS NOT NULL AND case_id IS NOT NULL AND evaluation_attempt_id IS NULL)` or `(environment = 'simulation' AND job_id IS NULL AND case_id IS NULL AND evaluation_attempt_id IS NOT NULL)`.
+This allows Flight Simulator evaluations to share existing checkpoint, encrypted value custody, action generation CAS, and worker seams without fabricating dummy production jobs or cases.
+

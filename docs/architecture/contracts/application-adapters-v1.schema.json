@@ -1201,6 +1201,7 @@
         "simulation_account_id",
         "simulation_environment",
         "configuration_equivalence_evidence_ref",
+        "production_equivalence_status",
         "fidelity_gaps"
       ],
       "properties": {
@@ -1227,7 +1228,10 @@
           "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
         },
         "production_qualification_ref": {
-          "$ref": "#/$defs/OperationQualificationRefV1"
+          "oneOf": [
+            { "$ref": "#/$defs/OperationQualificationRefV1" },
+            { "type": "null" }
+          ]
         },
         "simulation_qualification_ref": {
           "$ref": "#/$defs/OperationQualificationRefV1"
@@ -1243,7 +1247,14 @@
           "const": "simulation"
         },
         "configuration_equivalence_evidence_ref": {
-          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "production_equivalence_status": {
+          "type": "string",
+          "enum": ["established", "not_established"]
         },
         "fidelity_gaps": {
           "type": "array",

@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-15
+- **Amended by:** [ADR-0018](0018-job-orchestration-and-scheduling.md), [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md)
 - **Deciders:** Oryn Architecture Guild, Agent Runtime Owner, Job Orchestration Owner, Identity Policy Owner, Application Adapters Owner, Outcome Verification Owner, Infrastructure Security Lead
 - **Consulted:** Desktop Shell Owner, Browser Extension Owner, Local Context HUD Owner, Operational Graph Owner
 - **Informed:** All Engineering Teams
@@ -108,4 +109,12 @@ This decision amends relevant execution, authority, and reservation assumptions 
 3. **Action Generation and Deterministic Action Identity:** `RuntimePendingEffectV1` requires `action_generation: U64`, nullable `retry_of_action_id: Identifier`, and nullable `reconciliation_ref: Identifier`. Action IDs are derived deterministically using the generation-inclusive formula; only authorized safe reconciliation advances generation from `"0"` to `"1"`.
 4. **Identifier Scoping:** Compiler-owned node, region, loop, and binding names are strictly bound to Factory `PlanIdentifier`, while runtime-generated action, effect, and owner IDs reference wide Graph `Identifier` supporting 68-character action digests and UUIDs.
 5. **Synchronous Containment Fencing:** Emergency stop and containment commands synchronously advance control generations and write `OrchestrationSafetyFenceV1` records directly to the database and Identity recovery journal (`orchestration_safety_fenced`), bypassing ordinary queue fanout latency.
+
+## Amendment: Integration with Flight Simulator and Honest Evaluation Context (ADR-0019)
+
+[ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md) amends this record in the following specific areas:
+1. **Runtime Execution Context Typing:** Replaces the obsolete `ExecutionContextJobV1` with `RuntimeExecutionContextV1`, enforcing `job -> environment: production` and `evaluation -> environment: simulation`. In simulation, `evaluation_target` must resolve to `{kind: "agent", agent_version: UUID}` matching the candidate under test.
+2. **Simulation Host Isolation:** In simulation, cloud execution runs on fresh, single-use gVisor sandboxes; local desktop execution runs strictly on dedicated enrolled Windows/macOS lab devices (`identity_simulation_lab_device`), never ordinary employee workstations.
+3. **IPC Baselines:** Advances Desktop Shell worker supervision baseline to `shell-runtime.v1` major 1, minor 1, negotiating `evaluation_execution_v1`.
+
 

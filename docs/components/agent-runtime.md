@@ -125,22 +125,27 @@ The agent runtime contracts are formally codified in `urn:oryn:schemas:agent-run
 
 ## Trust and deployment boundaries
 
-### Process Isolation and Execution Hosts
-Execution placement is pinned for the entire lifetime of a case across one of three supported host environments:
+### Process Isolation, Hosts, and Environments
+Execution placement is pinned for the entire lifetime of an execution across one of two supported host kinds (`RuntimeHostV1 = "cloud" | "local"`), operating in either `production` or `simulation` environment:
 
-1. **Cloud Production Host (`RuntimeHostV1::Cloud`):**
+1. **Cloud Host (`RuntimeHostV1::Cloud`):**
    - Mandatory Linux container isolation under **gVisor** (`runsc` sandbox, RuntimeClass `gvisor`).
    - Hardened security profile: non-root UID 10001, read-only root filesystem, dropped Linux capabilities, no service-account tokens, swap and core dumps disabled.
    - Resource ceilings: 1 vCPU, 512 MiB RAM limit, 16 MiB memory-only scratch (`tmpfs`).
    - Zero ambient network egress: workers cannot reach database instances, HashiCorp Vault, cloud providers, or the public internet. All interactions occur via authenticated Control Plane APIs over mTLS.
-2. **Employee-Local Host (`RuntimeHostV1::Local`):**
-   - Pinned to employee workstation (`device_id` and `profile_id` non-null) when any case operation requires that employee's local device, browser session, or desktop application.
-   - Signed first-party Rust binary (`oryn-runtime-worker`) supervised by Desktop Shell via private inherited length-prefixed duplex IPC (`shell-runtime.v1` major 1, minor 0).
+   - In `simulation` environment, each attempt receives a fresh, non-reused gVisor sandbox and fresh synthetic state.
+2. **Local Workstation / Lab Host (`RuntimeHostV1::Local`):**
+   - In `production`, pinned to employee workstation (`device_id` and `profile_id` non-null) when any case operation requires that employee's local device, browser session, or desktop application.
+   - In `simulation`, pinned strictly to dedicated enrolled Windows/macOS lab devices (`identity_simulation_lab_device`), never ordinary employee workstations.
+   - Signed first-party Rust binary (`oryn-runtime-worker`) supervised by Desktop Shell via private inherited length-prefixed duplex IPC (`shell-runtime.v1` major 1, minor 1, negotiating `evaluation_execution_v1`).
    - Local workers access central runtime endpoints via a narrowly allowlisted `RuntimeControlPlaneClient`. Local workers possess no persistent credentials, refresh tokens, or direct Vault access.
    - Device loss, workstation lock/sleep, or user pause halts execution; local state never automatically migrates to cloud workers.
-3. **Flight Simulation Host (`environment: "simulation"`):**
-   - Executes the identical pure Rust core against simulated adapter bindings (`AdapterEnvironmentBindingV1`).
-   - `live` mode evaluates pinned cloud models for release certification; `recorded_diagnostic` mode replays validated typed results for regression testing without conferring live model coverage.
+
+### Execution Context Typing and Environment Constraints
+`RuntimeAssignmentV1.execution_context` and `ExecutionCheckpointV1.execution_context` use `RuntimeExecutionContextV1`:
+- `job`: Production job execution binding `job_id`, `case_id`, `job_type`, `agent_version_id`, `risk_tier`. Enforces `environment = "production"`.
+- `evaluation`: Flight simulator candidate evaluation binding `evaluation_id`, `scenario_version_id`, `attempt_id`, and `evaluation_target: { kind: "agent", agent_version: UUID }`. Enforces `environment = "simulation"`.
+The obsolete `ExecutionContextJobV1` definition is eliminated. `job` implies `production`; `evaluation` implies `simulation`. Agent version and behavior hashes in runtime state must resolve to the exact evaluation target.
 
 ### Identity and Delegation
 - Each runner incarnation authenticates as an Identity-owned `identity_execution_principal` via infrastructure mTLS (cloud) or an enrolled local device child token (local).

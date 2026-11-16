@@ -239,7 +239,7 @@ When an employee reviews a sanitized task demonstration for potential organizati
 - **Helper Supervision & Network Relay:** Desktop Shell supervises the unprivileged child process `oryn-sync-helper` over two inherited bidirectional byte channels (`shell-sync.v1`, major 1, minor 0: control/status and bulk data relay). `SessionBroker` delegates short-lived, audience-bound access tokens to sync. Shell acts as an opaque relay for guidance generation chunks forwarded from sync to `oryn-hud-helper` over Contract 20 bulk-data rails without caching or inspecting guidance contents.
 
 #### 2. HUD Guidance Presentation Interface (`HudPresentationPort`, Contract 20: `shell-hud.v1`)
-`local-context-hud` produces structured guidance models; `desktop-shell` renders them. The interface operates over two private, inherited bidirectional byte channels created by the shell supervisor at launch (`shell-hud.v1`, major 1, minor 0):
+`local-context-hud` produces structured guidance models; `desktop-shell` renders them. The interface operates over two private, inherited bidirectional byte channels created by the shell supervisor at launch (`shell-hud.v1`, major 1, minor 1, negotiating `assist_executable_body_v1` and `evaluation_execution_v1`):
 1. **Control/Presentation Channel:** Max 256 KiB frame, 64 queued messages / 1 MiB. Carries content-free heartbeats every 100 ms; 500 ms silence or EOF immediately invalidates active presentation and pauses pending assists.
 2. **Data Channel:** Max 1 MiB frame, 16 queued messages / 8 MiB. Carries bulk bundle transfers, manual search queries, and interaction receipts.
 
@@ -248,7 +248,7 @@ When an employee reviews a sanitized task demonstration for potential organizati
   {
     "protocol_version": "shell-hud.v1",
     "protocol_major": 1,
-    "protocol_minor": 0,
+    "protocol_minor": 1,
     "message_id": "01928374-3001-7000-8000-000000000001",
     "presentation_revision": "841",
     "guidance_session_id": "gsess_1092a8b",
@@ -305,7 +305,7 @@ When an employee reviews a sanitized task demonstration for potential organizati
   {
     "protocol_version": "shell-hud.v1",
     "protocol_major": 1,
-    "protocol_minor": 0,
+    "protocol_minor": 1,
     "message_id": "01928374-3002-7000-8000-000000000002",
     "presentation_revision": "842",
     "guidance_session_id": "gsess_1092a8b",
@@ -352,13 +352,13 @@ When a Tier 2 or Tier 3 action requires employee approval:
 History browsing, candidate inspection, and My Privacy data are fetched over the dedicated query channel using cursor-based pagination (capped at 100 items per response). Raw media thumbnails are fetched via short-lived, profile-bound opaque local handles (e.g. `local-media://handle-uuid`), validated by the privacy helper. Arbitrary filesystem path traversal and direct URLs to unredacted captures are strictly prohibited.
 
 #### 5. Local Native Adapter Worker Supervision (`shell-adapter.v1`, Contract 12)
-Desktop Shell supervises the signed first-party unprivileged child process `oryn-adapter-worker` over two inherited private length-prefixed byte channels (`shell-adapter.v1`, major 1, minor 1: max frame size 262,144 bytes / 256 KiB; no public TCP or named-pipe rendezvous):
+Desktop Shell supervises the signed first-party unprivileged child process `oryn-adapter-worker` over two inherited private length-prefixed byte channels (`shell-adapter.v1`, major 1, minor 2, negotiating `evaluation_execution_v1`: max frame size 262,144 bytes / 256 KiB; no public TCP or named-pipe rendezvous):
 - **Supervision & Gating:** Shell relays execution context and authority bundle (`{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1 | null, admission: SignedActionAdmissionV1}`), while Privacy Helper gates local observation-derived inputs and device-wide reservations via `LocalExecutionReservationBroker`.
 - **Deterministic OS Primitives:** Executes native Stage 3 semantic actuation using Windows UI Automation supported patterns and macOS Accessibility actions behind deterministic platform bridges without privilege elevation. Closed primitive set: `read | invoke | set_value | select | toggle`.
 - **Target & Safety Invariants:** Binds signed app identity, process/window ID, permitted workspace, target key, surface generation, exact expected before-state, and monotonic admission deadline. Screen pause, Pause All, desktop lock, focus loss, window occlusion, or generation drift immediately halts pending native dispatch. Prior submitted effects are preserved without pretending rollback occurred.
 
 #### 6. Local Agent Runtime Worker Supervision (`shell-runtime.v1`, Contract 10)
-Desktop Shell supervises the signed first-party unprivileged child process `oryn-runtime-worker` over private inherited duplex byte channels (`shell-runtime.v1`, major 1, minor 0):
+Desktop Shell supervises the signed first-party unprivileged child process `oryn-runtime-worker` over private inherited duplex byte channels (`shell-runtime.v1`, major 1, minor 1, negotiating `evaluation_execution_v1`):
 - **Framing & Limits:** Uses 4-byte little-endian length-prefixed JSON frames, maximum frame size 256 KiB (262,144 bytes). Inherited at spawn; zero public TCP or named-pipe sockets. Handshake binds `(organization_id, device_id, profile_id, assignment_id, assignment_epoch)`.
 - **Queue Bounds:** Channel buffers are capped at 64 frames / 4 MiB, with 8 reserved control slots for immediate processing of pause, stop, and cancellation commands. Value transfers use chunks at most 64 KiB.
 - **Security Boundaries:** No new public listener, accessibility permission, browser renderer, or direct vendor connection. `SessionBroker` provides only the short-lived (<= 5 min) audience-bound execution child credential (`audience: "execution"`).
@@ -372,7 +372,7 @@ Desktop Shell provides the presentation and registration surface for employee co
 - **Binding Contract (`LocalScheduleBindingV1`):** Binds `device_id`, `profile_id`, `employee_actor_id`, `consent_revision`, `consented_at`, and `not_after`.
 - **Session-Capped Expiry:** Validity is strictly capped at the employee's current desktop session (maximum 7 days). Session renewal alone never silently extends consent.
 - **Immediate Invalidation:** Workstation lock, system sleep, user logout, profile switch, manual pause, or shell visibility loss immediately revokes local dispatch availability. Scheduled occurrences encountering an unavailable device are recorded as `blocked` with reason `JOB_DEVICE_UNAVAILABLE`.
-- **Reservation Ownership:** Local execution leases and browser/OS actuation reservations remain owned exclusively by `LocalExecutionReservationBroker` under `shell-runtime.v1` and `browser-bridge.v1`. This registration creates no new capture-consent category and grants no unattended background capture rights.
+- **Reservation Ownership:** Local execution leases and browser/OS actuation reservations remain owned exclusively by `LocalExecutionReservationBroker` under `shell-runtime.v1`, `shell-adapter.v1`, and `browser-bridge.v1`. Holds closed variants: `{kind: "job", assignment_id, assignment_epoch}`, `{kind: "assist", assist_session_id, assist_incarnation}`, and `{kind: "evaluation", attempt_id, assignment_id, assignment_epoch}`. Simulation execution is strictly confined to dedicated enrolled lab devices (`identity_simulation_lab_device`), never ordinary employee workstations. This registration creates no new capture-consent category and grants no unattended background capture rights.
 
 
 ## Trust and deployment boundaries

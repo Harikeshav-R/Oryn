@@ -48,7 +48,7 @@ Bounded worker reuse is permitted only within this exact tuple. Credential roles
 ### Upstream Consumed Contracts
 - **Identity & Authority (Contract 11):** Consumes `VerifiedPrincipal`, `SignedActionAuthorizationV1`, `SignedActionApprovalV1`, and `SignedActionAdmissionV1` from [identity-policy](identity-policy.md). Consumes consumed-fence receipts; registers trusted `ActionPolicyFactsV1`.
 - **Infrastructure Security:** Consumes credential leases from HashiCorp Vault via `AdapterEgressBroker` under [infrastructure-security](infrastructure-security.md).
-- **Desktop Shell & Privacy Helper:** Consumes local reservation state (`local_execution_reservation_v1`, `execution_reservation_lease_v1` under `browser-bridge.v1` major 1, minor 5) and supervised process channels (`shell-adapter.v1` major 1, minor 1) from [desktop-shell](desktop-shell.md) and [local-privacy-storage](local-privacy-storage.md).
+- **Desktop Shell & Privacy Helper:** Consumes local reservation state (`local_execution_reservation_v1`, `execution_reservation_lease_v1`, and `evaluation_execution_v1` under `browser-bridge.v1` major 1, minor 6) and supervised process channels (`shell-adapter.v1` major 1, minor 2) from [desktop-shell](desktop-shell.md) and [local-privacy-storage](local-privacy-storage.md).
 
 ### Downstream Produced Contracts
 - **Contract 6 (`application-capability-v1.schema.json`):** Produces immutable `ApplicationCapabilitySnapshotV1` and live `ApplicationCapabilityStatusV1` via `ApplicationCapabilityPort`:
@@ -105,7 +105,7 @@ Bounded worker reuse is permitted only within this exact tuple. Credential roles
 |  +---------------------------------------------------------------------------------------------------+  |
 |  | Isolation Key: (organization_id, connection_id, environment, credential_role)                     |  |
 |  | - Deterministic pack operations (Gmail, Outlook, Sheets, Excel, Salesforce, HubSpot, NetSuite)   |  |
-|  | - Local UI Automation / macOS Accessibility (Native Stage 3) via shell-adapter.v1 (major 1, minor 1)|  |
+|  | - Local UI Automation / macOS Accessibility (Native Stage 3) via shell-adapter.v1 (major 1, minor 2)|  |
 |  | - Direct Vendor Network Access: STRICTLY BLOCKED                                                  |  |
 |  +---------------------------------------------------------------------------------------------------+  |
 +---------------------------------------------------|-----------------------------------------------------+
@@ -204,10 +204,21 @@ Local UI and browser actuation require exclusive single-tenant lock ownership vi
 - **Lease Parameters:** 30-second renewable reservation with 10-second renewal cadence. Bound to `(organization_id, device_id, profile_id, execution_context, workstation_session_epoch)` and a closed holder union:
   - `{kind: "job", assignment_id, assignment_epoch}`
   - `{kind: "assist", assist_session_id, assist_incarnation}`
+  - `{kind: "evaluation", attempt_id, assignment_id, assignment_epoch}`
 - **Context Validation:** Checked strictly against canonical `ExecutionContextV1`.
 - **Revocation & Quiescence:** Helper restart, session epoch change, pause, lock/sleep, window visibility loss, or disconnect immediately revokes local actuation. Revocation moves the reservation to `quiescing`, denying new primitives.
 - **Safe Boundary Acknowledgment (`ExecutionReservationBoundaryAckV1`):** Verified executor acknowledgment with `primitive_stopped = true` transitions the lease to `released`. If acknowledgment is missing, the reservation enters `exclusion_hold`, denying competing actuation until process termination or owner reconciliation completes.
-- **Protocol Versions:** Negotiates `browser-bridge.v1` major 1, minor 5 (requiring `execution_reservation_lease_v1` alongside `identity_authority_v1` and `local_execution_reservation_v1`). Native macOS actuation uses `shell-adapter.v1` major 1, minor 1.
+- **Protocol Versions:** Negotiates `browser-bridge.v1` major 1, minor 6 (requiring `evaluation_execution_v1` alongside `identity_authority_v1`, `local_execution_reservation_v1`, and `execution_reservation_lease_v1`). Native macOS actuation uses `shell-adapter.v1` major 1, minor 2.
+
+### Simulation Bindings and Vendor Fidelity (`AdapterEnvironmentBindingV1`)
+External environment mapping is decoupled from candidate behavior hashes:
+- `AdapterEnvironmentBindingV1` binds:
+  - `adapter_pack_ref`, `operation_id`, `simulation_qualification_ref`, `simulation_connection_id`, `simulation_account_id`, `simulation_environment`, `fidelity_gaps`.
+  - `production_equivalence_status`: `"established" | "not_established"`.
+  - Nullable `production_qualification_ref` and nullable `configuration_equivalence_evidence_ref`.
+- **Pre-Production Simulation Evaluation:** An unestablished production equivalence (`not_established` with null production references) allows behavioral evaluations in Flight Simulator, but Release Governance strictly denies production readiness until equivalence is established.
+- **Credential Isolation:** Workers receive simulation configuration metadata only; production connection IDs and credentials remain sealed in Control Plane / HashiCorp Vault. Vendor sandbox egress is mediated solely by `AdapterEgressBroker`.
+- **Synthetic Reference Packs:** First-party deterministic synthetic adapters (`synthetic.erp`, `synthetic.crm`, `synthetic.support`) replicate external business APIs with declared argument and side-effect parity.
 
 ### Storage Architecture and Schema DDL
 The component uses PostgreSQL 18 with Row-Level Security (RLS) under existing `TenantTransaction` boundaries:

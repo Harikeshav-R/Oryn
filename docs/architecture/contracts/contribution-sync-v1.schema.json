@@ -1125,7 +1125,8 @@
                       "root",
                       "policy",
                       "publisher",
-                      "receipt"
+                      "receipt",
+                      "evaluation"
                     ]
                   },
                   "public_key": {
@@ -2683,7 +2684,8 @@
                   "root",
                   "policy",
                   "publisher",
-                  "receipt"
+                  "receipt",
+                  "evaluation"
                 ]
               },
               "public_key": {

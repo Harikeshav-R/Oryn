@@ -5,6 +5,7 @@
 **Deciders:** User-Approved Architecture Review  
 **Authority:** Technical Architecture & Security Engineering  
 **Amends:** [ADR-0008](0008-reviewed-still-image-sharing.md), [ADR-0009](0009-local-context-guidance-and-assist-boundaries.md), [ADR-0010](0010-contribution-delivery-and-guidance-sync.md)  
+**Amended by:** [ADR-0012](0012-control-plane-transport-durability-and-inference.md), [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md), [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md)  
 **Normative Specification:** [docs/components/identity-policy.md](../components/identity-policy.md)
 
 ---
@@ -73,6 +74,8 @@ Oryn governs the execution boundary between autonomous AI agents, desktop human 
 - **Cryptographic Clarity:** Clear, unpadded base64url Ed25519 signatures over RFC 8785 canonical bytes across all schemas.
 
 *(Scope Amendment — 2026-11-14): [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md) amends action targets and policy facts: updates `AdapterTargetProjectionV1` to bind `connection_id`, `connection_revision`, `vendor_account_id`, `record_key`, `expected_state: AdapterExpectedStateV1`, `environment`, and `argument_sha256`. Differentiates action effects (`read`, `draft`, `write`), where reads require 0 parameter diffs and draft/write require 1–128 diffs. Introduces `register_action_facts` for trusted adapter-derived facts and adds capabilities `application.read`, `integration.manage`, and `application.qualify`.*
+
+*(Scope Amendment — 2026-11-15): [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md) amends `ExecutionContextV1` with the `evaluation` variant (`{kind: "evaluation", evaluation_id, scenario_version_id, attempt_id, evaluation_target}`). Introduces `SignedSimulationAdmissionV1` (`identity.simulation-admission.v1`) under `policy` key purpose, authenticates test-realm scripted actors with simulation-only authority (prohibiting fake human examples or supervised history), adds dedicated `evaluation` key purpose to `SignedTrustKeysetV1`, and adds simulation capabilities `simulation.read`, `simulation.edit`, `simulation.evaluate`, `simulation.review`, and `simulation.manage_policy`.*
 
 
 ### Negative / Tradeoffs

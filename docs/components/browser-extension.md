@@ -133,8 +133,8 @@ If any conjunct is unknown, false, or stale, observation for that document or mo
 - **Contract 12 (Authorized External Operation):**
   - **Producer:** [agent-runtime](agent-runtime.md) / [application-adapters](application-adapters.md)
   - **Consumer:** [browser-extension](browser-extension.md)
-  - **Transport:** Routed through Privacy Helper and native broker over `browser-bridge.v1` (negotiated `protocol_major: 1`, `protocol_minor: 5` with `identity_authority_v1`, `local_execution_reservation_v1`, and `execution_reservation_lease_v1` capabilities).
-  - **Boundary Invariant:** Execution requests (`ExecuteBrowserAction`) must bind `ExecutionContextV1` (`job` or `assist`), cryptographic `authorization_ref`, nullable `approval_ref`, authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1 | null, admission: SignedActionAdmissionV1}`, stable `action_sha256`, target key, record key, live document generation, surface generation, and expected before-state. Both authority bundle and reference IDs remain strictly outside the canonical `action_sha256` digest. Operates strictly within an exclusive device reservation managed by `LocalExecutionReservationBroker` (reserved execution tab for jobs, or reserved assist tab for HUD assists) preventing concurrent native or browser actuation. Extension verifies trust keyset and bundle signatures before DOM actuation; content-free action/nonce ledger prevents replay. Zero direct cloud network connection.
+  - **Transport:** Routed through Privacy Helper and native broker over `browser-bridge.v1` (negotiated `protocol_major: 1`, `protocol_minor: 6` with `identity_authority_v1`, `local_execution_reservation_v1`, `execution_reservation_lease_v1`, and `evaluation_execution_v1` capabilities).
+  - **Boundary Invariant:** Execution requests (`ExecuteBrowserAction`) must bind `ExecutionContextV1` (`job`, `assist`, or `evaluation`), cryptographic `authorization_ref`, nullable `approval_ref`, authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1 | null, admission: SignedActionAdmissionV1}`, stable `action_sha256`, target key, record key, live document generation, surface generation, and expected before-state. Both authority bundle and reference IDs remain strictly outside the canonical `action_sha256` digest. Operates strictly within an exclusive device reservation managed by `LocalExecutionReservationBroker` (reserved execution tab for jobs, reserved assist tab for HUD assists, or dedicated lab tab for evaluation attempts) preventing concurrent native or browser actuation. Extension verifies trust keyset and bundle signatures before DOM actuation; content-free action/nonce ledger prevents replay. Zero direct cloud network connection.
 
 - **Contract 13 (Submission Records and Readback Evidence):**
   - **Producer:** [browser-extension](browser-extension.md)
@@ -435,7 +435,7 @@ Sent immediately upon native port connection. Pre-pair message; omits paired env
   "type": "BridgeHello",
   "protocol_version": "browser-bridge.v1",
   "protocol_major": 1,
-  "protocol_minor": 5,
+  "protocol_minor": 6,
   "capabilities": [
     "dom_observation_v1",
     "action_execution_v1",
@@ -444,7 +444,8 @@ Sent immediately upon native port connection. Pre-pair message; omits paired env
     "meeting_audio_v1",
     "identity_authority_v1",
     "local_execution_reservation_v1",
-    "execution_reservation_lease_v1"
+    "execution_reservation_lease_v1",
+    "evaluation_execution_v1"
   ],
   "extension_id": "com.oryn.extension.chrome",
   "extension_version": "1.0.0",
@@ -1539,7 +1540,7 @@ To maintain zero-knowledge privacy guarantees, all telemetry and diagnostic logs
 Every authorized browser action executed by the subsystem produces an immutable local audit record stored in the execution audit log:
 - **Receipt Schema:**
   - `action_id`: UUIDv4
-  - `execution_context`: `ExecutionContextV1` (`job` or `assist`)
+  - `execution_context`: `ExecutionContextV1` (`job`, `assist`, or `evaluation`)
   - `action_sha256`: SHA-256 digest of canonical action proposal (`sha256_` followed by 64 lowercase hex digits)
   - `authorization_ref`: Cryptographic reference of authorization token
   - `approval_ref`: Operator approval identifier (or null for Tier 1/2)

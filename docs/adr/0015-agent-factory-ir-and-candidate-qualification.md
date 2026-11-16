@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-14
+- **Amended by:** [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md), [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md)
 - **Deciders:** Oryn Architecture Guild, Agent Factory Owner, Operational Graph Owner, Release Governance Owner, Control Plane Owner
 - **Consulted:** Flight Simulator Owner, Agent Runtime Owner, Identity Policy Owner, Outcome Verification Owner, Enterprise Security Lead
 - **Informed:** All Engineering Teams
@@ -66,6 +67,8 @@ The Oryn Architecture Guild resolves the core architecture and qualification bou
 - Identity Policy enforces that `workflow_owner` and `automation_builder` can draft and compile agents within their remit, but only operators with approval delegations can execute production jobs.
 
 *(Scope Amendment — 2026-11-14): [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md) amends capability discovery and compilation interfaces: normalizes `ApplicationCapabilityPort` to asynchronous producer-owned methods (`snapshot` and `statuses`). Requires `ApplicationCapabilityBodyV1` to support `platform="api"`, ordered required `qualification_refs`, and per-operation `write_guard`. Factory finalization locks `adapter_registry_guard(organization_id, generation)` before `graph_knowledge_guard`.*
+
+*(Scope Amendment — 2026-11-15): [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md) amends candidate evaluation bundle verification and repair command schemas: `RepairCandidateCommandV1` replaces generic string refs with typed `regression_requirement_refs: SimulationRegressionRequirementRefV1[]` referencing `SimulationRegressionRequirementV1` (`simulation.regression-requirement.v1`). Repairs require evaluating the full current regression suite, the original failing scenario / prevention spec, and at least 5 distinct nearby variations with material changed dimensions. Flight Simulator admits candidates under honest `ExecutionContextV1::Evaluation` and issues `SignedEvaluationReportV1`.*
 
 
 ## References

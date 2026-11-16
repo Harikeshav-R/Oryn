@@ -133,17 +133,17 @@ Oryn defines nine immutable role IDs with standard product display names:
 1. **`employee` (Employee):** `playbook.read`, personal privacy and contribution controls, participation in authorized assist sessions, `application.read` within allowed application scope. No production `job.run`.
 2. **`sme` (Subject Matter Expert):** Employee permissions plus `workflow.review`. May explain workflows and propose candidate rules, but cannot approve business rules.
 3. **`agent_operator` (Agent Operator):** Employee permissions plus `job.run`, team-scoped `incident.review`, and `action.approve` *only under an active, matching approval delegation*.
-4. **`workflow_owner` (Workflow Owner):** Employee permissions plus assigned `workflow.review`, `rule.approve`, `agent.edit` (remit-scoped authoring and draft edits; grants no `job.run`, action delegation, or production write authority), `incident.review`, `repair.approve`, `release.approve`, `schedule.manage`, and `application.qualify` (operation qualification staging/approvals in workflow/application remit). Action approval requires an explicit approval delegation; job execution requires the operator role.
-5. **`automation_builder` (Automation Builder):** Employee permissions plus `workflow.review` and `agent.edit`. May propose candidate agents, repairs, and test runs, but cannot approve production releases.
+4. **`workflow_owner` (Workflow Owner):** Employee permissions plus assigned `workflow.review`, `rule.approve`, `agent.edit` (remit-scoped authoring and draft edits; grants no `job.run`, action delegation, or production write authority), `incident.review`, `repair.approve`, `release.approve`, `schedule.manage`, `application.qualify` (operation qualification staging/approvals in workflow/application remit), `simulation.read`, and `simulation.review` (remit-scoped suite sealing and expected-result review). Action approval requires an explicit approval delegation; job execution requires the operator role.
+5. **`automation_builder` (Automation Builder):** Employee permissions plus `workflow.review`, `agent.edit`, `simulation.read`, `simulation.edit` (scenario authoring and draft modifications), and `simulation.evaluate` (launching candidate evaluation runs). May propose candidate agents, repairs, and test runs, but cannot approve production releases or seal readiness suites.
 6. **`operations_manager` (Operations Manager):** Team-scoped `playbook.read`, `analytics.read`, and read-only issue/incident status. Manager status does *not* confer action approval or raw evidence access.
-7. **`security_admin` (Security Admin):** `privacy_policy.manage`, `security_policy.manage`, `audit.read`, `hold.manage`, `integration.manage` (connection creation, scope expansion approval, credential lifecycle in application/team scope), and security-side permission expansion approval. No implicit business rule or release owner authority.
+7. **`security_admin` (Security Admin):** `privacy_policy.manage`, `security_policy.manage`, `audit.read`, `hold.manage`, `integration.manage` (connection creation, scope expansion approval, credential lifecycle in application/team scope), `simulation.manage_policy` (tenant simulator limit policy), and security-side permission expansion approval. No implicit business rule or release owner authority.
 8. **`organization_admin` (Organization Admin):** `membership.manage`, `execution_limits.manage`, team structure administration, and external identity federation configuration. No implicit action approval, business rule approval, arbitrary vendor data, or private evidence rights.
-9. **`read_only_stakeholder` (Read-Only Stakeholder):** Scoped `playbook.read`, `application.read`, and eligible report/status reads. No write, execution, or export rights by default.
+9. **`read_only_stakeholder` (Read-Only Stakeholder):** Scoped `playbook.read`, `application.read`, `simulation.read`, and eligible report/status reads. No write, execution, or export rights by default.
 
 ### Public Capability Catalog
-The system enforces twenty-two strictly bounded capabilities:
-- **Public Capabilities:** `playbook.read`, `workflow.review`, `rule.approve`, `agent.edit`, `job.run`, `action.approve`, `incident.review`, `repair.approve`, `release.approve`, `analytics.read`, `report.export`, `privacy_policy.manage`, `membership.manage`, `application.read`.
-- **Internal Governance Capabilities:** `schedule.manage`, `audit.read`, `security_policy.manage`, `hold.manage`, `identity.recover`, `integration.manage`, `application.qualify`, `execution_limits.manage`.
+The system enforces twenty-seven strictly bounded capabilities:
+- **Public Capabilities:** `playbook.read`, `workflow.review`, `rule.approve`, `agent.edit`, `job.run`, `action.approve`, `incident.review`, `repair.approve`, `release.approve`, `analytics.read`, `report.export`, `privacy_policy.manage`, `membership.manage`, `application.read`, `simulation.read`, `simulation.edit`, `simulation.evaluate`, `simulation.review`.
+- **Internal Governance Capabilities:** `schedule.manage`, `audit.read`, `security_policy.manage`, `hold.manage`, `identity.recover`, `integration.manage`, `application.qualify`, `execution_limits.manage`, `simulation.manage_policy`.
 
 Token scopes map respectively to OAuth claims: `application.read` (`application:read`), `integration.manage` (`integration:manage`), `application.qualify` (`application:qualify`), `execution_limits.manage` (`execution_limits:manage`).
 
@@ -179,6 +179,7 @@ An `ApprovalDelegationV1` is strictly decoupled from basic role assignments:
 - **Contract 11 (Synchronous Action Authorization):** Real-time interception of proposed operations from [agent-runtime](agent-runtime.md) and [local-context-hud](local-context-hud.md). Binds `ExecutionContextV1`, `action_sha256`, target key, record key, and document/surface generations. Resolves live knowledge eligibility (`KnowledgeEligibilitySnapshotV1`) with [operational-graph](operational-graph.md) inside the authoritative transaction; active conflicts or superseded rules without approved continuations reject admission fail-closed. Returns `Allow`, `Deny`, or `RequireHumanApproval`.
 - **Contract 3 (Guidance Access Lease Authorization):** Evaluates the strict conjunction of Discovery source audiences (`DiscoveryAudienceV1`) against the requesting principal before issuing signed guidance access leases (`hud.guidance-access-lease.v1`, max 24 hours) for exact playbook and guidance bundle hashes.
 - **Contract 18 (Analytics & Audit Read Models):** Delivers authorized role-scoped read models, permission updates, and immutable audit streams to [command-center-analytics](command-center-analytics.md).
+- **Contract 17 (Simulation Admission and Test Identity):** Authoritative issuance of `SignedSimulationAdmissionV1` (`identity.simulation-admission.v1`) to [flight-simulator](flight-simulator.md). Binds evaluation ID, suite, scenario, attempt, target identity, test-realm principals, and environment bindings. Authenticates test-realm scripted actors with pure policy evaluations, ensuring simulated approvals never count toward human examples or supervised production history. Manages evaluation trust-key purpose in `SignedTrustKeysetV1`.
 - **Contract 22 (Governed Cloud Inference Authorization):** Issues short-lived, signed `InferenceAuthorization` tokens to [cloud-inference](../architecture/cloud-inference.md). Enforces purpose allowlists, US processing, ZDR terms, and tenant monthly micro-USD budgets.
 - **Contract 24 (Contribution Sync Root):** Authoritative trust root for review-key registration and enrollment challenge validation for [contribution-sync](contribution-sync.md).
 
@@ -342,7 +343,7 @@ Browser clients never receive Auth0 tokens or Oryn bearer credentials:
    - Child access tokens: Bounded to maximum 5 minutes, scoped to specific audiences (`identity`, `sync`, `guidance`, `execution`, `inference`).
 5. **Execution Principal Registration & Scopes:**
    Runtime dispatchers require authenticated execution principal registration (`ExecutionPrincipalRegistrationV1`):
-   - Binds `organization_id`, `execution_context`, `host`, `assignment_id`, `assignment_epoch`, `recovery_epoch`, and `allowed_scopes`. Authenticated via cloud workload mTLS or enrolled local device execution child credential.
+   - Binds `organization_id`, `execution_context`, `host`, `assignment_id`, `assignment_epoch`, `recovery_epoch`, `allowed_scopes`, `environment` (`production` or `simulation`), and nullable `simulation_admission_ref` (required for simulation, null for production). Authenticated via cloud workload mTLS or enrolled local device execution child credential.
    - Child access tokens under audience `execution` are strictly bounded to 5 minutes maximum and limited to closed execution scopes:
      - `runtime:claim`: Atomically claim assignment and CAS progress
      - `runtime:read`: Retrieve authorized typed state and dependency values
@@ -350,7 +351,16 @@ Browser clients never receive Auth0 tokens or Oryn bearer credentials:
      - `runtime:heartbeat`: Renew assignment lease
      - `runtime:yield`: Relinquish execution at human wait, approval, or completion
    - Execution scopes grant zero rights to launch jobs, issue approvals, alter policy, or access vendor credentials.
-   - Guard checks verify matching tenant, execution principal, assignment ID/epoch, and recovery epoch, rejecting superseded, expired, or cancelled dispatchers before action admission.
+   - Guard checks verify matching tenant, execution principal, assignment ID/epoch, recovery epoch, and matching environment, rejecting superseded, expired, or cancelled dispatchers before action admission.
+
+#### Execution Contexts and Test-Realm Isolation
+`ExecutionContextV1` enforces closed context typing across production and evaluation:
+- `job`: Production job execution binding `job_id`, `case_id`, `job_type`, `agent_version_id`, `risk_tier`. Environment must be `production`.
+- `assist`: Real-time desktop assist guidance binding `session_id`, `actor_id`, `playbook_id`, `playbook_version`.
+- `evaluation`: Flight simulator candidate evaluation binding `evaluation_id`, `scenario_version_id`, `attempt_id`, and `evaluation_target` (`agent` or `assist_plan`). Environment must be `simulation`.
+
+Scripted simulation actors exist in an Identity-owned test realm; they are not real memberships and cannot acquire production sessions, credentials, governance grants, or business authority. Scripted approval and clarification events bind exact proposed values, action/proposal digests, record/surface generations, and test-realm authority. They are labeled simulated and never count as human examples or supervised history. Tier 4 remains denied.
+
 6. **Step-Up MFA:** Consequential operations (Tier 3 approvals, release approvals, policy modifications, emergency recovery) require verified MFA completed within the previous 5 minutes. Proven via Auth0 Actions emitting namespaced claims: `https://oryn.app/claims/connection_id`, `https://oryn.app/claims/connection_strategy`, and `https://oryn.app/claims/mfa_at`.
 
 ### Bridge Delivery Contract (`ExecuteBrowserAction`)

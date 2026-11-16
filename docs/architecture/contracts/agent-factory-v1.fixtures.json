@@ -5787,7 +5787,8 @@
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
                       "max_argument_bytes": 4096,
-                      "write_guard": "strong_precondition"
+                      "write_guard": "strong_precondition",
+                      "selection": null
                     },
                     {
                       "operation_id": "read_invoice",
@@ -5863,7 +5864,8 @@
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
                       "max_argument_bytes": 4096,
-                      "write_guard": "not_applicable"
+                      "write_guard": "not_applicable",
+                      "selection": null
                     }
                   ],
                   "qualification_refs": [
@@ -7069,7 +7071,8 @@
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
                       "max_argument_bytes": 4096,
-                      "write_guard": "not_applicable"
+                      "write_guard": "not_applicable",
+                      "selection": null
                     },
                     {
                       "operation_id": "update_record",
@@ -7114,7 +7117,8 @@
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
                       "max_argument_bytes": 4096,
-                      "write_guard": "strong_precondition"
+                      "write_guard": "strong_precondition",
+                      "selection": null
                     }
                   ],
                   "qualification_refs": [
@@ -8281,7 +8285,8 @@
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
                       "max_argument_bytes": 4096,
-                      "write_guard": "not_applicable"
+                      "write_guard": "not_applicable",
+                      "selection": null
                     },
                     {
                       "operation_id": "update_record",
@@ -8337,7 +8342,8 @@
                       "verification_spec_refs": [],
                       "policy_fact_fields": [],
                       "max_argument_bytes": 4096,
-                      "write_guard": "strong_precondition"
+                      "write_guard": "strong_precondition",
+                      "selection": null
                     }
                   ],
                   "qualification_refs": [

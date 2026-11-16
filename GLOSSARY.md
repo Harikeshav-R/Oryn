@@ -300,4 +300,24 @@ _Avoid_: Dynamic queue, auto-refill batch, rolling query
 A linked attempt to perform proven-safe remaining work for a Case; not a replay of prior effects.
 _Avoid_: Automatic retry, replay, loopback
 
+**Scenario**:
+A closed, versioned declarative specification of starting state, inputs, expected business outcome, invariants, fault plans, and coverage requirements used to evaluate an agent candidate or assist plan.
+_Avoid_: Test script, execution DSL, mock code
+
+**Scenario Suite**:
+An immutable, ordered collection of scenario version references, fixture references, and coverage requirements sealed by an authorized reviewer for a specific evaluation stage and target scope.
+_Avoid_: Test folder, ad-hoc test run, dynamic test selection
+
+**Evaluation**:
+A governed assessment of an exact candidate target against a sealed scenario suite under an explicit non-production execution context, producing independent verification evidence and signed readiness reports.
+_Avoid_: Benchmark run, QA smoke test, staging trial
+
+**Evaluation Attempt**:
+One isolated execution trial of an admitted scenario within an evaluation, executed with fresh sandbox state and evaluated by an independent oracle.
+_Avoid_: Test rerun, retry loop, execution repeat
+
+**Environment Fidelity**:
+The documented and evidenced correspondence between a simulation environment (synthetic pack or vendor sandbox) and production systems, disclosing known limitations and fidelity gaps.
+_Avoid_: Mock accuracy, sandbox parity, simulation equivalence
+
 

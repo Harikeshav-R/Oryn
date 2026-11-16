@@ -138,6 +138,9 @@
     },
     {
       "$ref": "#/$defs/ExecutionLimitsPolicyV1"
+    },
+    {
+      "$ref": "#/$defs/SignedSimulationAdmissionV1"
     }
   ],
   "$defs": {
@@ -307,7 +310,12 @@
         "application.read",
         "integration.manage",
         "application.qualify",
-        "execution_limits.manage"
+        "execution_limits.manage",
+        "simulation.read",
+        "simulation.edit",
+        "simulation.evaluate",
+        "simulation.review",
+        "simulation.manage_policy"
       ]
     },
     "RemitId": {
@@ -371,6 +379,34 @@
             "assist_plan_id",
             "assist_plan_version",
             "playbook_version"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "evaluation"
+            },
+            "evaluation_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "scenario_version_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "attempt_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "evaluation_target": {
+              "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetV1"
+            }
+          },
+          "required": [
+            "kind",
+            "evaluation_id",
+            "scenario_version_id",
+            "attempt_id",
+            "evaluation_target"
           ]
         }
       ]
@@ -5578,7 +5614,8 @@
                       "root",
                       "policy",
                       "publisher",
-                      "receipt"
+                      "receipt",
+                      "evaluation"
                     ]
                   },
                   "status": {
@@ -5867,6 +5904,8 @@
         "organization_id",
         "worker_id",
         "execution_context",
+        "environment",
+        "simulation_admission_ref",
         "host",
         "assignment_id",
         "assignment_epoch",
@@ -5887,6 +5926,20 @@
         },
         "execution_context": {
           "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["production", "simulation"]
+        },
+        "simulation_admission_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "host": {
           "$ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHostV1"
@@ -5914,6 +5967,137 @@
         },
         "expires_at": {
           "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "SimulationAdmissionPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admission_id",
+        "organization_id",
+        "evaluation_id",
+        "suite_version_id",
+        "suite_sha256",
+        "scenario_version_id",
+        "attempt_id",
+        "target_identity",
+        "mode",
+        "environment",
+        "environment_bindings_sha256",
+        "principal_profiles_sha256",
+        "assignment_id",
+        "assignment_epoch",
+        "control_generation",
+        "host",
+        "device_id",
+        "profile_id",
+        "recovery_epoch",
+        "issued_at",
+        "not_after"
+      ],
+      "properties": {
+        "admission_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "evaluation_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "suite_version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "suite_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "scenario_version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "target_identity": {
+          "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["live", "recorded_diagnostic"]
+        },
+        "environment": {
+          "const": "simulation"
+        },
+        "environment_bindings_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "principal_profiles_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "assignment_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "assignment_epoch": {
+          "$ref": "#/$defs/U64"
+        },
+        "control_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "host": {
+          "$ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHostV1"
+        },
+        "device_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "SignedSimulationAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.simulation-admission.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/SimulationAdmissionPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
         }
       }
     }

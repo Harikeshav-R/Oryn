@@ -1,0 +1,1204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:flight-simulator:v1",
+  "title": "Oryn Agent Flight Simulator and Evaluation Contracts",
+  "description": "Normative Draft 2020-12 schemas for Oryn flight-simulator scenario suites, test fixtures, suite sealing receipts, evaluation admissions, reports, replay records, and regression requirements.",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/EvaluationTargetV1" },
+    { "$ref": "#/$defs/EvaluationTargetIdentityV1" },
+    { "$ref": "#/$defs/SimulationVersionRefV1" },
+    { "$ref": "#/$defs/SimulationRegressionRequirementRefV1" },
+    { "$ref": "#/$defs/ScenarioExpectedResultV1" },
+    { "$ref": "#/$defs/FaultPlanV1" },
+    { "$ref": "#/$defs/ScenarioVersionV1" },
+    { "$ref": "#/$defs/FixtureManifestV1" },
+    { "$ref": "#/$defs/ScenarioSuiteVersionV1" },
+    { "$ref": "#/$defs/SuiteSealReceiptV1" },
+    { "$ref": "#/$defs/CoverageMatrixV1" },
+    { "$ref": "#/$defs/SimulationRegressionRequirementV1" },
+    { "$ref": "#/$defs/SignedEvaluationReportV1" },
+    { "$ref": "#/$defs/EvaluationConditionsV1" },
+    { "$ref": "#/$defs/ReplayEntryV1" },
+    { "$ref": "#/$defs/EvaluationComparisonV1" },
+    { "$ref": "#/$defs/ScenarioProposalV1" },
+    { "$ref": "#/$defs/SimulationProblemV1" },
+    { "$ref": "#/$defs/SimulationAdmissionRequestV1" },
+    { "$ref": "#/$defs/ScenarioExpectationRefV1" }
+  ],
+  "$defs": {
+    "UUID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9_.-]{1,128}$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Base64Url32": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "Base64Url64": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "EvaluationTargetV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "agent_version"],
+          "properties": {
+            "kind": { "const": "agent" },
+            "agent_version": { "$ref": "#/$defs/UUID" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "assist_plan_id",
+            "assist_plan_version",
+            "plan_sha256",
+            "playbook_version"
+          ],
+          "properties": {
+            "kind": { "const": "assist_plan" },
+            "assist_plan_id": { "$ref": "#/$defs/UUID" },
+            "assist_plan_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+            "plan_sha256": { "$ref": "#/$defs/Sha256Hex" },
+            "playbook_version": { "type": "string", "minLength": 1, "maxLength": 64 }
+          }
+        }
+      ]
+    },
+    "EvaluationTargetIdentityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "target",
+        "behavior_sha256",
+        "manifest_sha256"
+      ],
+      "properties": {
+        "schema_id": { "const": "simulation.target-identity.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "target": { "$ref": "#/$defs/EvaluationTargetV1" },
+        "behavior_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "manifest_sha256": { "$ref": "#/$defs/Sha256Hex" }
+      }
+    },
+    "SimulationVersionRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "entity_kind",
+        "entity_id",
+        "version_id",
+        "content_sha256"
+      ],
+      "properties": {
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "entity_kind": {
+          "type": "string",
+          "enum": ["scenario", "suite", "fixture", "regression_requirement"]
+        },
+        "entity_id": { "$ref": "#/$defs/UUID" },
+        "version_id": { "$ref": "#/$defs/UUID" },
+        "content_sha256": { "$ref": "#/$defs/Sha256Hex" }
+      }
+    },
+    "SimulationRegressionRequirementRefV1": {
+      "allOf": [
+        { "$ref": "#/$defs/SimulationVersionRefV1" },
+        {
+          "type": "object",
+          "properties": {
+            "entity_kind": { "const": "regression_requirement" }
+          },
+          "required": ["entity_kind"]
+        }
+      ]
+    },
+    "ScenarioCategoryV1": {
+      "type": "string",
+      "enum": [
+        "happy_path",
+        "boundary_conditions",
+        "business_exceptions",
+        "input_quality",
+        "application_drift",
+        "external_failure",
+        "permission_policy",
+        "recovery_duplicate_prevention",
+        "previous_incident"
+      ]
+    },
+    "ScenarioMixClassificationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edge", "negative", "failure_injection", "basis_refs"],
+      "properties": {
+        "edge": { "type": "boolean" },
+        "negative": { "type": "boolean" },
+        "failure_injection": { "type": "boolean" },
+        "basis_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "maxItems": 128
+        }
+      }
+    },
+    "ScenarioExpectedStopV1": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reason_code", "checkpoint_key"],
+          "properties": {
+            "reason_code": { "$ref": "#/$defs/Identifier" },
+            "checkpoint_key": { "$ref": "#/$defs/Identifier" }
+          }
+        }
+      ]
+    },
+    "ScenarioExpectedResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected_disposition",
+        "verification_spec_refs",
+        "postcondition_ids",
+        "expected_stop",
+        "no_effect_invariant_refs"
+      ],
+      "properties": {
+        "expected_disposition": {
+          "type": "string",
+          "enum": ["verified", "safe_escalation", "expected_rejection"]
+        },
+        "verification_spec_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128
+        },
+        "postcondition_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128
+        },
+        "expected_stop": { "$ref": "#/$defs/ScenarioExpectedStopV1" },
+        "no_effect_invariant_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128
+        }
+      }
+    },
+    "FaultHookEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fault_id",
+        "hook",
+        "occurrence",
+        "action_or_node_ref",
+        "kind",
+        "parameters"
+      ],
+      "properties": {
+        "fault_id": { "$ref": "#/$defs/Identifier" },
+        "hook": {
+          "type": "string",
+          "enum": [
+            "adapter_before_dispatch",
+            "adapter_after_dispatch_before_ack",
+            "readback",
+            "inference",
+            "surface",
+            "worker",
+            "authority",
+            "input"
+          ]
+        },
+        "occurrence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "action_or_node_ref": { "$ref": "#/$defs/Identifier" },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "timeout_before_dispatch",
+            "timeout_after_dispatch",
+            "http_error",
+            "rate_limit",
+            "readback_unavailable",
+            "readback_conflict",
+            "stale_record",
+            "surface_drift",
+            "worker_crash",
+            "approval_missing",
+            "permission_revoked",
+            "prompt_injection"
+          ]
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "delay_ms": { "type": "integer", "minimum": 1, "maximum": 30000 },
+            "status": { "type": "integer", "minimum": 400, "maximum": 599 },
+            "retry_after_ms": { "type": "integer", "minimum": 1, "maximum": 30000 },
+            "fixture_ref": { "$ref": "#/$defs/SimulationVersionRefV1" },
+            "resource_role": { "$ref": "#/$defs/Identifier" },
+            "phase": {
+              "type": "string",
+              "enum": ["before_dispatch", "after_dispatch", "after_owner_result"]
+            },
+            "script_step_id": { "$ref": "#/$defs/Identifier" },
+            "principal_profile_id": { "$ref": "#/$defs/Identifier" },
+            "capability": { "$ref": "#/$defs/Identifier" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "hook": { "const": "adapter_before_dispatch" } } },
+          "then": {
+            "properties": {
+              "kind": { "enum": ["timeout_before_dispatch", "http_error", "rate_limit"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "hook": { "const": "adapter_after_dispatch_before_ack" } } },
+          "then": {
+            "properties": {
+              "kind": { "const": "timeout_after_dispatch" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "hook": { "const": "readback" } } },
+          "then": {
+            "properties": {
+              "kind": { "enum": ["readback_unavailable", "readback_conflict", "stale_record"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "hook": { "const": "inference" } } },
+          "then": {
+            "properties": {
+              "kind": { "enum": ["timeout_before_dispatch", "timeout_after_dispatch", "http_error", "rate_limit"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "hook": { "const": "surface" } } },
+          "then": {
+            "properties": {
+              "kind": { "enum": ["surface_drift", "stale_record"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "hook": { "const": "worker" } } },
+          "then": {
+            "properties": {
+              "kind": { "const": "worker_crash" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "hook": { "const": "authority" } } },
+          "then": {
+            "properties": {
+              "kind": { "enum": ["approval_missing", "permission_revoked"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "hook": { "const": "input" } } },
+          "then": {
+            "properties": {
+              "kind": { "const": "prompt_injection" }
+            }
+          }
+        }
+      ]
+    },
+    "FaultPlanV1": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/FaultHookEntryV1" },
+      "maxItems": 32
+    },
+    "ScenarioVersionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "scenario_id",
+        "scenario_version_id",
+        "name",
+        "category",
+        "mix_classification",
+        "purpose",
+        "application_context",
+        "starting_state_ref",
+        "input_refs",
+        "policy_refs",
+        "allowed_actions",
+        "expected_result",
+        "invariant_refs",
+        "coverage_requirement_ids",
+        "principal_profiles",
+        "human_script",
+        "fault_plan",
+        "fixture_seed",
+        "logical_start_at",
+        "provenance",
+        "source_refs",
+        "semantic_sha256",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "simulation.scenario-version.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "scenario_id": { "$ref": "#/$defs/UUID" },
+        "scenario_version_id": { "$ref": "#/$defs/UUID" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "category": { "$ref": "#/$defs/ScenarioCategoryV1" },
+        "mix_classification": { "$ref": "#/$defs/ScenarioMixClassificationV1" },
+        "purpose": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "application_context": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["application_id", "operation_ids", "environment_profile"],
+          "properties": {
+            "application_id": { "$ref": "#/$defs/Identifier" },
+            "operation_ids": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/Identifier" },
+              "maxItems": 64
+            },
+            "environment_profile": { "$ref": "#/$defs/Identifier" }
+          }
+        },
+        "starting_state_ref": { "$ref": "#/$defs/SimulationVersionRefV1" },
+        "input_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "maxItems": 64
+        },
+        "policy_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "maxItems": 64
+        },
+        "allowed_actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128
+        },
+        "expected_result": { "$ref": "#/$defs/ScenarioExpectedResultV1" },
+        "invariant_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128
+        },
+        "coverage_requirement_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128
+        },
+        "principal_profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["profile_id", "role", "permissions"],
+            "properties": {
+              "profile_id": { "$ref": "#/$defs/Identifier" },
+              "role": { "$ref": "#/$defs/Identifier" },
+              "permissions": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/Identifier" },
+                "maxItems": 64
+              }
+            }
+          },
+          "maxItems": 16
+        },
+        "human_script": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["step_id", "actor_profile_id", "decision", "response_payload"],
+            "properties": {
+              "step_id": { "$ref": "#/$defs/Identifier" },
+              "actor_profile_id": { "$ref": "#/$defs/Identifier" },
+              "decision": { "type": "string", "enum": ["approve", "reject", "clarify"] },
+              "response_payload": { "type": "object" }
+            }
+          },
+          "maxItems": 32
+        },
+        "fault_plan": { "$ref": "#/$defs/FaultPlanV1" },
+        "fixture_seed": { "type": "integer", "minimum": 0 },
+        "logical_start_at": { "$ref": "#/$defs/UtcDateTime" },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["origin", "synthesis_method"],
+          "properties": {
+            "origin": { "type": "string", "enum": ["authored", "synthesized", "incident_repair"] },
+            "synthesis_method": { "type": "string" },
+            "source_incident_id": { "$ref": "#/$defs/UUID" }
+          }
+        },
+        "source_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "maxItems": 64
+        },
+        "semantic_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "created_by": { "$ref": "#/$defs/Identifier" },
+        "created_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "FixtureManifestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "fixture_id",
+        "fixture_sha256",
+        "semantic_content_sha256",
+        "media_type",
+        "byte_length",
+        "resource_roles",
+        "origin",
+        "source_refs",
+        "source_expires_at",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "simulation.fixture-manifest.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "fixture_id": { "$ref": "#/$defs/UUID" },
+        "fixture_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "semantic_content_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "media_type": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "byte_length": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+        "resource_roles": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "origin": { "type": "string", "enum": ["synthetic", "approved_anonymized"] },
+        "source_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "maxItems": 32
+        },
+        "source_expires_at": {
+          "oneOf": [{ "$ref": "#/$defs/UtcDateTime" }, { "type": "null" }]
+        },
+        "created_by": { "$ref": "#/$defs/Identifier" },
+        "created_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "TrialPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deterministic_attempts", "model_attempts", "aggregation"],
+      "properties": {
+        "deterministic_attempts": { "type": "integer", "const": 1 },
+        "model_attempts": { "type": "integer", "const": 3 },
+        "aggregation": { "type": "string", "const": "all_pass" }
+      }
+    },
+    "ScenarioSuiteVersionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "suite_id",
+        "suite_version_id",
+        "target_scope",
+        "requested_stage",
+        "scenario_refs",
+        "fixture_refs",
+        "coverage_requirements",
+        "trial_policy",
+        "suite_sha256",
+        "seal_ref",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "simulation.suite-version.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "suite_id": { "$ref": "#/$defs/UUID" },
+        "suite_version_id": { "$ref": "#/$defs/UUID" },
+        "target_scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target_kind", "target_id", "scope_boundaries"],
+          "properties": {
+            "target_kind": { "type": "string", "enum": ["agent", "assist_plan"] },
+            "target_id": { "$ref": "#/$defs/UUID" },
+            "scope_boundaries": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/Identifier" },
+              "maxItems": 64
+            }
+          }
+        },
+        "requested_stage": { "type": "integer", "enum": [3, 4] },
+        "scenario_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "minItems": 1,
+          "maxItems": 1000
+        },
+        "fixture_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "minItems": 1,
+          "maxItems": 256
+        },
+        "coverage_requirements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["requirement_id", "kind", "description"],
+            "properties": {
+              "requirement_id": { "$ref": "#/$defs/Identifier" },
+              "kind": { "$ref": "#/$defs/Identifier" },
+              "description": { "type": "string" }
+            }
+          },
+          "maxItems": 512
+        },
+        "trial_policy": { "$ref": "#/$defs/TrialPolicyV1" },
+        "suite_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "seal_ref": {
+          "oneOf": [{ "$ref": "#/$defs/UUID" }, { "type": "null" }]
+        },
+        "created_by": { "$ref": "#/$defs/Identifier" },
+        "created_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "SuiteSealReceiptPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seal_id",
+        "organization_id",
+        "suite_version_id",
+        "suite_sha256",
+        "reviewer_actor_id",
+        "authorization_ref",
+        "source_status_digest",
+        "sealed_at"
+      ],
+      "properties": {
+        "seal_id": { "$ref": "#/$defs/UUID" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "suite_version_id": { "$ref": "#/$defs/UUID" },
+        "suite_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "reviewer_actor_id": { "$ref": "#/$defs/Identifier" },
+        "authorization_ref": { "$ref": "#/$defs/SimulationVersionRefV1" },
+        "source_status_digest": { "$ref": "#/$defs/Sha256Hex" },
+        "sealed_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "SuiteSealReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "key_id", "payload", "signature"],
+      "properties": {
+        "schema_id": { "const": "simulation.suite-seal.v1" },
+        "key_id": { "$ref": "#/$defs/Identifier" },
+        "payload": { "$ref": "#/$defs/SuiteSealReceiptPayloadV1" },
+        "signature": { "$ref": "#/$defs/Base64Url64" }
+      }
+    },
+    "CoverageMatrixRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirement_id",
+        "kind",
+        "source_refs",
+        "scenario_version_ids",
+        "attempt_ids",
+        "oracle_result_ids",
+        "status",
+        "limitations"
+      ],
+      "properties": {
+        "requirement_id": { "$ref": "#/$defs/Identifier" },
+        "kind": { "$ref": "#/$defs/Identifier" },
+        "source_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" }
+        },
+        "scenario_version_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/UUID" }
+        },
+        "attempt_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/UUID" }
+        },
+        "oracle_result_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/UUID" }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["covered", "missing", "inconclusive", "fidelity_gap"]
+        },
+        "limitations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "CoverageMatrixV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "organization_id", "evaluation_id", "rows", "evaluated_at"],
+      "properties": {
+        "schema_id": { "const": "simulation.coverage-matrix.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "evaluation_id": { "$ref": "#/$defs/UUID" },
+        "rows": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CoverageMatrixRowV1" },
+          "maxItems": 1024
+        },
+        "evaluated_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "SimulationRegressionRequirementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "requirement_id",
+        "version_id",
+        "incident_refs",
+        "repair_ref",
+        "base_target",
+        "candidate_target",
+        "original_scenario_refs",
+        "prevention_spec_refs",
+        "variation_parent_refs",
+        "changed_dimensions",
+        "content_sha256",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "simulation.regression-requirement.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "requirement_id": { "$ref": "#/$defs/UUID" },
+        "version_id": { "$ref": "#/$defs/UUID" },
+        "incident_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "repair_ref": { "$ref": "#/$defs/SimulationVersionRefV1" },
+        "base_target": { "$ref": "#/$defs/EvaluationTargetV1" },
+        "candidate_target": { "$ref": "#/$defs/EvaluationTargetV1" },
+        "original_scenario_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "prevention_spec_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "maxItems": 64
+        },
+        "variation_parent_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "maxItems": 64
+        },
+        "changed_dimensions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 32
+        },
+        "content_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "created_by": { "$ref": "#/$defs/Identifier" },
+        "created_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "EvaluationReportPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "report_id",
+        "organization_id",
+        "evaluation_id",
+        "target_identity",
+        "suite_version_id",
+        "suite_sha256",
+        "mode",
+        "requested_stage",
+        "evaluated_scope",
+        "conditions_sha256",
+        "attempt_manifest_sha256",
+        "oracle_results_sha256",
+        "coverage_sha256",
+        "completion",
+        "assessment",
+        "scenario_results_ref",
+        "mandatory_check_results",
+        "gaps",
+        "unresolved_failure_refs",
+        "evidence_manifest_sha256",
+        "evidence_valid_until",
+        "signed_at"
+      ],
+      "properties": {
+        "report_id": { "$ref": "#/$defs/UUID" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "evaluation_id": { "$ref": "#/$defs/UUID" },
+        "target_identity": { "$ref": "#/$defs/EvaluationTargetIdentityV1" },
+        "suite_version_id": { "$ref": "#/$defs/UUID" },
+        "suite_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "mode": { "type": "string", "enum": ["live", "recorded_diagnostic"] },
+        "requested_stage": { "type": "integer", "enum": [3, 4] },
+        "evaluated_scope": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 64
+        },
+        "conditions_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "attempt_manifest_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "oracle_results_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "coverage_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "completion": {
+          "type": "string",
+          "enum": ["completed", "incomplete", "canceled", "blocked"]
+        },
+        "assessment": {
+          "type": "string",
+          "enum": ["pass", "fail", "incomplete"]
+        },
+        "scenario_results_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["artifact_id", "content_sha256", "byte_length"],
+          "properties": {
+            "artifact_id": { "$ref": "#/$defs/UUID" },
+            "content_sha256": { "$ref": "#/$defs/Sha256Hex" },
+            "byte_length": { "type": "integer", "minimum": 1, "maximum": 1048576 }
+          }
+        },
+        "mandatory_check_results": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "all_branches_covered",
+            "policy_probes_passed",
+            "no_unauthorized_actions",
+            "no_unhandled_exceptions",
+            "prescribed_trials_passed"
+          ],
+          "properties": {
+            "all_branches_covered": { "type": "boolean" },
+            "policy_probes_passed": { "type": "boolean" },
+            "no_unauthorized_actions": { "type": "boolean" },
+            "no_unhandled_exceptions": { "type": "boolean" },
+            "prescribed_trials_passed": { "type": "boolean" }
+          }
+        },
+        "gaps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 64
+        },
+        "unresolved_failure_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "maxItems": 128
+        },
+        "evidence_manifest_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "evidence_valid_until": { "$ref": "#/$defs/UtcDateTime" },
+        "signed_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "SignedEvaluationReportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "key_id", "payload", "signature"],
+      "properties": {
+        "schema_id": { "const": "simulation.evaluation-report.v1" },
+        "key_id": { "$ref": "#/$defs/Identifier" },
+        "payload": { "$ref": "#/$defs/EvaluationReportPayloadV1" },
+        "signature": { "$ref": "#/$defs/Base64Url64" }
+      }
+    },
+    "EvaluationConditionsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "runtime_semantic_revision",
+        "hud_semantic_revision",
+        "worker_image_digest",
+        "adapter_bindings",
+        "fixture_digests",
+        "fault_plan_digests",
+        "verifier_spec_digests",
+        "model_bindings",
+        "seed",
+        "logical_time",
+        "trial_policy",
+        "fidelity_gaps",
+        "production_equivalence_status"
+      ],
+      "properties": {
+        "schema_id": { "const": "simulation.evaluation-conditions.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "runtime_semantic_revision": { "$ref": "#/$defs/U64" },
+        "hud_semantic_revision": { "$ref": "#/$defs/U64" },
+        "worker_image_digest": { "$ref": "#/$defs/Sha256Hex" },
+        "adapter_bindings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "maxItems": 64
+        },
+        "fixture_digests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Sha256Hex" },
+          "maxItems": 256
+        },
+        "fault_plan_digests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Sha256Hex" },
+          "maxItems": 64
+        },
+        "verifier_spec_digests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Sha256Hex" },
+          "maxItems": 128
+        },
+        "model_bindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["route_id", "route_revision", "model_revision"],
+            "properties": {
+              "route_id": { "$ref": "#/$defs/Identifier" },
+              "route_revision": { "$ref": "#/$defs/U64" },
+              "model_revision": { "type": "string" }
+            }
+          },
+          "maxItems": 16
+        },
+        "seed": { "type": "integer", "minimum": 0 },
+        "logical_time": { "$ref": "#/$defs/UtcDateTime" },
+        "trial_policy": { "$ref": "#/$defs/TrialPolicyV1" },
+        "fidelity_gaps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 64
+        },
+        "production_equivalence_status": {
+          "type": "string",
+          "enum": ["established", "not_established"]
+        }
+      }
+    },
+    "ReplayEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "observed_at",
+        "step_or_node_id",
+        "decision_refs",
+        "source_value_refs",
+        "proposed_action_ref",
+        "authority_result_ref",
+        "submission_receipt_ref",
+        "readback_ref",
+        "verification_result_ref",
+        "expected_actual_diff_ref",
+        "state_availability"
+      ],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 1 },
+        "observed_at": { "$ref": "#/$defs/UtcDateTime" },
+        "step_or_node_id": { "$ref": "#/$defs/Identifier" },
+        "decision_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" }
+        },
+        "source_value_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" }
+        },
+        "proposed_action_ref": {
+          "oneOf": [{ "$ref": "#/$defs/Identifier" }, { "type": "null" }]
+        },
+        "authority_result_ref": {
+          "oneOf": [{ "$ref": "#/$defs/Identifier" }, { "type": "null" }]
+        },
+        "submission_receipt_ref": {
+          "oneOf": [{ "$ref": "#/$defs/Identifier" }, { "type": "null" }]
+        },
+        "readback_ref": {
+          "oneOf": [{ "$ref": "#/$defs/Identifier" }, { "type": "null" }]
+        },
+        "verification_result_ref": {
+          "oneOf": [{ "$ref": "#/$defs/Identifier" }, { "type": "null" }]
+        },
+        "expected_actual_diff_ref": {
+          "oneOf": [{ "$ref": "#/$defs/Identifier" }, { "type": "null" }]
+        },
+        "state_availability": {
+          "type": "string",
+          "enum": ["complete", "redacted", "missing"]
+        }
+      }
+    },
+    "EvaluationComparisonV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "comparison_id",
+        "baseline_report_id",
+        "candidate_report_id",
+        "comparable",
+        "reason_codes",
+        "shared_scenarios_count",
+        "newly_passing",
+        "newly_regressing",
+        "unchanged",
+        "safety_policy_differences",
+        "metrics",
+        "compared_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "simulation.comparison.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "comparison_id": { "$ref": "#/$defs/UUID" },
+        "baseline_report_id": { "$ref": "#/$defs/UUID" },
+        "candidate_report_id": { "$ref": "#/$defs/UUID" },
+        "comparable": { "type": "boolean" },
+        "reason_codes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" }
+        },
+        "shared_scenarios_count": { "type": "integer", "minimum": 0 },
+        "newly_passing": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/UUID" }
+        },
+        "newly_regressing": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/UUID" }
+        },
+        "unchanged": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/UUID" }
+        },
+        "safety_policy_differences": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baseline_pass_rate",
+            "candidate_pass_rate",
+            "baseline_median_ms",
+            "candidate_median_ms",
+            "cost_microusd"
+          ],
+          "properties": {
+            "baseline_pass_rate": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "candidate_pass_rate": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+            "baseline_median_ms": {
+              "oneOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+            },
+            "candidate_median_ms": {
+              "oneOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+            },
+            "cost_microusd": {
+              "oneOf": [{ "$ref": "#/$defs/U64" }, { "type": "null" }]
+            }
+          }
+        },
+        "compared_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "ScenarioProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "proposals"
+      ],
+      "properties": {
+        "schema_id": { "const": "simulation.scenario-proposal.v1" },
+        "proposals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "category",
+              "purpose",
+              "starting_conditions",
+              "inputs",
+              "expected_disposition",
+              "rationale"
+            ],
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "category": { "$ref": "#/$defs/ScenarioCategoryV1" },
+              "purpose": { "type": "string", "minLength": 1, "maxLength": 512 },
+              "starting_conditions": { "type": "object" },
+              "inputs": { "type": "object" },
+              "expected_disposition": {
+                "type": "string",
+                "enum": ["verified", "safe_escalation", "expected_rejection"]
+              },
+              "rationale": { "type": "string" }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 16
+        }
+      }
+    },
+    "SimulationProblemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "safe_retry",
+        "next_action"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "SIMULATION_NOT_AUTHORIZED",
+            "SIMULATION_REVISION_CONFLICT",
+            "SIMULATION_TARGET_INVALID",
+            "SIMULATION_SUITE_INCOMPLETE",
+            "SIMULATION_SOURCE_UNAVAILABLE",
+            "SIMULATION_POLICY_CONFLICT",
+            "SIMULATION_ENVIRONMENT_UNAVAILABLE",
+            "SIMULATION_FIDELITY_GAP",
+            "SIMULATION_RESET_UNVERIFIED",
+            "SIMULATION_INPUT_RESTRICTED",
+            "SIMULATION_LIMIT_EXCEEDED",
+            "SIMULATION_BUDGET_EXCEEDED",
+            "SIMULATION_ASSIGNMENT_STALE",
+            "SIMULATION_EVIDENCE_EXPIRED",
+            "SIMULATION_NOT_COMPARABLE"
+          ]
+        },
+        "message": { "type": "string" },
+        "retryable": { "type": "boolean" },
+        "safe_retry": { "type": "boolean" },
+        "next_action": { "type": "string" },
+        "details": { "type": "object" }
+      }
+    },
+    "SimulationAdmissionRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evaluation_id",
+        "scenario_version_id",
+        "attempt_id",
+        "assignment_id",
+        "expected_control_generation",
+        "expected_assignment_epoch"
+      ],
+      "properties": {
+        "evaluation_id": { "$ref": "#/$defs/UUID" },
+        "scenario_version_id": { "$ref": "#/$defs/UUID" },
+        "attempt_id": { "$ref": "#/$defs/UUID" },
+        "assignment_id": { "$ref": "#/$defs/UUID" },
+        "expected_control_generation": { "$ref": "#/$defs/U64" },
+        "expected_assignment_epoch": { "$ref": "#/$defs/U64" }
+      }
+    },
+    "ScenarioExpectationRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "suite_id",
+        "suite_version_id",
+        "scenario_id",
+        "scenario_version_id",
+        "expected_result_sha256",
+        "attempt_id"
+      ],
+      "properties": {
+        "suite_id": { "$ref": "#/$defs/UUID" },
+        "suite_version_id": { "$ref": "#/$defs/UUID" },
+        "scenario_id": { "$ref": "#/$defs/UUID" },
+        "scenario_version_id": { "$ref": "#/$defs/UUID" },
+        "expected_result_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "attempt_id": { "$ref": "#/$defs/UUID" }
+      }
+    }
+  }
+}

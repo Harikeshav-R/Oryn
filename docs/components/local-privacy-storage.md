@@ -31,12 +31,12 @@ The component governs:
 7. **Employee Review Before Sharing:** Compiles candidate workflows, derives purpose-bound redacted still images, enforces strict image size and count limits, binds final review attestations with Ed25519 device signatures, and emits approved contributions.
 8. **Governed Inference Egress:** Operates the edge `InferenceEgressClient`, attaching signed `InferenceAuthorization` tokens and dispatching transient model inference requests over TLS 1.3 to the LiteLLM gateway with contractual zero content retention, no model training, and strict US geographic confinement.
 9. **Private HUD Context Stream:** Streams sanitized observation events and ingests reverse demonstration proposals over a direct, length-prefixed socketpair/pipe link (`privacy-context.v1`, Contract 25) with `local-context-hud`.
-10. **Unified Local Execution Reservation:** Operates the `LocalExecutionReservationBroker`, maintaining the authoritative workstation execution reservation keyed by `(device_id, context, modality, epoch)` across browser (`browser-bridge.v1` major 1 minor 5) and native (`shell-adapter.v1` major 1 minor 1) modalities to enforce mutual exclusion and prevent competing actuation.
+10. **Unified Local Execution Reservation:** Operates the `LocalExecutionReservationBroker`, maintaining the authoritative workstation execution reservation keyed by `(device_id, context, modality, epoch)` across browser (`browser-bridge.v1` major 1 minor 6) and native (`shell-adapter.v1` major 1 minor 2) modalities to enforce mutual exclusion and prevent competing actuation.
 
 ### Internal Modules and Responsibilities
 `oryn-privacy-helper` is structured into eight decoupled Rust modules:
 - `CaptureGate`: Authoritative consent validation, category state derivation, window and URL admission, ephemeral visibility lease tracking (100 ms lease / 500 ms cutoff), and signed capture policy lease verification. Runs on a high-priority, non-blocking control thread.
-- `LocalExecutionReservationBroker`: Maintains the authoritative local reservation record keyed by `(device_id, context, modality, epoch)`, enforcing mutual exclusion between browser and native actuation, validating session epochs and execution context (`job` vs `assist`), and executing fail-safe cleanup upon disconnect, pause, or completion.
+- `LocalExecutionReservationBroker`: Maintains the authoritative local reservation record keyed by `(device_id, context, modality, epoch)`, enforcing mutual exclusion between browser and native actuation, validating session epochs and execution context (`job`, `assist`, or `evaluation`), and executing fail-safe cleanup upon disconnect, pause, or completion.
 - `SourceSupervisor`: Spawns and supervises `oryn-observation-worker` and `oryn-meeting-worker`; verifies binary Authenticode / code signatures; enforces 100 ms watchdog heartbeats; tracks per-source health (`ready`, `degraded`, `unavailable`); manages shared-memory slot admission; aggregates browser bridge health; and maintains source-specific recovery blockers. Meeting session coordination logic remains owned by Component 4 inside the helper.
 - `EvidenceStore`: Manages SQLCipher 4 database partitions, independently encrypted media blobs, FTS5 indexes, versioned writes, transactional commits, and keyset-paginated read queries.
 - `RetentionCoordinator`: Tracks retention deadlines, enforces trusted-time constraints across boots, evaluates signed retention/hold verdicts, computes deletion previews, and executes crash-safe selective purge workflows.
@@ -1059,24 +1059,34 @@ The `LocalExecutionReservationBroker` inside `oryn-privacy-helper` is the single
 1. **Authoritative Reservation Key:**
    The broker maintains exactly one active local reservation record keyed by the 4-tuple:
    $$\text{ReservationKey} = (\text{device\_id}, \text{context}, \text{modality}, \text{epoch})$$
-   where `context` is the tagged `ExecutionContextV1` (`job` with `job_id`, `case_id`, `agent_version`, or `assist` with `assist_session_id`, `user_id`, `window_id`), `modality` is strictly `browser` or `native`, and `epoch` is the workstation session epoch.
+   where `context` is the tagged `ExecutionContextV1`:
+   - `job`: Production job `{kind: "job", assignment_id, assignment_epoch}`.
+   - `assist`: HUD assist `{kind: "assist", assist_session_id, assist_incarnation}`.
+   - `evaluation`: Flight simulator candidate evaluation `{kind: "evaluation", attempt_id, assignment_id, assignment_epoch}` on enrolled lab devices.
+   `modality` is strictly `browser` or `native`, and `epoch` is the workstation session epoch.
 
 2. **Modality Mutual Exclusion:**
-   Workstation execution is mutually exclusive across all modalities, jobs, assists, and employee profiles. At any time $T$, only one execution context may hold an active local reservation. Any reservation request from a competing job, assist session, employee profile, or adapter modality is rejected immediately with a conflict status.
+   Workstation execution is mutually exclusive across all modalities, jobs, assists, evaluations, and profiles. At any time $T$, only one execution context may hold an active local reservation. Any reservation request from a competing job, assist session, evaluation attempt, employee profile, or adapter modality is rejected immediately with a conflict status.
 
 3. **Acquisition & Release Sequence:**
    - **Browser Execution:** When a browser adapter operation requires actuation, the browser bridge broker first requests the common reservation from `LocalExecutionReservationBroker`. Only after obtaining this workstation reservation does the browser bridge issue an `AcquireReservation` command to the browser extension and arm the DNR navigation guard. If extension reservation fails, the common workstation reservation is immediately released.
-   - **Native Execution:** When native actuation is dispatched to the supervised worker `oryn-adapter-worker` over `shell-adapter.v1` (major 1, minor 1), the worker obtains the same common workstation reservation from `LocalExecutionReservationBroker`. Native actuation cannot proceed without this active grant.
+   - **Native Execution:** When native actuation is dispatched to the supervised worker `oryn-adapter-worker` over `shell-adapter.v1` (major 1, minor 2), the worker obtains the same common workstation reservation from `LocalExecutionReservationBroker`. Native actuation cannot proceed without this active grant.
    - **Fail-Safe Release:** Loss of visibility lease, workstation lock/sleep, employee pause (`PauseCapture` / `PauseScreenObservation`), shell disconnect, window occlusion, or action completion triggers immediate release of the reservation record.
 
 4. **Browser Bridge Negotiation:**
-   The broker preserves existing browser wire reservation messages (`AcquireReservation`, `ReleaseReservation`, `HeartbeatReservation`) on Contracts 11 and 12 (`browser-bridge.v1`). Execution requires negotiation of major 1, minor 5 and the explicit capabilities `identity_authority_v1`, `local_execution_reservation_v1`, and `execution_reservation_lease_v1`. Legacy clients cannot claim joint native/browser execution support and cannot interoperate with unified workstation reservations. All browser action results must return typed `execution_context` (`ExecutionContextV1`).
+   The broker preserves existing browser wire reservation messages (`AcquireReservation`, `ReleaseReservation`, `HeartbeatReservation`) on Contracts 11 and 12 (`browser-bridge.v1`). Execution requires negotiation of major 1, minor 6 and the explicit capabilities `identity_authority_v1`, `local_execution_reservation_v1`, `execution_reservation_lease_v1`, and `evaluation_execution_v1`. Legacy clients cannot claim joint native/browser execution support and cannot interoperate with unified workstation reservations. All browser action results must return typed `execution_context` (`ExecutionContextV1`).
 
 5. **Observation Buffers & Ephemeral Receipts:**
    - **Content-Free Receipts:** Local execution receipts (`BrowserActionResult`, native action receipts) are content-free metadata envelopes confirming actuation success/failure. They are independent of personal-history retention and do not log or leak captured DOM nodes, element text, or screen pixels.
    - **No Central Observation Transcript:** Raw native or browser observations never become a central execution transcript.
    - **Preparation Buffers:** Observation-derived preparation buffers (e.g., target element coordinates or semantic nodes) reside strictly in volatile memory. When `personal_history_retention=false`, they expire under the strict 30-second volatile ceiling. If an authorized action is not dispatched within 30 seconds of observation acquisition, the buffer is zeroed and fresh target preparation is required.
    - **Distinct Data Classes:** Signed hashes and approval records do not justify retaining captured before-values. API-authorized business inputs remain strictly segregated from employee observation data.
+
+6. **Dedicated Lab Capture and Replay Isolation:**
+   Dedicated enrolled lab devices (`identity_simulation_lab_device`) execute browser and native evaluation scenarios under Flight Simulator:
+   - Ordinary local privacy retention boundaries apply strictly to lab devices: local captures follow private local retention, capture consent, and review-before-sharing policies.
+   - Central simulator replay receives metadata or separately reviewed redacted still excerpts; raw local screen captures are never streamed to central storage merely because the device is designated as a lab.
+   - The 30-day simulator replay retention ceiling cannot extend a shorter local private-source or policy deadline. Once local private evidence expires or is deleted, central replay marks the corresponding media unavailable without invalidating surviving independent business verification records.
 
 ### Identity Policy Signed Artifacts
 The privacy helper relies on cryptographic artifacts signed by `identity-policy` using pinned Ed25519 issuer keys. The signature covers the exact normative preimage: `UTF-8(schema_id) + 0x0A (LF byte) + RFC_8785_Canonical_JSON(payload)`. Signatures are unpadded base64url-encoded strings (86 characters).

@@ -379,12 +379,13 @@
         "request_id",
         "organization_id",
         "execution_context",
-        "agent_version_id",
+        "evaluation_target",
         "behavior_sha256",
         "requirement_ids",
         "action_ids",
         "checkpoint_revision",
-        "environment"
+        "environment",
+        "scenario_expectation_ref"
       ],
       "properties": {
         "schema_id": {
@@ -399,8 +400,18 @@
         "execution_context": {
           "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
         },
-        "agent_version_id": {
-          "$ref": "#/$defs/UUID"
+        "evaluation_target": {
+          "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetV1"
+        },
+        "scenario_expectation_ref": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/ScenarioExpectationRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "behavior_sha256": {
           "$ref": "#/$defs/Sha256Hex"

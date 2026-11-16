@@ -7587,6 +7587,1546 @@
           }
         }
       }
+    },
+    "/v1/simulator/suites": {
+      "post": {
+        "operationId": "createSimulatorSuite",
+        "summary": "Create an owner-scoped suite draft",
+        "description": "Initializes a new evaluation suite draft under the caller's authorized tenant and remit.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./flight-simulator-v1.schema.json#/$defs/ScenarioSuiteVersionV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Suite draft created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/ScenarioSuiteVersionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed suite definition",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Suite conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listSimulatorSuites",
+        "summary": "Authorized cursor-paginated suite selector",
+        "description": "Returns authorized cursor-paginated suite revisions up to 100 entries / 256 KiB.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated suite list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./flight-simulator-v1.schema.json#/$defs/ScenarioSuiteVersionV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/suites/{suite_id}": {
+      "get": {
+        "operationId": "getSimulatorSuite",
+        "summary": "Authorized suite status, revisions, coverage, and seal status",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "suite_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Suite details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/ScenarioSuiteVersionV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Suite not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/suites/{suite_id}/scenarios": {
+      "post": {
+        "operationId": "addSimulatorScenario",
+        "summary": "Add a complete replacement immutable scenario version under expected draft revision",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "suite_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./flight-simulator-v1.schema.json#/$defs/ScenarioVersionV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Scenario version appended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/ScenarioVersionV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid scenario",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Draft revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/suites/{suite_id}/scenario-decisions": {
+      "post": {
+        "operationId": "decideSimulatorScenario",
+        "summary": "Accept or reject a specific scenario version with reason and expected draft revision",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "suite_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "scenario_version_id",
+                  "decision",
+                  "reason",
+                  "expected_draft_revision"
+                ],
+                "properties": {
+                  "scenario_version_id": {
+                    "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+                  },
+                  "decision": {
+                    "type": "string",
+                    "enum": [
+                      "accept",
+                      "reject"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "expected_draft_revision": {
+                    "$ref": "./flight-simulator-v1.schema.json#/$defs/U64"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Decision recorded"
+          },
+          "400": {
+            "description": "Invalid decision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/suites/{suite_id}/generations": {
+      "post": {
+        "operationId": "generateSimulatorScenarios",
+        "summary": "Request bounded draft scenario generation",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "suite_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Generation operation started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many concurrent generations",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/suites/{suite_id}/seals": {
+      "post": {
+        "operationId": "sealSimulatorSuite",
+        "summary": "Owner/delegate seals the exact revision/digest after validation",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "suite_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./flight-simulator-v1.schema.json#/$defs/SuiteSealReceiptV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Suite successfully sealed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SuiteSealReceiptV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Seal validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized reviewer",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Digest mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/fixtures": {
+      "post": {
+        "operationId": "createSimulatorFixture",
+        "summary": "Create immutable fixture metadata/provenance and bounded upload intent",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./flight-simulator-v1.schema.json#/$defs/FixtureManifestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Fixture metadata created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/FixtureManifestV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fixture metadata",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/fixtures/{fixture_id}": {
+      "get": {
+        "operationId": "getSimulatorFixture",
+        "summary": "Authorized provenance, typed review projection, content digest, and artifact reference",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "fixture_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fixture details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/FixtureManifestV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixture not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/artifacts/{artifact_id}/content": {
+      "get": {
+        "operationId": "getSimulatorArtifactContent",
+        "summary": "Independently authorized purpose/audience-bound artifact content, at most 1 MiB",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "artifact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artifact payload bytes",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Artifact expired",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/fixtures/{fixture_id}/content": {
+      "put": {
+        "operationId": "uploadSimulatorFixtureContent",
+        "summary": "Upload at most 1 MiB application/octet-stream, declared digest/length required",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "fixture_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payload uploaded and quarantined pending verification"
+          },
+          "400": {
+            "description": "Digest or length mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload exceeds 1 MiB",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/evaluations": {
+      "post": {
+        "operationId": "startSimulatorEvaluation",
+        "summary": "Start exact target/suite/mode/scope with bounded resource/spend request",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "target",
+                  "suite_version_id",
+                  "suite_sha256",
+                  "mode",
+                  "requested_stage",
+                  "max_spend_microusd"
+                ],
+                "properties": {
+                  "target": {
+                    "$ref": "./flight-simulator-v1.schema.json#/$defs/EvaluationTargetV1"
+                  },
+                  "suite_version_id": {
+                    "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+                  },
+                  "suite_sha256": {
+                    "$ref": "./flight-simulator-v1.schema.json#/$defs/Sha256Hex"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "live",
+                      "recorded_diagnostic"
+                    ]
+                  },
+                  "requested_stage": {
+                    "type": "integer",
+                    "enum": [
+                      3,
+                      4
+                    ]
+                  },
+                  "max_spend_microusd": {
+                    "$ref": "./flight-simulator-v1.schema.json#/$defs/U64"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Evaluation queued and operation created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed evaluation request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Tenant evaluation limit reached",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listSimulatorEvaluations",
+        "summary": "Authorized cursor-paginated evaluation history",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "suite_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./flight-simulator-v1.schema.json#/$defs/SignedEvaluationReportV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/evaluations/{evaluation_id}": {
+      "get": {
+        "operationId": "getSimulatorEvaluation",
+        "summary": "Bounded progress summary, trial counts, readiness blockers, and availability",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "evaluation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "evaluation_id",
+                    "lifecycle",
+                    "progress"
+                  ],
+                  "properties": {
+                    "evaluation_id": {
+                      "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+                    },
+                    "lifecycle": {
+                      "type": "string",
+                      "enum": [
+                        "queued",
+                        "admitting",
+                        "running",
+                        "finalizing",
+                        "completed",
+                        "cancel_requested",
+                        "canceled",
+                        "blocked"
+                      ]
+                    },
+                    "progress": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Evaluation not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/evaluations/{evaluation_id}/cancellations": {
+      "post": {
+        "operationId": "cancelSimulatorEvaluation",
+        "summary": "Synchronous admission/control fence before acknowledgement; asynchronous cleanup progress",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "evaluation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation cancellation acknowledged and control fence advanced"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Evaluation not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/evaluations/{evaluation_id}/report": {
+      "get": {
+        "operationId": "getSimulatorEvaluationReport",
+        "summary": "Immutable signed report plus separately computed current-eligibility projection",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "evaluation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed evaluation report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SignedEvaluationReportV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Evaluation not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/evaluations/{evaluation_id}/scenario-results": {
+      "get": {
+        "operationId": "getSimulatorScenarioResults",
+        "summary": "Authorized cursor pages of immutable result records, at most 100 entries/256 KiB",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "evaluation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scenario results page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Evaluation not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/evaluations/{evaluation_id}/scenarios/{scenario_version_id}/replay": {
+      "get": {
+        "operationId": "getSimulatorScenarioReplay",
+        "summary": "Authorized paginated metadata; content retrieval remains independently authorized",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "evaluation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          },
+          {
+            "name": "scenario_version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Replay timeline entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./flight-simulator-v1.schema.json#/$defs/ReplayEntryV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Replay not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/comparisons": {
+      "post": {
+        "operationId": "compareSimulatorEvaluations",
+        "summary": "Compare two visible fixed reports without rerunning or joining evidence",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "baseline_report_id",
+                  "candidate_report_id"
+                ],
+                "properties": {
+                  "baseline_report_id": {
+                    "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+                  },
+                  "candidate_report_id": {
+                    "$ref": "./flight-simulator-v1.schema.json#/$defs/UUID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evaluation comparison result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/EvaluationComparisonV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed comparison request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/regression-requirements": {
+      "post": {
+        "operationId": "createSimulatorRegressionRequirement",
+        "summary": "Incident/repair owner submits a versioned requirement; no automatic rule approval",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationRegressionRequirementV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Regression requirement created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationRegressionRequirementV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid requirement",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulator/policy": {
+      "put": {
+        "operationId": "updateSimulatorPolicy",
+        "summary": "Security/Workflow-owner authorized tenant limit policy with optimistic concurrency",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "expected_revision",
+                  "max_concurrent_evaluations",
+                  "max_concurrent_attempts",
+                  "max_attempt_duration_seconds",
+                  "max_evaluation_duration_seconds"
+                ],
+                "properties": {
+                  "expected_revision": {
+                    "$ref": "./flight-simulator-v1.schema.json#/$defs/U64"
+                  },
+                  "max_concurrent_evaluations": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2
+                  },
+                  "max_concurrent_attempts": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4
+                  },
+                  "max_attempt_duration_seconds": {
+                    "type": "integer",
+                    "minimum": 60,
+                    "maximum": 600
+                  },
+                  "max_evaluation_duration_seconds": {
+                    "type": "integer",
+                    "minimum": 300,
+                    "maximum": 7200
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Policy updated"
+          },
+          "400": {
+            "description": "Invalid policy",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./flight-simulator-v1.schema.json#/$defs/SimulationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
