@@ -62,6 +62,15 @@
       "$ref": "#/$defs/HandoffProposalV1"
     },
     {
+      "$ref": "#/$defs/HandoffVerificationBindingV1"
+    },
+    {
+      "$ref": "#/$defs/HandoffAssessmentCommandV1"
+    },
+    {
+      "$ref": "#/$defs/HandoffAssessmentReceiptV1"
+    },
+    {
       "$ref": "#/$defs/RuleChangeCommandV1"
     },
     {
@@ -2467,44 +2476,256 @@
     },
     "HandoffAssessmentInputV1": {
       "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "verification_id"
+          ],
+          "properties": {
+            "method": {
+              "const": "system_evidence"
+            },
+            "verification_id": {
+              "$ref": "#/$defs/Identifier"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "verdict",
+            "postcondition_refs",
+            "evidence_refs"
+          ],
+          "properties": {
+            "method": {
+              "const": "authorized_reviewer"
+            },
+            "verdict": {
+              "type": "string",
+              "enum": [
+                "verified",
+                "contradicted",
+                "unknown"
+              ]
+            },
+            "postcondition_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "minItems": 1,
+              "maxItems": 16
+            },
+            "evidence_refs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KnowledgeVersionRefV1"
+              },
+              "maxItems": 32
+            }
+          }
+        }
+      ]
+    },
+    "HandoffSourceBindingV1": {
+      "type": "object",
       "additionalProperties": false,
       "required": [
-        "method",
-        "verdict",
-        "postcondition_refs",
-        "evidence_refs"
+        "connection_id",
+        "expected_connection_revision",
+        "record_key",
+        "argument_canonical_base64url"
       ],
       "properties": {
-        "method": {
+        "connection_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "expected_connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "record_key": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "argument_canonical_base64url": {
           "type": "string",
-          "enum": [
-            "system_evidence",
-            "authorized_reviewer"
+          "pattern": "^[a-zA-Z0-9_-]*$"
+        }
+      }
+    },
+    "HandoffVerificationRequirementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirement_id",
+        "capability_ref",
+        "postcondition_id",
+        "spec_ref",
+        "source_bindings",
+        "evidence_not_before"
+      ],
+      "properties": {
+        "requirement_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "capability_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "postcondition_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "spec_ref": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/KnowledgeVersionRefV1"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entity_kind": {
+                  "const": "verification_spec"
+                }
+              }
+            }
           ]
         },
-        "verdict": {
-          "type": "string",
-          "enum": [
-            "verified",
-            "contradicted",
-            "unknown"
-          ]
-        },
-        "postcondition_refs": {
+        "source_bindings": {
           "type": "array",
-          "items": {
-            "type": "string",
-            "maxLength": 128
-          },
           "minItems": 1,
-          "maxItems": 16
-        },
-        "evidence_refs": {
-          "type": "array",
+          "maxItems": 8,
           "items": {
-            "$ref": "#/$defs/KnowledgeVersionRefV1"
-          },
-          "maxItems": 32
+            "$ref": "#/$defs/HandoffSourceBindingV1"
+          }
+        },
+        "evidence_not_before": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "HandoffVerificationBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "handoff_ref",
+        "binding_sha256",
+        "requirements"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "handoff_ref": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/KnowledgeVersionRefV1"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entity_kind": {
+                  "const": "handoff"
+                }
+              }
+            }
+          ]
+        },
+        "binding_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "requirements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/HandoffVerificationRequirementV1"
+          }
+        }
+      }
+    },
+    "HandoffAssessmentCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "handoff_id",
+        "expected_revision",
+        "binding_sha256",
+        "reverify_of",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.handoff-assessment-command.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "handoff_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "binding_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "reverify_of": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "HandoffAssessmentReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "handoff_id",
+        "assessment_id",
+        "verification_id",
+        "handoff_ref"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.handoff-assessment-receipt.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "handoff_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "assessment_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "verification_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "handoff_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
         }
       }
     },

@@ -1,35 +1,368 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:oryn:schemas:outcome-verification:v1",
-  "title": "Oryn Outcome Verification Projection Wire Schemas (v1)",
-  "description": "Normative Draft 2020-12 wire schemas for verification specification projections, live verifier status, and verification requirements.",
+  "title": "Oryn Outcome Verification Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for verification specifications, management, execution runs, human reviews, standalone handoffs, and result attestations.",
   "oneOf": [
-    {
-      "$ref": "#/$defs/VerificationSpecProjectionV1"
-    },
-    {
-      "$ref": "#/$defs/VerificationSpecStatusV1"
-    },
-    {
-      "$ref": "#/$defs/VerificationRequirementV1"
-    },
-    {
-      "$ref": "#/$defs/VerificationRunRequestV1"
-    },
-    {
-      "$ref": "#/$defs/VerificationRunResultV1"
-    },
-    {
-      "$ref": "#/$defs/VerificationStatusQueryV1"
-    },
-    {
-      "$ref": "#/$defs/VerificationRunStatusV1"
-    },
-    {
-      "$ref": "#/$defs/VerificationErrorV1"
-    }
+    { "$ref": "#/$defs/VerificationSpecProjectionV1" },
+    { "$ref": "#/$defs/VerificationSpecStatusV1" },
+    { "$ref": "#/$defs/VerificationRequirementV1" },
+    { "$ref": "#/$defs/VerificationSpecDraftCommandV1" },
+    { "$ref": "#/$defs/VerificationSpecDecisionCommandV1" },
+    { "$ref": "#/$defs/VerificationSpecViewV1" },
+    { "$ref": "#/$defs/VerificationProblemV1" },
+    { "$ref": "#/$defs/VerificationRunRequestV1" },
+    { "$ref": "#/$defs/VerificationRunResultV1" },
+    { "$ref": "#/$defs/VerificationStatusQueryV1" },
+    { "$ref": "#/$defs/VerificationRunStatusV1" },
+    { "$ref": "#/$defs/VerificationErrorV1" },
+    { "$ref": "#/$defs/SignedVerificationResultAttestationV1" },
+    { "$ref": "#/$defs/PostconditionAssessmentRequestV1" },
+    { "$ref": "#/$defs/SignedPostconditionAssessmentV1" },
+    { "$ref": "#/$defs/HandoffAssessmentRequestV1" },
+    { "$ref": "#/$defs/HandoffAssessmentQueryV1" },
+    { "$ref": "#/$defs/HandoffAssessmentResultV1" },
+    { "$ref": "#/$defs/HandoffAssessmentStatusV1" },
+    { "$ref": "#/$defs/VerificationExplanationRequestV1" },
+    { "$ref": "#/$defs/VerificationExplanationV1" }
   ],
   "$defs": {
+    "UUID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$"
+    },
+    "VerificationLimitationV1": {
+      "type": "string",
+      "enum": [
+        "source_unavailable",
+        "source_timeout",
+        "freshness_unproven",
+        "source_conflict",
+        "evidence_missing",
+        "evidence_expired",
+        "value_invalid",
+        "derivation_invalid",
+        "readback_limit_exceeded",
+        "budget_exhausted",
+        "review_expired",
+        "reviewer_authority_lost",
+        "spec_revoked",
+        "policy_revoked",
+        "control_superseded",
+        "predicate_unknown"
+      ]
+    },
+    "VerificationReadSourceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "readback_capability_ref",
+        "readback_operation_id",
+        "max_age_ms",
+        "contradiction_timing"
+      ],
+      "properties": {
+        "source_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "readback_capability_ref": {
+          "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1"
+        },
+        "readback_operation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "max_age_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300000,
+          "default": 30000
+        },
+        "contradiction_timing": {
+          "type": "string",
+          "enum": [
+            "immediate_if_fresh_authoritative",
+            "after_window"
+          ]
+        }
+      }
+    },
+    "VerificationFactBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "sources"
+      ],
+      "properties": {
+        "fact_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source_id",
+              "json_pointer"
+            ],
+            "properties": {
+              "source_id": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+              },
+              "json_pointer": {
+                "type": "string",
+                "maxLength": 512,
+                "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "VerificationDerivedFactBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "operator",
+        "input_fact_ids"
+      ],
+      "properties": {
+        "fact_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "operator": {
+          "const": "subtract"
+        },
+        "input_fact_ids": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          }
+        }
+      }
+    },
+    "VerificationReviewerPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewer_role",
+        "distinct_executor_required",
+        "assessment_deadline_ms",
+        "max_observation_age_ms"
+      ],
+      "properties": {
+        "reviewer_role": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RoleId"
+        },
+        "distinct_executor_required": {
+          "type": "boolean",
+          "default": false
+        },
+        "assessment_deadline_ms": {
+          "const": 86400000
+        },
+        "max_observation_age_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300000,
+          "default": 300000
+        }
+      }
+    },
+    "VerificationSpecProjectionBodyV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "capability_ref",
+            "postcondition_ids",
+            "method",
+            "fact_definitions",
+            "derived_fact_bindings",
+            "predicate",
+            "supported_stages",
+            "readback_sources",
+            "fact_bindings",
+            "confirmation_window_ms",
+            "reviewer_policy"
+          ],
+          "properties": {
+            "capability_ref": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            },
+            "postcondition_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+              }
+            },
+            "method": {
+              "const": "system_evidence"
+            },
+            "fact_definitions": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessFactDefinitionV1"
+              }
+            },
+            "derived_fact_bindings": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 16,
+              "items": {
+                "$ref": "#/$defs/VerificationDerivedFactBindingV1"
+              }
+            },
+            "predicate": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessConditionV1"
+            },
+            "supported_stages": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 3,
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "enum": [3, 4, 5]
+              }
+            },
+            "readback_sources": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "$ref": "#/$defs/VerificationReadSourceV1"
+              }
+            },
+            "fact_bindings": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/VerificationFactBindingV1"
+              }
+            },
+            "confirmation_window_ms": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 300000,
+              "default": 30000
+            },
+            "reviewer_policy": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "capability_ref",
+            "postcondition_ids",
+            "method",
+            "fact_definitions",
+            "derived_fact_bindings",
+            "predicate",
+            "supported_stages",
+            "readback_sources",
+            "fact_bindings",
+            "confirmation_window_ms",
+            "reviewer_policy"
+          ],
+          "properties": {
+            "capability_ref": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            },
+            "postcondition_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+              }
+            },
+            "method": {
+              "const": "authorized_reviewer"
+            },
+            "fact_definitions": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessFactDefinitionV1"
+              }
+            },
+            "derived_fact_bindings": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 16,
+              "items": {
+                "$ref": "#/$defs/VerificationDerivedFactBindingV1"
+              }
+            },
+            "predicate": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessConditionV1"
+            },
+            "supported_stages": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "const": 3
+              }
+            },
+            "readback_sources": {
+              "type": "array",
+              "maxItems": 0
+            },
+            "fact_bindings": {
+              "type": "array",
+              "maxItems": 0
+            },
+            "confirmation_window_ms": {
+              "type": "null"
+            },
+            "reviewer_policy": {
+              "$ref": "#/$defs/VerificationReviewerPolicyV1"
+            }
+          }
+        }
+      ]
+    },
     "VerificationSpecProjectionV1": {
       "type": "object",
       "additionalProperties": false,
@@ -66,133 +399,6 @@
           "$ref": "#/$defs/VerificationSpecProjectionBodyV1"
         }
       }
-    },
-    "VerificationSpecProjectionBodyV1": {
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "capability_ref",
-            "postcondition_ids",
-            "method",
-            "fact_definitions",
-            "predicate",
-            "readback_capability_ref",
-            "readback_operation_id",
-            "reviewer_role",
-            "supported_stages"
-          ],
-          "properties": {
-            "capability_ref": {
-              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
-            },
-            "postcondition_ids": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 128,
-              "uniqueItems": true,
-              "items": {
-                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
-              }
-            },
-            "method": {
-              "const": "system_evidence"
-            },
-            "fact_definitions": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 32,
-              "items": {
-                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessFactDefinitionV1"
-              }
-            },
-            "predicate": {
-              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessConditionV1"
-            },
-            "readback_capability_ref": {
-              "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1"
-            },
-            "readback_operation_id": {
-              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
-            },
-            "reviewer_role": {
-              "type": "null"
-            },
-            "supported_stages": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 3,
-              "uniqueItems": true,
-              "items": {
-                "type": "integer",
-                "enum": [3, 4, 5]
-              }
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "capability_ref",
-            "postcondition_ids",
-            "method",
-            "fact_definitions",
-            "predicate",
-            "readback_capability_ref",
-            "readback_operation_id",
-            "reviewer_role",
-            "supported_stages"
-          ],
-          "properties": {
-            "capability_ref": {
-              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
-            },
-            "postcondition_ids": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 128,
-              "uniqueItems": true,
-              "items": {
-                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
-              }
-            },
-            "method": {
-              "const": "authorized_reviewer"
-            },
-            "fact_definitions": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 32,
-              "items": {
-                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessFactDefinitionV1"
-              }
-            },
-            "predicate": {
-              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessConditionV1"
-            },
-            "readback_capability_ref": {
-              "type": "null"
-            },
-            "readback_operation_id": {
-              "type": "null"
-            },
-            "reviewer_role": {
-              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RoleId"
-            },
-            "supported_stages": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 1,
-              "uniqueItems": true,
-              "items": {
-                "const": 3
-              }
-            }
-          }
-        }
-      ]
     },
     "VerificationSpecStatusV1": {
       "type": "object",
@@ -246,6 +452,34 @@
         }
       }
     },
+    "VerificationRequirementSourceBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "connection_binding_id",
+        "record_key",
+        "arguments"
+      ],
+      "properties": {
+        "source_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "connection_binding_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "record_key": {
+          "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/ValueRefV1"
+        },
+        "arguments": {
+          "type": "object",
+          "maxProperties": 32,
+          "additionalProperties": {
+            "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/ValueRefV1"
+          }
+        }
+      }
+    },
     "VerificationRequirementV1": {
       "type": "object",
       "additionalProperties": false,
@@ -254,6 +488,7 @@
         "capability_ref",
         "postcondition_id",
         "spec_ref",
+        "source_bindings",
         "action_node_ids",
         "required_before_node_ids",
         "on_unknown",
@@ -291,6 +526,14 @@
             }
           ]
         },
+        "source_bindings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/VerificationRequirementSourceBindingV1"
+          }
+        },
         "action_node_ids": {
           "type": "array",
           "minItems": 0,
@@ -317,25 +560,185 @@
         }
       }
     },
-    "UUID": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    "VerificationSpecDraftCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "spec_id",
+        "expected_revision",
+        "body",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.spec-draft-command.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "spec_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_revision": {
+          "oneOf": [
+            { "$ref": "#/$defs/U64" },
+            { "type": "null" }
+          ]
+        },
+        "body": {
+          "$ref": "#/$defs/VerificationSpecProjectionBodyV1"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
     },
-    "UUIDv4": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    "VerificationSpecDecisionCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "spec_id",
+        "expected_revision",
+        "draft_sha256",
+        "decision",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.spec-decision-command.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "spec_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "draft_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "submit_for_review",
+            "approve",
+            "request_changes",
+            "revoke"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
     },
-    "Sha256Hex": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{64}$"
+    "VerificationSpecViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "spec_id",
+        "revision",
+        "state",
+        "draft_sha256",
+        "body",
+        "projection",
+        "owner_actor_id",
+        "responsible_team_id"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.spec-view.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "spec_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "in_review",
+            "approved",
+            "revoked"
+          ]
+        },
+        "draft_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "body": {
+          "$ref": "#/$defs/VerificationSpecProjectionBodyV1"
+        },
+        "projection": {
+          "oneOf": [
+            { "$ref": "#/$defs/VerificationSpecProjectionV1" },
+            { "type": "null" }
+          ]
+        },
+        "owner_actor_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "responsible_team_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        }
+      }
     },
-    "U64": {
-      "type": "string",
-      "pattern": "^(0|[1-9][0-9]{0,19})$"
-    },
-    "UtcDateTime": {
-      "type": "string",
-      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$"
+    "VerificationProblemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "code",
+        "request_id",
+        "resource_id",
+        "retryable"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.problem.v1"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "VERIFICATION_NOT_AUTHORIZED",
+            "VERIFICATION_INPUT_INVALID",
+            "VERIFICATION_UNAVAILABLE",
+            "VERIFICATION_REQUEST_CONFLICT",
+            "VERIFICATION_SPEC_NOT_FOUND",
+            "VERIFICATION_REVISION_CONFLICT",
+            "VERIFICATION_STATE_INVALID",
+            "VERIFICATION_SPEC_INVALID",
+            "VERIFICATION_EVIDENCE_UNAVAILABLE"
+          ]
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "resource_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      }
     },
     "RequirementResultV1": {
       "type": "object",
@@ -352,7 +755,11 @@
         },
         "verdict": {
           "type": "string",
-          "enum": ["verified", "mismatch", "unknown"]
+          "enum": [
+            "verified",
+            "mismatch",
+            "unknown"
+          ]
         },
         "evidence_refs": {
           "type": "array",
@@ -364,8 +771,7 @@
         "limitations": {
           "type": "array",
           "items": {
-            "type": "string",
-            "maxLength": 1024
+            "$ref": "#/$defs/VerificationLimitationV1"
           },
           "maxItems": 32
         }
@@ -418,24 +824,31 @@
         },
         "requirement_ids": {
           "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
           "items": {
             "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
-          },
-          "maxItems": 256
+          }
         },
         "action_ids": {
           "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true,
           "items": {
             "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
-          },
-          "maxItems": 256
+          }
         },
         "checkpoint_revision": {
           "$ref": "#/$defs/U64"
         },
         "environment": {
           "type": "string",
-          "enum": ["production", "simulation"]
+          "enum": [
+            "production",
+            "simulation"
+          ]
         }
       }
     },
@@ -475,14 +888,19 @@
         },
         "requirement_results": {
           "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
           "items": {
             "$ref": "#/$defs/RequirementResultV1"
-          },
-          "maxItems": 256
+          }
         },
         "verdict": {
           "type": "string",
-          "enum": ["verified", "mismatch", "unknown"]
+          "enum": [
+            "verified",
+            "mismatch",
+            "unknown"
+          ]
         },
         "evidence_refs": {
           "type": "array",
@@ -526,7 +944,11 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["schema_id", "state", "request_id"],
+          "required": [
+            "schema_id",
+            "state",
+            "request_id"
+          ],
           "properties": {
             "schema_id": {
               "const": "verification.run-status.v1"
@@ -542,7 +964,11 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["schema_id", "state", "result"],
+          "required": [
+            "schema_id",
+            "state",
+            "result"
+          ],
           "properties": {
             "schema_id": {
               "const": "verification.run-status.v1"
@@ -560,7 +986,10 @@
     "VerificationErrorV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["code", "request_id"],
+      "required": [
+        "code",
+        "request_id"
+      ],
       "properties": {
         "code": {
           "type": "string",
@@ -573,6 +1002,475 @@
         },
         "request_id": {
           "$ref": "#/$defs/UUIDv4"
+        }
+      }
+    },
+    "SignedVerificationResultAttestationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.result-attestation.v1"
+        },
+        "key_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "organization_id",
+            "verification_id",
+            "result_sha256",
+            "request_binding_sha256",
+            "evidence_manifest_sha256",
+            "engine_revision",
+            "issued_at"
+          ],
+          "properties": {
+            "organization_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "verification_id": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+            },
+            "result_sha256": {
+              "$ref": "#/$defs/Sha256Hex"
+            },
+            "request_binding_sha256": {
+              "$ref": "#/$defs/Sha256Hex"
+            },
+            "evidence_manifest_sha256": {
+              "$ref": "#/$defs/Sha256Hex"
+            },
+            "engine_revision": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "issued_at": {
+              "$ref": "#/$defs/UtcDateTime"
+            }
+          }
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        }
+      }
+    },
+    "ReviewerFactObservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "value",
+        "source_ref",
+        "source_locator",
+        "observed_at",
+        "valid_until",
+        "artifact_refs"
+      ],
+      "properties": {
+        "fact_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "value": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/TypedValueV1" },
+            { "type": "null" }
+          ]
+        },
+        "source_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        "source_locator": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "observed_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "valid_until": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "artifact_refs": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+          }
+        }
+      }
+    },
+    "PostconditionAssessmentRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "request_id",
+        "review_revision",
+        "requirement_id",
+        "spec_ref",
+        "request_binding_sha256",
+        "observations",
+        "rationale"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.postcondition-assessment.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "review_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "requirement_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "spec_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        "request_binding_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "observations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/ReviewerFactObservationV1"
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      }
+    },
+    "SignedPostconditionAssessmentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.postcondition-assessment-attestation.v1"
+        },
+        "key_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "assessment_id",
+            "organization_id",
+            "request_id",
+            "requirement_id",
+            "spec_ref",
+            "request_binding_sha256",
+            "reviewer_actor_id",
+            "reviewer_role",
+            "observations_sha256",
+            "review_revision",
+            "policy_revision",
+            "assessed_at"
+          ],
+          "properties": {
+            "assessment_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "organization_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "request_id": {
+              "$ref": "#/$defs/UUIDv4"
+            },
+            "requirement_id": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+            },
+            "spec_ref": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            },
+            "request_binding_sha256": {
+              "$ref": "#/$defs/Sha256Hex"
+            },
+            "reviewer_actor_id": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+            },
+            "reviewer_role": {
+              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RoleId"
+            },
+            "observations_sha256": {
+              "$ref": "#/$defs/Sha256Hex"
+            },
+            "review_revision": {
+              "$ref": "#/$defs/U64"
+            },
+            "policy_revision": {
+              "$ref": "#/$defs/U64"
+            },
+            "assessed_at": {
+              "$ref": "#/$defs/UtcDateTime"
+            }
+          }
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        }
+      }
+    },
+    "HandoffAssessmentRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "organization_id",
+        "handoff_ref",
+        "binding_sha256",
+        "reverify_of"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.handoff-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "handoff_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        "binding_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "reverify_of": {
+          "oneOf": [
+            { "$ref": "#/$defs/UUIDv4" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "HandoffAssessmentQueryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "handoff_ref",
+        "request_id"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.handoff-query.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "handoff_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        }
+      }
+    },
+    "HandoffAssessmentResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "verification_id",
+        "organization_id",
+        "handoff_ref",
+        "binding_sha256",
+        "requirement_results",
+        "verdict",
+        "evidence_refs",
+        "assessed_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.handoff-result.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "verification_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "handoff_ref": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        "binding_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "requirement_results": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/RequirementResultV1"
+          }
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "contradicted",
+            "unknown"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+          },
+          "maxItems": 256
+        },
+        "assessed_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "HandoffAssessmentStatusV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_id",
+            "state",
+            "request_id"
+          ],
+          "properties": {
+            "schema_id": {
+              "const": "verification.handoff-status.v1"
+            },
+            "state": {
+              "const": "pending"
+            },
+            "request_id": {
+              "$ref": "#/$defs/UUIDv4"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_id",
+            "state",
+            "result"
+          ],
+          "properties": {
+            "schema_id": {
+              "const": "verification.handoff-status.v1"
+            },
+            "state": {
+              "const": "complete"
+            },
+            "result": {
+              "$ref": "#/$defs/HandoffAssessmentResultV1"
+            }
+          }
+        }
+      ]
+    },
+    "VerificationExplanationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "verification_id",
+        "request_id"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.explanation-request.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "verification_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        }
+      }
+    },
+    "VerificationExplanationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "verification_id",
+        "input_sha256",
+        "summary",
+        "citations"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "verification.explanation.v1"
+        },
+        "verification_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "input_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "citations": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "requirement_id",
+              "evidence_ref"
+            ],
+            "properties": {
+              "requirement_id": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+              },
+              "evidence_ref": {
+                "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+              }
+            }
+          }
         }
       }
     }

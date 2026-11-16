@@ -1,0 +1,3194 @@
+{
+  "schema_id": "verification.fixture-set.v1",
+  "public_keys": [
+    {
+      "key_id": "test_publisher_1",
+      "purpose": "publisher",
+      "public_key_base64url": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+      "test_seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "test_only": true
+    }
+  ],
+  "validation_cases": [
+    {
+      "case_id": "spec_projection_system_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecProjectionV1",
+      "instance": {
+        "schema_id": "verification.spec-projection.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "spec_invoice_recon",
+          "version_id": "22222222-2222-4222-8222-222222222222",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "body": {
+          "capability_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "capability",
+            "entity_id": "cap_invoice_manage",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "postcondition_ids": [
+            "post_invoice_reconciled"
+          ],
+          "method": "system_evidence",
+          "fact_definitions": [
+            {
+              "fact_id": "invoice_status",
+              "type": "string",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "invoice_amount",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "po_amount",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "balance_diff",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "approved_source"
+                ],
+                "approved_source_refs": []
+              }
+            }
+          ],
+          "derived_fact_bindings": [
+            {
+              "fact_id": "balance_diff",
+              "operator": "subtract",
+              "input_fact_ids": [
+                "invoice_amount",
+                "po_amount"
+              ]
+            }
+          ],
+          "predicate": {
+            "op": "eq",
+            "fact_id": "invoice_status",
+            "value": {
+              "type": "string",
+              "value": "Paid"
+            }
+          },
+          "supported_stages": [
+            3,
+            4,
+            5
+          ],
+          "readback_sources": [
+            {
+              "source_id": "src_netsuite_readback",
+              "readback_capability_ref": {
+                "application_id": "app_netsuite",
+                "capability_id": "cap_invoice_manage",
+                "version_id": "33333333-3333-4333-8333-333333333333",
+                "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "readback_operation_id": "get_invoice",
+              "max_age_ms": 30000,
+              "contradiction_timing": "immediate_if_fresh_authoritative"
+            }
+          ],
+          "fact_bindings": [
+            {
+              "fact_id": "invoice_status",
+              "sources": [
+                {
+                  "source_id": "src_netsuite_readback",
+                  "json_pointer": "/body/status"
+                }
+              ]
+            }
+          ],
+          "confirmation_window_ms": 30000,
+          "reviewer_policy": null
+        }
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "spec_projection_reviewer_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecProjectionV1",
+      "instance": {
+        "schema_id": "verification.spec-projection.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "spec_invoice_recon",
+          "version_id": "22222222-2222-4222-8222-222222222222",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "body": {
+          "capability_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "capability",
+            "entity_id": "cap_invoice_manage",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "postcondition_ids": [
+            "post_manual_check"
+          ],
+          "method": "authorized_reviewer",
+          "fact_definitions": [
+            {
+              "fact_id": "reviewer_confirmed",
+              "type": "boolean",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "authorized_reviewer"
+                ],
+                "approved_source_refs": []
+              }
+            }
+          ],
+          "derived_fact_bindings": [],
+          "predicate": {
+            "op": "eq",
+            "fact_id": "reviewer_confirmed",
+            "value": {
+              "type": "boolean",
+              "value": true
+            }
+          },
+          "supported_stages": [
+            3
+          ],
+          "readback_sources": [],
+          "fact_bindings": [],
+          "confirmation_window_ms": null,
+          "reviewer_policy": {
+            "reviewer_role": "sme",
+            "distinct_executor_required": true,
+            "assessment_deadline_ms": 86400000,
+            "max_observation_age_ms": 300000
+          }
+        }
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "spec_projection_invalid_missing_postconditions",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecProjectionV1",
+      "instance": {
+        "schema_id": "verification.spec-projection.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "spec_invoice_recon",
+          "version_id": "22222222-2222-4222-8222-222222222222",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "body": {
+          "capability_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "capability",
+            "entity_id": "cap_invoice_manage",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "postcondition_ids": [],
+          "method": "system_evidence",
+          "fact_definitions": [
+            {
+              "fact_id": "invoice_status",
+              "type": "string",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "invoice_amount",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "po_amount",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "balance_diff",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "approved_source"
+                ],
+                "approved_source_refs": []
+              }
+            }
+          ],
+          "derived_fact_bindings": [
+            {
+              "fact_id": "balance_diff",
+              "operator": "subtract",
+              "input_fact_ids": [
+                "invoice_amount",
+                "po_amount"
+              ]
+            }
+          ],
+          "predicate": {
+            "op": "eq",
+            "fact_id": "invoice_status",
+            "value": {
+              "type": "string",
+              "value": "Paid"
+            }
+          },
+          "supported_stages": [
+            3,
+            4,
+            5
+          ],
+          "readback_sources": [
+            {
+              "source_id": "src_netsuite_readback",
+              "readback_capability_ref": {
+                "application_id": "app_netsuite",
+                "capability_id": "cap_invoice_manage",
+                "version_id": "33333333-3333-4333-8333-333333333333",
+                "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "readback_operation_id": "get_invoice",
+              "max_age_ms": 30000,
+              "contradiction_timing": "immediate_if_fresh_authoritative"
+            }
+          ],
+          "fact_bindings": [
+            {
+              "fact_id": "invoice_status",
+              "sources": [
+                {
+                  "source_id": "src_netsuite_readback",
+                  "json_pointer": "/body/status"
+                }
+              ]
+            }
+          ],
+          "confirmation_window_ms": 30000,
+          "reviewer_policy": null
+        }
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "spec_status_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecStatusV1",
+      "instance": {
+        "schema_id": "verification.spec-status.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "spec_invoice_recon",
+          "version_id": "22222222-2222-4222-8222-222222222222",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "generation": 1,
+        "status": "available",
+        "observed_at": "2026-11-15T22:00:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "spec_status_invalid_enum",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecStatusV1",
+      "instance": {
+        "schema_id": "verification.spec-status.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "spec_invoice_recon",
+          "version_id": "22222222-2222-4222-8222-222222222222",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "generation": 1,
+        "status": "not_an_enum",
+        "observed_at": "2026-11-15T22:00:00Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "requirement_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRequirementV1",
+      "instance": {
+        "requirement_id": "req_invoice_check",
+        "capability_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "capability",
+          "entity_id": "cap_invoice_manage",
+          "version_id": "33333333-3333-4333-8333-333333333333",
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "postcondition_id": "post_invoice_reconciled",
+        "spec_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "spec_invoice_recon",
+          "version_id": "22222222-2222-4222-8222-222222222222",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "source_bindings": [
+          {
+            "source_id": "src_netsuite_readback",
+            "connection_binding_id": "conn_erp_primary",
+            "record_key": {
+              "kind": "input",
+              "name": "invoice_id"
+            },
+            "arguments": {}
+          }
+        ],
+        "action_node_ids": [
+          "act_node_1"
+        ],
+        "required_before_node_ids": [
+          "act_node_2"
+        ],
+        "on_unknown": "pause_case",
+        "on_mismatch": "pause_case"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "requirement_invalid_on_unknown",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRequirementV1",
+      "instance": {
+        "requirement_id": "req_invoice_check",
+        "capability_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "capability",
+          "entity_id": "cap_invoice_manage",
+          "version_id": "33333333-3333-4333-8333-333333333333",
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "postcondition_id": "post_invoice_reconciled",
+        "spec_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "spec_invoice_recon",
+          "version_id": "22222222-2222-4222-8222-222222222222",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "source_bindings": [
+          {
+            "source_id": "src_netsuite_readback",
+            "connection_binding_id": "conn_erp_primary",
+            "record_key": {
+              "kind": "input",
+              "name": "invoice_id"
+            },
+            "arguments": {}
+          }
+        ],
+        "action_node_ids": [
+          "act_node_1"
+        ],
+        "required_before_node_ids": [
+          "act_node_2"
+        ],
+        "on_unknown": "auto_retry",
+        "on_mismatch": "pause_case"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "spec_draft_cmd_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecDraftCommandV1",
+      "instance": {
+        "schema_id": "verification.spec-draft-command.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_id": "22222222-2222-4222-8222-222222222222",
+        "expected_revision": "0",
+        "body": {
+          "capability_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "capability",
+            "entity_id": "cap_invoice_manage",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "postcondition_ids": [
+            "post_invoice_reconciled"
+          ],
+          "method": "system_evidence",
+          "fact_definitions": [
+            {
+              "fact_id": "invoice_status",
+              "type": "string",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "invoice_amount",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "po_amount",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "balance_diff",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "approved_source"
+                ],
+                "approved_source_refs": []
+              }
+            }
+          ],
+          "derived_fact_bindings": [
+            {
+              "fact_id": "balance_diff",
+              "operator": "subtract",
+              "input_fact_ids": [
+                "invoice_amount",
+                "po_amount"
+              ]
+            }
+          ],
+          "predicate": {
+            "op": "eq",
+            "fact_id": "invoice_status",
+            "value": {
+              "type": "string",
+              "value": "Paid"
+            }
+          },
+          "supported_stages": [
+            3,
+            4,
+            5
+          ],
+          "readback_sources": [
+            {
+              "source_id": "src_netsuite_readback",
+              "readback_capability_ref": {
+                "application_id": "app_netsuite",
+                "capability_id": "cap_invoice_manage",
+                "version_id": "33333333-3333-4333-8333-333333333333",
+                "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "readback_operation_id": "get_invoice",
+              "max_age_ms": 30000,
+              "contradiction_timing": "immediate_if_fresh_authoritative"
+            }
+          ],
+          "fact_bindings": [
+            {
+              "fact_id": "invoice_status",
+              "sources": [
+                {
+                  "source_id": "src_netsuite_readback",
+                  "json_pointer": "/body/status"
+                }
+              ]
+            }
+          ],
+          "confirmation_window_ms": 30000,
+          "reviewer_policy": null
+        },
+        "reason": "Draft spec"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "spec_draft_cmd_invalid_missing_body",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecDraftCommandV1",
+      "instance": {
+        "schema_id": "verification.spec-draft-command.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_id": "22222222-2222-4222-8222-222222222222",
+        "expected_revision": "0",
+        "reason": "Draft spec"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "spec_decision_cmd_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecDecisionCommandV1",
+      "instance": {
+        "schema_id": "verification.spec-decision-command.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_id": "22222222-2222-4222-8222-222222222222",
+        "expected_revision": "1",
+        "draft_sha256": "8c6ee0d5452faf72fdb128e1430ec773c7d3f2181fc8693385e14cbad11235bb",
+        "decision": "approve",
+        "reason": "Approved"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "spec_decision_cmd_invalid_enum",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecDecisionCommandV1",
+      "instance": {
+        "schema_id": "verification.spec-decision-command.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_id": "22222222-2222-4222-8222-222222222222",
+        "expected_revision": "1",
+        "draft_sha256": "8c6ee0d5452faf72fdb128e1430ec773c7d3f2181fc8693385e14cbad11235bb",
+        "decision": "grant_all",
+        "reason": "Approved"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "spec_view_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecViewV1",
+      "instance": {
+        "schema_id": "verification.spec-view.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_id": "22222222-2222-4222-8222-222222222222",
+        "revision": "1",
+        "state": "approved",
+        "draft_sha256": "8c6ee0d5452faf72fdb128e1430ec773c7d3f2181fc8693385e14cbad11235bb",
+        "body": {
+          "capability_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "capability",
+            "entity_id": "cap_invoice_manage",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "postcondition_ids": [
+            "post_invoice_reconciled"
+          ],
+          "method": "system_evidence",
+          "fact_definitions": [
+            {
+              "fact_id": "invoice_status",
+              "type": "string",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "invoice_amount",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "po_amount",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "balance_diff",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "approved_source"
+                ],
+                "approved_source_refs": []
+              }
+            }
+          ],
+          "derived_fact_bindings": [
+            {
+              "fact_id": "balance_diff",
+              "operator": "subtract",
+              "input_fact_ids": [
+                "invoice_amount",
+                "po_amount"
+              ]
+            }
+          ],
+          "predicate": {
+            "op": "eq",
+            "fact_id": "invoice_status",
+            "value": {
+              "type": "string",
+              "value": "Paid"
+            }
+          },
+          "supported_stages": [
+            3,
+            4,
+            5
+          ],
+          "readback_sources": [
+            {
+              "source_id": "src_netsuite_readback",
+              "readback_capability_ref": {
+                "application_id": "app_netsuite",
+                "capability_id": "cap_invoice_manage",
+                "version_id": "33333333-3333-4333-8333-333333333333",
+                "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "readback_operation_id": "get_invoice",
+              "max_age_ms": 30000,
+              "contradiction_timing": "immediate_if_fresh_authoritative"
+            }
+          ],
+          "fact_bindings": [
+            {
+              "fact_id": "invoice_status",
+              "sources": [
+                {
+                  "source_id": "src_netsuite_readback",
+                  "json_pointer": "/body/status"
+                }
+              ]
+            }
+          ],
+          "confirmation_window_ms": 30000,
+          "reviewer_policy": null
+        },
+        "projection": {
+          "schema_id": "verification.spec-projection.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "spec_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "verification_spec",
+            "entity_id": "spec_invoice_recon",
+            "version_id": "22222222-2222-4222-8222-222222222222",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "body": {
+            "capability_ref": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "capability",
+              "entity_id": "cap_invoice_manage",
+              "version_id": "33333333-3333-4333-8333-333333333333",
+              "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "postcondition_ids": [
+              "post_invoice_reconciled"
+            ],
+            "method": "system_evidence",
+            "fact_definitions": [
+              {
+                "fact_id": "invoice_status",
+                "type": "string",
+                "nullable": false,
+                "enum_values": null,
+                "currency": null,
+                "source_requirement": {
+                  "methods": [
+                    "system_evidence"
+                  ],
+                  "approved_source_refs": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "entity_kind": "capability",
+                      "entity_id": "cap_invoice_manage",
+                      "version_id": "33333333-3333-4333-8333-333333333333",
+                      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    }
+                  ]
+                }
+              },
+              {
+                "fact_id": "invoice_amount",
+                "type": "decimal",
+                "nullable": false,
+                "enum_values": null,
+                "currency": null,
+                "source_requirement": {
+                  "methods": [
+                    "system_evidence"
+                  ],
+                  "approved_source_refs": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "entity_kind": "capability",
+                      "entity_id": "cap_invoice_manage",
+                      "version_id": "33333333-3333-4333-8333-333333333333",
+                      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    }
+                  ]
+                }
+              },
+              {
+                "fact_id": "po_amount",
+                "type": "decimal",
+                "nullable": false,
+                "enum_values": null,
+                "currency": null,
+                "source_requirement": {
+                  "methods": [
+                    "system_evidence"
+                  ],
+                  "approved_source_refs": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "entity_kind": "capability",
+                      "entity_id": "cap_invoice_manage",
+                      "version_id": "33333333-3333-4333-8333-333333333333",
+                      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    }
+                  ]
+                }
+              },
+              {
+                "fact_id": "balance_diff",
+                "type": "decimal",
+                "nullable": false,
+                "enum_values": null,
+                "currency": null,
+                "source_requirement": {
+                  "methods": [
+                    "approved_source"
+                  ],
+                  "approved_source_refs": []
+                }
+              }
+            ],
+            "derived_fact_bindings": [
+              {
+                "fact_id": "balance_diff",
+                "operator": "subtract",
+                "input_fact_ids": [
+                  "invoice_amount",
+                  "po_amount"
+                ]
+              }
+            ],
+            "predicate": {
+              "op": "eq",
+              "fact_id": "invoice_status",
+              "value": {
+                "type": "string",
+                "value": "Paid"
+              }
+            },
+            "supported_stages": [
+              3,
+              4,
+              5
+            ],
+            "readback_sources": [
+              {
+                "source_id": "src_netsuite_readback",
+                "readback_capability_ref": {
+                  "application_id": "app_netsuite",
+                  "capability_id": "cap_invoice_manage",
+                  "version_id": "33333333-3333-4333-8333-333333333333",
+                  "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                },
+                "readback_operation_id": "get_invoice",
+                "max_age_ms": 30000,
+                "contradiction_timing": "immediate_if_fresh_authoritative"
+              }
+            ],
+            "fact_bindings": [
+              {
+                "fact_id": "invoice_status",
+                "sources": [
+                  {
+                    "source_id": "src_netsuite_readback",
+                    "json_pointer": "/body/status"
+                  }
+                ]
+              }
+            ],
+            "confirmation_window_ms": 30000,
+            "reviewer_policy": null
+          }
+        },
+        "owner_actor_id": "usr_lead",
+        "responsible_team_id": "team_ops"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "spec_view_invalid_state",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecViewV1",
+      "instance": {
+        "schema_id": "verification.spec-view.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "spec_id": "22222222-2222-4222-8222-222222222222",
+        "revision": "1",
+        "state": "published_live",
+        "draft_sha256": "8c6ee0d5452faf72fdb128e1430ec773c7d3f2181fc8693385e14cbad11235bb",
+        "body": {
+          "capability_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "capability",
+            "entity_id": "cap_invoice_manage",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "postcondition_ids": [
+            "post_invoice_reconciled"
+          ],
+          "method": "system_evidence",
+          "fact_definitions": [
+            {
+              "fact_id": "invoice_status",
+              "type": "string",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "invoice_amount",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "po_amount",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "system_evidence"
+                ],
+                "approved_source_refs": [
+                  {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "entity_kind": "capability",
+                    "entity_id": "cap_invoice_manage",
+                    "version_id": "33333333-3333-4333-8333-333333333333",
+                    "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            {
+              "fact_id": "balance_diff",
+              "type": "decimal",
+              "nullable": false,
+              "enum_values": null,
+              "currency": null,
+              "source_requirement": {
+                "methods": [
+                  "approved_source"
+                ],
+                "approved_source_refs": []
+              }
+            }
+          ],
+          "derived_fact_bindings": [
+            {
+              "fact_id": "balance_diff",
+              "operator": "subtract",
+              "input_fact_ids": [
+                "invoice_amount",
+                "po_amount"
+              ]
+            }
+          ],
+          "predicate": {
+            "op": "eq",
+            "fact_id": "invoice_status",
+            "value": {
+              "type": "string",
+              "value": "Paid"
+            }
+          },
+          "supported_stages": [
+            3,
+            4,
+            5
+          ],
+          "readback_sources": [
+            {
+              "source_id": "src_netsuite_readback",
+              "readback_capability_ref": {
+                "application_id": "app_netsuite",
+                "capability_id": "cap_invoice_manage",
+                "version_id": "33333333-3333-4333-8333-333333333333",
+                "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "readback_operation_id": "get_invoice",
+              "max_age_ms": 30000,
+              "contradiction_timing": "immediate_if_fresh_authoritative"
+            }
+          ],
+          "fact_bindings": [
+            {
+              "fact_id": "invoice_status",
+              "sources": [
+                {
+                  "source_id": "src_netsuite_readback",
+                  "json_pointer": "/body/status"
+                }
+              ]
+            }
+          ],
+          "confirmation_window_ms": 30000,
+          "reviewer_policy": null
+        },
+        "projection": {
+          "schema_id": "verification.spec-projection.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "spec_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "verification_spec",
+            "entity_id": "spec_invoice_recon",
+            "version_id": "22222222-2222-4222-8222-222222222222",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "body": {
+            "capability_ref": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "capability",
+              "entity_id": "cap_invoice_manage",
+              "version_id": "33333333-3333-4333-8333-333333333333",
+              "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "postcondition_ids": [
+              "post_invoice_reconciled"
+            ],
+            "method": "system_evidence",
+            "fact_definitions": [
+              {
+                "fact_id": "invoice_status",
+                "type": "string",
+                "nullable": false,
+                "enum_values": null,
+                "currency": null,
+                "source_requirement": {
+                  "methods": [
+                    "system_evidence"
+                  ],
+                  "approved_source_refs": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "entity_kind": "capability",
+                      "entity_id": "cap_invoice_manage",
+                      "version_id": "33333333-3333-4333-8333-333333333333",
+                      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    }
+                  ]
+                }
+              },
+              {
+                "fact_id": "invoice_amount",
+                "type": "decimal",
+                "nullable": false,
+                "enum_values": null,
+                "currency": null,
+                "source_requirement": {
+                  "methods": [
+                    "system_evidence"
+                  ],
+                  "approved_source_refs": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "entity_kind": "capability",
+                      "entity_id": "cap_invoice_manage",
+                      "version_id": "33333333-3333-4333-8333-333333333333",
+                      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    }
+                  ]
+                }
+              },
+              {
+                "fact_id": "po_amount",
+                "type": "decimal",
+                "nullable": false,
+                "enum_values": null,
+                "currency": null,
+                "source_requirement": {
+                  "methods": [
+                    "system_evidence"
+                  ],
+                  "approved_source_refs": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "entity_kind": "capability",
+                      "entity_id": "cap_invoice_manage",
+                      "version_id": "33333333-3333-4333-8333-333333333333",
+                      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    }
+                  ]
+                }
+              },
+              {
+                "fact_id": "balance_diff",
+                "type": "decimal",
+                "nullable": false,
+                "enum_values": null,
+                "currency": null,
+                "source_requirement": {
+                  "methods": [
+                    "approved_source"
+                  ],
+                  "approved_source_refs": []
+                }
+              }
+            ],
+            "derived_fact_bindings": [
+              {
+                "fact_id": "balance_diff",
+                "operator": "subtract",
+                "input_fact_ids": [
+                  "invoice_amount",
+                  "po_amount"
+                ]
+              }
+            ],
+            "predicate": {
+              "op": "eq",
+              "fact_id": "invoice_status",
+              "value": {
+                "type": "string",
+                "value": "Paid"
+              }
+            },
+            "supported_stages": [
+              3,
+              4,
+              5
+            ],
+            "readback_sources": [
+              {
+                "source_id": "src_netsuite_readback",
+                "readback_capability_ref": {
+                  "application_id": "app_netsuite",
+                  "capability_id": "cap_invoice_manage",
+                  "version_id": "33333333-3333-4333-8333-333333333333",
+                  "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                },
+                "readback_operation_id": "get_invoice",
+                "max_age_ms": 30000,
+                "contradiction_timing": "immediate_if_fresh_authoritative"
+              }
+            ],
+            "fact_bindings": [
+              {
+                "fact_id": "invoice_status",
+                "sources": [
+                  {
+                    "source_id": "src_netsuite_readback",
+                    "json_pointer": "/body/status"
+                  }
+                ]
+              }
+            ],
+            "confirmation_window_ms": 30000,
+            "reviewer_policy": null
+          }
+        },
+        "owner_actor_id": "usr_lead",
+        "responsible_team_id": "team_ops"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "problem_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationProblemV1",
+      "instance": {
+        "schema_id": "verification.problem.v1",
+        "code": "VERIFICATION_SPEC_NOT_FOUND",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "resource_id": "spec_01",
+        "retryable": false
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "problem_invalid_code",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationProblemV1",
+      "instance": {
+        "schema_id": "verification.problem.v1",
+        "code": "INVALID_CODE",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "resource_id": "spec_01",
+        "retryable": false
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "run_request_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunRequestV1",
+      "instance": {
+        "schema_id": "verification.run-request.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_01",
+          "case_id": "case_01",
+          "agent_version": "agv_01"
+        },
+        "evaluation_target": {
+          "kind": "agent",
+          "agent_version": "33333333-3333-4333-8333-333333333333"
+        },
+        "scenario_expectation_ref": null,
+        "behavior_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "requirement_ids": [
+          "req_invoice_check"
+        ],
+        "action_ids": [
+          "act_01"
+        ],
+        "checkpoint_revision": "1",
+        "environment": "production"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "run_request_invalid_uuid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunRequestV1",
+      "instance": {
+        "schema_id": "verification.run-request.v1",
+        "request_id": "not-a-uuid",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_01",
+          "case_id": "case_01",
+          "agent_version": "agv_01"
+        },
+        "evaluation_target": {
+          "kind": "agent",
+          "agent_version": "33333333-3333-4333-8333-333333333333"
+        },
+        "scenario_expectation_ref": null,
+        "behavior_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "requirement_ids": [
+          "req_invoice_check"
+        ],
+        "action_ids": [
+          "act_01"
+        ],
+        "checkpoint_revision": "1",
+        "environment": "production"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "run_result_verified_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunResultV1",
+      "instance": {
+        "schema_id": "verification.run-result.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "verification_id": "ver_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_01",
+          "case_id": "case_01",
+          "agent_version": "agv_01"
+        },
+        "behavior_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "requirement_results": [
+          {
+            "requirement_id": "req_invoice_check",
+            "verdict": "verified",
+            "evidence_refs": [
+              "evi_readback_01"
+            ],
+            "limitations": []
+          }
+        ],
+        "verdict": "verified",
+        "evidence_refs": [
+          "evi_readback_01"
+        ],
+        "verified_at": "2026-11-15T22:05:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "run_result_mismatch_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunResultV1",
+      "instance": {
+        "schema_id": "verification.run-result.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "verification_id": "ver_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_01",
+          "case_id": "case_01",
+          "agent_version": "agv_01"
+        },
+        "behavior_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "requirement_results": [
+          {
+            "requirement_id": "req_invoice_check",
+            "verdict": "mismatch",
+            "evidence_refs": [
+              "evi_readback_01"
+            ],
+            "limitations": []
+          }
+        ],
+        "verdict": "mismatch",
+        "evidence_refs": [
+          "evi_readback_01"
+        ],
+        "verified_at": "2026-11-15T22:05:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "run_result_unknown_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunResultV1",
+      "instance": {
+        "schema_id": "verification.run-result.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "verification_id": "ver_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_01",
+          "case_id": "case_01",
+          "agent_version": "agv_01"
+        },
+        "behavior_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "requirement_results": [
+          {
+            "requirement_id": "req_invoice_check",
+            "verdict": "unknown",
+            "evidence_refs": [],
+            "limitations": [
+              "freshness_unproven"
+            ]
+          }
+        ],
+        "verdict": "unknown",
+        "evidence_refs": [
+          "evi_readback_01"
+        ],
+        "verified_at": "2026-11-15T22:05:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "run_result_invalid_verdict",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunResultV1",
+      "instance": {
+        "schema_id": "verification.run-result.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "verification_id": "ver_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_01",
+          "case_id": "case_01",
+          "agent_version": "agv_01"
+        },
+        "behavior_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "requirement_results": [
+          {
+            "requirement_id": "req_invoice_check",
+            "verdict": "verified",
+            "evidence_refs": [
+              "evi_readback_01"
+            ],
+            "limitations": []
+          }
+        ],
+        "verdict": "passed",
+        "evidence_refs": [
+          "evi_readback_01"
+        ],
+        "verified_at": "2026-11-15T22:05:00Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "status_query_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationStatusQueryV1",
+      "instance": {
+        "schema_id": "verification.status-query.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_01",
+          "case_id": "case_01",
+          "agent_version": "agv_01"
+        },
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "run_status_pending_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunStatusV1",
+      "instance": {
+        "schema_id": "verification.run-status.v1",
+        "state": "pending",
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "run_status_complete_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunStatusV1",
+      "instance": {
+        "schema_id": "verification.run-status.v1",
+        "state": "complete",
+        "result": {
+          "schema_id": "verification.run-result.v1",
+          "request_id": "11111111-1111-4111-8111-111111111111",
+          "verification_id": "ver_01",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_01",
+            "case_id": "case_01",
+            "agent_version": "agv_01"
+          },
+          "behavior_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "requirement_results": [
+            {
+              "requirement_id": "req_invoice_check",
+              "verdict": "verified",
+              "evidence_refs": [
+                "evi_readback_01"
+              ],
+              "limitations": []
+            }
+          ],
+          "verdict": "verified",
+          "evidence_refs": [
+            "evi_readback_01"
+          ],
+          "verified_at": "2026-11-15T22:05:00Z"
+        }
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "run_status_invalid_state",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunStatusV1",
+      "instance": {
+        "schema_id": "verification.run-status.v1",
+        "state": "in_progress",
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "error_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationErrorV1",
+      "instance": {
+        "code": "VERIFICATION_UNAVAILABLE",
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "error_invalid_code",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationErrorV1",
+      "instance": {
+        "code": "RANDOM_ERROR",
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "result_attestation_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/SignedVerificationResultAttestationV1",
+      "instance": {
+        "schema_id": "verification.result-attestation.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "verification_id": "ver_01",
+          "result_sha256": "af13f49039ac0126f46dc2a313d0286c229a32c9d515ce63f47fae13fa6fc9a1",
+          "request_binding_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "evidence_manifest_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "engine_revision": "1.0.0",
+          "issued_at": "2026-11-15T22:05:01Z"
+        },
+        "signature": "j9b6ETZcyZt_zK76WBM0O6zeGFlBgiUK-cWU0ytkVz_eRJbgPqOC0BNzz9luIXkqghxtkAvNuyW_MBkmhFLOBA"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "postcondition_assessment_req_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/PostconditionAssessmentRequestV1",
+      "instance": {
+        "schema_id": "verification.postcondition-assessment.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "review_revision": "1",
+        "requirement_id": "req_invoice_check",
+        "spec_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "spec_invoice_recon",
+          "version_id": "22222222-2222-4222-8222-222222222222",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "request_binding_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "observations": [
+          {
+            "fact_id": "reviewer_confirmed",
+            "value": {
+              "type": "boolean",
+              "value": true
+            },
+            "source_ref": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "verification_spec",
+              "entity_id": "spec_invoice_recon",
+              "version_id": "22222222-2222-4222-8222-222222222222",
+              "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "source_locator": "portal.netsuite.com/inv/1001",
+            "observed_at": "2026-11-15T22:04:00Z",
+            "valid_until": "2026-11-16T22:04:00Z",
+            "artifact_refs": []
+          }
+        ],
+        "rationale": "Verified invoice balance is zero in vendor portal."
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "postcondition_assessment_req_invalid_empty",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/PostconditionAssessmentRequestV1",
+      "instance": {
+        "schema_id": "verification.postcondition-assessment.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "review_revision": "1",
+        "requirement_id": "req_invoice_check",
+        "spec_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "spec_invoice_recon",
+          "version_id": "22222222-2222-4222-8222-222222222222",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "request_binding_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "observations": [],
+        "rationale": "Verified invoice balance is zero in vendor portal."
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "signed_postcondition_assessment_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/SignedPostconditionAssessmentV1",
+      "instance": {
+        "schema_id": "verification.postcondition-assessment-attestation.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "assessment_id": "66666666-6666-4666-8666-666666666666",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "request_id": "11111111-1111-4111-8111-111111111111",
+          "requirement_id": "req_invoice_check",
+          "spec_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "verification_spec",
+            "entity_id": "spec_invoice_recon",
+            "version_id": "22222222-2222-4222-8222-222222222222",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "request_binding_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "reviewer_actor_id": "usr_human_auditor",
+          "reviewer_role": "sme",
+          "observations_sha256": "bd738c13f85e1c39d372dba8f6ba770682ff39959eee0b22fec0302d94dd7ed4",
+          "review_revision": "1",
+          "policy_revision": "1",
+          "assessed_at": "2026-11-15T22:04:30Z"
+        },
+        "signature": "oyGdZ6lxJnaqzX4OzNDgjy33jlIZAAqpwo9HBObV_jt4oIBby6-dkUzvn5TnOSB7g2EQV3tPBvAuM-dwgggdAw"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "handoff_request_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/HandoffAssessmentRequestV1",
+      "instance": {
+        "schema_id": "verification.handoff-request.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "handoff_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "handoff",
+          "entity_id": "hnd_01",
+          "version_id": "77777777-7777-4777-8777-777777777777",
+          "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "binding_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "reverify_of": null
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "handoff_query_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/HandoffAssessmentQueryV1",
+      "instance": {
+        "schema_id": "verification.handoff-query.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "handoff_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "handoff",
+          "entity_id": "hnd_01",
+          "version_id": "77777777-7777-4777-8777-777777777777",
+          "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "handoff_result_verified_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/HandoffAssessmentResultV1",
+      "instance": {
+        "schema_id": "verification.handoff-result.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "verification_id": "ver_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "handoff_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "handoff",
+          "entity_id": "hnd_01",
+          "version_id": "77777777-7777-4777-8777-777777777777",
+          "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "binding_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "requirement_results": [
+          {
+            "requirement_id": "req_handoff_reconcile",
+            "verdict": "verified",
+            "evidence_refs": [
+              "evi_handoff_01"
+            ],
+            "limitations": []
+          }
+        ],
+        "verdict": "verified",
+        "evidence_refs": [
+          "evi_handoff_01"
+        ],
+        "assessed_at": "2026-11-15T22:06:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "handoff_result_contradicted_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/HandoffAssessmentResultV1",
+      "instance": {
+        "schema_id": "verification.handoff-result.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "verification_id": "ver_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "handoff_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "handoff",
+          "entity_id": "hnd_01",
+          "version_id": "77777777-7777-4777-8777-777777777777",
+          "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "binding_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "requirement_results": [
+          {
+            "requirement_id": "req_handoff_reconcile",
+            "verdict": "verified",
+            "evidence_refs": [
+              "evi_handoff_01"
+            ],
+            "limitations": []
+          }
+        ],
+        "verdict": "contradicted",
+        "evidence_refs": [
+          "evi_handoff_01"
+        ],
+        "assessed_at": "2026-11-15T22:06:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "handoff_result_unknown_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/HandoffAssessmentResultV1",
+      "instance": {
+        "schema_id": "verification.handoff-result.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "verification_id": "ver_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "handoff_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "handoff",
+          "entity_id": "hnd_01",
+          "version_id": "77777777-7777-4777-8777-777777777777",
+          "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "binding_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "requirement_results": [
+          {
+            "requirement_id": "req_handoff_reconcile",
+            "verdict": "verified",
+            "evidence_refs": [
+              "evi_handoff_01"
+            ],
+            "limitations": []
+          }
+        ],
+        "verdict": "unknown",
+        "evidence_refs": [
+          "evi_handoff_01"
+        ],
+        "assessed_at": "2026-11-15T22:06:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "handoff_result_invalid_verdict",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/HandoffAssessmentResultV1",
+      "instance": {
+        "schema_id": "verification.handoff-result.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "verification_id": "ver_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "handoff_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "handoff",
+          "entity_id": "hnd_01",
+          "version_id": "77777777-7777-4777-8777-777777777777",
+          "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "binding_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "requirement_results": [
+          {
+            "requirement_id": "req_handoff_reconcile",
+            "verdict": "verified",
+            "evidence_refs": [
+              "evi_handoff_01"
+            ],
+            "limitations": []
+          }
+        ],
+        "verdict": "failed",
+        "evidence_refs": [
+          "evi_handoff_01"
+        ],
+        "assessed_at": "2026-11-15T22:06:00Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "handoff_status_pending_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/HandoffAssessmentStatusV1",
+      "instance": {
+        "schema_id": "verification.handoff-status.v1",
+        "state": "pending",
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "handoff_status_complete_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/HandoffAssessmentStatusV1",
+      "instance": {
+        "schema_id": "verification.handoff-status.v1",
+        "state": "complete",
+        "result": {
+          "schema_id": "verification.handoff-result.v1",
+          "request_id": "11111111-1111-4111-8111-111111111111",
+          "verification_id": "ver_01",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "handoff_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "handoff",
+            "entity_id": "hnd_01",
+            "version_id": "77777777-7777-4777-8777-777777777777",
+            "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          },
+          "binding_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "requirement_results": [
+            {
+              "requirement_id": "req_handoff_reconcile",
+              "verdict": "verified",
+              "evidence_refs": [
+                "evi_handoff_01"
+              ],
+              "limitations": []
+            }
+          ],
+          "verdict": "verified",
+          "evidence_refs": [
+            "evi_handoff_01"
+          ],
+          "assessed_at": "2026-11-15T22:06:00Z"
+        }
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "explanation_request_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationExplanationRequestV1",
+      "instance": {
+        "schema_id": "verification.explanation-request.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "verification_id": "ver_01",
+        "request_id": "11111111-1111-4111-8111-111111111111"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "explanation_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationExplanationV1",
+      "instance": {
+        "schema_id": "verification.explanation.v1",
+        "verification_id": "ver_01",
+        "input_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "summary": "Outcome verified against NetSuite ERP invoice record; payment posted.",
+        "citations": [
+          {
+            "requirement_id": "req_invoice_check",
+            "evidence_ref": "evi_readback_01"
+          }
+        ]
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "explanation_invalid_summary_too_long",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationExplanationV1",
+      "instance": {
+        "schema_id": "verification.explanation.v1",
+        "verification_id": "ver_01",
+        "input_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "summary": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "citations": []
+      },
+      "expected_valid": false
+    }
+  ],
+  "digest_vectors": [
+    {
+      "case_id": "digest_vector_spec_projection_system",
+      "payload": {
+        "capability_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "capability",
+          "entity_id": "cap_invoice_manage",
+          "version_id": "33333333-3333-4333-8333-333333333333",
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "postcondition_ids": [
+          "post_invoice_reconciled"
+        ],
+        "method": "system_evidence",
+        "fact_definitions": [
+          {
+            "fact_id": "invoice_status",
+            "type": "string",
+            "nullable": false,
+            "enum_values": null,
+            "currency": null,
+            "source_requirement": {
+              "methods": [
+                "system_evidence"
+              ],
+              "approved_source_refs": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "entity_kind": "capability",
+                  "entity_id": "cap_invoice_manage",
+                  "version_id": "33333333-3333-4333-8333-333333333333",
+                  "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              ]
+            }
+          },
+          {
+            "fact_id": "invoice_amount",
+            "type": "decimal",
+            "nullable": false,
+            "enum_values": null,
+            "currency": null,
+            "source_requirement": {
+              "methods": [
+                "system_evidence"
+              ],
+              "approved_source_refs": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "entity_kind": "capability",
+                  "entity_id": "cap_invoice_manage",
+                  "version_id": "33333333-3333-4333-8333-333333333333",
+                  "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              ]
+            }
+          },
+          {
+            "fact_id": "po_amount",
+            "type": "decimal",
+            "nullable": false,
+            "enum_values": null,
+            "currency": null,
+            "source_requirement": {
+              "methods": [
+                "system_evidence"
+              ],
+              "approved_source_refs": [
+                {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "entity_kind": "capability",
+                  "entity_id": "cap_invoice_manage",
+                  "version_id": "33333333-3333-4333-8333-333333333333",
+                  "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              ]
+            }
+          },
+          {
+            "fact_id": "balance_diff",
+            "type": "decimal",
+            "nullable": false,
+            "enum_values": null,
+            "currency": null,
+            "source_requirement": {
+              "methods": [
+                "approved_source"
+              ],
+              "approved_source_refs": []
+            }
+          }
+        ],
+        "derived_fact_bindings": [
+          {
+            "fact_id": "balance_diff",
+            "operator": "subtract",
+            "input_fact_ids": [
+              "invoice_amount",
+              "po_amount"
+            ]
+          }
+        ],
+        "predicate": {
+          "op": "eq",
+          "fact_id": "invoice_status",
+          "value": {
+            "type": "string",
+            "value": "Paid"
+          }
+        },
+        "supported_stages": [
+          3,
+          4,
+          5
+        ],
+        "readback_sources": [
+          {
+            "source_id": "src_netsuite_readback",
+            "readback_capability_ref": {
+              "application_id": "app_netsuite",
+              "capability_id": "cap_invoice_manage",
+              "version_id": "33333333-3333-4333-8333-333333333333",
+              "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "readback_operation_id": "get_invoice",
+            "max_age_ms": 30000,
+            "contradiction_timing": "immediate_if_fresh_authoritative"
+          }
+        ],
+        "fact_bindings": [
+          {
+            "fact_id": "invoice_status",
+            "sources": [
+              {
+                "source_id": "src_netsuite_readback",
+                "json_pointer": "/body/status"
+              }
+            ]
+          }
+        ],
+        "confirmation_window_ms": 30000,
+        "reviewer_policy": null
+      },
+      "expected_sha256": "8c6ee0d5452faf72fdb128e1430ec773c7d3f2181fc8693385e14cbad11235bb"
+    },
+    {
+      "case_id": "digest_vector_spec_projection_reviewer",
+      "payload": {
+        "capability_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "capability",
+          "entity_id": "cap_invoice_manage",
+          "version_id": "33333333-3333-4333-8333-333333333333",
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "postcondition_ids": [
+          "post_manual_check"
+        ],
+        "method": "authorized_reviewer",
+        "fact_definitions": [
+          {
+            "fact_id": "reviewer_confirmed",
+            "type": "boolean",
+            "nullable": false,
+            "enum_values": null,
+            "currency": null,
+            "source_requirement": {
+              "methods": [
+                "authorized_reviewer"
+              ],
+              "approved_source_refs": []
+            }
+          }
+        ],
+        "derived_fact_bindings": [],
+        "predicate": {
+          "op": "eq",
+          "fact_id": "reviewer_confirmed",
+          "value": {
+            "type": "boolean",
+            "value": true
+          }
+        },
+        "supported_stages": [
+          3
+        ],
+        "readback_sources": [],
+        "fact_bindings": [],
+        "confirmation_window_ms": null,
+        "reviewer_policy": {
+          "reviewer_role": "sme",
+          "distinct_executor_required": true,
+          "assessment_deadline_ms": 86400000,
+          "max_observation_age_ms": 300000
+        }
+      },
+      "expected_sha256": "92fcafb00aa7ff1365ca5f55cc85ae289a51c73ed522cb39054414d26a1ecc19"
+    },
+    {
+      "case_id": "digest_vector_run_result_payload",
+      "payload": {
+        "schema_id": "verification.run-result.v1",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "verification_id": "ver_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_01",
+          "case_id": "case_01",
+          "agent_version": "agv_01"
+        },
+        "behavior_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "requirement_results": [
+          {
+            "requirement_id": "req_invoice_check",
+            "verdict": "verified",
+            "evidence_refs": [
+              "evi_readback_01"
+            ],
+            "limitations": []
+          }
+        ],
+        "verdict": "verified",
+        "evidence_refs": [
+          "evi_readback_01"
+        ],
+        "verified_at": "2026-11-15T22:05:00Z"
+      },
+      "expected_sha256": "af13f49039ac0126f46dc2a313d0286c229a32c9d515ce63f47fae13fa6fc9a1"
+    },
+    {
+      "case_id": "digest_vector_attestation_payload",
+      "payload": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "verification_id": "ver_01",
+        "result_sha256": "af13f49039ac0126f46dc2a313d0286c229a32c9d515ce63f47fae13fa6fc9a1",
+        "request_binding_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "evidence_manifest_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "engine_revision": "1.0.0",
+        "issued_at": "2026-11-15T22:05:01Z"
+      },
+      "expected_sha256": "2c9eae0cfc1a6dadd81feca45bc1659a2a528d6e967177e468e63d7edc5716bf"
+    },
+    {
+      "case_id": "digest_vector_postcondition_assessment_payload",
+      "payload": {
+        "assessment_id": "66666666-6666-4666-8666-666666666666",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "request_id": "11111111-1111-4111-8111-111111111111",
+        "requirement_id": "req_invoice_check",
+        "spec_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "spec_invoice_recon",
+          "version_id": "22222222-2222-4222-8222-222222222222",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "request_binding_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "reviewer_actor_id": "usr_human_auditor",
+        "reviewer_role": "sme",
+        "observations_sha256": "bd738c13f85e1c39d372dba8f6ba770682ff39959eee0b22fec0302d94dd7ed4",
+        "review_revision": "1",
+        "policy_revision": "1",
+        "assessed_at": "2026-11-15T22:04:30Z"
+      },
+      "expected_sha256": "1f6cf9dc2e68516568a271fcca78ea4cea8eb8d3342f5e85ebef78f1b0fa3805"
+    }
+  ],
+  "signature_vectors": [
+    {
+      "case_id": "sig_vector_result_attestation_valid",
+      "public_key": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+      "envelope": {
+        "schema_id": "verification.result-attestation.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "verification_id": "ver_01",
+          "result_sha256": "af13f49039ac0126f46dc2a313d0286c229a32c9d515ce63f47fae13fa6fc9a1",
+          "request_binding_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "evidence_manifest_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "engine_revision": "1.0.0",
+          "issued_at": "2026-11-15T22:05:01Z"
+        },
+        "signature": "j9b6ETZcyZt_zK76WBM0O6zeGFlBgiUK-cWU0ytkVz_eRJbgPqOC0BNzz9luIXkqghxtkAvNuyW_MBkmhFLOBA"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "sig_vector_result_attestation_corrupted",
+      "public_key": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+      "envelope": {
+        "schema_id": "verification.result-attestation.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "verification_id": "ver_01",
+          "result_sha256": "af13f49039ac0126f46dc2a313d0286c229a32c9d515ce63f47fae13fa6fc9a1",
+          "request_binding_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "evidence_manifest_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "engine_revision": "1.0.0",
+          "issued_at": "2026-11-15T22:05:01Z"
+        },
+        "signature": "B9b6ETZcyZt_zK76WBM0O6zeGFlBgiUK-cWU0ytkVz_eRJbgPqOC0BNzz9luIXkqghxtkAvNuyW_MBkmhFLOBA"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "sig_vector_postcondition_assessment_valid",
+      "public_key": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+      "envelope": {
+        "schema_id": "verification.postcondition-assessment-attestation.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "assessment_id": "66666666-6666-4666-8666-666666666666",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "request_id": "11111111-1111-4111-8111-111111111111",
+          "requirement_id": "req_invoice_check",
+          "spec_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "verification_spec",
+            "entity_id": "spec_invoice_recon",
+            "version_id": "22222222-2222-4222-8222-222222222222",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "request_binding_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "reviewer_actor_id": "usr_human_auditor",
+          "reviewer_role": "sme",
+          "observations_sha256": "bd738c13f85e1c39d372dba8f6ba770682ff39959eee0b22fec0302d94dd7ed4",
+          "review_revision": "1",
+          "policy_revision": "1",
+          "assessed_at": "2026-11-15T22:04:30Z"
+        },
+        "signature": "oyGdZ6lxJnaqzX4OzNDgjy33jlIZAAqpwo9HBObV_jt4oIBby6-dkUzvn5TnOSB7g2EQV3tPBvAuM-dwgggdAw"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "sig_vector_postcondition_assessment_tampered_payload",
+      "public_key": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+      "envelope": {
+        "schema_id": "verification.postcondition-assessment-attestation.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "assessment_id": "66666666-6666-4666-8666-666666666666",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "request_id": "11111111-1111-4111-8111-111111111111",
+          "requirement_id": "req_invoice_check",
+          "spec_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "verification_spec",
+            "entity_id": "spec_invoice_recon",
+            "version_id": "22222222-2222-4222-8222-222222222222",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "request_binding_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "reviewer_actor_id": "usr_human_auditor",
+          "reviewer_role": "sme",
+          "observations_sha256": "bd738c13f85e1c39d372dba8f6ba770682ff39959eee0b22fec0302d94dd7ed4",
+          "review_revision": "99",
+          "policy_revision": "1",
+          "assessed_at": "2026-11-15T22:04:30Z"
+        },
+        "signature": "oyGdZ6lxJnaqzX4OzNDgjy33jlIZAAqpwo9HBObV_jt4oIBby6-dkUzvn5TnOSB7g2EQV3tPBvAuM-dwgggdAw"
+      },
+      "expected_valid": false
+    }
+  ],
+  "semantic_cases": [
+    {
+      "case_id": "semantic_01_ui_vs_fresh_source",
+      "scenario": "UI / runner self-reports Approved, but authoritative fresh readback says Pending",
+      "inputs": {
+        "runner_report": "Approved",
+        "effect_anchor": "2026-11-15T22:00:00Z",
+        "authoritative_readback": {
+          "source_status": "Pending",
+          "freshness_proof": {
+            "proof_kind": "certified_monotonic_coverage",
+            "coverage_timestamp": "2026-11-15T22:00:05Z",
+            "anchor_timestamp": "2026-11-15T22:00:00Z"
+          }
+        },
+        "postcondition": {
+          "expected_status": "Approved"
+        }
+      },
+      "expected": {
+        "verdict": "mismatch",
+        "case_state": "failed",
+        "emits_incident": true,
+        "allow_subsequent_mutation": false
+      }
+    },
+    {
+      "case_id": "semantic_02_invoice_po_checked_decimal",
+      "scenario": "Checked decimal evaluation and strict currency compatibility",
+      "inputs": {
+        "tests": [
+          {
+            "invoice_amount": "100.00",
+            "invoice_currency": "USD",
+            "po_amount": "100.00",
+            "po_currency": "USD"
+          },
+          {
+            "invoice_amount": "100.05",
+            "invoice_currency": "USD",
+            "po_amount": "100.00",
+            "po_currency": "USD"
+          },
+          {
+            "invoice_amount": "100.00",
+            "invoice_currency": "USD",
+            "po_amount": "100.00",
+            "po_currency": "EUR"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "diff": "0.00",
+            "verdict": "verified"
+          },
+          {
+            "diff": "0.05",
+            "verdict": "mismatch"
+          },
+          {
+            "error": "INCOMPATIBLE_CURRENCIES",
+            "verdict": "unknown"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "semantic_03_primary_fallback_sources",
+      "scenario": "Primary unavailable with fresh fallback succeeds; conflicting sources yield unknown",
+      "inputs": {
+        "subcase_fallback": {
+          "primary": {
+            "available": false
+          },
+          "fallback": {
+            "available": true,
+            "freshness_proof": {
+              "proof_kind": "matching_commit_token",
+              "token": "tok_123"
+            },
+            "fact_value": "Paid"
+          }
+        },
+        "subcase_primary_mismatch_fallback_pass": {
+          "primary": {
+            "available": true,
+            "fact_value": "Unpaid",
+            "freshness_proof": {
+              "proof_kind": "matching_commit_token",
+              "token": "tok_123"
+            }
+          },
+          "fallback": {
+            "available": true,
+            "fact_value": "Paid",
+            "freshness_proof": {
+              "proof_kind": "matching_commit_token",
+              "token": "tok_123"
+            }
+          }
+        },
+        "subcase_conflict": {
+          "source_a": {
+            "available": true,
+            "fact_value": "Shipped",
+            "freshness_proof": {
+              "proof_kind": "certified_monotonic_coverage",
+              "coverage_timestamp": "2026-11-15T22:00:10Z",
+              "anchor_timestamp": "2026-11-15T22:00:00Z"
+            }
+          },
+          "source_b": {
+            "available": true,
+            "fact_value": "Cancelled",
+            "freshness_proof": {
+              "proof_kind": "certified_monotonic_coverage",
+              "coverage_timestamp": "2026-11-15T22:00:10Z",
+              "anchor_timestamp": "2026-11-15T22:00:00Z"
+            }
+          }
+        }
+      },
+      "expected": {
+        "subcase_fallback_verdict": "verified",
+        "subcase_primary_mismatch_fallback_pass_verdict": "mismatch",
+        "subcase_conflict_verdict": "unknown"
+      }
+    },
+    {
+      "case_id": "semantic_04_freshness_proof_modes",
+      "scenario": "Freshness proof validation against effect anchor",
+      "inputs": {
+        "effect_anchor": "2026-11-15T22:00:00Z",
+        "cases": [
+          {
+            "mode": "matching_commit_token",
+            "receipt_token": "cmt_99",
+            "readback_token": "cmt_99"
+          },
+          {
+            "mode": "matching_commit_token",
+            "receipt_token": "cmt_99",
+            "readback_token": "cmt_98"
+          },
+          {
+            "mode": "certified_monotonic_coverage",
+            "coverage_ts": "2026-11-15T22:00:05Z"
+          },
+          {
+            "mode": "certified_monotonic_coverage",
+            "coverage_ts": "2026-11-15T21:59:59Z"
+          },
+          {
+            "mode": "certified_read_after_write",
+            "guarantee": true
+          },
+          {
+            "mode": "no_proof_cached",
+            "guarantee": false
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "fresh": true,
+            "verdict": "verified"
+          },
+          {
+            "fresh": false,
+            "verdict": "unknown"
+          },
+          {
+            "fresh": true,
+            "verdict": "verified"
+          },
+          {
+            "fresh": false,
+            "verdict": "unknown"
+          },
+          {
+            "fresh": true,
+            "verdict": "verified"
+          },
+          {
+            "fresh": false,
+            "verdict": "unknown"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "semantic_05_eventual_consistency_and_deadlines",
+      "scenario": "Eventual consistency polling within deadline vs timeout",
+      "inputs": {
+        "deadline_seconds": 30,
+        "observations": [
+          {
+            "elapsed_seconds": 5,
+            "state": "Pending",
+            "authoritative_contradiction": false
+          },
+          {
+            "elapsed_seconds": 15,
+            "state": "Paid",
+            "authoritative_contradiction": false
+          },
+          {
+            "elapsed_seconds": 35,
+            "state": "Pending",
+            "authoritative_contradiction": false
+          },
+          {
+            "elapsed_seconds": 5,
+            "state": "PermanentRejection",
+            "authoritative_contradiction": true
+          }
+        ]
+      },
+      "expected": {
+        "step_1": "pending",
+        "step_2": "verified",
+        "step_3": "unknown",
+        "step_4": "mismatch"
+      }
+    },
+    {
+      "case_id": "semantic_06_requirement_completeness_and_aggregation",
+      "scenario": "Aggregation across multiple requirements",
+      "inputs": {
+        "suite_a": [
+          {
+            "id": "r1",
+            "verdict": "verified"
+          },
+          {
+            "id": "r2",
+            "verdict": "verified"
+          }
+        ],
+        "suite_b": [
+          {
+            "id": "r1",
+            "verdict": "verified"
+          },
+          {
+            "id": "r2",
+            "verdict": "unknown"
+          }
+        ],
+        "suite_c": [
+          {
+            "id": "r1",
+            "verdict": "unknown"
+          },
+          {
+            "id": "r2",
+            "verdict": "mismatch"
+          }
+        ],
+        "suite_empty": []
+      },
+      "expected": {
+        "suite_a_aggregate": "verified",
+        "suite_b_aggregate": "unknown",
+        "suite_c_aggregate": "mismatch",
+        "suite_empty_aggregate": "unknown"
+      }
+    },
+    {
+      "case_id": "semantic_07_request_replay_and_lease",
+      "scenario": "Deterministic replay and worker lease fence",
+      "inputs": {
+        "original_request_id": "11111111-1111-4111-8111-111111111111",
+        "original_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "replay_same_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "replay_altered_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "worker_lease_expired": true
+      },
+      "expected": {
+        "replay_same_response": "return_cached_result",
+        "replay_altered_response": "VERIFICATION_REQUEST_CONFLICT",
+        "expired_worker_finalize": "denied"
+      }
+    },
+    {
+      "case_id": "semantic_08_human_postcondition_assessment",
+      "scenario": "Stage 3 human reviewer observations and separation of duties",
+      "inputs": {
+        "actor_id": "usr_agent_operator",
+        "approver_id": "usr_manager",
+        "subcases": [
+          {
+            "reviewer_id": "usr_independent_auditor",
+            "role": "billing_auditor",
+            "hours_elapsed": 2,
+            "separation_policy": "must_differ_from_actor_and_approver"
+          },
+          {
+            "reviewer_id": "usr_agent_operator",
+            "role": "billing_auditor",
+            "hours_elapsed": 2,
+            "separation_policy": "must_differ_from_actor"
+          },
+          {
+            "reviewer_id": "usr_independent_auditor",
+            "role": "billing_auditor",
+            "hours_elapsed": 25,
+            "separation_policy": "none"
+          },
+          {
+            "reviewer_id": "usr_independent_auditor",
+            "role": "wrong_role",
+            "hours_elapsed": 2,
+            "separation_policy": "none"
+          }
+        ]
+      },
+      "expected": {
+        "subcase_results": [
+          {
+            "valid": true,
+            "verdict": "verified"
+          },
+          {
+            "valid": false,
+            "error": "SEPARATION_OF_DUTIES_VIOLATION"
+          },
+          {
+            "valid": false,
+            "error": "REVIEW_DEADLINE_EXPIRED"
+          },
+          {
+            "valid": false,
+            "error": "ROLE_MISMATCH"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "semantic_09_standalone_graph_handoff",
+      "scenario": "Graph handoff obligation verification mapping",
+      "inputs": {
+        "cases": [
+          {
+            "binding_valid": true,
+            "verifier_verdict": "verified"
+          },
+          {
+            "binding_valid": true,
+            "verifier_verdict": "mismatch"
+          },
+          {
+            "binding_valid": true,
+            "verifier_verdict": "unknown"
+          },
+          {
+            "binding_valid": false,
+            "error": "UNAUTHORIZED_BINDING"
+          }
+        ]
+      },
+      "expected": {
+        "graph_outcomes": [
+          {
+            "graph_status": "completed",
+            "obligation_met": true
+          },
+          {
+            "graph_status": "contradicted",
+            "obligation_met": false
+          },
+          {
+            "graph_status": "active",
+            "obligation_met": false
+          },
+          {
+            "graph_status": "rejected",
+            "obligation_met": false
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "semantic_10_one_use_read_grant_fencing",
+      "scenario": "Strict cryptographic binding and single-use lease fencing",
+      "inputs": {
+        "lease_epoch": 1,
+        "token_purpose": "verification_read",
+        "target_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "attempts": [
+          {
+            "token_purpose": "verification_read",
+            "target_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "attempt": 1
+          },
+          {
+            "token_purpose": "verification_read",
+            "target_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "attempt": 1
+          },
+          {
+            "token_purpose": "action",
+            "target_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "attempt": 2
+          },
+          {
+            "token_purpose": "verification_read",
+            "target_digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "attempt": 3
+          }
+        ]
+      },
+      "expected": {
+        "attempt_results": [
+          {
+            "allowed": true
+          },
+          {
+            "allowed": false,
+            "error": "LEASE_ALREADY_CONSUMED"
+          },
+          {
+            "allowed": false,
+            "error": "TOKEN_PURPOSE_MISMATCH"
+          },
+          {
+            "allowed": false,
+            "error": "TARGET_DIGEST_MISMATCH"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "semantic_11_reverification_and_immutability",
+      "scenario": "Re-verification allocates fresh UUID without mutating historical results",
+      "inputs": {
+        "original_run": {
+          "request_id": "11111111-1111-4111-8111-111111111111",
+          "verdict": "unknown"
+        },
+        "reverify_request": {
+          "reverify_of": "11111111-1111-4111-8111-111111111111",
+          "new_request_id": "88888888-8888-4888-8888-888888888888",
+          "action_generation": 0,
+          "current_action_generation": 0,
+          "readback_result": "Paid"
+        }
+      },
+      "expected": {
+        "original_record_verdict_after_reverify": "unknown",
+        "new_record_verdict": "verified",
+        "resumes_execution_automatically": false
+      }
+    },
+    {
+      "case_id": "semantic_12_evidence_expiry_and_destruction",
+      "scenario": "Tiered retention and unwrap denial following key destruction",
+      "inputs": {
+        "terminal_verification_ts": "2026-11-01T00:00:00Z",
+        "query_at_day_5": "2026-11-06T00:00:00Z",
+        "query_at_day_8": "2026-11-09T00:00:00Z",
+        "restore_attempted_after_key_shred": true
+      },
+      "expected": {
+        "day_5_materialization": "payload_accessible",
+        "day_8_materialization": "410_gone_unavailable_metadata_only",
+        "audit_record_accessible": true,
+        "restore_key_unwrap": "denied_by_destruction_journal_overlay"
+      }
+    },
+    {
+      "case_id": "semantic_13_simulation_oracle_independence",
+      "scenario": "Simulator sealed expectation resolution and ten-minute ceiling",
+      "inputs": {
+        "cases": [
+          {
+            "sealed_verdict": "verified",
+            "elapsed_attempt_seconds": 300
+          },
+          {
+            "sealed_verdict": "mismatch",
+            "elapsed_attempt_seconds": 300
+          },
+          {
+            "sealed_verdict": "verified",
+            "elapsed_attempt_seconds": 650
+          }
+        ]
+      },
+      "expected": {
+        "outcomes": [
+          {
+            "simulator_disposition": "passed"
+          },
+          {
+            "simulator_disposition": "failed_incorrect_outcome"
+          },
+          {
+            "simulator_disposition": "attempt_timeout_exceeded"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "semantic_14_advisory_explanation",
+      "scenario": "On-demand model explanation boundaries",
+      "inputs": {
+        "cases": [
+          {
+            "finalized": true,
+            "valid_citations": true,
+            "model_online": true
+          },
+          {
+            "finalized": false,
+            "valid_citations": true,
+            "model_online": true
+          },
+          {
+            "finalized": true,
+            "valid_citations": false,
+            "model_online": true
+          },
+          {
+            "finalized": true,
+            "valid_citations": true,
+            "model_online": false
+          }
+        ]
+      },
+      "expected": {
+        "outcomes": [
+          {
+            "explanation_emitted": true,
+            "verdict_modified": false
+          },
+          {
+            "explanation_emitted": false,
+            "error": "RESULT_NOT_FINALIZED"
+          },
+          {
+            "explanation_emitted": false,
+            "error": "INVALID_CITATION_ID"
+          },
+          {
+            "explanation_emitted": false,
+            "error": "INFERENCE_UNAVAILABLE",
+            "verdict_modified": false
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "semantic_15_concurrency_race_safety",
+      "scenario": "Finalization races and payload digest re-validation before commit",
+      "inputs": {
+        "cases": [
+          {
+            "draft_hash_at_sign": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "draft_hash_at_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          {
+            "draft_hash_at_sign": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "draft_hash_at_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        ]
+      },
+      "expected": {
+        "outcomes": [
+          {
+            "committed": true
+          },
+          {
+            "committed": false,
+            "signature_discarded": true,
+            "error": "SIGNATURE_PREIMAGE_MISMATCH"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "workflow_01_invoice_po_reconciliation",
+      "workflow_name": "Invoice vs PO 3-Way Match Reconciliation",
+      "inputs": {
+        "spec": {
+          "method": "system_evidence",
+          "capability_ref": {
+            "application_id": "app_netsuite",
+            "capability_id": "cap_invoice_manage",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "postcondition_ids": [
+            "post_invoice_po_match"
+          ],
+          "sources": [
+            {
+              "source_id": "erp_invoice",
+              "readback_operation_id": "get_invoice",
+              "freshness_requirement": "authoritative"
+            },
+            {
+              "source_id": "erp_po",
+              "readback_operation_id": "get_po",
+              "freshness_requirement": "authoritative"
+            }
+          ]
+        },
+        "trials": [
+          {
+            "trial_id": "match_exact",
+            "invoice": {
+              "amount": "1500.00",
+              "currency": "USD",
+              "po_number": "PO-991"
+            },
+            "po": {
+              "amount": "1500.00",
+              "currency": "USD",
+              "po_number": "PO-991"
+            }
+          },
+          {
+            "trial_id": "mismatch_amount",
+            "invoice": {
+              "amount": "1500.50",
+              "currency": "USD",
+              "po_number": "PO-991"
+            },
+            "po": {
+              "amount": "1500.00",
+              "currency": "USD",
+              "po_number": "PO-991"
+            }
+          },
+          {
+            "trial_id": "unknown_currency_mismatch",
+            "invoice": {
+              "amount": "1500.00",
+              "currency": "EUR",
+              "po_number": "PO-991"
+            },
+            "po": {
+              "amount": "1500.00",
+              "currency": "USD",
+              "po_number": "PO-991"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "trial_results": {
+          "match_exact": {
+            "verdict": "verified",
+            "case_state": "verified_complete"
+          },
+          "mismatch_amount": {
+            "verdict": "mismatch",
+            "case_state": "failed",
+            "incident_emitted": true
+          },
+          "unknown_currency_mismatch": {
+            "verdict": "unknown",
+            "case_state": "outcome_unknown"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "workflow_02_customer_order_status_reconciliation",
+      "workflow_name": "CRM Order Status vs Shipping Carrier Reconciliation",
+      "inputs": {
+        "spec": {
+          "method": "system_evidence",
+          "capability_ref": {
+            "application_id": "app_netsuite",
+            "capability_id": "cap_invoice_manage",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "postcondition_ids": [
+            "post_order_shipped_match"
+          ],
+          "sources": [
+            {
+              "source_id": "crm_order",
+              "readback_operation_id": "get_order",
+              "freshness_requirement": "authoritative"
+            },
+            {
+              "source_id": "carrier_tracking",
+              "readback_operation_id": "get_tracking",
+              "freshness_requirement": "authoritative"
+            }
+          ]
+        },
+        "trials": [
+          {
+            "trial_id": "shipped_matched",
+            "crm_status": "Shipped",
+            "carrier_status": "Delivered",
+            "carrier_delivered": true
+          },
+          {
+            "trial_id": "shipped_contradicted",
+            "crm_status": "Shipped",
+            "carrier_status": "ReturnedToSender",
+            "carrier_delivered": false
+          },
+          {
+            "trial_id": "carrier_timeout",
+            "crm_status": "Shipped",
+            "carrier_status": null
+          }
+        ]
+      },
+      "expected": {
+        "trial_results": {
+          "shipped_matched": {
+            "verdict": "verified",
+            "case_state": "verified_complete"
+          },
+          "shipped_contradicted": {
+            "verdict": "mismatch",
+            "case_state": "failed",
+            "incident_emitted": true
+          },
+          "carrier_timeout": {
+            "verdict": "unknown",
+            "case_state": "outcome_unknown"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "workflow_03_support_exception_triage",
+      "workflow_name": "Support Ticket Exception Triage and Escalation",
+      "inputs": {
+        "spec": {
+          "method": "system_evidence",
+          "capability_ref": {
+            "application_id": "app_netsuite",
+            "capability_id": "cap_invoice_manage",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "postcondition_ids": [
+            "post_exception_contained"
+          ],
+          "sources": [
+            {
+              "source_id": "helpdesk_ticket",
+              "readback_operation_id": "get_ticket",
+              "freshness_requirement": "authoritative"
+            },
+            {
+              "source_id": "billing_portal",
+              "readback_operation_id": "get_refund_status",
+              "freshness_requirement": "authoritative"
+            }
+          ]
+        },
+        "trials": [
+          {
+            "trial_id": "refund_approved_and_ticket_closed",
+            "ticket_status": "Solved",
+            "refund_status": "Completed",
+            "refund_amount": "50.00",
+            "ticket_requested_amount": "50.00"
+          },
+          {
+            "trial_id": "refund_amount_mismatch",
+            "ticket_status": "Solved",
+            "refund_status": "Completed",
+            "refund_amount": "100.00",
+            "ticket_requested_amount": "50.00"
+          },
+          {
+            "trial_id": "safe_escalation_branch",
+            "ticket_status": "EscalatedToHumanTier3",
+            "refund_status": "OnHold",
+            "requires_human_approval": true
+          }
+        ]
+      },
+      "expected": {
+        "trial_results": {
+          "refund_approved_and_ticket_closed": {
+            "verdict": "verified",
+            "case_state": "verified_complete"
+          },
+          "refund_amount_mismatch": {
+            "verdict": "mismatch",
+            "case_state": "failed",
+            "incident_emitted": true
+          },
+          "safe_escalation_branch": {
+            "verdict": "verified",
+            "case_state": "expectedly_rejected"
+          }
+        }
+      }
+    }
+  ],
+  "descriptive_cases": [
+    {
+      "case_id": "desc_01_gvisor_memory_isolation",
+      "description": "Evidence decryption occurs in non-root gVisor memory-only scratch without disk persistence",
+      "status": "unexecuted_acceptance_requirement"
+    },
+    {
+      "case_id": "desc_02_vault_transit_key_destruction",
+      "description": "Vault Transit per-artifact DEK is permanently destroyed at retention deadline, rendering ciphertext undecryptable across backups",
+      "status": "unexecuted_acceptance_requirement"
+    },
+    {
+      "case_id": "desc_03_pg18_rls_tenant_containment",
+      "description": "PostgreSQL 18 RLS policies enforce tenant separation using session setting oryn.organization_id",
+      "status": "unexecuted_acceptance_requirement"
+    }
+  ]
+}

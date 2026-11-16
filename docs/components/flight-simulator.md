@@ -99,7 +99,8 @@ The Flight Simulator directly satisfies and enforces platform mandates defined i
   - Routes sandbox egress strictly through `AdapterEgressBroker` with environment-scoped credentials and mock endpoints.
 - **Contract Reference #13 & #14 (Flight Simulator to Outcome Verification):**
   - Dispatches `VerificationRunRequestV1` defined in [`outcome-verification-v1.schema.json`](../architecture/contracts/outcome-verification-v1.schema.json) binding required `evaluation_target: EvaluationTargetV1` and sealed `scenario_expectation_ref: ScenarioExpectationRefV1`.
-  - Ingests independent verdicts (`VerificationRunResultV1`): `verified`, `mismatch`, or `unknown`.
+  - Ingests immutable independent verdicts (`VerificationRunResultV1`): `verified`, `mismatch`, or `unknown`.
+  - Verifier independently loads sealed expectation definitions; mismatch maps to `failed_incorrect_outcome`, unknown to `inconclusive`, verified expected safe stop may support `passed_expected_safe_escalation`. Verification strictly respects attempt timeouts within the 10-minute attempt ceiling.
 - **Contract Reference #17 (Incident Correction and Repair to Flight Simulator):**
   - Ingests `SimulationRegressionRequirementV1` (`simulation.regression-requirement.v1`) binding incident reference, repair reference, original failing scenarios, prevention specs, and at least 5 distinct nearby variations.
 - **Contract Reference #22 (LiteLLM Cloud Inference Gateway):**

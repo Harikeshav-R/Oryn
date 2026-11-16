@@ -9127,6 +9127,1052 @@
           }
         }
       }
+    },
+    "/v1/verification/specs": {
+      "post": {
+        "operationId": "createVerificationSpecDraft",
+        "summary": "Create verification specification draft",
+        "description": "Initializes a new verification specification in draft state with optimistic concurrency control.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUIDv7 idempotency key"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationSpecDraftCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Specification draft created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationSpecViewV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable specification",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/verification/specs/{spec_id}": {
+      "get": {
+        "operationId": "getVerificationSpec",
+        "summary": "Get verification specification view",
+        "description": "Retrieves authorized verification specification head, draft, and current approved projection.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "spec_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Specification UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized specification view",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationSpecViewV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Specification not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/verification/specs/{spec_id}/draft": {
+      "put": {
+        "operationId": "updateVerificationSpecDraft",
+        "summary": "Update verification specification draft",
+        "description": "Updates draft revision with optimistic concurrency check against expected_revision.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "spec_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationSpecDraftCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Draft revision updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationSpecViewV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Specification not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid draft content",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/verification/specs/{spec_id}/decisions": {
+      "post": {
+        "operationId": "decideVerificationSpec",
+        "summary": "Submit specification lifecycle decision",
+        "description": "Advances or revokes verification specification lifecycle state.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "spec_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationSpecDecisionCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lifecycle transition committed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationSpecViewV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid decision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Specification not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or invalid state transition",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable decision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/verification/runs": {
+      "post": {
+        "operationId": "requestVerificationRun",
+        "summary": "Submit internal verification run request",
+        "description": "Initiates independent outcome verification for execution context, assist plan, or simulation attempt.",
+        "security": [
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationRunRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification complete (cached or immediate)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationRunStatusV1"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Verification pending / admitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationRunStatusV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationErrorV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationErrorV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationErrorV1"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationErrorV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/verification/runs/{request_id}": {
+      "get": {
+        "operationId": "queryVerificationRunStatus",
+        "summary": "Query internal verification run status",
+        "description": "Retrieves pending progress or complete result for a verification run request.",
+        "security": [
+          {
+            "BearerAuth": [],
+            "MtlsAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Verification request UUIDv4"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current run status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationRunStatusV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationErrorV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationErrorV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/verification/results/{verification_id}": {
+      "get": {
+        "operationId": "getVerificationResult",
+        "summary": "Get authorized content-free verification result",
+        "description": "Returns content-free immutable verification result metadata.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "verification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Verification Identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Immutable verification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationRunResultV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Result not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/verification/results/{verification_id}/attestation": {
+      "get": {
+        "operationId": "getVerificationAttestation",
+        "summary": "Get detached signed verification result attestation",
+        "description": "Returns detached Vault Ed25519 signature over canonical result digest.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "verification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detached cryptographic result attestation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/SignedVerificationResultAttestationV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Attestation not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/verification/results/{verification_id}/evidence/{evidence_id}": {
+      "get": {
+        "operationId": "getVerificationEvidence",
+        "summary": "Get authorized minimized bounded evidence",
+        "description": "Retrieves encrypted minimized normalized fact snapshot prior to retention expiry.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "verification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Minimized evidence payload and metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Evidence not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Evidence unavailable / expired",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/verification/runs/{request_id}/assessments": {
+      "post": {
+        "operationId": "submitPostconditionAssessment",
+        "summary": "Submit Stage 3 human postcondition assessment",
+        "description": "Submits attributable human observation of business postconditions against declared source locators.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./outcome-verification-v1.schema.json#/$defs/PostconditionAssessmentRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assessment processed and run completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationRunStatusV1"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Assessment accepted, evaluation in progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationRunStatusV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized or separation policy violation",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or expired deadline",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid observation structure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/verification/results/{verification_id}/explanations": {
+      "post": {
+        "operationId": "requestVerificationExplanation",
+        "summary": "Request advisory explanation of verification result",
+        "description": "Generates on-demand post-verdict advisory summary and citations via cloud inference.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "verification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationExplanationRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Advisory verification explanation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationExplanationV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Result not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Inference explanation unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/handoffs/{handoff_id}/assessments": {
+      "post": {
+        "operationId": "submitHandoffAssessmentCommand",
+        "summary": "Submit Graph handoff assessment command",
+        "description": "Dispatches standalone handoff verification assessment for inter-team handoff obligations.",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "handoff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./operational-graph-v1.schema.json#/$defs/HandoffAssessmentCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Handoff assessment completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/HandoffAssessmentStatusV1"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Handoff assessment pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/HandoffAssessmentStatusV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Handoff not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable command",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/knowledge/handoffs/{handoff_id}/assessments/{request_id}": {
+      "get": {
+        "operationId": "getHandoffAssessmentStatus",
+        "summary": "Query authorized Graph handoff assessment status",
+        "description": "Retrieves status and verdict of a standalone handoff postcondition assessment.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "handoff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current handoff assessment status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/HandoffAssessmentStatusV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Assessment not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./outcome-verification-v1.schema.json#/$defs/VerificationProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

@@ -47,6 +47,7 @@ The component is partitioned into eleven internal modules:
 9. `InferenceAdmission`: Verification of signed policy/privacy grants, route pricing validation, atomic monthly budget reservation, and job budget reservation linkage (`JobBudgetReservationV1`).
 10. `InferenceSessionCoordinator`: WebSocket connection affinity, chunk proof verification, and streaming proxying to LiteLLM.
 11. `JobOrchestration`: Coordinates job previews, starts, controls, case reconciliations, schedules, activations, sponsor confirmations, employee local consents, and internal trigger events via `JobOrchestrationPort` under `control-plane-v1.openapi.json`.
+12. `OutcomeVerificationCoordinator`: Pure deterministic evaluation library `oryn-verification-core`, verification spec catalog, readback coordination with application adapters, postcondition assessment handling, standalone Graph handoff verifications, advisory explanations, and 13 Control Plane routes under `control-plane-v1.openapi.json`.
 
 ```rust
 // Core Domain Command & Handler Interfaces (Specification Reference)
@@ -886,6 +887,7 @@ Key architectural decisions settled for the Control Plane component (formalized 
 3. **Confidential BFF Web Session Architecture:** Rejected browser-stored JWT access/refresh tokens. Control Plane issues a single opaque, HttpOnly, SameSite=Lax `__Host-oryn_session` cookie tied to server-side session records, protected by memory-bound CSRF tokens and 30-minute idle locks.
 4. **Transient Non-Resumable Cloud Inference:** Rejected inference session resumption across pods. Interservice inference uses ephemeral WebSocket connections bound to pod IP; socket disconnect or node failure immediately terminates upstream model calls and discards transient state.
 5. **Independent Recovery Journal Custody Extension:** Extended the independent recovery journal to record minimal 5-field custody projections, ensuring contribution acceptance and action fences survive PostgreSQL PITR restores.
+6. **Outcome Verification and Evidence Finality (ADR-0020):** Integrated pure `oryn-verification-core` within Control Plane, establishing 13 dedicated routes, dedicated non-actuating `verification_read` token authority, certified readback freshness proofs, AES-256-GCM encrypted evidence with 7d/30d cryptographic destruction, and 24-month audit retention.
 
 ### Infrastructure Prerequisites and Dependencies
 The following capabilities are provided by [infrastructure-security](infrastructure-security.md) and must be operational before Control Plane deployment:

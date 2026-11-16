@@ -141,6 +141,18 @@
     },
     {
       "$ref": "#/$defs/SignedSimulationAdmissionV1"
+    },
+    {
+      "$ref": "#/$defs/SignedVerificationReadAuthorizationV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationReadAuthorizationRequestV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationReadLeaseRequestV1"
+    },
+    {
+      "$ref": "#/$defs/SignedVerificationReadLeaseV1"
     }
   ],
   "$defs": {
@@ -1916,6 +1928,9 @@
               "type": "null"
             }
           ]
+        },
+        "verification_policy": {
+          "$ref": "#/$defs/VerificationPolicyConfigV1"
         }
       },
       "required": [
@@ -1934,7 +1949,8 @@
         "federation",
         "inference_budget_limit_microusd",
         "inference_budget_window",
-        "execution_limits"
+        "execution_limits",
+        "verification_policy"
       ]
     },
     "ExecutionLimitsPolicyV1": {
@@ -6098,6 +6114,399 @@
         },
         "signature": {
           "$ref": "#/$defs/Base64Url64"
+        }
+      }
+    },
+    "VerificationPolicyConfigV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "distinct_spec_author_required",
+        "distinct_assessment_executor_required",
+        "maximum_confirmation_window_ms",
+        "maximum_assessment_deadline_ms"
+      ],
+      "properties": {
+        "distinct_spec_author_required": {
+          "type": "boolean",
+          "default": false
+        },
+        "distinct_assessment_executor_required": {
+          "type": "boolean",
+          "default": false
+        },
+        "maximum_confirmation_window_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000,
+          "default": 300000
+        },
+        "maximum_assessment_deadline_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 86400000,
+          "default": 86400000
+        }
+      }
+    },
+    "VerificationReadContextV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": [
+            "organization_id",
+            "verification_request_id",
+            "requirement_id",
+            "source_id",
+            "poll_sequence",
+            "kind",
+            "execution_context",
+            "request_binding_sha256"
+          ],
+          "properties": {
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "verification_request_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "requirement_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "source_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "poll_sequence": {
+              "$ref": "#/$defs/U64"
+            },
+            "kind": {
+              "const": "execution_verification"
+            },
+            "execution_context": {
+              "$ref": "#/$defs/ExecutionContextV1"
+            },
+            "request_binding_sha256": {
+              "$ref": "#/$defs/ActionDigest"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "organization_id",
+            "verification_request_id",
+            "requirement_id",
+            "source_id",
+            "poll_sequence",
+            "kind",
+            "handoff_ref",
+            "binding_sha256"
+          ],
+          "properties": {
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "verification_request_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "requirement_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "source_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "poll_sequence": {
+              "$ref": "#/$defs/U64"
+            },
+            "kind": {
+              "const": "handoff_assessment"
+            },
+            "handoff_ref": {
+              "allOf": [
+                {
+                  "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "entity_kind": {
+                      "const": "handoff"
+                    }
+                  }
+                }
+              ]
+            },
+            "binding_sha256": {
+              "$ref": "#/$defs/ActionDigest"
+            }
+          }
+        }
+      ]
+    },
+    "SignedVerificationReadAuthorizationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.verification-read-authorization.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/VerificationReadAuthorizationPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      }
+    },
+    "VerificationReadAuthorizationPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorization_id",
+        "organization_id",
+        "actor_id",
+        "workload_id",
+        "context",
+        "prepared_read_id",
+        "prepared_read_revision",
+        "target_sha256",
+        "attempt_id",
+        "policy_revision",
+        "revocation_generation",
+        "audience",
+        "issued_at",
+        "not_after"
+      ],
+      "properties": {
+        "authorization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "workload_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "context": {
+          "$ref": "#/$defs/VerificationReadContextV1"
+        },
+        "prepared_read_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "prepared_read_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "target_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "revocation_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "audience": {
+          "const": "adapter-readback"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "VerificationReadAuthorizationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "prepared_read_id",
+        "prepared_read_revision",
+        "attempt_id",
+        "workload_id"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.verification-read-authorization-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "prepared_read_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "prepared_read_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "workload_id": {
+          "$ref": "#/$defs/Identifier"
+        }
+      }
+    },
+    "VerificationReadLeaseRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "authorization",
+        "worker_id",
+        "worker_incarnation"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.verification-read-lease-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "authorization": {
+          "$ref": "#/$defs/SignedVerificationReadAuthorizationV1"
+        },
+        "worker_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "worker_incarnation": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "SignedVerificationReadLeaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.verification-read-lease.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/VerificationReadLeasePayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      }
+    },
+    "VerificationReadLeasePayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lease_id",
+        "organization_id",
+        "authorization_id",
+        "context",
+        "prepared_read_id",
+        "prepared_read_revision",
+        "target_sha256",
+        "attempt_id",
+        "workload_id",
+        "worker_id",
+        "worker_incarnation",
+        "connection_id",
+        "connection_revision",
+        "vendor_account_id",
+        "environment",
+        "credential_role",
+        "operation_id",
+        "max_bytes",
+        "issued_at",
+        "not_after"
+      ],
+      "properties": {
+        "lease_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "authorization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "context": {
+          "$ref": "#/$defs/VerificationReadContextV1"
+        },
+        "prepared_read_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "prepared_read_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "target_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "workload_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "worker_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "worker_incarnation": {
+          "$ref": "#/$defs/U64"
+        },
+        "connection_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "connection_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "vendor_account_id": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "production",
+            "simulation"
+          ]
+        },
+        "credential_role": {
+          "const": "readback"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
         }
       }
     }

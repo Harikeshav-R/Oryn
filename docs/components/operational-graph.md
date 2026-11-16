@@ -25,7 +25,7 @@ The Living Operational Graph and Knowledge Governance component maintains the au
 - Authorized cross-team handoff commitments and reviewed meeting handoffs (`MeetingReviewedHandoffV1`) from [contribution-sync](contribution-sync.md) via Contract 24 (`graph_handoff_intake`).
 - Agent evaluation outcomes and deployment readiness requests from [release-governance](release-governance.md).
 - Verified principal tokens, role memberships, and authority evaluation from [identity-policy](identity-policy.md) (ADR-0011).
-- Independent outcome verification verdicts (`system_evidence` or `authorized_reviewer`) from [outcome-verification](outcome-verification.md).
+- Independent outcome verification verdicts via `HandoffVerificationBindingV1` from [outcome-verification](outcome-verification.md). Ingests authoritative `HandoffAssessmentResultV1` via workload mTLS without caller-authored verdicts; mismatch maps to Graph status `contradicted`.
 - Governed cloud embedding (`text.embed`) and reranking (`text.rerank`) operations via [cloud-inference](../architecture/cloud-inference.md) under Contract 22.
 
 ### Produces

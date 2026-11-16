@@ -19,12 +19,12 @@
           "organization_id": "018f0000-0000-7000-8000-000000000001",
           "agent_id": "018f0000-0000-7000-8000-000000000100",
           "agent_version_id": "018f0000-0000-7000-8000-000000000101",
-          "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
+          "behavior_sha256": "cc939ae0e470a6370977bf1b3afe07e145e7faacd37e28a86c6083e2527329cc",
           "manifest_sha256": "2e5dd223999710d9472eda60ccfe02d2d8a11c3d782132b89b1aa17bd30d63cd",
           "compiler_revision": "compiler_v1",
           "signed_at": "2026-11-14T12:00:00Z"
         },
-        "signature": "YRe89uonF57sd8djIswmwBf4DSiYFaJNaQssyPX3JMc_9rZS4fPb4ywjt0FoHWn8W96sW4qGi6TEvjkRecJqCw"
+        "signature": "qBQgcJJwT43jSOTK2vO1RPqPgelfkw8b31o06s8_5mb9fAFBJsoauaR4xRYDK6-pyF2cnzA1FJG7_yNQFqYyDA"
       },
       "public_key_id": "test_publisher_1",
       "expected_valid": true
@@ -986,19 +986,39 @@
                   "value": true
                 }
               },
-              "readback_capability_ref": {
-                "application_id": "invoice_app",
-                "capability_id": "invoice_operations",
-                "version_id": "018f0000-0000-7000-8000-000000000016",
-                "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
-              },
-              "readback_operation_id": "read_invoice",
-              "reviewer_role": null,
               "supported_stages": [
                 3,
                 4,
                 5
-              ]
+              ],
+              "derived_fact_bindings": [],
+              "readback_sources": [
+                {
+                  "source_id": "src_readback_01",
+                  "readback_capability_ref": {
+                    "application_id": "invoice_app",
+                    "capability_id": "invoice_operations",
+                    "version_id": "018f0000-0000-7000-8000-000000000016",
+                    "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                  },
+                  "readback_operation_id": "read_invoice",
+                  "max_age_ms": 30000,
+                  "contradiction_timing": "after_window"
+                }
+              ],
+              "fact_bindings": [
+                {
+                  "fact_id": "status_confirmed",
+                  "sources": [
+                    {
+                      "source_id": "src_readback_01",
+                      "json_pointer": "/status_confirmed"
+                    }
+                  ]
+                }
+              ],
+              "confirmation_window_ms": 30000,
+              "reviewer_policy": null
             }
           }
         ],
@@ -1025,7 +1045,23 @@
             ],
             "required_before_node_ids": [],
             "on_unknown": "pause_case",
-            "on_mismatch": "pause_case"
+            "on_mismatch": "pause_case",
+            "source_bindings": [
+              {
+                "source_id": "src_readback_01",
+                "connection_binding_id": "invoice_connection",
+                "record_key": {
+                  "kind": "input",
+                  "name": "invoice_id"
+                },
+                "arguments": {
+                  "id": {
+                    "kind": "input",
+                    "name": "invoice_id"
+                  }
+                }
+              }
+            ]
           }
         ],
         "model_bindings": [],
@@ -1075,8 +1111,8 @@
           }
         ]
       },
-      "sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
-      "expected_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c"
+      "sha256": "cc939ae0e470a6370977bf1b3afe07e145e7faacd37e28a86c6083e2527329cc",
+      "expected_sha256": "cc939ae0e470a6370977bf1b3afe07e145e7faacd37e28a86c6083e2527329cc"
     },
     {
       "case_id": "invoice_manifest",
@@ -5943,19 +5979,39 @@
                       "value": true
                     }
                   },
-                  "readback_capability_ref": {
-                    "application_id": "invoice_app",
-                    "capability_id": "invoice_operations",
-                    "version_id": "018f0000-0000-7000-8000-000000000016",
-                    "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
-                  },
-                  "readback_operation_id": "read_invoice",
-                  "reviewer_role": null,
                   "supported_stages": [
                     3,
                     4,
                     5
-                  ]
+                  ],
+                  "derived_fact_bindings": [],
+                  "readback_sources": [
+                    {
+                      "source_id": "src_readback_01",
+                      "readback_capability_ref": {
+                        "application_id": "invoice_app",
+                        "capability_id": "invoice_operations",
+                        "version_id": "018f0000-0000-7000-8000-000000000016",
+                        "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                      },
+                      "readback_operation_id": "read_invoice",
+                      "max_age_ms": 30000,
+                      "contradiction_timing": "after_window"
+                    }
+                  ],
+                  "fact_bindings": [
+                    {
+                      "fact_id": "status_confirmed",
+                      "sources": [
+                        {
+                          "source_id": "src_readback_01",
+                          "json_pointer": "/status_confirmed"
+                        }
+                      ]
+                    }
+                  ],
+                  "confirmation_window_ms": 30000,
+                  "reviewer_policy": null
                 }
               }
             ],
@@ -5982,7 +6038,23 @@
                 ],
                 "required_before_node_ids": [],
                 "on_unknown": "pause_case",
-                "on_mismatch": "pause_case"
+                "on_mismatch": "pause_case",
+                "source_bindings": [
+                  {
+                    "source_id": "src_readback_01",
+                    "connection_binding_id": "invoice_connection",
+                    "record_key": {
+                      "kind": "input",
+                      "name": "invoice_id"
+                    },
+                    "arguments": {
+                      "id": {
+                        "kind": "input",
+                        "name": "invoice_id"
+                      }
+                    }
+                  }
+                ]
               }
             ],
             "model_bindings": [],
@@ -6103,12 +6175,12 @@
             "organization_id": "018f0000-0000-7000-8000-000000000001",
             "agent_id": "018f0000-0000-7000-8000-000000000100",
             "agent_version_id": "018f0000-0000-7000-8000-000000000101",
-            "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
+            "behavior_sha256": "4c26bc7536e5671a97cf8debc22b4dab4c1e4b126690c06bb3d58dbd2be3f352",
             "manifest_sha256": "2e5dd223999710d9472eda60ccfe02d2d8a11c3d782132b89b1aa17bd30d63cd",
             "compiler_revision": "compiler_v1",
             "signed_at": "2026-11-14T12:00:00Z"
           },
-          "signature": "YRe89uonF57sd8djIswmwBf4DSiYFaJNaQssyPX3JMc_9rZS4fPb4ywjt0FoHWn8W96sW4qGi6TEvjkRecJqCw"
+          "signature": "GKxfgwCfv7FXr8bEN6u-LrNwlVDh2ggyTV-EdoMs9QPg3TMkF15XGnU1oXbBDrE9_5rMszcYPaWHCE03mLALBQ"
         },
         "compile_report": {
           "schema_id": "agent.compile-report.v1",
@@ -7196,19 +7268,39 @@
                       "value": true
                     }
                   },
-                  "readback_capability_ref": {
-                    "application_id": "order_app",
-                    "capability_id": "order_operations",
-                    "version_id": "018f0000-0000-7000-8000-000000000016",
-                    "content_sha256": "b993a70fda7fe02202bf8130ebead2b51b47fc92207710e00699de72115cd342"
-                  },
-                  "readback_operation_id": "read_record",
-                  "reviewer_role": null,
                   "supported_stages": [
                     3,
                     4,
                     5
-                  ]
+                  ],
+                  "derived_fact_bindings": [],
+                  "readback_sources": [
+                    {
+                      "source_id": "src_readback_01",
+                      "readback_capability_ref": {
+                        "application_id": "order_app",
+                        "capability_id": "order_operations",
+                        "version_id": "018f0000-0000-7000-8000-000000000016",
+                        "content_sha256": "b993a70fda7fe02202bf8130ebead2b51b47fc92207710e00699de72115cd342"
+                      },
+                      "readback_operation_id": "read_record",
+                      "max_age_ms": 30000,
+                      "contradiction_timing": "after_window"
+                    }
+                  ],
+                  "fact_bindings": [
+                    {
+                      "fact_id": "status_confirmed",
+                      "sources": [
+                        {
+                          "source_id": "src_readback_01",
+                          "json_pointer": "/status_confirmed"
+                        }
+                      ]
+                    }
+                  ],
+                  "confirmation_window_ms": 30000,
+                  "reviewer_policy": null
                 }
               }
             ],
@@ -7235,7 +7327,23 @@
                 ],
                 "required_before_node_ids": [],
                 "on_unknown": "pause_case",
-                "on_mismatch": "pause_case"
+                "on_mismatch": "pause_case",
+                "source_bindings": [
+                  {
+                    "source_id": "src_readback_01",
+                    "connection_binding_id": "order_connection",
+                    "record_key": {
+                      "kind": "input",
+                      "name": "record_id"
+                    },
+                    "arguments": {
+                      "id": {
+                        "kind": "input",
+                        "name": "record_id"
+                      }
+                    }
+                  }
+                ]
               }
             ],
             "model_bindings": [],
@@ -7356,12 +7464,12 @@
             "organization_id": "018f0000-0000-7000-8000-000000000001",
             "agent_id": "018f0000-0000-7000-8000-000000000200",
             "agent_version_id": "018f0000-0000-7000-8000-000000000201",
-            "behavior_sha256": "a349d04e28c65dc407a37192c94fa044b6e0bbf1ab1d728fc240b8844270bee5",
+            "behavior_sha256": "6f6b3f8900003845f75d8f191a92c69de735f01a675ab7fd57e58d1a71d3fca1",
             "manifest_sha256": "4a9f44f4e97b63c176470e12421fb6cdd07f33d929861b3c43d4350dda50e085",
             "compiler_revision": "compiler_v1",
             "signed_at": "2026-11-14T12:00:00Z"
           },
-          "signature": "CT-rhHxUtZWF6xKcoFyoYjDVLl4gc4wWUDsjkfEnAMzmUbQz-dUQAeBAzHcWXS9GXmdQj2bRpqlMTGAdrkuXDQ"
+          "signature": "lN6Vhh3cWQZyatXBh_6XgAppn8SnUX6TxqfERuVjdn0VsyIgnpZWOlMG9SYjiHSopJ1KNCv3-pi8Yhhf8trIAA"
         },
         "compile_report": {
           "schema_id": "agent.compile-report.v1",
@@ -8455,19 +8563,48 @@
                       }
                     ]
                   },
-                  "readback_capability_ref": {
-                    "application_id": "support_app",
-                    "capability_id": "support_operations",
-                    "version_id": "018f0000-0000-7000-8000-000000000016",
-                    "content_sha256": "61113fc97d6b25de5df206bac7a6a4800954f0932931ee21604841ad3dc763fc"
-                  },
-                  "readback_operation_id": "read_record",
-                  "reviewer_role": null,
                   "supported_stages": [
                     3,
                     4,
                     5
-                  ]
+                  ],
+                  "derived_fact_bindings": [],
+                  "readback_sources": [
+                    {
+                      "source_id": "src_readback_01",
+                      "readback_capability_ref": {
+                        "application_id": "support_app",
+                        "capability_id": "support_operations",
+                        "version_id": "018f0000-0000-7000-8000-000000000016",
+                        "content_sha256": "61113fc97d6b25de5df206bac7a6a4800954f0932931ee21604841ad3dc763fc"
+                      },
+                      "readback_operation_id": "read_record",
+                      "max_age_ms": 30000,
+                      "contradiction_timing": "after_window"
+                    }
+                  ],
+                  "fact_bindings": [
+                    {
+                      "fact_id": "category_matches_expected",
+                      "sources": [
+                        {
+                          "source_id": "src_readback_01",
+                          "json_pointer": "/category_matches_expected"
+                        }
+                      ]
+                    },
+                    {
+                      "fact_id": "status_confirmed",
+                      "sources": [
+                        {
+                          "source_id": "src_readback_01",
+                          "json_pointer": "/status_confirmed"
+                        }
+                      ]
+                    }
+                  ],
+                  "confirmation_window_ms": 30000,
+                  "reviewer_policy": null
                 }
               }
             ],
@@ -8494,7 +8631,23 @@
                 ],
                 "required_before_node_ids": [],
                 "on_unknown": "pause_case",
-                "on_mismatch": "pause_case"
+                "on_mismatch": "pause_case",
+                "source_bindings": [
+                  {
+                    "source_id": "src_readback_01",
+                    "connection_binding_id": "support_connection",
+                    "record_key": {
+                      "kind": "input",
+                      "name": "record_id"
+                    },
+                    "arguments": {
+                      "id": {
+                        "kind": "input",
+                        "name": "record_id"
+                      }
+                    }
+                  }
+                ]
               }
             ],
             "model_bindings": [
@@ -8636,12 +8789,12 @@
             "organization_id": "018f0000-0000-7000-8000-000000000001",
             "agent_id": "018f0000-0000-7000-8000-000000000300",
             "agent_version_id": "018f0000-0000-7000-8000-000000000301",
-            "behavior_sha256": "ce5a2e12c91605ccc670dede07989436177a58fd6a3cebbdd070e16d59aaa28d",
+            "behavior_sha256": "ea803ea99774b019113cceec52e65de8e868bd8a860f70f0b7bf551da088af02",
             "manifest_sha256": "c54cc62484b05a5bdaace4568a0a516d0dd478095728e2336f43cd739098d11b",
             "compiler_revision": "compiler_v1",
             "signed_at": "2026-11-14T12:00:00Z"
           },
-          "signature": "6NJXEtsQd-7ZUysOOoxnVv6pFajTDB2lpQZhxaL3Wa5ulI3MLeCaSqiJ34TmAf8cGWSrBlA1qXtgcUO6-ScRDg"
+          "signature": "klcOnQN8PkC3igMI2Fk2a3M7jXiBFZzXDrm74BlXDME_48FFUZrzpTYcrkcVxSh3dwXMSrBc1rsRotdHRbWdCw"
         },
         "compile_report": {
           "schema_id": "agent.compile-report.v1",
@@ -15996,19 +16149,39 @@
                         "value": true
                       }
                     },
-                    "readback_capability_ref": {
-                      "application_id": "invoice_app",
-                      "capability_id": "invoice_operations",
-                      "version_id": "018f0000-0000-7000-8000-000000000016",
-                      "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
-                    },
-                    "readback_operation_id": "read_invoice",
-                    "reviewer_role": null,
                     "supported_stages": [
                       3,
                       4,
                       5
-                    ]
+                    ],
+                    "derived_fact_bindings": [],
+                    "readback_sources": [
+                      {
+                        "source_id": "src_readback_01",
+                        "readback_capability_ref": {
+                          "application_id": "invoice_app",
+                          "capability_id": "invoice_operations",
+                          "version_id": "018f0000-0000-7000-8000-000000000016",
+                          "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                        },
+                        "readback_operation_id": "read_invoice",
+                        "max_age_ms": 30000,
+                        "contradiction_timing": "after_window"
+                      }
+                    ],
+                    "fact_bindings": [
+                      {
+                        "fact_id": "status_confirmed",
+                        "sources": [
+                          {
+                            "source_id": "src_readback_01",
+                            "json_pointer": "/status_confirmed"
+                          }
+                        ]
+                      }
+                    ],
+                    "confirmation_window_ms": 30000,
+                    "reviewer_policy": null
                   }
                 }
               ],
@@ -16035,7 +16208,23 @@
                   ],
                   "required_before_node_ids": [],
                   "on_unknown": "pause_case",
-                  "on_mismatch": "pause_case"
+                  "on_mismatch": "pause_case",
+                  "source_bindings": [
+                    {
+                      "source_id": "src_readback_01",
+                      "connection_binding_id": "invoice_connection",
+                      "record_key": {
+                        "kind": "input",
+                        "name": "invoice_id"
+                      },
+                      "arguments": {
+                        "id": {
+                          "kind": "input",
+                          "name": "invoice_id"
+                        }
+                      }
+                    }
+                  ]
                 }
               ],
               "model_bindings": [],
@@ -16156,12 +16345,12 @@
               "organization_id": "018f0000-0000-7000-8000-000000000001",
               "agent_id": "018f0000-0000-7000-8000-000000000100",
               "agent_version_id": "018f0000-0000-7000-8000-000000000101",
-              "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
+              "behavior_sha256": "cc939ae0e470a6370977bf1b3afe07e145e7faacd37e28a86c6083e2527329cc",
               "manifest_sha256": "2e5dd223999710d9472eda60ccfe02d2d8a11c3d782132b89b1aa17bd30d63cd",
               "compiler_revision": "compiler_v1",
               "signed_at": "2026-11-14T12:00:00Z"
             },
-            "signature": "YRe89uonF57sd8djIswmwBf4DSiYFaJNaQssyPX3JMc_9rZS4fPb4ywjt0FoHWn8W96sW4qGi6TEvjkRecJqCw"
+            "signature": "qBQgcJJwT43jSOTK2vO1RPqPgelfkw8b31o06s8_5mb9fAFBJsoauaR4xRYDK6-pyF2cnzA1FJG7_yNQFqYyDA"
           },
           "compile_report": {
             "schema_id": "agent.compile-report.v1",
@@ -17178,19 +17367,39 @@
                         "value": true
                       }
                     },
-                    "readback_capability_ref": {
-                      "application_id": "invoice_app",
-                      "capability_id": "invoice_operations",
-                      "version_id": "018f0000-0000-7000-8000-000000000016",
-                      "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
-                    },
-                    "readback_operation_id": "read_invoice",
-                    "reviewer_role": null,
                     "supported_stages": [
                       3,
                       4,
                       5
-                    ]
+                    ],
+                    "derived_fact_bindings": [],
+                    "readback_sources": [
+                      {
+                        "source_id": "src_readback_01",
+                        "readback_capability_ref": {
+                          "application_id": "invoice_app",
+                          "capability_id": "invoice_operations",
+                          "version_id": "018f0000-0000-7000-8000-000000000016",
+                          "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                        },
+                        "readback_operation_id": "read_invoice",
+                        "max_age_ms": 30000,
+                        "contradiction_timing": "after_window"
+                      }
+                    ],
+                    "fact_bindings": [
+                      {
+                        "fact_id": "status_confirmed",
+                        "sources": [
+                          {
+                            "source_id": "src_readback_01",
+                            "json_pointer": "/status_confirmed"
+                          }
+                        ]
+                      }
+                    ],
+                    "confirmation_window_ms": 30000,
+                    "reviewer_policy": null
                   }
                 }
               ],
@@ -17217,7 +17426,23 @@
                   ],
                   "required_before_node_ids": [],
                   "on_unknown": "pause_case",
-                  "on_mismatch": "pause_case"
+                  "on_mismatch": "pause_case",
+                  "source_bindings": [
+                    {
+                      "source_id": "src_readback_01",
+                      "connection_binding_id": "invoice_connection",
+                      "record_key": {
+                        "kind": "input",
+                        "name": "invoice_id"
+                      },
+                      "arguments": {
+                        "id": {
+                          "kind": "input",
+                          "name": "invoice_id"
+                        }
+                      }
+                    }
+                  ]
                 }
               ],
               "model_bindings": [],
@@ -18360,19 +18585,39 @@
                         "value": true
                       }
                     },
-                    "readback_capability_ref": {
-                      "application_id": "invoice_app",
-                      "capability_id": "invoice_operations",
-                      "version_id": "018f0000-0000-7000-8000-000000000016",
-                      "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
-                    },
-                    "readback_operation_id": "read_invoice",
-                    "reviewer_role": null,
                     "supported_stages": [
                       3,
                       4,
                       5
-                    ]
+                    ],
+                    "derived_fact_bindings": [],
+                    "readback_sources": [
+                      {
+                        "source_id": "src_readback_01",
+                        "readback_capability_ref": {
+                          "application_id": "invoice_app",
+                          "capability_id": "invoice_operations",
+                          "version_id": "018f0000-0000-7000-8000-000000000016",
+                          "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                        },
+                        "readback_operation_id": "read_invoice",
+                        "max_age_ms": 30000,
+                        "contradiction_timing": "after_window"
+                      }
+                    ],
+                    "fact_bindings": [
+                      {
+                        "fact_id": "status_confirmed",
+                        "sources": [
+                          {
+                            "source_id": "src_readback_01",
+                            "json_pointer": "/status_confirmed"
+                          }
+                        ]
+                      }
+                    ],
+                    "confirmation_window_ms": 30000,
+                    "reviewer_policy": null
                   }
                 }
               ],
@@ -18399,7 +18644,23 @@
                   ],
                   "required_before_node_ids": [],
                   "on_unknown": "pause_case",
-                  "on_mismatch": "pause_case"
+                  "on_mismatch": "pause_case",
+                  "source_bindings": [
+                    {
+                      "source_id": "src_readback_01",
+                      "connection_binding_id": "invoice_connection",
+                      "record_key": {
+                        "kind": "input",
+                        "name": "invoice_id"
+                      },
+                      "arguments": {
+                        "id": {
+                          "kind": "input",
+                          "name": "invoice_id"
+                        }
+                      }
+                    }
+                  ]
                 }
               ],
               "model_bindings": [],
@@ -18520,12 +18781,12 @@
               "organization_id": "018f0000-0000-7000-8000-000000000001",
               "agent_id": "018f0000-0000-7000-8000-000000000100",
               "agent_version_id": "018f0000-0000-7000-8000-000000000101",
-              "behavior_sha256": "af0f9bcfdbd61e86afe90946acc7941d5d5b91afc9e0c985ba80476fe0d9359c",
+              "behavior_sha256": "cc939ae0e470a6370977bf1b3afe07e145e7faacd37e28a86c6083e2527329cc",
               "manifest_sha256": "2e5dd223999710d9472eda60ccfe02d2d8a11c3d782132b89b1aa17bd30d63cd",
               "compiler_revision": "compiler_v1",
               "signed_at": "2026-11-14T12:00:00Z"
             },
-            "signature": "YRe89uonF57sd8djIswmwBf4DSiYFaJNaQssyPX3JMc_9rZS4fPb4ywjt0FoHWn8W96sW4qGi6TEvjkRecJqCw"
+            "signature": "qBQgcJJwT43jSOTK2vO1RPqPgelfkw8b31o06s8_5mb9fAFBJsoauaR4xRYDK6-pyF2cnzA1FJG7_yNQFqYyDA"
           },
           "compile_report": {
             "schema_id": "agent.compile-report.v1",
@@ -19532,19 +19793,39 @@
                     "value": true
                   }
                 },
-                "readback_capability_ref": {
-                  "application_id": "invoice_app",
-                  "capability_id": "invoice_operations",
-                  "version_id": "018f0000-0000-7000-8000-000000000016",
-                  "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
-                },
-                "readback_operation_id": "read_invoice",
-                "reviewer_role": null,
                 "supported_stages": [
                   3,
                   4,
                   5
-                ]
+                ],
+                "derived_fact_bindings": [],
+                "readback_sources": [
+                  {
+                    "source_id": "src_readback_01",
+                    "readback_capability_ref": {
+                      "application_id": "invoice_app",
+                      "capability_id": "invoice_operations",
+                      "version_id": "018f0000-0000-7000-8000-000000000016",
+                      "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                    },
+                    "readback_operation_id": "read_invoice",
+                    "max_age_ms": 30000,
+                    "contradiction_timing": "after_window"
+                  }
+                ],
+                "fact_bindings": [
+                  {
+                    "fact_id": "status_confirmed",
+                    "sources": [
+                      {
+                        "source_id": "src_readback_01",
+                        "json_pointer": "/status_confirmed"
+                      }
+                    ]
+                  }
+                ],
+                "confirmation_window_ms": 30000,
+                "reviewer_policy": null
               }
             }
           ],
@@ -19571,7 +19852,23 @@
               ],
               "required_before_node_ids": [],
               "on_unknown": "pause_case",
-              "on_mismatch": "pause_case"
+              "on_mismatch": "pause_case",
+              "source_bindings": [
+                {
+                  "source_id": "src_readback_01",
+                  "connection_binding_id": "invoice_connection",
+                  "record_key": {
+                    "kind": "input",
+                    "name": "invoice_id"
+                  },
+                  "arguments": {
+                    "id": {
+                      "kind": "input",
+                      "name": "invoice_id"
+                    }
+                  }
+                }
+              ]
             }
           ],
           "model_bindings": [],
@@ -20573,19 +20870,39 @@
                     "value": true
                   }
                 },
-                "readback_capability_ref": {
-                  "application_id": "invoice_app",
-                  "capability_id": "invoice_operations",
-                  "version_id": "018f0000-0000-7000-8000-000000000016",
-                  "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
-                },
-                "readback_operation_id": "read_invoice",
-                "reviewer_role": null,
                 "supported_stages": [
                   3,
                   4,
                   5
-                ]
+                ],
+                "derived_fact_bindings": [],
+                "readback_sources": [
+                  {
+                    "source_id": "src_readback_01",
+                    "readback_capability_ref": {
+                      "application_id": "invoice_app",
+                      "capability_id": "invoice_operations",
+                      "version_id": "018f0000-0000-7000-8000-000000000016",
+                      "content_sha256": "ebb61f55b5875dfaf5ba518c8163e154a0d9817442ee0917030793ff2faec870"
+                    },
+                    "readback_operation_id": "read_invoice",
+                    "max_age_ms": 30000,
+                    "contradiction_timing": "after_window"
+                  }
+                ],
+                "fact_bindings": [
+                  {
+                    "fact_id": "status_confirmed",
+                    "sources": [
+                      {
+                        "source_id": "src_readback_01",
+                        "json_pointer": "/status_confirmed"
+                      }
+                    ]
+                  }
+                ],
+                "confirmation_window_ms": 30000,
+                "reviewer_policy": null
               }
             }
           ],
@@ -20612,7 +20929,23 @@
               ],
               "required_before_node_ids": [],
               "on_unknown": "pause_case",
-              "on_mismatch": "pause_case"
+              "on_mismatch": "pause_case",
+              "source_bindings": [
+                {
+                  "source_id": "src_readback_01",
+                  "connection_binding_id": "invoice_connection",
+                  "record_key": {
+                    "kind": "input",
+                    "name": "invoice_id"
+                  },
+                  "arguments": {
+                    "id": {
+                      "kind": "input",
+                      "name": "invoice_id"
+                    }
+                  }
+                }
+              ]
             }
           ],
           "model_bindings": [],
@@ -20670,7 +21003,7 @@
         }
       },
       "expected": {
-        "equal_body_sha256": "97e15b558283ae1bd51d902a62fa638a44fe3cc467a810633ca55ba02e79be44",
+        "equal_body_sha256": "cc939ae0e470a6370977bf1b3afe07e145e7faacd37e28a86c6083e2527329cc",
         "provenance_changes_identity": false
       }
     },

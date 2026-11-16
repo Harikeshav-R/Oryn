@@ -75,10 +75,10 @@ The runtime directly enforces and participates in the following product requirem
 - **Contract Reference #11 ([identity-policy](identity-policy.md)):** Submits authorization requests (`AuthorizationRequestV1`) and consumes one-use action admission (`ConsumeActionV1`) under [`identity-policy-v1.schema.json`](../architecture/contracts/identity-policy-v1.schema.json).
   - Execution workers authenticate using identity execution child tokens (`audience: "execution"`) with narrow scopes (`runtime:claim`, `runtime:read`, `runtime:advance`, `runtime:heartbeat`, `runtime:yield`).
   - Worker identity is derived by the Identity PDP from verified principal context, not caller assertions.
-- **Contract Reference #12 ([application-adapters](application-adapters.md)):** Dispatches operations via `AdapterExecutionPort` (`prepare`, `execute`, `status`, `readback`, and typed `value`) under [`application-adapters-v1.schema.json`](../architecture/contracts/application-adapters-v1.schema.json).
+- **Contract Reference #12 ([application-adapters](application-adapters.md)):** Dispatches operations via `AdapterExecutionPort` (`prepare`, `execute`, `status`, and typed `value`) under [`application-adapters-v1.schema.json`](../architecture/contracts/application-adapters-v1.schema.json).
   - Browser actuation executes over `browser-bridge.v1` (major 1, minor 5 with required capability `execution_reservation_lease_v1`).
   - Native actuation executes over `shell-adapter.v1` (major 1, minor 1) supervised by Desktop Shell.
-- **Contract Reference #13 & #14 ([outcome-verification](outcome-verification.md)):** Submits verification requests (`VerificationRunRequestV1`) and receives independent verdicts (`VerificationRunResultV1`) under [`outcome-verification-v1.schema.json`](../architecture/contracts/outcome-verification-v1.schema.json).
+- **Contract Reference #14 ([outcome-verification](outcome-verification.md)):** Submits verification requests (`VerificationRunRequestV1`) and receives independent verdicts (`VerificationRunResultV1`) under [`outcome-verification-v1.schema.json`](../architecture/contracts/outcome-verification-v1.schema.json).
 - **Contract Reference #22 ([cloud-inference](../architecture/cloud-inference.md)):** Dispatches `agent_runtime_reason` (`agent.runtime-value.v1`) through governed LiteLLM gateway under [`cloud-inference-v1.schema.json`](../architecture/contracts/cloud-inference-v1.schema.json). Input is capped at 32 KiB and output at 16 KiB with a maximum 30,000 ms timeout.
 
 ### 2. Normative Wire Schemas

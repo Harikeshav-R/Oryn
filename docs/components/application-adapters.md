@@ -81,7 +81,7 @@ Bounded worker reuse is permitted only within this exact tuple. Credential roles
   ```
   Returns `ApplicationRecordRefV1` items containing canonical `record_identity_sha256 = SHA256(RFC8785({application_id, vendor_account_id, environment, record_type, native_record_id}))`. Cross-connection canonical mapping guarantees that multiple distinct connections targeting the same underlying vendor account and native record produce the exact same identity digest.
 - **Contract 12 (`application-adapters-v1.schema.json`):** Consumes authorized prepare, execute, and value query requests (`AdapterPrepareRequestV1`, `AdapterExecuteRequestV1`, `AdapterValueQueryV1`) from [agent-runtime](agent-runtime.md) and [local-context-hud](local-context-hud.md). Produces typed operation output values (`AdapterOperationValueV1`) capped at 256 KiB. Attempt identifiers (`attempt_id`) across Identity admission and submission journals are valid UUIDv4.
-- **Contract 13 (`application-adapters-v1.schema.json`):** Produces immutable submission receipts (`AdapterSubmissionReceiptV1`) and signed readback evidence (`SignedAdapterReadbackEvidenceV1`) to [outcome-verification](outcome-verification.md).
+- **Contract 13 (`application-adapters-v1.schema.json`):** Produces immutable submission receipts (`AdapterSubmissionReceiptV1`, carrying optional `source_commit_token`) and signed readback evidence (`SignedAdapterReadbackEvidenceV1`) with certified freshness proofs (`ReadbackFreshnessProofV1`) to [outcome-verification](outcome-verification.md). Serves prepared reads via `AdapterReadPrepareRequestV1` and bounded evidence retrieval via `AdapterReadEvidencePort::{metadata, materialize}` bound to `verification_read` token authority.
 
 ---
 

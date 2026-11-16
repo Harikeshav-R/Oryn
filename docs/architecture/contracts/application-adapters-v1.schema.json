@@ -19,6 +19,8 @@
     { "$ref": "#/$defs/AdapterExecuteRequestV1" },
     { "$ref": "#/$defs/AdapterSubmissionReceiptV1" },
     { "$ref": "#/$defs/AdapterSubmissionQueryV1" },
+    { "$ref": "#/$defs/AdapterReadPrepareRequestV1" },
+    { "$ref": "#/$defs/PreparedAdapterReadV1" },
     { "$ref": "#/$defs/AdapterReadbackRequestV1" },
     { "$ref": "#/$defs/AdapterReadbackEvidenceV1" },
     { "$ref": "#/$defs/SignedAdapterReadbackEvidenceV1" },
@@ -117,7 +119,8 @@
         "allowed_stages",
         "verification_binding",
         "write_guard",
-        "automation_effects_sha256"
+        "automation_effects_sha256",
+        "readback_freshness"
       ],
       "properties": {
         "application_id": {
@@ -178,6 +181,52 @@
         },
         "automation_effects_sha256": {
           "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "readback_freshness": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ReadbackFreshnessCertificationV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ReadbackFreshnessCertificationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mechanism",
+        "token_kind",
+        "max_staleness_ms",
+        "synchronous_commit_visibility"
+      ],
+      "properties": {
+        "mechanism": {
+          "type": "string",
+          "enum": [
+            "exact_commit_token",
+            "monotonic_commit_version",
+            "read_after_write",
+            "bounded_staleness"
+          ]
+        },
+        "token_kind": {
+          "oneOf": [
+            { "type": "string", "maxLength": 64 },
+            { "type": "null" }
+          ]
+        },
+        "max_staleness_ms": {
+          "oneOf": [
+            { "type": "integer", "minimum": 0, "maximum": 300000 },
+            { "type": "null" }
+          ]
+        },
+        "synchronous_commit_visibility": {
+          "type": "boolean"
         }
       }
     },
@@ -907,7 +956,8 @@
         "timestamp_utc",
         "external_correlation_ref",
         "evidence_ref",
-        "error_code"
+        "error_code",
+        "source_commit_token"
       ],
       "properties": {
         "schema_id": {
@@ -984,6 +1034,20 @@
             { "$ref": "#/$defs/AdapterErrorCodeV1" },
             { "type": "null" }
           ]
+        },
+        "source_commit_token": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "value"],
+              "properties": {
+                "kind": { "type": "string", "maxLength": 64 },
+                "value": { "type": "string", "maxLength": 256 }
+              }
+            },
+            { "type": "null" }
+          ]
         }
       }
     },
@@ -1012,15 +1076,20 @@
         }
       }
     },
-    "AdapterReadbackRequestV1": {
+    "AdapterReadPrepareRequestV1": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "schema_id",
         "request_id",
-        "subject_action_id",
+        "context",
         "verification_spec_ref",
-        "prepared_read",
+        "connection_id",
+        "expected_connection_revision",
+        "capability_ref",
+        "operation_id",
+        "record_key",
+        "argument_canonical_base64url",
         "observed_after",
         "max_bytes",
         "deadline_at"
@@ -1028,19 +1097,37 @@
       "properties": {
         "schema_id": {
           "type": "string",
-          "const": "adapter.readback-request.v1"
+          "const": "adapter.read-prepare.v1"
         },
         "request_id": {
           "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
         },
-        "subject_action_id": {
-          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        "context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/VerificationReadContextV1"
         },
         "verification_spec_ref": {
           "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
         },
-        "prepared_read": {
-          "$ref": "#/$defs/AdapterExecuteRequestV1"
+        "connection_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "expected_connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "capability_ref": {
+          "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1"
+        },
+        "operation_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "record_key": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "argument_canonical_base64url": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]*$"
         },
         "observed_after": {
           "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
@@ -1055,15 +1142,138 @@
         }
       }
     },
+    "PreparedAdapterReadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "prepared_read_id",
+        "revision",
+        "context",
+        "target_sha256",
+        "qualification_ref",
+        "preflight_not_after"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.prepared-read.v1"
+        },
+        "prepared_read_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/VerificationReadContextV1"
+        },
+        "target_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "qualification_ref": {
+          "$ref": "#/$defs/OperationQualificationRefV1"
+        },
+        "preflight_not_after": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp"
+        }
+      }
+    },
+    "ReadbackFreshnessProofV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "qualification_ref",
+        "certification_sha256",
+        "mechanism",
+        "source_token",
+        "coverage_through"
+      ],
+      "properties": {
+        "qualification_ref": {
+          "$ref": "#/$defs/OperationQualificationRefV1"
+        },
+        "certification_sha256": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256"
+        },
+        "mechanism": {
+          "type": "string",
+          "enum": [
+            "exact_commit_token",
+            "monotonic_commit_version",
+            "read_after_write",
+            "bounded_staleness"
+          ]
+        },
+        "source_token": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "value"],
+              "properties": {
+                "kind": { "type": "string", "maxLength": 64 },
+                "value": { "type": "string", "maxLength": 256 }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "coverage_through": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "AdapterReadbackRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "prepared_read_id",
+        "prepared_read_revision",
+        "attempt_id",
+        "authorization"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "adapter.readback-request.v1"
+        },
+        "request_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "prepared_read_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        },
+        "prepared_read_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "attempt_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "authorization": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/SignedVerificationReadAuthorizationV1"
+        }
+      }
+    },
     "AdapterReadbackEvidenceV1": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "evidence_id",
         "organization_id",
-        "execution_context",
-        "subject_action_id",
-        "read_action_id",
+        "context",
+        "prepared_read_id",
+        "read_attempt_id",
+        "freshness_proof",
         "verification_spec_ref",
         "connection_id",
         "connection_revision",
@@ -1088,14 +1298,17 @@
         "organization_id": {
           "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
         },
-        "execution_context": {
-          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+        "context": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/VerificationReadContextV1"
         },
-        "subject_action_id": {
+        "prepared_read_id": {
           "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
         },
-        "read_action_id": {
-          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+        "read_attempt_id": {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid"
+        },
+        "freshness_proof": {
+          "$ref": "#/$defs/ReadbackFreshnessProofV1"
         },
         "verification_spec_ref": {
           "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"

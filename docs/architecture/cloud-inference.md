@@ -388,6 +388,18 @@ The Flight Simulator (`flight-simulator`) component consumes governed cloud mode
    - **Concurrency & Rate Ceilings:** At most 2 concurrent scenario generation calls per tenant; at most 16 proposed cases per call and at most 8 calls per explicit generation operation.
    - **Governance & Provenance:** Persists validated typed draft cases and reusable `SynthesisProvenanceV1`, not raw prompts, completions, or model reasoning. Scenario generation cannot seal suites, establish authoritative expectations, or grade outcomes; candidate proposals require Workflow Owner or delegate review before suite inclusion.
    - **Route Pinning & Retries:** Reuses existing route pinning, US-only/ZDR/no-training agreements, budget reservations, single same-binding pre-response retry, late-result rejection, and zero provider fallback.
+
+### 3.12 Outcome Verification Explanation Semantic Contracts (`text.reason`)
+
+The Outcome Verification (`outcome-verification`) component consumes on-demand, advisory cloud model reasoning via the LiteLLM gateway under Contract 22 for generating human-readable discrepancy summaries and evidence citations over finalized verification results:
+
+1. **`verification_explanation` (Operation: `text.reason`):**
+   - **Purpose:** Explains finalized verification run results (`VerificationRunResultV1`) by synthesizing human-readable discrepancy summaries and citing authorized requirement and evidence references.
+   - **Output Schema:** `verification.explanation.v1` (enforcing `VerificationExplanationV1` with `verification_id`, `input_sha256`, `summary` [max 2,048 characters], and `citations` [0–32 items `{requirement_id, evidence_ref}`]). Explains finalized results only; contains zero verdict, fact, predicate, or action modification fields.
+   - **Input Scope:** Minimized authorized discrepancy and fact projections; strictly excludes unencrypted private captures, credentials, and deleted evidence. Input capped at 16 KiB; output capped at 8 KiB. Timeout: 10,000 ms.
+   - **Concurrency & Rate Ceilings:** At most 2 concurrent explanation calls per tenant; no automatic retries.
+   - **Governance & Provenance:** Strictly advisory; off unless explicitly enabled and requested. Persists only validated labeled advisory outputs and provenance in expiring encrypted custody, not raw prompts, completions, or model reasoning. Inference failures or outages return unavailable explanation metadata and leave the already-finalized verdict bytes unchanged.
+   - **Route Pinning & Retries:** Pinned model route, US-only/ZDR/no-training agreements, budget reservations, rejection of invented citations or stale inputs, zero provider fallback.
 ---
 
 ## 4. Control Plane and Gateway Interfaces
@@ -580,7 +592,7 @@ This table records all document families across the Oryn repository and their re
 | `docs/components/application-adapters.md`| Reconciled | Added shared inference pointer; confirmed deterministic action constraints. |
 | `docs/components/job-orchestration.md` | Reconciled | Added shared inference pointer; confirmed durable execution state. |
 | `docs/components/flight-simulator.md` | Reconciled | Added `simulation_scenario_generate` (`simulation.scenario-proposal.v1`) under `text.reason`; validated proposals and `SynthesisProvenanceV1` persisted; raw prompts, completions, and model reasoning excluded; no local inference fallback. |
-| `docs/components/outcome-verification.md`| Reconciled | Reconciled model-assisted verification; preserved independent deterministic checks. |
+| `docs/components/outcome-verification.md`| Reconciled | Added advisory `verification_explanation` (`verification.explanation.v1`) under `text.reason`; preserved pure deterministic `oryn-verification-core` checks; raw prompts/completions discarded. |
 | `docs/components/release-governance.md` | Reconciled | Reconciled change analysis via shared gateway contract; preserved human release gates. |
 | `docs/components/command-center-analytics.md` | Reconciled | Preserved role-scoped views and prohibition of employee surveillance data. |
 | `docs/README.md` | Reconciled | Linked cloud inference specification; confirmed 21-component architecture and v1.0 baseline. |

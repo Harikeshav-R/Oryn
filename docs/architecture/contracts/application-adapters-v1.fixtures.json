@@ -50,7 +50,8 @@
             "content_sha256": "4741f31f6800b883132d57ee1359a5de956356f8ae03fff04d1871352e3e6d12"
           },
           "write_guard": "not_applicable",
-          "automation_effects_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+          "automation_effects_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "readback_freshness": null
         }
       },
       "expected_valid": true
@@ -96,7 +97,8 @@
             "content_sha256": "4741f31f6800b883132d57ee1359a5de956356f8ae03fff04d1871352e3e6d12"
           },
           "write_guard": "not_applicable",
-          "automation_effects_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+          "automation_effects_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "readback_freshness": null
         },
         "extra_forbidden": true
       },
@@ -214,7 +216,8 @@
         "timestamp_utc": "2026-11-14T10:01:00Z",
         "external_correlation_ref": "sf_req_9988",
         "evidence_ref": null,
-        "error_code": null
+        "error_code": null,
+        "source_commit_token": null
       },
       "expected_valid": true
     },
@@ -249,7 +252,8 @@
         "timestamp_utc": "2026-11-14T10:01:00Z",
         "external_correlation_ref": "sf_req_9988",
         "evidence_ref": null,
-        "error_code": null
+        "error_code": null,
+        "source_commit_token": null
       },
       "expected_valid": false
     },
@@ -262,14 +266,6 @@
         "payload": {
           "evidence_id": "ev_001",
           "organization_id": "018f0000-0000-7000-8000-000000000001",
-          "execution_context": {
-            "kind": "job",
-            "job_id": "job_100",
-            "case_id": "case_101",
-            "agent_version": "v1"
-          },
-          "subject_action_id": "act_test_001",
-          "read_action_id": "act_read_001",
           "verification_spec_ref": {
             "organization_id": "018f0000-0000-7000-8000-000000000001",
             "entity_kind": "verification_spec",
@@ -298,9 +294,37 @@
           "field_provenance": {
             "status": "api_direct"
           },
-          "limitations": []
+          "limitations": [],
+          "context": {
+            "kind": "execution_verification",
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "verification_request_id": "00000000-0000-4000-8000-000000000001",
+            "requirement_id": "req_001",
+            "source_id": "src_salesforce_read",
+            "poll_sequence": "1",
+            "execution_context": {
+              "kind": "job",
+              "job_id": "job_100",
+              "case_id": "case_101",
+              "agent_version": "v1"
+            },
+            "request_binding_sha256": "sha256_1122334455667788990011223344556677889900112233445566778899001122"
+          },
+          "prepared_read_id": "prep_001",
+          "read_attempt_id": "00000000-0000-4000-8000-000000000002",
+          "freshness_proof": {
+            "qualification_ref": {
+              "qualification_id": "qual_sf_lookup",
+              "version_id": "018f0000-0000-7000-8000-000000000021",
+              "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "certification_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "mechanism": "read_after_write",
+            "source_token": null,
+            "coverage_through": null
+          }
         },
-        "signature": "DOWXqoCdbV_lKNdiuuvx9L4gRTeQcYnMovYY7kPyV6d9a1MlfvVWs9jJ8kkv2rLkgkMs13VvQewkHoGukxR9CA"
+        "signature": "fMCWa1DKNGmiTHA-n6MbOk6NpxSrD7fOyd6K6P7z4UsQG65kRmr2vQq_LPkxywHm4d-EKZcQDU6oRbThFaVEDA"
       },
       "expected_valid": true
     },
@@ -600,14 +624,6 @@
         "payload": {
           "evidence_id": "ev_001",
           "organization_id": "018f0000-0000-7000-8000-000000000001",
-          "execution_context": {
-            "kind": "job",
-            "job_id": "job_100",
-            "case_id": "case_101",
-            "agent_version": "v1"
-          },
-          "subject_action_id": "act_test_001",
-          "read_action_id": "act_read_001",
           "verification_spec_ref": {
             "organization_id": "018f0000-0000-7000-8000-000000000001",
             "entity_kind": "verification_spec",
@@ -636,9 +652,37 @@
           "field_provenance": {
             "status": "api_direct"
           },
-          "limitations": []
+          "limitations": [],
+          "context": {
+            "kind": "execution_verification",
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "verification_request_id": "00000000-0000-4000-8000-000000000001",
+            "requirement_id": "req_001",
+            "source_id": "src_salesforce_read",
+            "poll_sequence": "1",
+            "execution_context": {
+              "kind": "job",
+              "job_id": "job_100",
+              "case_id": "case_101",
+              "agent_version": "v1"
+            },
+            "request_binding_sha256": "sha256_1122334455667788990011223344556677889900112233445566778899001122"
+          },
+          "prepared_read_id": "prep_001",
+          "read_attempt_id": "00000000-0000-4000-8000-000000000002",
+          "freshness_proof": {
+            "qualification_ref": {
+              "qualification_id": "qual_sf_lookup",
+              "version_id": "018f0000-0000-7000-8000-000000000021",
+              "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "certification_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "mechanism": "read_after_write",
+            "source_token": null,
+            "coverage_through": null
+          }
         },
-        "signature": "DOWXqoCdbV_lKNdiuuvx9L4gRTeQcYnMovYY7kPyV6d9a1MlfvVWs9jJ8kkv2rLkgkMs13VvQewkHoGukxR9CA"
+        "signature": "fMCWa1DKNGmiTHA-n6MbOk6NpxSrD7fOyd6K6P7z4UsQG65kRmr2vQq_LPkxywHm4d-EKZcQDU6oRbThFaVEDA"
       },
       "expected_valid": true
     },

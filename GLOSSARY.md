@@ -256,6 +256,18 @@ _Avoid_: Success verdict, completed case
 Independently acquired application state used to assess business postconditions, distinct from a submission acknowledgment or verdict.
 _Avoid_: Response echo, agent self-report
 
+**Verification Specification**:
+An approved description of required business postconditions and the evidence accepted to establish them. It does not authorize execution.
+_Avoid_: Agent self-check, success banner, approval policy
+
+**Verification Run**:
+One bounded assessment of fixed business postconditions for a particular work item and evidence context. A later assessment is a separate run, not a rewritten earlier result.
+_Avoid_: Mutation retry, workflow execution, success receipt
+
+**Postcondition Assessment**:
+An authorized person's attributable, source-backed statement of observed business facts for a required outcome. It is distinct from approval to perform the business action.
+_Avoid_: Commit approval, acknowledgment, manual success override
+
 **Execution Assignment**:
 Bounded responsibility to continue one case under a fixed agent version and declared scope. It does not itself authorize a business action.
 _Avoid_: Blanket permission, job launch
