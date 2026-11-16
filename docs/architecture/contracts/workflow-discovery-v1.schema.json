@@ -84,6 +84,9 @@
     },
     {
       "$ref": "#/$defs/DiscoveryConfigurationV1"
+    },
+    {
+      "$ref": "#/$defs/HumanTaskReportingFactV1"
     }
   ],
   "$defs": {
@@ -2767,147 +2770,227 @@
       }
     },
     "OpportunityV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_id",
-        "organization_id",
-        "candidate_id",
-        "candidate_revision",
-        "submission_period_start",
-        "submission_period_end",
-        "complete_attempts",
-        "verified_attempts",
-        "contradicted_attempts",
-        "unknown_attempts",
-        "measured_verified_attempts",
-        "exception_fraction",
-        "observed_variant_count",
-        "unresolved_question_count",
-        "rule_conflict_count",
-        "median_elapsed_ms",
-        "median_net_ms",
-        "assumptions",
-        "estimated_saved_ms",
-        "suppression_reason",
-        "ranking_keys"
-      ],
-      "properties": {
-        "schema_id": {
-          "const": "workflow.opportunity.v1"
-        },
-        "organization_id": {
-          "$ref": "#/$defs/OrganizationId"
-        },
-        "candidate_id": {
-          "$ref": "#/$defs/UUIDv4"
-        },
-        "candidate_revision": {
-          "$ref": "#/$defs/Revision"
-        },
-        "submission_period_start": {
-          "$ref": "#/$defs/UtcDateTime"
-        },
-        "submission_period_end": {
-          "$ref": "#/$defs/UtcDateTime"
-        },
-        "complete_attempts": {
-          "$ref": "#/$defs/SafeInteger"
-        },
-        "verified_attempts": {
-          "$ref": "#/$defs/SafeInteger"
-        },
-        "contradicted_attempts": {
-          "$ref": "#/$defs/SafeInteger"
-        },
-        "unknown_attempts": {
-          "$ref": "#/$defs/SafeInteger"
-        },
-        "measured_verified_attempts": {
-          "$ref": "#/$defs/SafeInteger"
-        },
-        "exception_fraction": {
-          "oneOf": [
-            {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_id",
+            "organization_id",
+            "candidate_id",
+            "candidate_revision",
+            "submission_period_start",
+            "submission_period_end",
+            "state",
+            "complete_attempts",
+            "verified_attempts",
+            "contradicted_attempts",
+            "unknown_attempts",
+            "measured_verified_attempts",
+            "exception_fraction",
+            "observed_variant_count",
+            "unresolved_question_count",
+            "rule_conflict_count",
+            "median_elapsed_ms",
+            "median_net_ms",
+            "assumptions",
+            "estimated_saved_ms",
+            "privacy_release_refs",
+            "ranking_keys"
+          ],
+          "properties": {
+            "schema_id": {
+              "const": "workflow.opportunity.v1"
+            },
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "candidate_id": {
+              "$ref": "#/$defs/UUIDv4"
+            },
+            "candidate_revision": {
+              "$ref": "#/$defs/Revision"
+            },
+            "submission_period_start": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "submission_period_end": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "state": {
+              "const": "available"
+            },
+            "complete_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "verified_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "contradicted_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "unknown_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "measured_verified_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "exception_fraction": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "numerator",
+                    "denominator"
+                  ],
+                  "properties": {
+                    "numerator": {
+                      "$ref": "#/$defs/SafeInteger"
+                    },
+                    "denominator": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "observed_variant_count": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "unresolved_question_count": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "rule_conflict_count": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "median_elapsed_ms": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 604800000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "median_net_ms": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 604800000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "assumptions": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/OpportunityAssumptionsV1"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "estimated_saved_ms": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "privacy_release_refs": {
+              "type": "array",
+              "items": {
+                "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1"
+              },
+              "maxItems": 128
+            },
+            "ranking_keys": {
               "type": "object",
               "additionalProperties": false,
               "required": [
-                "numerator",
-                "denominator"
+                "safety_blocked",
+                "verified_attempts",
+                "complete_attempts",
+                "unresolved_questions",
+                "candidate_id"
               ],
               "properties": {
-                "numerator": {
+                "safety_blocked": {
+                  "type": "boolean"
+                },
+                "verified_attempts": {
                   "$ref": "#/$defs/SafeInteger"
                 },
-                "denominator": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "maximum": 9007199254740991
+                "complete_attempts": {
+                  "$ref": "#/$defs/SafeInteger"
+                },
+                "unresolved_questions": {
+                  "$ref": "#/$defs/SafeInteger"
+                },
+                "candidate_id": {
+                  "$ref": "#/$defs/UUIDv4"
                 }
               }
-            },
-            {
-              "type": "null"
             }
-          ]
+          }
         },
-        "observed_variant_count": {
-          "$ref": "#/$defs/SafeInteger"
-        },
-        "unresolved_question_count": {
-          "$ref": "#/$defs/SafeInteger"
-        },
-        "rule_conflict_count": {
-          "$ref": "#/$defs/SafeInteger"
-        },
-        "median_elapsed_ms": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 604800000
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_id",
+            "organization_id",
+            "candidate_id",
+            "candidate_revision",
+            "submission_period_start",
+            "submission_period_end",
+            "state",
+            "suppression_reason"
+          ],
+          "properties": {
+            "schema_id": {
+              "const": "workflow.opportunity.v1"
             },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "median_net_ms": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 604800000
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
             },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "assumptions": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/OpportunityAssumptionsV1"
+            "candidate_id": {
+              "$ref": "#/$defs/UUIDv4"
             },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "estimated_saved_ms": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": 0
+            "candidate_revision": {
+              "$ref": "#/$defs/Revision"
             },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "suppression_reason": {
-          "oneOf": [
-            {
+            "submission_period_start": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "submission_period_end": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "suppressed",
+                "unavailable"
+              ]
+            },
+            "suppression_reason": {
               "type": "string",
               "enum": [
                 "policy_missing",
@@ -2915,39 +2998,129 @@
                 "permission_denied",
                 "insufficient_verified_data"
               ]
+            }
+          }
+        }
+      ]
+    },
+    "HumanTaskReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "demonstration_id",
+        "actor_id",
+        "device_id",
+        "profile_id",
+        "reviewed_contribution_ref",
+        "observed_task_completed_at",
+        "completion_basis",
+        "capability_binding_ref",
+        "owning_team_id",
+        "application_ids",
+        "risk_tier",
+        "task_measurement",
+        "verification_basis",
+        "source_eligibility",
+        "contributor_privacy_token"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "discovery.human-task-reporting-fact.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "demonstration_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "device_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "reviewed_contribution_ref": {
+          "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1"
+        },
+        "observed_task_completed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
             },
             {
               "type": "null"
             }
           ]
         },
-        "ranking_keys": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "safety_blocked",
-            "verified_attempts",
-            "complete_attempts",
-            "unresolved_questions",
-            "candidate_id"
-          ],
-          "properties": {
-            "safety_blocked": {
-              "type": "boolean"
+        "completion_basis": {
+          "type": "string",
+          "enum": [
+            "observed_complete",
+            "employee_reported_complete",
+            "incomplete",
+            "unknown"
+          ]
+        },
+        "capability_binding_ref": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1"
             },
-            "verified_attempts": {
-              "$ref": "#/$defs/SafeInteger"
-            },
-            "complete_attempts": {
-              "$ref": "#/$defs/SafeInteger"
-            },
-            "unresolved_questions": {
-              "$ref": "#/$defs/SafeInteger"
-            },
-            "candidate_id": {
-              "$ref": "#/$defs/UUIDv4"
+            {
+              "type": "null"
             }
-          }
+          ]
+        },
+        "owning_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "application_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "risk_tier": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "task_measurement": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/TaskMeasurementV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verification_basis": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "unverified",
+            "unknown"
+          ]
+        },
+        "source_eligibility": {
+          "type": "string",
+          "enum": [
+            "eligible",
+            "ineligible",
+            "withdrawn"
+          ]
+        },
+        "contributor_privacy_token": {
+          "$ref": "#/$defs/Sha256Hex"
         }
       }
     },

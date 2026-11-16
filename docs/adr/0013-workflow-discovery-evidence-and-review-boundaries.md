@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-09
+- **Amended by:** [0023-command-center-reporting-privacy-and-delivery.md](0023-command-center-reporting-privacy-and-delivery.md)
 - **Deciders:** Oryn Architecture Guild, Workflow Discovery Owner, Operational Graph Owner, Identity Policy Owner, Privacy Storage Owner
 - **Consulted:** Control Plane Owner, Local Context HUD Owner, Enterprise Security Lead
 - **Informed:** All Engineering Teams
@@ -90,3 +91,6 @@ The Oryn Architecture Guild resolves the evidence, review, and publication bound
 - `control-plane-v1.schema.json` expands `ControlPlaneProblemV1.code` with 12 discovery error codes and `DomainEventV1.event_type` with 7 discovery event types.
 - Contract 25 advances to `privacy-context.v1` major 1, minor 2.
 - `docs/components/workflow-discovery.md` advances from baseline brief to detailed technical specification.
+
+*(Scope Amendment — 2026-11-16): [ADR-0023](0023-command-center-reporting-privacy-and-delivery.md) replaces the leaking `OpportunityV1` definition with a discriminated union `available | suppressed | unavailable`. Suppressed and unavailable opportunity projections omit all numeric metrics, sample sizes, durations, savings estimates, and ranking keys, exposing only candidate identity, submission period, and a safe reason code. Available opportunity projections require valid `privacy_release_refs: Ref[]` referencing released, sealed weekly privacy cells that meet the organization's contributor threshold (minimum 5). In addition, ADR-0023 defines internal owner reporting facts via `HumanTaskReportingFactV1` and amends `WorkflowContributionContentV1` and `DemonstrationProposalV1` with required nullable `observed_task_completed_at` to provide verified observed completion timestamps for weekly cohort binning.*
+

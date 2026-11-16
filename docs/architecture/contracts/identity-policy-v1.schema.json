@@ -159,6 +159,9 @@
     },
     {
       "$ref": "#/$defs/ReleaseAutomationPolicyV1"
+    },
+    {
+      "$ref": "#/$defs/ApprovalReportingFactV1"
     }
   ],
   "$defs": {
@@ -318,6 +321,8 @@
         "repair.approve",
         "release.approve",
         "analytics.read",
+        "analytics.pilot.manage",
+        "analytics.assumptions.manage",
         "report.export",
         "privacy_policy.manage",
         "membership.manage",
@@ -1974,6 +1979,16 @@
               "type": "null"
             }
           ]
+        },
+        "reporting_policy": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ReportingPolicyV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -1994,8 +2009,136 @@
         "inference_budget_window",
         "execution_limits",
         "verification_policy",
-        "release_automation_policy"
+        "release_automation_policy",
+        "reporting_policy"
       ]
+    },
+    "ReportingPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimum_contributors",
+        "human_release_grace_hours",
+        "facts_retention_months",
+        "reports_retention_days",
+        "notifications_retention_days",
+        "exports_retention_seconds",
+        "email_enabled",
+        "critical_quiet_hours_override"
+      ],
+      "properties": {
+        "minimum_contributors": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 1000
+        },
+        "human_release_grace_hours": {
+          "type": "integer",
+          "const": 72
+        },
+        "facts_retention_months": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 24
+        },
+        "reports_retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90
+        },
+        "notifications_retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90
+        },
+        "exports_retention_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 86400
+        },
+        "email_enabled": {
+          "type": "boolean"
+        },
+        "critical_quiet_hours_override": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ApprovalReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "proposal_id",
+        "workflow_id",
+        "decision_type",
+        "review_opened_at",
+        "decided_at",
+        "decision_outcome",
+        "source_revision",
+        "supersession_ref"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.approval-reporting-fact.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "proposal_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "workflow_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "decision_type": {
+          "type": "string",
+          "enum": [
+            "action_approval",
+            "candidate_approval",
+            "rule_approval",
+            "repair_approval",
+            "release_approval",
+            "baseline_approval"
+          ]
+        },
+        "review_opened_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "decided_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decision_outcome": {
+          "type": "string",
+          "enum": [
+            "approved",
+            "rejected",
+            "superseded",
+            "pending"
+          ]
+        },
+        "source_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "supersession_ref": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     },
     "ExecutionLimitsPolicyV1": {
       "type": "object",
@@ -2195,7 +2338,8 @@
             "release_cohort_binding",
             "release_cohort_fence",
             "release_preauthorization",
-            "release_approval_consumption"
+            "release_approval_consumption",
+            "analytics_disclosure_commitment"
           ]
         },
         "record_id": {
@@ -2317,6 +2461,21 @@
             "properties": {
               "state_after": {
                 "$ref": "#/$defs/ReleaseCohortBindingAfterStateV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "analytics_disclosure_commitment" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/AnalyticsDisclosureCommitmentV1"
               }
             }
           }
@@ -4658,7 +4817,8 @@
             "sync",
             "guidance",
             "execution",
-            "inference"
+            "inference",
+            "notifications"
           ]
         },
         "scopes": {
@@ -4758,6 +4918,35 @@
                 },
                 "minItems": 1,
                 "maxItems": 32,
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "audience": {
+                "const": "notifications"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "execution_context": {
+                "type": "null"
+              },
+              "scopes": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "notifications:read_own",
+                    "notifications:update_own",
+                    "notifications:record_delivery"
+                  ]
+                },
+                "minItems": 1,
+                "maxItems": 3,
                 "uniqueItems": true
               }
             }
@@ -5104,7 +5293,8 @@
             "runtime_retention_fenced",
             "orchestration_safety_fenced",
             "release_changed",
-            "release_preauthorization_changed"
+            "release_preauthorization_changed",
+            "analytics_disclosure_changed"
           ]
         },
         "record_after_images": {

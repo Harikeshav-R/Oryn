@@ -343,7 +343,17 @@
             "INCIDENT_EVIDENCE_UNAVAILABLE",
             "INCIDENT_INPUT_RESTRICTED",
             "INCIDENT_LIMIT_EXCEEDED",
-            "INCIDENT_DEPENDENCY_UNAVAILABLE"
+            "INCIDENT_DEPENDENCY_UNAVAILABLE",
+            "CC_SURVEILLANCE_FORBIDDEN",
+            "CC_PRIVACY_POLICY_MISSING",
+            "CC_PRIVACY_SCOPE_UNRELEASABLE",
+            "CC_REPORT_LIMIT_EXCEEDED",
+            "CC_REPORT_REVOKED",
+            "CC_EXPORT_LIMIT_EXCEEDED",
+            "CC_EXPORT_EXPIRED",
+            "CC_SOURCE_INCOMPLETE",
+            "CC_SOURCE_REVISION_CONFLICT",
+            "CC_CHANNEL_UNAVAILABLE"
           ]
         },
         "request_id": {
@@ -650,7 +660,14 @@
             "agent.synthesis_proposed",
             "agent.compilation_completed",
             "agent.version_created",
-            "agent.qualification_changed"
+            "agent.qualification_changed",
+            "analytics.source_changed",
+            "analytics.privacy_release_changed",
+            "analytics.report_changed",
+            "analytics.pilot_changed",
+            "notification.changed",
+            "notification.preferences_changed",
+            "export.changed"
           ]
         },
         "aggregate_type": {

@@ -372,6 +372,31 @@ _Avoid_: business rollback, job repinning
 Explicit, scoped, revocable, time-bounded authority for the narrowly eligible automated governance changes named in an approved policy.
 _Avoid_: Approval Delegation, blanket autonomy
 
+**Contributor Privacy Cohort**:
+Distinct people whose authorized task contributions support a disclosed process measurement; not a Release Cohort or candidate repetition threshold.
+_Avoid_: employee performance cohort
+
+**Metric Cohort**:
+The defined population and reporting interval used to calculate a metric; a retry or later verification does not create another Case.
+_Avoid_: execution attempt count
+
+**Report Snapshot**:
+A fixed, attributable statement of released operational facts, assumptions, methodology, and known limitations at a stated cutoff; not a live dashboard.
+_Avoid_: live report
+
+**Time Avoidance Estimate**:
+Modeled task effort avoided after estimated review effort, based on verified automated work and disclosed manual assumptions; not realized payroll savings.
+_Avoid_: labor savings achieved
+
+**Export Artifact**:
+A governed downloadable representation of authorized organizational information; possession does not create continuing product access rights.
+_Avoid_: public report link
+
+**Notification Acknowledgment**:
+An attributable indication that a recipient acknowledged an alert; not business-action approval or incident resolution.
+_Avoid_: incident resolution
+
+
 
 
 

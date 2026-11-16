@@ -1016,7 +1016,8 @@ Transmits local synthesized task demonstration proposals for privacy-storage val
       "elapsed_ms": 600000,
       "wait_ms": 120000,
       "basis": "observed_task_boundary",
-      "complete_interval": true
+      "complete_interval": true,
+      "observed_task_completed_at": "2026-11-16T14:20:00.000Z"
     },
     "expected_privacy_revision": "1422",
     "deletion_generation": "5",
@@ -1046,7 +1047,7 @@ Transmits local synthesized task demonstration proposals for privacy-storage val
 ```
 
 ##### Shared Demonstration Identity and Measurement Validation
-The Privacy Helper mints a fresh random `demonstration_id` (UUIDv4) once for one local Task Instance, organization, and profile. The helper persists the local-task-to-shared-ID mapping alongside source-linked private task metadata only when retention allows. Revisions and separate contributions for the same local Task Instance reuse that ID. Local task IDs, evidence IDs, source epochs, observation timestamps, record identifiers, and reusable employee tracking keys never cross in this field. When personal retention is disabled (`personal_history_retention = false`), this mapping exists strictly within the source's 30-second volatile buffer lifetime; no durable map, shadow payload, or deferred queue is created.
+The Privacy Helper mints a fresh random `demonstration_id` (UUIDv4) once for one local Task Instance, organization, and profile. The helper persists the local-task-to-shared-ID mapping alongside source-linked private task metadata only when retention allows. Revisions and separate contributions for the same local Task Instance reuse that ID. Local task IDs, evidence IDs, source epochs, observation timestamps, record identifiers, and reusable employee tracking keys never cross in this field. When personal retention is disabled (`personal_history_retention = false`), this mapping exists strictly within the source's 30-second volatile buffer lifetime; no durable map, shadow payload, or deferred queue is created. Upon employee contribution approval, the privacy helper maps `observed_task_completed_at` into `WorkflowContributionContentV1` to establish verifiable empirical task completion boundaries for downstream baseline duration calibration and time avoidance calculations in Command Center Analytics.
 
 The central attempt identity is `(organization_id, actor_id, device_id, profile_id, demonstration_id)` because device enrollment authenticates its issuer. A demonstration ID reused with a different issuer does not collapse unrelated employees' attempts. Different contribution IDs for this tuple do not increase support. A helper-controlled identifier prevents accidental duplicate submissions; it does not cryptographically prove independent real-world work against a compromised endpoint or deliberate human collusion.
 

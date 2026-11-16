@@ -96,9 +96,67 @@
     },
     {
       "$ref": "#/$defs/RequestRevalidationCommandV1"
+    },
+    {
+      "$ref": "#/$defs/WorkflowReportingFactV1"
     }
   ],
   "$defs": {
+    "WorkflowReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "capability_id",
+        "capability_version_ref",
+        "playbook_ref",
+        "reviewed_exception_type_refs",
+        "handoff_refs",
+        "owning_team_id",
+        "approved_dependency_refs",
+        "approved_variant_ids",
+        "approved_fix_refs",
+        "source_eligibility"
+      ],
+      "properties": {
+        "schema_id": { "const": "graph.workflow-reporting-fact.v1" },
+        "organization_id": { "$ref": "#/$defs/Uuid" },
+        "capability_id": { "$ref": "#/$defs/Identifier" },
+        "capability_version_ref": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+        "playbook_ref": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+        "reviewed_exception_type_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 64
+        },
+        "handoff_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 64
+        },
+        "owning_team_id": { "$ref": "#/$defs/Identifier" },
+        "approved_dependency_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "approved_variant_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 64
+        },
+        "approved_fix_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 64
+        },
+        "source_eligibility": {
+          "type": "string",
+          "enum": ["eligible", "ineligible", "restricted"]
+        }
+      }
+    },
     "Uuid": {
       "type": "string",
       "format": "uuid"

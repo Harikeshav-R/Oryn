@@ -24,9 +24,45 @@
     { "$ref": "#/$defs/HandoffAssessmentResultV1" },
     { "$ref": "#/$defs/HandoffAssessmentStatusV1" },
     { "$ref": "#/$defs/VerificationExplanationRequestV1" },
-    { "$ref": "#/$defs/VerificationExplanationV1" }
+    { "$ref": "#/$defs/VerificationExplanationV1" },
+    { "$ref": "#/$defs/VerificationReportingFactV1" }
   ],
   "$defs": {
+    "VerificationReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "verification_run_id",
+        "verification_result_ref",
+        "verification_result_sha256",
+        "execution_context",
+        "verdict",
+        "finalized_at",
+        "evidence_availability"
+      ],
+      "properties": {
+        "schema_id": { "const": "verification.reporting-fact.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "verification_run_id": { "$ref": "#/$defs/UUID" },
+        "verification_result_ref": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+        "verification_result_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "execution_context": {
+          "type": "string",
+          "enum": ["job", "evaluation"]
+        },
+        "verdict": {
+          "type": "string",
+          "enum": ["verified", "mismatch", "unknown"]
+        },
+        "finalized_at": { "$ref": "#/$defs/UtcDateTime" },
+        "evidence_availability": {
+          "type": "string",
+          "enum": ["complete", "partial", "purged", "unavailable"]
+        }
+      }
+    },
     "UUID": {
       "type": "string",
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"

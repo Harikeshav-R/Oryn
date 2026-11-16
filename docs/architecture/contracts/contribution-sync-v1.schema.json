@@ -340,6 +340,7 @@
       "type": "object",
       "required": [
         "demonstration_id",
+        "observed_task_completed_at",
         "completion_basis",
         "task_measurement",
         "objective",
@@ -358,6 +359,16 @@
       "properties": {
         "demonstration_id": {
           "$ref": "#/$defs/UUIDv4"
+        },
+        "observed_task_completed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "completion_basis": {
           "type": "string",

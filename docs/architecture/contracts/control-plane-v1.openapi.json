@@ -11081,7 +11081,9 @@
         "summary": "Create release draft",
         "description": "Creates a new release definition in draft state.",
         "security": [
-          { "BffSessionCookie": [] }
+          {
+            "BffSessionCookie": []
+          }
         ],
         "requestBody": {
           "required": true,
@@ -11141,33 +11143,46 @@
         "summary": "List releases",
         "description": "Returns authorized release views with cursor pagination.",
         "security": [
-          { "BffSessionCookie": [] }
+          {
+            "BffSessionCookie": []
+          }
         ],
         "parameters": [
           {
             "name": "agent_id",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "workflow_id",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "state",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "maximum": 100 }
+            "schema": {
+              "type": "integer",
+              "maximum": 100
+            }
           },
           {
             "name": "cursor",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -11185,13 +11200,20 @@
                       }
                     },
                     "next_cursor": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "total_count": {
                       "type": "string"
                     }
                   },
-                  "required": ["items", "next_cursor", "total_count"],
+                  "required": [
+                    "items",
+                    "next_cursor",
+                    "total_count"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -11216,14 +11238,19 @@
         "summary": "Get release view",
         "description": "Retrieves the current release view by release identifier.",
         "security": [
-          { "BffSessionCookie": [] }
+          {
+            "BffSessionCookie": []
+          }
         ],
         "parameters": [
           {
             "name": "release_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -11256,14 +11283,19 @@
         "summary": "Evaluate release readiness",
         "description": "Returns current readiness evaluation findings without granting release authority.",
         "security": [
-          { "BffSessionCookie": [] }
+          {
+            "BffSessionCookie": []
+          }
         ],
         "parameters": [
           {
             "name": "release_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -11296,14 +11328,19 @@
         "summary": "Get release diff",
         "description": "Returns structural diff between base and head definitions with gate findings.",
         "security": [
-          { "BffSessionCookie": [] }
+          {
+            "BffSessionCookie": []
+          }
         ],
         "parameters": [
           {
             "name": "release_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -11336,14 +11373,19 @@
         "summary": "Submit release command",
         "description": "Executes a state transition or governance command on a release.",
         "security": [
-          { "BffSessionCookie": [] }
+          {
+            "BffSessionCookie": []
+          }
         ],
         "parameters": [
           {
             "name": "release_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -11436,24 +11478,34 @@
         "summary": "List rollout observations",
         "description": "Returns paginated immutable rollout observations for a release.",
         "security": [
-          { "BffSessionCookie": [] }
+          {
+            "BffSessionCookie": []
+          }
         ],
         "parameters": [
           {
             "name": "release_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "maximum": 100 }
+            "schema": {
+              "type": "integer",
+              "maximum": 100
+            }
           },
           {
             "name": "cursor",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -11471,13 +11523,20 @@
                       }
                     },
                     "next_cursor": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "total_count": {
                       "type": "string"
                     }
                   },
-                  "required": ["items", "next_cursor", "total_count"],
+                  "required": [
+                    "items",
+                    "next_cursor",
+                    "total_count"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -11502,38 +11561,54 @@
         "summary": "Get observation case/incident members",
         "description": "Returns paginated content-free case and incident references with manifest digest proof.",
         "security": [
-          { "BffSessionCookie": [] }
+          {
+            "BffSessionCookie": []
+          }
         ],
         "parameters": [
           {
             "name": "release_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "observation_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
           {
             "name": "kind",
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["case", "incident"]
+              "enum": [
+                "case",
+                "incident"
+              ]
             }
           },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "maximum": 100 }
+            "schema": {
+              "type": "integer",
+              "maximum": 100
+            }
           },
           {
             "name": "cursor",
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -11555,13 +11630,21 @@
                       "pattern": "^[0-9a-f]{64}$"
                     },
                     "next_cursor": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "total_count": {
                       "type": "string"
                     }
                   },
-                  "required": ["items", "manifest_sha256", "next_cursor", "total_count"],
+                  "required": [
+                    "items",
+                    "manifest_sha256",
+                    "next_cursor",
+                    "total_count"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -11586,7 +11669,9 @@
         "summary": "Stage release preauthorization",
         "description": "Creates a staged release preauthorization proposal awaiting formal owner approval.",
         "security": [
-          { "BffSessionCookie": [] }
+          {
+            "BffSessionCookie": []
+          }
         ],
         "requestBody": {
           "required": true,
@@ -11648,14 +11733,19 @@
         "summary": "Revoke release preauthorization",
         "description": "Revokes an active release preauthorization grant.",
         "security": [
-          { "BffSessionCookie": [] }
+          {
+            "BffSessionCookie": []
+          }
         ],
         "parameters": [
           {
             "name": "preauthorization_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -11664,10 +11754,19 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["expected_generation", "reason"],
+                "required": [
+                  "expected_generation",
+                  "reason"
+                ],
                 "properties": {
-                  "expected_generation": { "type": "string" },
-                  "reason": { "type": "string", "minLength": 1, "maxLength": 1024 }
+                  "expected_generation": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  }
                 },
                 "additionalProperties": false
               }
@@ -11711,6 +11810,1874 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/home": {
+      "get": {
+        "operationId": "getHomeView",
+        "summary": "Command center home view summary",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Home view summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/HomeViewV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/search/queries": {
+      "post": {
+        "operationId": "queryGlobalSearch",
+        "summary": "Global search across workflows, cases, incidents, and reports",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/GlobalSearchQueryV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search results page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/GlobalSearchPageV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/queries": {
+      "post": {
+        "operationId": "queryAnalyticsReporting",
+        "summary": "Execute metric query against analytics reporting marts",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/ReportingQueryV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reporting metric page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/ReportingPageV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/baselines": {
+      "get": {
+        "operationId": "listReportingBaselines",
+        "summary": "List reporting baselines for metrics and workflows",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workflow_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "metric_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reporting baselines page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/ReportingBaselinePageV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "approveReportingBaseline",
+        "summary": "Approve or record a reporting baseline",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/ApproveReportingBaselineV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Approved reporting baseline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/ReportingBaselineV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pilots": {
+      "get": {
+        "operationId": "listPilots",
+        "summary": "List analytics evaluation pilots",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pilots page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/PilotPageV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createPilot",
+        "summary": "Create a 14-day evaluation pilot",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/CreatePilotV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created evaluation pilot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/PilotV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pilots/{pilot_id}": {
+      "get": {
+        "operationId": "getPilot",
+        "summary": "Get evaluation pilot details",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pilot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pilot details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/PilotV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "amendPilot",
+        "summary": "Amend pilot configuration or metadata",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pilot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/AmendPilotV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Amended pilot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/PilotV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pilots/{pilot_id}/participants": {
+      "get": {
+        "operationId": "getPilotParticipants",
+        "summary": "Get pilot participant roster and status",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pilot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pilot participants roster",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/PilotParticipantsV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pilots/{pilot_id}/controls": {
+      "post": {
+        "operationId": "controlPilot",
+        "summary": "Execute pilot control transition (pause, resume, abort, complete)",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pilot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/PilotControlV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated pilot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/PilotV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports": {
+      "get": {
+        "operationId": "listReports",
+        "summary": "List generated report snapshots",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reports page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/ReportPageV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "generateReport",
+        "summary": "Trigger generation of an immutable report snapshot",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/GenerateReportV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Asynchronous operation started for report generation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reports/{report_id}": {
+      "get": {
+        "operationId": "getReportSnapshot",
+        "summary": "Fetch immutable report snapshot",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Report snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/ReportSnapshotV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notifications": {
+      "get": {
+        "operationId": "listNotifications",
+        "summary": "List notifications feed or long-poll updates",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "wait_seconds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifications feed page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/NotificationPageV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notifications/{notification_id}": {
+      "patch": {
+        "operationId": "updateNotification",
+        "summary": "Update notification acknowledgment, snooze, or resolution",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "notification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/UpdateNotificationV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/NotificationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notification-preferences": {
+      "get": {
+        "operationId": "getNotificationPreferences",
+        "summary": "Get principal notification preferences",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/NotificationPreferencesV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateNotificationPreferences",
+        "summary": "Update principal notification preferences",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/UpdateNotificationPreferencesV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated notification preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/NotificationPreferencesV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notifications/{notification_id}/delivery-receipts": {
+      "post": {
+        "operationId": "recordNotificationDeliveryReceipt",
+        "summary": "Record delivery receipt for desktop shell or notification channel",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "notification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/NotificationDeliveryReceiptV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Receipt recorded successfully"
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/exports": {
+      "post": {
+        "operationId": "createExport",
+        "summary": "Request signed export artifact generation",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/CreateExportV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Asynchronous operation started for export generation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/exports/{export_id}": {
+      "get": {
+        "operationId": "getExportView",
+        "summary": "Fetch export artifact status and manifest",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "export_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Export status and manifest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/ExportViewV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/exports/{export_id}/parts/{part_id}/content": {
+      "get": {
+        "operationId": "getExportPartContent",
+        "summary": "Download export artifact binary part",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "export_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "part_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Export part binary stream",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/audit/queries": {
+      "post": {
+        "operationId": "queryAuditJournal",
+        "summary": "Query immutable audit journal and evidence records",
+        "security": [
+          {
+            "BffSessionCookie": [],
+            "CsrfHeader": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command-center-analytics-v1.schema.json#/$defs/AuditQueryV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audit journal query page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./command-center-analytics-v1.schema.json#/$defs/AuditQueryPageV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error response",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
                 }
               }
             }

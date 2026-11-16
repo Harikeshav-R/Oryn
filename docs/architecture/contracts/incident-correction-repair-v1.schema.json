@@ -81,9 +81,103 @@
     },
     {
       "$ref": "#/$defs/IncidentFixtureSetV1"
+    },
+    {
+      "$ref": "#/$defs/ReliabilityReportingFactV1"
     }
   ],
   "$defs": {
+    "ReliabilityReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "incident_id",
+        "agent_id",
+        "agent_version_id",
+        "workflow_id",
+        "reviewed_exception_type_ref",
+        "occurred_at",
+        "detected_at",
+        "contained_at",
+        "safe_boundary_at",
+        "unresolved_effects_count",
+        "correction_review_state",
+        "correction_turnaround_ms",
+        "repair_proposal_kind",
+        "repair_lineage_ref",
+        "recovery_evidence_status"
+      ],
+      "properties": {
+        "schema_id": { "const": "incident.reliability-reporting-fact.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "incident_id": { "$ref": "#/$defs/UUID" },
+        "agent_id": { "$ref": "#/$defs/Identifier" },
+        "agent_version_id": { "$ref": "#/$defs/Identifier" },
+        "workflow_id": { "$ref": "#/$defs/Identifier" },
+        "reviewed_exception_type_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "occurred_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "detected_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "contained_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "safe_boundary_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "unresolved_effects_count": { "$ref": "#/$defs/U64" },
+        "correction_review_state": {
+          "type": "string",
+          "enum": ["not_requested", "requested", "submitted", "accepted", "rejected"]
+        },
+        "correction_turnaround_ms": {
+          "oneOf": [
+            { "$ref": "#/$defs/U64" },
+            { "type": "null" }
+          ]
+        },
+        "repair_proposal_kind": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": ["interaction_binding", "string_format", "procedural_branch", "rule_adjustment"]
+            },
+            { "type": "null" }
+          ]
+        },
+        "repair_lineage_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "recovery_evidence_status": {
+          "type": "string",
+          "enum": ["verified", "unverified", "none"]
+        }
+      }
+    },
     "UUID": {
       "type": "string",
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"

@@ -971,7 +971,7 @@ Oryn measures business-process health and automation results, not employee atten
 | Metric | Definition | Reporting constraint |
 |---|---|---|
 | **Workflow frequency** | Number of recognized completed task instances for an approved process in a period | Aggregate only; exclude incomplete observation |
-| **Verified success rate** | Verified-complete cases divided by eligible cases with resolved outcomes | Show unknown outcomes separately |
+| **Verified success rate** | Verified-complete cases divided by all started cases ($C_{\text{verified}} / C_{\text{started}}$); cases cancelled before start are excluded from the denominator | Unknown/unresolved outcomes ($C_{\text{unknown}} / C_{\text{started}}$) shown separately as a distinct reliability metric |
 | **Exception rate** | Cases requiring exception handling divided by started cases | Separate expected escalations from failures |
 | **Autonomous completion rate** | Cases completed without per-case human correction and independently verified | Do not count merely submitted cases |
 | **Human escalation rate** | Cases escalated to a person divided by started cases | Break down cause categories |
@@ -979,7 +979,7 @@ Oryn measures business-process health and automation results, not employee atten
 | **Regression rate** | Previously passing test scenarios that fail under a new version | Show by agent version |
 | **Median case duration** | Median elapsed execution time of verified cases | Separate waiting for approval where possible |
 | **Approval workload** | Count of decisions requiring human review by workflow | Do not rank individual reviewers |
-| **Estimated time avoided** | Verified automated volume multiplied by a clearly disclosed baseline manual task duration less estimated review effort | Show assumptions, not a promise of realized labor savings |
+| **Estimated time avoided** | Sum of $(\text{BaselineDuration} - \text{ActiveExecutionDuration} - \text{HumanCorrectionDuration})$ across verified cases; verified no-op cases yield exactly $0\,\text{ms}$ avoidance; approval wait duration is excluded from active duration and does not penalize avoidance | Show assumptions, not a promise of realized labor savings |
 | **Estimated cost per completed case** | Applicable execution and review costs divided by verified-complete cases | If data unavailable, show unavailable |
 | **Operational backlog** | Eligible unresolved cases by process and status | Subject to authorized system visibility |
 | **Agent maintenance burden** | Count of incidents and manual repairs per agent and version | Measure operational reliability, not an employee's effort |
@@ -998,7 +998,7 @@ Oryn ranks improvement candidates using an explained combination of repeat volum
 
 ### 23.6 The 14-Day Operational X-Ray
 
-A customer can run a voluntary, time-bounded discovery pilot for one approved operational team. The pilot setup specifies start/end dates, applications, participating employees, permitted workflows, required privacy notices, owner, and intended output. Oryn reports progress without displaying employee surveillance indicators.
+A customer can run a voluntary, time-bounded discovery pilot for one approved operational team. The pilot setup specifies exact start/end local dates strictly spanning 14 calendar days (336 hours, or 335/337 hours across local Daylight Saving Time transitions), applications, at least 5 participating enrolled employees for team aggregations, permitted workflows, required privacy notices, owner, and intended output. Oryn reports progress without displaying employee surveillance indicators.
 
 The pilot report contains: scope and sample size; workflows discovered; common variants and exception patterns; process handoffs; known bottlenecks; reusable peer fixes; estimated automation opportunities; evidence quality; eligible agent candidates; risks and privacy limitations; and a recommended next-step shortlist. It may include a supervised demonstration of a validated candidate agent, but must not imply that a production-grade agent was automatically proven safe solely because two weeks elapsed.
 

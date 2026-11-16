@@ -25,7 +25,7 @@ The Contribution and Synchronization Gateway mediates the boundary between priva
 - Network interface status and supervisor lifecycle events from [desktop-shell](desktop-shell.md) over `shell-sync.v1`.
 
 ### Produces
-- Authenticated, organization-scoped contribution payloads delivered to [workflow-discovery](workflow-discovery.md) for procedure clustering and candidate synthesis.
+- Authenticated, organization-scoped contribution payloads delivered to [workflow-discovery](workflow-discovery.md) for procedure clustering and candidate synthesis, including required nullable `observed_task_completed_at` in `WorkflowContributionContentV1` to establish empirical baseline task duration and completion boundaries.
 - Reviewed meeting handoff proposals (`ReviewedMeetingHandoffProposal`) delivered to [operational-graph](operational-graph.md) via Contract 24.
 - Cryptographically verified, access-filtered guidance working sets delivered to [local-context-hud](local-context-hud.md) via [desktop-shell](desktop-shell.md) over Contract 20 bulk-data rails.
 - Contribution delivery receipts, queue admission states, and connectivity indicators delivered to [desktop-shell](desktop-shell.md).
@@ -819,7 +819,7 @@ The review digest `content_digest` covers the exact RFC 8785 canonical JSON byte
 - **Process Model:** `oryn-sync-helper` runs locally on employee endpoints as a dedicated, unprivileged native child process supervised by [desktop-shell](desktop-shell.md).
 - **Process Isolation:** The helper is sandboxed using native OS primitives (macOS `sandbox-exec` / App Sandbox, Windows Job Objects with restricted tokens). It possesses zero filesystem access outside its profile-scoped directory, cannot bind local network ports, and communicates exclusively over inherited anonymous pipes/socketpairs.
 - **Inherited IPC Rails:**
-  - `shell-sync.v1` (major 1, minor 0): Two bidirectional channels between Desktop Shell and Sync Helper (Control/Status and Bulk Data Relay).
+  - `shell-sync.v1` (major 1, minor 1): Bidirectional channels between Desktop Shell and Sync Helper (Control/Status and Bulk Data Relay), negotiating capability `central_notifications_v1` for desktop notification routing and delivery receipts.
   - `privacy-sync.v1` (major 1, minor 0): Two bidirectional channels directly linking `oryn-privacy-helper` and `oryn-sync-helper` (Control and Payload Chunks).
 - **Credential Separation:** The sync helper never receives private evidence encryption keys, master disk passwords, refresh tokens, or raw capture buffers. It receives only short-lived, audience-bound access tokens from `SessionBroker`.
 - **Transport Security:** All cloud communication uses TLS 1.3 with strict SPKI certificate pinning. Unpinned interception fails closed with `SYNC_TLS_TRUST_FAILED`. No trust-on-first-use (TOFU) or insecure bypass flags exist.
@@ -829,7 +829,9 @@ The review digest `content_digest` covers the exact RFC 8785 canonical JSON byte
 ### Execution Model and Threading
 The helper operates a deterministic single-threaded state machine core alongside an asynchronous I/O runtime (Tokio) and a dedicated blocking worker pool:
 - **State Reducer:** `reduce_sync(state: SyncState, input: SyncInput, now: MonotonicInstant) -> SyncTransition`. All protocol decisions, transitions, and timers are purely functional and deterministic.
-- **Network Task:** One serial upload worker, at most two bundle download workers, and one long-polling worker.
+- **Network Task:** One serial upload worker, at most two bundle download workers, and dual independent long-polling workers:
+  - *Sync Control Change Feed:* Bounded 25-second long poll against `/v1/sync/changes` using tokens scoped to `audience: "sync"`.
+  - *Central Notification Feed:* Bounded 25-second long poll against `/v1/notifications` negotiating `central_notifications_v1` and using child tokens strictly scoped to `audience: "notifications"`. Notifications are immediately forwarded to Desktop Shell for presentation, and `NotificationDeliveryReceiptV1` outcomes (`presented`, `suppressed`, `unavailable`) are reported back.
 - **Storage/Crypto Worker:** Bounded thread pool handling AES-256-GCM chunk encryption and SQLCipher 4 database writes.
 
 ### Logical Submodules

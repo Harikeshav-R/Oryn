@@ -102,7 +102,9 @@ Release, Rollout, and Change Governance authorizes which immutable agent candida
       request: &AssistReleaseAdmissionRequestV1,
   ) -> Result<SignedAssistReleaseEligibilityV1, ReleaseProblemV1>;
   ```
-- **Contract Reference #18 (Outcome Verification Integration):** Synchronously ingests case completion outcomes and system evidence attestations to track the 20-case consecutive supervised streak. Streak sequence is locked to the exact candidate identity, context, and declared evidence scope.
+- **Contract Reference #18 ([command-center-analytics](command-center-analytics.md)):**
+  - **Release Reporting Facts (`ReleaseReportingFactV1`):** Emitted via `ReportingSourcePort` under schema `release.reporting-fact.v1`. Supplies release lifecycle milestones, current autonomy stages (Stages 1..5), active canary cohort allocations, safety fence activations (`ReleaseCohortFenceV1`), and streak health metrics for Command Center rollout tracking and executive compliance reporting.
+  - **Outcome Verification Integration:** Synchronously ingests case completion outcomes and system evidence attestations to track the 20-case consecutive supervised streak. Streak sequence is locked to the exact candidate identity, context, and declared evidence scope.
 - **Contract Reference #21 (Incident Correction and Repair Interface):** Delivers bounded `RepairReleaseObservationV1` records with exact `observation_ref` bindings and complete incident manifests. Synchronously respects containment restrictions.
 - **Contract Reference #22 (Cloud Inference Baseline):** Diff categorization and presentation formatting may consume `text.reason` via LiteLLM under [cloud-inference](../architecture/cloud-inference.md); release gating and authority promotion never execute AI inference.
 

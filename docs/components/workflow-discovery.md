@@ -90,16 +90,13 @@ All model calls route through the LiteLLM gateway under strict zero content rete
 - **Input Scope:** Input texts are transmitted as `SourceScopeV1.source_kind = "organizational_artifact"` referencing RAM-only buffers of accepted, shared contribution texts. Raw screen captures and contributor PII are excluded.
 - **Retry Semantics:** At most one same-binding retry is permitted upon confirmed transient transport failure prior to response commencement. No automatic prompt repair loops or uncertified model fallbacks are allowed.
 
-### Contract 18: Control Plane Domain Events
-Emits transactional domain events to notify authorized subscribers in [command-center-analytics](command-center-analytics.md):
-- `workflow.candidate_created`
-- `workflow.candidate_changed`
-- `workflow.candidate_invalidated`
-- `workflow.candidate_rejected`
-- `workflow.candidate_approved`
-- `workflow.reconsideration_requested`
-- `workflow.promotion_staged`
-Events carry metadata only (`resource_id`, `resource_version`, `safe_state_label`); no employee names, task timings, raw descriptions, or prompts travel on the event bus.
+### Contract 18: Control Plane Reporting Facts & Domain Events
+Workflow Discovery supplies empirical human demonstration evidence and opportunity projections to [command-center-analytics](command-center-analytics.md) under Contract 18:
+- **`HumanTaskReportingFactV1` (`discovery.human-task-reporting-fact.v1`):** Ingested via `ReportingSourcePort` to provide empirical timing distributions (`observed_duration_ms`, `wait_duration_ms`), task completion timestamps, application context IDs, and contributor privacy release references without exposing contributor identities.
+- **Discriminated `OpportunityV1` Projection:** Enforces cohort privacy as a structural JSON Schema discriminated union:
+  - *Available Opportunity (`state: "available"`):* Exposes `privacy_release_refs`, timing percentiles (median, P90), observed case/employee counts, and financial projections only when the contributing cohort meets the 5-contributor floor ($\ge 5$ distinct employees) and active privacy releases are attached.
+  - *Suppressed/Unavailable Opportunity (`state: "suppressed" | "unavailable"`):* Emits only identity and reason fields (`candidate_id`, `state`, `suppression_reason`). All numerical counts, contributor tallies, timing distributions, and monetary estimates are strictly omitted from the payload to prevent statistical differential leakage.
+- **Domain Event Bus:** Emits transactional domain events (`workflow.candidate_created`, `workflow.candidate_changed`, `workflow.candidate_invalidated`, `workflow.candidate_rejected`, `workflow.candidate_approved`, `workflow.reconsideration_requested`, `workflow.promotion_staged`). Events carry metadata only (`resource_id`, `resource_version`, `safe_state_label`); no employee names, task timings, raw descriptions, or prompts travel on the event bus.
 
 ## Trust and deployment boundaries
 

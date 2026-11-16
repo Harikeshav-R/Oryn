@@ -72,6 +72,8 @@ The runtime directly enforces and participates in the following product requirem
   - The runtime executes the closed ten-node DAG IR (`read`, `transform`, `reason`, `decision`, `action`, `foreach`, `verify`, `human_input`, `escalate`, `finish`). Dynamic graph generation, recursive loops, and scripting are strictly forbidden.
   - Value references (`ValueRefV1`) require strict dominance: an output reference must strictly dominate its consumer. Branch-local outputs cannot cross joins without a common dominating producer; there are no implicit phi nodes.
 - **Contract Reference #10 ([job-orchestration](job-orchestration.md)):** Ingests bounded work assignments (`RuntimeAssignmentV1`) and commits state transitions through [`agent-runtime-v1.schema.json`](../architecture/contracts/agent-runtime-v1.schema.json).
+  - Negotiates `runtime_reporting_v1` capability over worker IPC rails. Checkpoint commits (`RuntimeCheckpointCommitV1`) convey `intervention_facts`, monotonic `intervention_through_sequence`, `reporting_events`, and monotonic `reporting_through_sequence`.
+  - Execution progress notifications (`RuntimeProgressV1`) carry required nullable `reporting_event` (`RuntimeReportingEventPayloadV1`) for live milestone streaming to Job Orchestration and Command Center Analytics.
 - **Contract Reference #11 ([identity-policy](identity-policy.md)):** Submits authorization requests (`AuthorizationRequestV1`) and consumes one-use action admission (`ConsumeActionV1`) under [`identity-policy-v1.schema.json`](../architecture/contracts/identity-policy-v1.schema.json).
   - Execution workers authenticate using identity execution child tokens (`audience: "execution"`) with narrow scopes (`runtime:claim`, `runtime:read`, `runtime:advance`, `runtime:heartbeat`, `runtime:yield`).
   - Worker identity is derived by the Identity PDP from verified principal context, not caller assertions.
@@ -105,6 +107,8 @@ The agent runtime contracts are formally codified in `urn:oryn:schemas:agent-run
 | `RuntimeValueUploadV1` | `runtime.value-upload.v1` | Worker payload uploading an encrypted typed binding value. |
 | `RuntimeValueQueryV1` | `runtime.value-query.v1` | Worker query payload requesting decryption and materialization of a binding value. |
 | `RuntimeRetentionFenceV1` | (Defined in schema) | Immutable journal record bounding retention deadlines and progress watermarks. |
+| `RuntimeInterventionFactV1` | `runtime.intervention-fact.v1` | Fact capturing human steering, step overrides, or rejections during agent execution. |
+| `RuntimeReportingEventV1` | `runtime.reporting-event.v1` | Real-time reporting telemetry envelope carrying content-free lifecycle and milestone progress. |
 
 ### Identifier Scoping and Generation Preimage
 - **Identifier Separation:** Generic `$defs.Identifier` in `agent-runtime-v1.schema.json` references Graph Identifier, accepting full 68-character `act_` digests and UUID owner IDs. Compiler-owned structures (`PlanIdentifier`) strictly govern node IDs, region IDs, loop variables, slot names, and compiler binding IDs.

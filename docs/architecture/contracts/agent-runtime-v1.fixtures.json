@@ -107,6 +107,7 @@
         "reason_code": "node_completed",
         "action_ids": [],
         "verification_refs": [],
+        "reporting_event": null,
         "timestamp_utc": "2026-11-15T16:00:02Z"
       },
       "expected_valid": true
@@ -469,6 +470,7 @@
         "reason_code": "node_completed",
         "action_ids": [],
         "verification_refs": [],
+        "reporting_event": null,
         "timestamp_utc": "2026-11-15T16:00:02Z"
       },
       "expected_valid": false

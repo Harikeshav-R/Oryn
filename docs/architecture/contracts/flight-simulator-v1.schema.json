@@ -25,9 +25,57 @@
     { "$ref": "#/$defs/ScenarioProposalV1" },
     { "$ref": "#/$defs/SimulationProblemV1" },
     { "$ref": "#/$defs/SimulationAdmissionRequestV1" },
-    { "$ref": "#/$defs/ScenarioExpectationRefV1" }
+    { "$ref": "#/$defs/ScenarioExpectationRefV1" },
+    { "$ref": "#/$defs/ScenarioReportingFactV1" }
   ],
   "$defs": {
+    "ScenarioReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "evaluation_run_id",
+        "scenario_id",
+        "scenario_version_id",
+        "trial_aggregation_verdict",
+        "comparison_eligibility",
+        "previous_pass",
+        "new_result",
+        "suite_ref",
+        "oracle_ref",
+        "environment_ref",
+        "condition_refs"
+      ],
+      "properties": {
+        "schema_id": { "const": "simulation.scenario-reporting-fact.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "evaluation_run_id": { "$ref": "#/$defs/UUID" },
+        "scenario_id": { "$ref": "#/$defs/Identifier" },
+        "scenario_version_id": { "$ref": "#/$defs/Identifier" },
+        "trial_aggregation_verdict": {
+          "type": "string",
+          "enum": ["passed", "failed", "inconclusive", "error"]
+        },
+        "comparison_eligibility": {
+          "type": "string",
+          "enum": ["comparable", "not_comparable"]
+        },
+        "previous_pass": { "type": "boolean" },
+        "new_result": {
+          "type": "string",
+          "enum": ["passed", "failed", "inconclusive"]
+        },
+        "suite_ref": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+        "oracle_ref": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+        "environment_ref": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+        "condition_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 64
+        }
+      }
+    },
     "UUID": {
       "type": "string",
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"

@@ -23,7 +23,9 @@
     { "$ref": "#/$defs/RuntimeValueUploadV1" },
     { "$ref": "#/$defs/RuntimeValueQueryV1" },
     { "$ref": "#/$defs/RuntimeRetentionFenceV1" },
-    { "$ref": "#/$defs/RuntimeFixtureSetV1" }
+    { "$ref": "#/$defs/RuntimeFixtureSetV1" },
+    { "$ref": "#/$defs/RuntimeInterventionFactV1" },
+    { "$ref": "#/$defs/RuntimeReportingEventV1" }
   ],
   "$defs": {
     "PlanIdentifier": {
@@ -592,6 +594,70 @@
       },
       "required": ["value_execution_id", "binding_id", "value_revision", "bytes", "sha256"]
     },
+    "RuntimeInterventionFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "execution_id",
+        "execution_context",
+        "intervention_sequence",
+        "kind",
+        "occurred_at",
+        "source_command_ref"
+      ],
+      "properties": {
+        "execution_id": { "$ref": "#/$defs/UUID" },
+        "execution_context": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1" },
+        "intervention_sequence": { "$ref": "#/$defs/U64" },
+        "kind": {
+          "type": "string",
+          "enum": ["approval", "clarification", "applied_correction", "manual_continuation"]
+        },
+        "occurred_at": { "$ref": "#/$defs/UtcDateTime" },
+        "source_command_ref": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" }
+      }
+    },
+    "RuntimeReportingEventPayloadV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "execution_started" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "interval_id", "wait"],
+          "properties": {
+            "kind": { "const": "wait_started" },
+            "interval_id": { "$ref": "#/$defs/Identifier" },
+            "wait": { "$ref": "#/$defs/RuntimeWaitV1" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "interval_id"],
+          "properties": {
+            "kind": { "const": "wait_ended" },
+            "interval_id": { "$ref": "#/$defs/Identifier" }
+          }
+        }
+      ]
+    },
+    "RuntimeReportingEventV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "timestamp_utc", "event"],
+      "properties": {
+        "sequence": { "$ref": "#/$defs/U64" },
+        "timestamp_utc": { "$ref": "#/$defs/UtcDateTime" },
+        "event": { "$ref": "#/$defs/RuntimeReportingEventPayloadV1" }
+      }
+    },
     "RuntimeCheckpointCommitV1": {
       "type": "object",
       "additionalProperties": false,
@@ -612,7 +678,19 @@
           "type": "array",
           "items": { "$ref": "#/$defs/RuntimeOwnerResultRefV1" },
           "maxItems": 256
-        }
+        },
+        "intervention_facts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeInterventionFactV1" },
+          "maxItems": 128
+        },
+        "intervention_through_sequence": { "$ref": "#/$defs/U64" },
+        "reporting_events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeReportingEventV1" },
+          "maxItems": 128
+        },
+        "reporting_through_sequence": { "$ref": "#/$defs/U64" }
       },
       "required": [
         "schema_id",
@@ -623,7 +701,11 @@
         "expected_control_generation",
         "transition",
         "value_blob_refs",
-        "owner_result_refs"
+        "owner_result_refs",
+        "intervention_facts",
+        "intervention_through_sequence",
+        "reporting_events",
+        "reporting_through_sequence"
       ]
     },
     "RuntimeControlV1": {
@@ -677,6 +759,12 @@
           "items": { "$ref": "#/$defs/RuntimeOwnerResultRefV1" },
           "maxItems": 256
         },
+        "reporting_event": {
+          "oneOf": [
+            { "$ref": "#/$defs/RuntimeReportingEventPayloadV1" },
+            { "type": "null" }
+          ]
+        },
         "timestamp_utc": { "$ref": "#/$defs/UtcDateTime" }
       },
       "required": [
@@ -692,6 +780,7 @@
         "reason_code",
         "action_ids",
         "verification_refs",
+        "reporting_event",
         "timestamp_utc"
       ]
     },

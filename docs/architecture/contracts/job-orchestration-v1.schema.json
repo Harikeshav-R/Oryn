@@ -28,9 +28,136 @@
     { "$ref": "#/$defs/JobReleaseEligibilityV1" },
     { "$ref": "#/$defs/JobBudgetReservationV1" },
     { "$ref": "#/$defs/OrchestrationSafetyFenceV1" },
-    { "$ref": "#/$defs/JobFixtureSetV1" }
+    { "$ref": "#/$defs/JobFixtureSetV1" },
+    { "$ref": "#/$defs/CaseReportingFactV1" }
   ],
   "$defs": {
+    "ApprovalWaitIntervalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interval_id", "started_at", "ended_at"],
+      "properties": {
+        "interval_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "started_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "ended_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "CaseReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "job_id",
+        "case_id",
+        "workflow_id",
+        "agent_id",
+        "agent_version_id",
+        "application_ids",
+        "risk_tier",
+        "release_stage",
+        "first_started_at",
+        "verified_completed_at",
+        "already_satisfied",
+        "resolved_outcome",
+        "latest_verification_ref",
+        "exception_count",
+        "escalation_count",
+        "escalation_causes",
+        "approval_wait_intervals",
+        "intervention_coverage",
+        "applied_correction_count",
+        "applied_correction_refs",
+        "business_effect_attribution",
+        "execution_refs",
+        "settled_charge_ids",
+        "total_settled_microusd"
+      ],
+      "properties": {
+        "schema_id": { "const": "orchestration.case-reporting-fact.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "job_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "case_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "workflow_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "application_ids": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "risk_tier": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "release_stage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "first_started_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "verified_completed_at": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+            { "type": "null" }
+          ]
+        },
+        "already_satisfied": { "type": "boolean" },
+        "resolved_outcome": {
+          "type": "string",
+          "enum": ["verified_complete", "expected_rejection", "definitive_mismatch", "unresolved"]
+        },
+        "latest_verification_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "exception_count": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "escalation_count": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "escalation_causes": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+          "maxItems": 64
+        },
+        "approval_wait_intervals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ApprovalWaitIntervalV1" },
+          "maxItems": 128
+        },
+        "intervention_coverage": {
+          "type": "string",
+          "enum": ["complete", "incomplete", "unknown"]
+        },
+        "applied_correction_count": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "applied_correction_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "business_effect_attribution": {
+          "type": "string",
+          "enum": ["none", "applied", "partially_applied", "failed"]
+        },
+        "execution_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "settled_charge_ids": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+          "maxItems": 128
+        },
+        "total_settled_microusd": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DecimalString" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
     "JobStateV1": {
       "type": "string",
       "enum": [

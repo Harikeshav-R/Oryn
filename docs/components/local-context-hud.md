@@ -121,7 +121,7 @@ Operating over an isolated, direct socketpair (macOS) or anonymous pipe pair (Wi
   - `GetContextHistory`: Queries historical task summaries for repetition analysis.
   - `SaveTaskSummary`: Persists bounded `PrivateTaskSummaryV1` in screen partition databases.
   - `SaveGuideCheckpoint`, `GetGuideCheckpoint`, `DeleteGuideCheckpoint`: Manages at most one resumable `GuideCheckpointV1` per profile.
-  - `DemonstrationProposalV1`: Submits synthesized task demonstration proposals with proposed task-level duration measurements (elapsed and wait ms, observed vs estimate basis, complete interval flag) for privacy-storage validation and helper-minted shared demonstration identity before contribution review.
+  - `DemonstrationProposalV1`: Submits synthesized task demonstration proposals with proposed task-level duration measurements (elapsed and wait ms, observed vs estimate basis, complete interval flag, and required empirical completion timestamp `observed_task_completed_at`) for privacy-storage validation and helper-minted shared demonstration identity before contribution review.
 
 ### Contract 3: Guidance Bundle and Access Lease Interface (`hud.guidance-bundle.v1`)
 Consumes published, access-filtered guidance bundles from [operational-graph](operational-graph.md) via [contribution-sync](contribution-sync.md), and signed access leases from [identity-policy](identity-policy.md).

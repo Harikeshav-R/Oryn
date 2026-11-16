@@ -2233,6 +2233,7 @@
         "candidate_revision": "1",
         "submission_period_start": "2026-11-01T00:00:00Z",
         "submission_period_end": "2026-11-09T20:00:00Z",
+        "state": "available",
         "complete_attempts": 3,
         "verified_attempts": 2,
         "contradicted_attempts": 0,
@@ -2270,7 +2271,15 @@
           ]
         },
         "estimated_saved_ms": 2400120000,
-        "suppression_reason": null,
+        "privacy_release_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "privacy_release",
+            "entity_id": "rel_wk_2026_44_finance",
+            "version_id": "1",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
         "ranking_keys": {
           "safety_blocked": false,
           "verified_attempts": 2,
@@ -2278,6 +2287,20 @@
           "unresolved_questions": 0,
           "candidate_id": "11111111-2222-4333-8444-555555555555"
         }
+      }
+    },
+    {
+      "case_id": "pos_OpportunityV1_suppressed",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/OpportunityV1",
+      "instance": {
+        "schema_id": "workflow.opportunity.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "candidate_revision": "1",
+        "submission_period_start": "2026-11-01T00:00:00Z",
+        "submission_period_end": "2026-11-09T20:00:00Z",
+        "state": "suppressed",
+        "suppression_reason": "cohort_too_small"
       }
     },
     {
@@ -2605,6 +2628,28 @@
     }
   ],
   "structural_negative_cases": [
+    {
+      "case_id": "neg_OpportunityV1_suppressed_with_counts",
+      "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/OpportunityV1",
+      "instance": {
+        "schema_id": "workflow.opportunity.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "candidate_id": "11111111-2222-4333-8444-555555555555",
+        "candidate_revision": "1",
+        "submission_period_start": "2026-11-01T00:00:00Z",
+        "submission_period_end": "2026-11-09T20:00:00Z",
+        "state": "suppressed",
+        "suppression_reason": "cohort_too_small",
+        "complete_attempts": 3,
+        "ranking_keys": {
+          "safety_blocked": false,
+          "verified_attempts": 2,
+          "complete_attempts": 3,
+          "unresolved_questions": 0,
+          "candidate_id": "11111111-2222-4333-8444-555555555555"
+        }
+      }
+    },
     {
       "case_id": "neg_closed_schema_extra_property",
       "schema_ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateApprovalV1",

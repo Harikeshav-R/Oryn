@@ -5,7 +5,7 @@
 **Deciders:** User-Approved Architecture Review  
 **Authority:** Technical Architecture & Security Engineering  
 **Amends:** [ADR-0010](0010-contribution-delivery-and-guidance-sync.md), [ADR-0011](0011-identity-authority-and-approval-fencing.md)  
-**Amended by:** [ADR-0022](0022-release-eligibility-and-rollout-governance.md)  
+**Amended by:** [ADR-0022](0022-release-eligibility-and-rollout-governance.md), [ADR-0023](0023-command-center-reporting-privacy-and-delivery.md)  
 **Normative Specification:** [docs/components/control-plane.md](../components/control-plane.md)
 
 ---
@@ -74,4 +74,7 @@ Oryn's enterprise multi-tenant control plane coordinates client ingress, domain 
 - Offline long-polling clients must maintain active HTTP connections, requiring careful connection pool offloading.
 
 *(Scope Amendment — 2026-11-16): [ADR-0022](0022-release-eligibility-and-rollout-governance.md) incorporates release governance routes and `durability_pending` transaction commitments, requiring complete signed authority checkpointing before newly expanded release authority is acknowledged or exposed to admission traffic.*
+
+*(Scope Amendment — 2026-11-16): [ADR-0023](0023-command-center-reporting-privacy-and-delivery.md) incorporates Command Center, Notifications, and Analytics routes; multi-channel notification delivery via Desktop Shell (`shell-sync.v1` major 1, minor 1) and isolated Notification Egress Broker (AWS SES in `us-east-1`); governed export streaming via isolated Export Artifact Broker and sandboxed Export Render Worker (AWS S3 in `us-east-1`); and Authority Recovery Journal disclosure checkpointing (`analytics_disclosure_changed`).*
+
 
