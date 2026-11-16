@@ -6222,7 +6222,8 @@
             ],
             "expected_disposition": "safe_escalation"
           }
-        ]
+        ],
+        "repair_bindings": []
       },
       "expected_valid": true
     },
@@ -7511,7 +7512,8 @@
             ],
             "expected_disposition": "safe_escalation"
           }
-        ]
+        ],
+        "repair_bindings": []
       },
       "expected_valid": true
     },
@@ -8836,7 +8838,8 @@
             ],
             "expected_disposition": "safe_escalation"
           }
-        ]
+        ],
+        "repair_bindings": []
       },
       "expected_valid": true
     },
@@ -21377,14 +21380,26 @@
         "base_agent_version_id": "018f0000-0000-7000-8000-000000000101",
         "current_agent_version_id": "018f0000-0000-7000-8000-000000000101",
         "regression_requirement_refs": [
-          "scenario_regression"
+          {
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "entity_kind": "regression_requirement",
+            "entity_id": "00000000-0000-4000-8000-000000000801",
+            "version_id": "00000000-0000-4000-8000-000000000802",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
         ]
       },
       "expected": {
         "new_candidate_lineage": true,
         "prior_version_mutated": false,
         "linked_regressions": [
-          "scenario_regression"
+          {
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "entity_kind": "regression_requirement",
+            "entity_id": "00000000-0000-4000-8000-000000000801",
+            "version_id": "00000000-0000-4000-8000-000000000802",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
         ]
       }
     },

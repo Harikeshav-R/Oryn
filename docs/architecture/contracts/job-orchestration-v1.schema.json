@@ -286,6 +286,7 @@
         "schema_id",
         "agent_id",
         "agent_version_id",
+        "cohort_id",
         "selection",
         "dependencies",
         "limits",
@@ -295,6 +296,12 @@
         "schema_id": { "const": "job.preview-request.v1" },
         "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
         "agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "cohort_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
         "selection": { "$ref": "#/$defs/JobSelectionSpecV1" },
         "dependencies": {
           "type": "array",
@@ -320,6 +327,7 @@
         "manifest_sha256",
         "release_id",
         "release_revision",
+        "cohort_id",
         "selection",
         "dependencies",
         "population_count",
@@ -344,6 +352,7 @@
         "manifest_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
         "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
         "release_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "cohort_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
         "selection": { "$ref": "#/$defs/JobSelectionSpecV1" },
         "dependencies": {
           "type": "array",
@@ -986,6 +995,7 @@
         "revision",
         "workflow_id",
         "agent_id",
+        "cohort_id",
         "owner_actor_id",
         "sponsor_actor_id",
         "trigger",
@@ -1009,6 +1019,7 @@
         "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
         "workflow_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
         "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "cohort_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
         "owner_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
         "sponsor_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
         "trigger": { "$ref": "#/$defs/ScheduleTriggerV1" },
@@ -1300,7 +1311,7 @@
         "generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
         "subject_kind": {
           "type": "string",
-          "enum": ["job", "schedule", "case", "action_intent", "budget", "occurrence"]
+          "enum": ["job", "schedule", "case", "action_intent", "budget", "occurrence", "incident_restriction", "release_cohort"]
         },
         "subject_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
         "state_ref_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
@@ -1514,6 +1525,45 @@
                 },
                 "intended_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
               }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "restriction_id",
+                "incident_ref",
+                "target",
+                "effect",
+                "state",
+                "generation",
+                "approval_refs",
+                "has_unresolved_effects"
+              ],
+              "properties": {
+                "kind": { "const": "incident_restriction" },
+                "restriction_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                "incident_ref": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentRefV1" },
+                "target": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentContainmentTargetV1" },
+                "effect": {
+                  "type": "string",
+                  "enum": ["pause_execution", "pause_writes", "stop_new_jobs"]
+                },
+                "state": {
+                  "type": "string",
+                  "enum": ["active", "cleared"]
+                },
+                "generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+                "approval_refs": {
+                  "type": "array",
+                  "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" },
+                  "maxItems": 16
+                },
+                "has_unresolved_effects": { "type": "boolean" }
+              }
+            },
+            {
+              "$ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseCohortFenceV1"
             }
           ]
         }

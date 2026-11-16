@@ -921,7 +921,7 @@
           "$ref": "#/$defs/Identifier"
         },
         "eligibility": {
-          "$ref": "#/$defs/AssistPlanEligibilityV1"
+          "$ref": "urn:oryn:schemas:release-governance:v1#/$defs/SignedAssistReleaseEligibilityV1"
         }
       }
     },

@@ -598,59 +598,59 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 6.7 Incident Detection, Classification, and Containment
 
-**Responsibility:** Convert safety failures, errors, abnormal outcomes, repeated exceptions, and uncertainty into governed incident records and immediate containment actions.
+**Responsibility:** Convert safety failures, errors, abnormal outcomes, repeated exceptions, and uncertainty into authoritative incident records and immediate, synchronous containment restrictions.
 
-**Owns:** Incident status, severity, correlation across jobs/agents/adapters, diagnostic hypotheses, affected-scope determination, request to pause/restrict activity.
+**Owns:** Incident status, severity, correlation group memberships, diagnostic hypotheses, affected-scope determination, request to pause/restrict activity via Job Orchestration and Identity.
 
-**Consumes:** Execution failures, verification mismatches, policy violations, simulator regressions where relevant, operator reports, application drift signals.
+**Consumes:** Execution failures, verification mismatches, policy violations, simulator regressions, operator reports, application drift signals.
 
-**Produces:** Incidents with observed evidence and labeled hypotheses; escalation and containment requests; expert questions; repair investigation triggers.
+**Produces:** Incidents with observed evidence references and labeled hypotheses; synchronous containment commands (`SetIncidentRestrictionCommandV1`); expert questions; repair investigation triggers.
 
 **Does not own:** Unilateral approval of a candidate fix, unrestricted access to private desktop evidence, or silent changes to an approved business policy.
 
-**Boundary requirement:** Stop/pause decisions must be able to affect one case, a batch, a worker, an adapter capability, or a released version according to actual blast radius. Security-critical restrictions are not merely UI notifications.
+**Boundary requirement:** Stop/pause decisions commit synchronously with sub-second durability and connected-worker safe-boundary acknowledgment within ≤ 2 seconds; connected workers without acknowledgment remain `acknowledgment_pending`, not falsely stopped. Containment executes across ten bounded targets (`case`, `job`, `schedule`, `agent_version`, `connection`, `operation`, `capability`, `rule`, `worker`, `organization`) via `orchestration_incident_restriction` and durable safety fences (`OrchestrationSafetyFenceV1`). Containment never depends on cloud AI inference, group correlation, or notification delivery. Security-critical restrictions are not merely UI notifications. Independent incidents remain distinct from heuristic correlation groups (`incident_group`).
 
 ### 6.8 Human Correction and Exception Intelligence
 
-**Responsibility:** Collect structured human knowledge when an observed procedure or agent fails to handle a case; turn explanations and demonstrations into reviewable learning candidates.
+**Responsibility:** Collect structured, attributable human knowledge when an observed procedure or agent fails to handle a case; turn explanations and demonstrations into reviewable learning candidates without converting individual explanations directly into policy.
 
-**Owns:** Correction requests, expert questions and responses, competing explanations, candidate exceptions and rule proposals, correction-to-incident linkage.
+**Owns:** Immutable correction records (`CorrectionV1`), expert questions and responses (`CorrectionQuestionV1`), competing explanations, candidate exceptions and rule proposals, correction-to-incident linkage.
 
-**Consumes:** Incident evidence the expert may access, failed-case context, published policies, expert-provided resolution or demonstration.
+**Consumes:** Permitted incident context, failed-case evidence references, published policies, expert-provided resolution or desktop dictation.
 
-**Produces:** Suggested workflow step/branch corrections, potential business rules, additional scenarios, repair inputs, unresolved knowledge conflicts.
+**Produces:** Attributable corrections, suggested workflow step/branch corrections, candidate business rules (`ProposeRuleCommandV1`), additional scenario specifications, repair inputs, reported knowledge conflicts (`ReportConflictCommandV1`).
 
-**Does not own:** Automatic promotion of an expert's individual response into authoritative company policy or release of repaired agents.
+**Does not own:** Automatic promotion of an expert's individual response into authoritative company policy or autonomous release of repaired agents.
 
-**Boundary requirement:** Classify interaction fixes, data-interpretation fixes, and policy/rule changes separately, because they have different approval paths. No answer or contradictory answers leave the exception unresolved and in a safe escalation state.
+**Boundary requirement:** Desktop-only online audio dictation uses Privacy Helper's `CorrectionMicrophoneSource` mode over binary `ORYC` v1 frames (16-kHz mono PCM, ≤ 3,200 bytes per 100 ms) under employee preference category `incident_correction_audio` and signed capture-policy lease (`incident_correction_audio_permitted: true`). Reviewed corrections wrap in `ReviewedContributionV1` (`reviewed_correction`) signed with device private keys. Contradictory credible explanations report material Graph conflicts (`ReportConflictCommandV1` / `KnowledgeConflictV1`) and restrict affected branches; resolution requires authoritative policy owner approval (`ApproveRuleCommandV1`). No majority vote or model chooses the winner.
 
 ### 6.9 Repair Proposal and Regression Engine
 
-**Responsibility:** Generate bounded, explainable modifications that address documented failures and submit them to evaluation and release governance.
+**Responsibility:** Generate bounded, explainable modifications that address documented failures within declared structural scopes and submit them to evaluation and release governance.
 
-**Owns:** Repair hypotheses, proposed behavioral diff, change scope, incident linkage, requested new regression scenarios, effect/impact analysis.
+**Owns:** Repair hypotheses, proposed behavioral diff, structural change scope (`RepairScopeV1`), incident linkage, requested new regression scenarios, prevention specifications (`PreventionSpecificationV1`), effect/impact analysis.
 
-**Consumes:** Incident diagnosis, accepted corrections, knowledge graph dependencies, immutable agent version, relevant test failures, policy restrictions.
+**Consumes:** Incident diagnosis (`DiagnosisV1`), accepted corrections (`CorrectionV1`), knowledge graph dependencies, immutable agent version, relevant test failures, policy restrictions.
 
-**Produces:** New draft agent/capability versions or adapter changes, reviewable repair proposals, new test requirements, re-evaluation requests.
+**Produces:** New draft agent/capability versions, adapter change proposals (`AdapterChangeProposalV1`), reviewable repair proposals (`RepairProposalV1`), stable regression requirements (`SimulationRegressionRequirementV1`), re-evaluation requests.
 
 **Does not own:** Editing the active version in place, granting broader permissions, bypassing required tests, or asserting release readiness on its own.
 
-**Boundary requirement:** Prefer narrow change sets. A changed UI target is not a reason to rewrite unrelated finance rules; a changed finance rule may require revalidation of many agents even when no UI behavior changed.
+**Boundary requirement:** Prefer narrow structural change sets. Enforce declared structural bounds (`RepairScopeV1`) and reject changes outside permitted node IDs/JSON pointers. Stable regression requirements (`SimulationRegressionRequirementV1`) eliminate creation cycles by removing `candidate_target`; candidate binding occurs at Factory compilation finalization time via `repair_bindings` on `CandidateEvaluationBundleV1`. Evaluation requires full applicable regression suites, original/prevention obligations, and at least 5 nearby variations. Release is rejected if the original failure is resolved but any known applicable case regresses (PRODUCT §28.4).
 
 ### 6.10 Release, Rollout, and Change Governance
 
-**Responsibility:** Decide which immutable version is allowed to serve which organization, workflow, case population, application configuration, and autonomy stage.
+**Responsibility:** Decide which immutable version is allowed to serve which organization, workflow, explicit named case cohort, and autonomy stage.
 
-**Owns:** Release requests, review and approval lineage, evaluation references, readiness gates, active version/rollout mapping, canary restrictions, pause/restore/revert operations, release audit.
+**Owns:** Release requests, review and approval lineage, evaluation references, readiness gates, active version/cohort mapping (`ReleaseCohortV1`), rollout health monitoring (`RolloutHealthPolicyV1`), canary restrictions, pause/restore/revert operations (`restore_named`), Stage 5 automated repair preauthorizations (`ReleasePreauthorizationV1`), signed assist release eligibility (`SignedAssistReleaseEligibilityV1`), and release audit.
 
-**Consumes:** Candidate version, complete required evaluation evidence, current organization policy, workflow owner approval, risk tier, rollout configuration, incident/safety state.
+**Consumes:** Candidate version, complete required evaluation evidence, current organization policy, workflow owner approval, risk tier, named rollout configuration, incident/safety state.
 
-**Produces:** Approved scoped release, denied/revision-required decision, rollout changes, stop instructions, version restoration and revalidation requirements.
+**Produces:** Approved scoped release, denied/revision-required decision, rollout changes, stop instructions (`ReleaseCohortFenceV1`), version restoration and revalidation requirements, and signed assist release eligibility attestations.
 
 **Does not own:** Generating agent behavior or substituting its own judgment for mandatory business policy approval.
 
-**Boundary requirement:** Automatic Stage 5 release is limited to the narrow low-risk conditions explicitly permitted by `PRODUCT.md`; higher-risk or policy-changing patches require human approval. Evaluation passing is necessary but not sufficient for production release.
+**Boundary requirement:** Traffic allocation is governed strictly by explicit named cohorts (`ReleaseCohortV1`); synthetic percentage routers are forbidden. Production release authorization defaults to the designated Workflow Owner; Security Officer approval is required only when permissions expand or policy explicitly demands stricter fencing. Ordinary material replacements reset the 20-case consecutive supervised streak to 0; no streak inheritance. Automatic Stage 5 release is strictly limited to narrow preauthorized Tier 0/1 patches (`interaction_binding` and `string_format` with proved transitive dataflow safety) under an active, dual-authorized `ReleasePreauthorizationV1`. Evaluation passing is necessary but not sufficient for production release; active 30-day operation qualifications under Contract 12 are strictly required. Version restoration (`restore_named`) re-establishes cohort admission for new jobs by pointing to a verified historical predecessor; running jobs remain pinned; external mutations already committed are never retroactively undone or recalled; synchronous safety fences act as forward dispatch barriers.
 
 ---
 
@@ -679,17 +679,17 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 | Knowledge Governance | Agent Factory | Approved capability, rules, postconditions (Contract 5) | Immutable/versioned references (`knowledge.capability-version.v1` and `knowledge.business-rule-version.v1`); wire schema `operational-graph-v1.schema.json` |
 | Capability Registry / Application Adapters | Factory / Orchestrator / Runner | Supported actions, limitations, selection capabilities, and verification support (Contract 6) | Immutable capability snapshots (`application.capability-snapshot.v1`) with ordered `qualification_refs`, per-operation `write_guard`, qualified `selection` declarations (`RecordSelectionCapabilityV1`), and live statuses (`application.capability-status.v1`) with `operation_statuses`; record selection via `AdapterRecordSelectionPort::select` returning `AdapterRecordSelectionPageV1` with `ApplicationRecordRefV1`; wire schemas `application-capability-v1.schema.json` and `application-adapters-v1.schema.json`; unsupported operations cannot be inferred from model output |
 | Agent Factory / HUD | Simulator | Sealed candidate evaluation bundle, assist evaluation bundle, IR, and coverage requirements (Contract 7) | Sealed `CandidateEvaluationBundleV1` with Vault Ed25519 attestation, `AssistEvaluationBundleV1`, `DependencyManifestV1`, and `CompileReportV1`; wire schemas `agent-factory-v1.schema.json`, `guidance-sync-v1.schema.json`, and `flight-simulator-v1.schema.json`; simulator cannot mutate candidate |
-| Outcome Verification / Simulator | Release Governance | Verification spec projections, signed evaluation reports, coverage matrices, and oracle verdicts (Contract 7 & 8) | Immutable `VerificationSpecProjectionV1` (`system_evidence` vs `authorized_reviewer` closed union) for compilation, pure deterministic evaluation core, and `SignedEvaluationReportV1` (`simulation.evaluation-report.v1`) with `CoverageMatrixV1`; wire schemas `outcome-verification-v1.schema.json` and `flight-simulator-v1.schema.json`; independent system evidence required; behavioral pass separated from production qualification; no cross-evaluation readiness stitching |
-| Release Governance | Orchestrator | Eligible active version and scope (Contract 9) | `ReleaseJobAdmissionPort::resolve` returns `JobReleaseEligibilityV1` binding release ID, revision, behavior/manifest hashes, autonomy stage (3..5), and allowed scope; jobs pin accepted release and obey emergency containment fences; future versions never repin running jobs |
+| Outcome Verification / Simulator | Release Governance | Verification spec projections, signed evaluation reports, coverage matrices, and oracle verdicts (Contract 7 & 8) | Immutable `VerificationSpecProjectionV1` (`system_evidence` vs `authorized_reviewer` closed union) for compilation, pure deterministic evaluation core, and `SignedEvaluationReportV1` (`simulation.evaluation-report.v1`) with `CoverageMatrixV1`; wire schemas `outcome-verification-v1.schema.json` and `flight-simulator-v1.schema.json`; independent system evidence required; behavioral pass separated from production qualification (active 30-day operation qualification under Contract 12 required); Stage 3 requires 5 verified human examples and 25 distinct scenarios (5 edge/negative); Stage 4 requires 100 scenarios (20 edge) and 20 consecutive independently system-evidenced supervised cases; Stage 5 requires complete regression suite, affected failures, and 5 nearby variations; no cross-evaluation readiness stitching |
+| Release Governance | Orchestrator | Eligible active version, named cohort, and scope (Contract 9) | `ReleaseJobAdmissionPort::resolve(&self, tx: &mut TenantTransaction, principal: &VerifiedPrincipal, request: &ReleaseJobAdmissionRequestV1)` returns `JobReleaseEligibilityV1` binding release ID, revision, behavior/manifest hashes, autonomy stage (3..5), allowed scope, and named `cohort_id` in `canary_bucket_id`; enforces two-stage population validation (`population_sha256 = SHA256(RFC8785(ordered_records))`); rejects ambiguous cohort matches (`RELEASE_COHORT_AMBIGUOUS`); jobs pin accepted release and obey emergency cohort fences (`ReleaseCohortFenceV1`); future versions never repin running jobs; wire schema `release-governance-v1.schema.json` |
 | Orchestrator | Runner | Approved, bounded work assignment, execution context, and value custody (Contract 10) | Bounded assignment (`RuntimeAssignmentV1`), `RuntimeExecutionContextV1` (enforcing `job -> production`, `evaluation -> simulation`), durable execution checkpoints (`ExecutionCheckpointV1`) via PostgreSQL CAS, value uploads (`RuntimeValueUploadV1`) and queries (`RuntimeValueQueryV1`) via `RuntimeValuePort`, and monotonic `action_generation` metadata; wire schema `agent-runtime-v1.schema.json`; assignment alone does not grant unrestricted action rights |
-| Runner / Local Context HUD / Orchestrator / Simulator | Identity Policy | Action authorization, simulation admission, schedule sponsor authority, and safety fences (Contract 11) | Deny or escalate to human review when authority or context is missing; binds `ExecutionContextV1` (`job`, `assist`, `evaluation`), canonical proposal digest `action_sha256`, target key, record key, and document/surface generations. Item-level approval for Tier 3; Tier 4 unconditionally denied. Issues `SignedSimulationAdmissionV1` (`identity.simulation-admission.v1`) under policy purpose; authenticates test-realm scripted actors. Evaluates `ScheduledExecutionAuthorityV1` for recurring jobs and `ExecutionLimitsPolicyV1` (`execution_limits.manage`). Dedicated Vault evaluation keys for suite seals and evaluation reports. Wire schema `identity-policy-v1.schema.json` |
+| Runner / Local Context HUD / Orchestrator / Simulator / Release Governance | Identity Policy | Action authorization, simulation admission, governance proposals, schedule authority, and safety fences (Contract 11) | Deny or escalate to human review when authority or context is missing; binds `ExecutionContextV1` (`job`, `assist` with release bindings, `evaluation`), canonical proposal digest `action_sha256`, target key, record key, and document/surface generations. Formal human release decisions consume `SignedGovernanceProposalV1` via `consume_governance` within a 15-minute window with fresh MFA within 5 minutes, defaulting to Workflow Owner remit. Item-level approval for Tier 3; Tier 4 unconditionally denied. Issues `SignedSimulationAdmissionV1` (`identity.simulation-admission.v1`) under policy purpose; authenticates test-realm scripted actors. Evaluates `ScheduledExecutionAuthorityV1` for recurring jobs and `ExecutionLimitsPolicyV1` (`execution_limits.manage`). Dedicated Vault evaluation keys for suite seals and evaluation reports. Wire schema `identity-policy-v1.schema.json` |
 | Runner / Local Context HUD | External adapter / Browser Extension | Authorized external operation (Contract 12) | Limited strictly to defined application actions with narrow credentials; external environment bindings (`AdapterEnvironmentBindingV1`) with `production_equivalence_status`; browser actions execute over `browser-bridge.v1` (major 1, minor 6 with `evaluation_execution_v1` and `execution_reservation_lease_v1`) via `ExecuteBrowserAction` with full authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1|null, admission: SignedActionAdmissionV1}`; native actions execute over `shell-adapter.v1` (major 1, minor 2); wire schema `application-adapters-v1.schema.json` |
 | Runner / Application Adapters | Outcome Verification | Submission receipt, readback evidence, and run verdict (Contract 13) | Produces `AdapterSubmissionReceiptV1` (`submission_state`: `not_dispatched`, `dispatched`, `application_acknowledged`, `unknown`, `source_commit_token`), signed readback evidence (`SignedAdapterReadbackEvidenceV1`) with certified freshness proofs (`ReadbackFreshnessProofV1`), prepared reads (`AdapterReadPrepareRequestV1`), and independent verification run requests (`VerificationRunRequestV1` -> `VerificationRunResultV1`) requiring `evaluation_target: EvaluationTargetV1` and nullable sealed `scenario_expectation_ref`; dedicated non-actuating `verification_read` token purpose and single-use leases; wire schemas `application-adapters-v1.schema.json`, `flight-simulator-v1.schema.json`, and `outcome-verification-v1.schema.json`; post-submit verification does not claim that an already-submitted external write cannot commit; runner success ≠ business completion |
 | Verifier | Orchestrator / Incident / Simulator | Independent verdict, mismatch classification, and readback records (Contract 14) | Pure `oryn-verification-core` returns immutable `VerificationRunResultV1` (`verified`, `mismatch`, `unknown`) and detached attestation (`SignedVerificationResultAttestationV1`); attributable human postcondition assessments (`SignedPostconditionAssessmentV1`) and standalone Graph handoff verifications; unknown outcomes or mismatches pause case and block dangerous retries; independently resolves `scenario_expectation_ref` for simulation attempts; AES-256-GCM encrypted evidence with 7d/30d cryptographic destruction and 24-month audit retention; subsequent readback evaluations generate distinct verifier request and result IDs without rewriting earlier history |
-| Incident | Correction/Repair | Failure classification and evidence references | AI diagnosis labeled hypothesis until supported |
-| Correction | Knowledge/Repair | Accepted expert correction or candidate rule (Contract 16) | Independent domain owners must approve procedural and policy changes (`ProposeRuleCommandV1`); wire schema `operational-graph-v1.schema.json` |
-| Incident / Repair | Factory / Simulator | New candidate repair draft and typed regression requirements (Contract 17) | `RepairCandidateCommandV1` binding `SimulationRegressionRequirementRefV1[]` (`simulation.regression-requirement.v1`) with incident, repair, base, candidate, original failing scenario, and nearby variations; no in-place active version mutation; wire schemas `agent-factory-v1.schema.json` and `flight-simulator-v1.schema.json` |
-| Orchestration / Governance / Identity Policy | Command Center | Authorized job/case projections, notifications, audit (Contract 18) | Role-scoped read models (`JobViewV1`, `CaseViewV1`, `JobPageV1`, `CasePageV1`), schedule definitions, and immutable audit trails via REST APIs and bounded 25s long poll (`GET /v1/changes`); presentation layer is not an authorization authority; wire schema `job-orchestration-v1.schema.json` |
+| Incident | Orchestration / Identity / Governance | Failure classification, synchronous containment restrictions, and resolution (Contract 15) | Wire schema `incident-correction-repair-v1.schema.json`. Governs `IncidentSignalV1`, `IncidentV1`, `IncidentGroupV1`, `IncidentContainmentTargetV1`, and 13 commands. Evaluates synchronous safety fences (`orchestration_incident_restriction`) and release cohort fences (`release_cohort`) via Orchestration/Identity without model dependencies. Closed dispositions: `recovery_confirmed` or `accepted_containment` |
+| Correction / Incident | Knowledge / Repair / Privacy Helper / Release Governance | Attributable expert corrections, diagnostic hypotheses, bounded proposals, and rollout observations (Contract 16) | Wire schema `incident-correction-repair-v1.schema.json`. Governs `CorrectionV1`, `ReviewedCorrectionV1`, `CorrectionQuestionV1`, `CorrectionTranscriptV1`, `DiagnosisV1`, `RepairProposalV1`, `RepairScopeV1`, `PreventionSpecificationV1`, and bounded `RepairReleaseObservationV1` binding `observation_ref`, `new_incident_count`, `incident_refs_complete`, and `incident_manifest_sha256`. Contradictory corrections report Graph conflicts (`ReportConflictCommandV1`); rule changes require owner `ApproveRuleCommandV1`; adapter proposals route through `AdapterChangeProposalV1` |
+| Incident / Repair | Factory / Simulator | New candidate repair draft and typed regression requirements (Contract 17) | `RepairCandidateCommandV1` binding `SimulationRegressionRequirementRefV1[]` (`simulation.regression-requirement.v1`) without `candidate_target`; produces immutable replacement candidate lineage with `repair_bindings` on `CandidateEvaluationBundleV1`; requires full regression suite + 5 nearby variations; wire schemas `agent-factory-v1.schema.json` and `flight-simulator-v1.schema.json` |
+| Orchestration / Governance / Identity Policy | Command Center | Authorized job/case/release projections, notifications, audit (Contract 18) | Role-scoped read models (`JobViewV1`, `CaseViewV1`, `JobPageV1`, `CasePageV1`, `ReleaseViewV1`, `ReleaseDiffV1`), schedule definitions, and immutable audit trails via REST APIs and bounded 25s long poll (`GET /v1/changes`); presentation layer is not an authorization authority; wire schemas `job-orchestration-v1.schema.json` and `release-governance-v1.schema.json` |
 | Desktop Shell | Local Privacy Storage | Capture control, visibility lease, and state subscription | Inherited byte-channel control; visibility loss or unrenewed lease immediately stops capture; raw media never crosses control channel; `shell-privacy.v1` minor 2 allocates channel 4 `shell-meeting-audio.v1`; distinct `PauseScreenObservation` and `PauseCapture` controls; typed `MeetingPort` commands |
 | Local Context HUD | Desktop Shell | Guidance cards, highlight targets, and user guidance interactions | Shell hosts all presentation and windows; HUD produces structured models and tracks guide progression; stale context invalidates highlights |
 | Local Context HUD | Browser Extension | Target presence and geometry query | HUD queries target resolution; extension resolves packaged deterministic locators against live DOM and returns desktop coordinates and affine transform; fallback to text-only guidance if geometry unproven |
@@ -805,7 +805,7 @@ sequenceDiagram
     G-->>F: Released version and effective scope
 ```
 
-**Guardrails:** A candidate with unresolved required steps cannot be silently deployed. Tests must cover expected safe rejections, not just happy paths. Releasing an agent is distinct from starting a job. Test and supervised-history minimums are those in `PRODUCT.md` §14.
+**Guardrails:** A candidate with unresolved required steps cannot be silently deployed. Tests must cover expected safe rejections, not just happy paths. Releasing an agent is distinct from starting a job. Test and supervised-history minimums are those in `PRODUCT.md` §14. Releases map to explicit named cohorts (`ReleaseCohortV1`); ordinary material replacements reset the 20-case supervised streak to zero with no inheritance; Stage 5 automated repairs are strictly confined to `interaction_binding` and `string_format` with proved transitive dataflow safety.
 
 ### 8.3 Flow C — Production job with a consequential approval
 
@@ -836,7 +836,7 @@ sequenceDiagram
     J-->>U: Case and job status with explanation
 ```
 
-**Guardrails:** Approval is for the specific proposed values, records, and scope, not a blanket authorization. Check for stale target state before committing. If the application may have committed but did not return confirmation, **stop potentially duplicative retries** pending reconciliation. Independent cases may continue only if shared safety is unaffected.
+**Guardrails:** Approval is for the specific proposed values, records, and scope, not a blanket authorization. Job admission executes via `ReleaseJobAdmissionPort::resolve` with two-stage population validation against explicit named cohorts (`ReleaseCohortV1`); ambiguous cohort matches fail preflight (`RELEASE_COHORT_AMBIGUOUS`). Check for stale target state before committing. If the application may have committed but did not return confirmation, **stop potentially duplicative retries** pending reconciliation. Independent cases may continue only if shared safety is unaffected. Cohort fences (`ReleaseCohortFenceV1`) synchronously halt new job starts and dispatches.
 
 ### 8.4 Flow D — Flight Simulator evaluation
 
@@ -857,29 +857,33 @@ sequenceDiagram
 sequenceDiagram
     participant V as Verifier / Runner
     participant I as Incident Engine
+    participant O as Job Orchestration / Identity
     participant H as Subject-Matter Expert
     participant K as Knowledge Governance
     participant R as Repair Engine
-    participant F as Agent Factory
     participant S as Flight Simulator
+    participant F as Agent Factory
     participant G as Release Governance
 
-    V->>I: Failure, mismatch or unknown outcome
-    I->>I: Classify and contain affected scope
+    V->>I: Failure, mismatch, or unknown outcome
+    I->>O: SetIncidentRestrictionCommandV1 (synchronous containment)
+    O-->>I: Sub-second restriction commitment ack
     I-->>H: Focused question + permitted evidence
-    H->>I: Corrected step or explanation
-    I->>K: Candidate new knowledge or exception
-    K-->>R: Accepted correction / rule decision
-    R->>F: Bounded repair proposal
-    F-->>S: New immutable agent candidate
-    S-->>G: Full regression + affected/new cases
-    G-->>H: Review when required
-    H->>G: Approve or request changes
-    G-->>I: Limited rollout and monitoring
-    I-->>G: Recovery evidence / regression signal
+    H->>I: Attributable correction (typed or ORYC v1 audio dictation)
+    I->>K: Candidate rule change or conflict report
+    K-->>R: Accepted correction / owner rule approval
+    R->>S: Prevention specs & stable regression requirements (no candidate cycle)
+    R->>F: Bounded repair proposal (EditableAgentPlanV1)
+    F->>F: Draft revision + AgentRepairContextV1
+    F-->>S: CandidateEvaluationBundleV1 (repair_bindings)
+    S-->>G: Evaluation report (full regression + original + 5 variations)
+    G-->>H: Human review when required
+    H->>G: Approve rollout policy
+    G-->>I: RepairReleaseObservationV1 progressive canary monitoring
+    I-->>G: Recovery confirmed or regression containment
 ```
 
-**Guardrails:** Human correction does not necessarily equal policy authorization. Required changes to organizational rules go through owner approval first. Patches cannot self-expand permissions. Automatic Stage 5 release is permitted only for the narrow preapproved low-risk change categories defined in `PRODUCT.md` §14.5; all other releases receive the required human review.
+**Guardrails:** Human correction does not equal policy authorization. Rule amendments require owner approval. Containment commits synchronously via Orchestration and Identity before model inference. Regression requirements do not depend on yet-to-be-created candidates; candidates bind requirements at Factory finalization time. Release Governance enforces regression rejection across all known applicable cases (PRODUCT §28.4); automatic Stage 5 release is off by default and restricted to preapproved Tier 0/1 categories.
 
 ### 8.6 Flow F — Real-time contextual guidance and peer intelligence
 
@@ -949,7 +953,7 @@ These **version lifecycle states** are distinct from the product's six **autonom
 | 4 | Scoped Autopilot | Tested, verified, explicitly authorized autonomy for eligible Tier 1/2 cases |
 | 5 | Self-Maintaining Autopilot | Controlled repair creation/evaluation and narrowly allowed automatic low-risk releases |
 
-`PRODUCT.md` §14 controls specific gates: Stage 3 requires **5 verified human examples and 25 distinct scenarios, including 5 edge or negative scenarios**; Stage 4 requires **20 consecutive outcome-verified supervised cases and 100 scenarios, including 20 edge, failure, or negative scenarios**. Stage 5 requires the complete regression suite, affected failures, and five nearby variations. These are **minimum gates**, not statistical guarantees; other criteria remain mandatory. Autonomy progression advances exclusively through formal governance proposals (`SignedGovernanceProposalV1`), requiring independent Workflow Owner and Security Admin approval remits without fabricating execution contexts.
+`PRODUCT.md` §14 controls specific gates: Stage 3 requires **5 verified human examples and 25 distinct scenarios, including 5 edge or negative scenarios**; Stage 4 requires **20 consecutive outcome-verified supervised cases and 100 scenarios, including 20 edge, failure, or negative scenarios**. Stage 5 requires the complete regression suite, affected failures, and five nearby variations. Ordinary material replacements reset the 20-case consecutive supervised streak to zero; no streak inheritance. These are **minimum gates**, not statistical guarantees; other criteria remain mandatory. Autonomy progression advances through formal governance proposals (`SignedGovernanceProposalV1`), defaulting to Workflow Owner remit, requiring Security Officer approval only when permissions expand or policy explicitly demands stricter fencing. Narrow Stage 5 automated repairs (`ReleasePreauthorizationV1`) are strictly limited to `interaction_binding` and `string_format` patches with proved transitive dataflow safety, preserving maintenance lineage under unchanged safety contracts.
 
 ### 9.3 Action risk tiers
 
@@ -987,11 +991,23 @@ Job status is strictly computed from current authoritative case records plus con
 
 ### 9.5 Version and release lifecycle
 
-Every material change produces a new immutable version. Release approval associates that version with a permitted scope and effective time. A rollback/revert normally means **restoring eligibility of an earlier authorized version**, not undoing external business mutations already performed by the newer version.
+Every material change produces a new immutable version. Release approval associates that version with an explicit named cohort (`ReleaseCohortV1`) and effective time. Version restoration (`restore_named`) halts the failing release across affected cohorts and updates the admission mapping to point to a fully re-verified historical predecessor definition; running jobs remain pinned to their existing execution version; external mutations committed by running or superseded versions are never retroactively undone or recalled; synchronous safety fences (`ReleaseCohortFenceV1`) act as forward admission and dispatch barriers. Rollout health is governed by deterministic integer arithmetic over disjoint case dispositions; missing or stale telemetry triggers synchronous fences. Narrow Stage 5 automated repairs (`ReleasePreauthorizationV1`) are strictly limited to `interaction_binding` and `string_format` patches. Assist plans require dual-signed attestations (`SignedAssistReleaseEligibilityV1`) validated by Desktop HUD before execution.
 
 ### 9.6 Incident and repair lifecycle
 
-An incident can be detected, triaged, contained, investigated, awaiting expert input, linked to a proposed repair, and eventually resolved/closed under an accepted disposition. A repair can be proposed, revised, evaluated, rejected, approved, released, monitored, or superseded. The exact state names and transition permissions are owned by their future component specs; the high-level separation must remain.
+#### Incident Lifecycle
+`detected → triaged → contained ↔ investigating ↔ awaiting_expert ↔ repairing ↔ resolved / dismissed ↔ reopened`
+- **Triage & Containment:** Establishes severity (`low`, `medium`, `high`, `critical`) and dispatches synchronous containment restrictions (`SetIncidentRestrictionCommandV1`) to Job Orchestration before any model inference.
+- **Investigation & Expert Micro-Interview:** Formulates unverified diagnostic hypotheses (`DiagnosisV1`) and posts at most one focused question (`CorrectionQuestionV1`) to assigned experts.
+- **Attributable Correction:** Captures attributable corrections (`CorrectionV1`) via web console or desktop-only audio dictation (`ORYC` v1). Contradictory explanations report Graph conflicts (`ReportConflictCommandV1`).
+- **Resolution:** Owner-only transition with closed disposition: `recovery_confirmed` (with authoritative rollout evidence) or `accepted_containment` (with documented residual restrictions and review deadlines; Critical additionally requires Security sign-off). Dismissal requires explicit justification and cannot hide unresolved restrictions. Reopening preserves full prior history.
+
+#### Repair Proposal Lifecycle
+`proposed → needs_input ↔ review_requested ↔ changes_requested → rejected / accepted_for_draft → evaluating → blocked / validated → released → monitoring → superseded / withdrawn`
+- **Bounded Proposal:** Bounded by `RepairScopeV1` (permitted node IDs and JSON pointers). Rejects changes outside declared structural bounds.
+- **Factory Draft & Async Compilation:** Factory validates base/head match and binds immutable `AgentRepairContextV1`. Guarded finalization commits candidate and `RepairCandidateBindingV1`.
+- **Simulator Evaluation:** Evaluates candidate against full regression suite, original/prevention obligations, and ≥ 5 nearby variations. Regression in any known applicable case blocks release.
+- **Release & Progressive Canary Monitoring:** Release Governance manages canary cohorts and restoration of prior versions. Populates `RepairReleaseObservationV1` from authoritative orchestrator/verifier telemetry. Critical regression immediately triggers containment and halts rollout.
 
 
 ### 9.7 Guidance and assist session lifecycles

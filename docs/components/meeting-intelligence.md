@@ -441,6 +441,17 @@ All local audio transport across inherited channels uses a standardized 64-byte 
 - **Audio Invariants:** 16,000 Hz, signed 16-bit little-endian, mono. Packetized at 100 ms intervals (exactly 1,600 samples = 3,200 bytes per frame; final packet may contain 1–1,600 samples).
 - **Validation:** `payload_length` must equal `sample_count * 2`. Packets exceeding 3,200 bytes or with mismatched permits are dropped immediately.
 
+### 5.2.1 Binary Correction Audio Frame Format (`ORYC` v1)
+
+For desktop incident correction dictation, `oryn-meeting-worker` provides the dedicated `CorrectionMicrophoneSource` mode, reusing low-level microphone acquisition mechanics while strictly isolating correction audio from meeting sessions:
+- **Magic:** `'ORYC'` (0x4F 0x52 0x59 0x43), version `1` (u16). Distinct frame tag; never overloads meeting `'ORYA'`.
+- **Header Layout:** Identical 64-byte big-endian header layout, explicitly substituting the 16-byte `Correction Capture UUID` in place of the `Meeting Session UUID`.
+- **Audio Constraints:** Exclusively captures selected microphone PCM: 16-kHz, mono, signed 16-bit little-endian, 100-ms packets (≤ 3,200 bytes).
+- **Audio Boundaries:** Never acquires application-loopback, browser tab, or system audio.
+- **Channel and Permit Rejection:** Binary `'ORYC'` frames are strictly rejected on browser Channel 4 (`shell-meeting-audio.v1`); correction frames are rejected under meeting permits, and meeting frames are rejected under correction holds.
+- **Mutual Exclusion:** Active meeting capture blocks correction capture initiation. If a meeting capture starts while correction recording is active, the active correction recording is immediately stopped, unpersisted audio is discarded, and normal meeting authorization proceeds.
+- **Policy & Consent Gate:** Requires employee category consent for `incident_correction_audio` and signed capture-policy lease with `incident_correction_audio_permitted: true` (which requires underlying `audio` acquisition permission). Missing or false permission fails closed.
+
 ### 5.3 Control Channel Schemas (`meeting-capture.v1`)
 
 Framed over private control streams (4-byte length prefix + UTF-8 JSON, max 1 MiB):

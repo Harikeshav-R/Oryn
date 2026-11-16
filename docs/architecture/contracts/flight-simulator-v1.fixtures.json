@@ -438,7 +438,7 @@
         "incident_refs": [
           {
             "organization_id": "00000000-0000-4000-8000-000000000001",
-            "entity_kind": "scenario",
+            "entity_kind": "incident",
             "entity_id": "00000000-0000-4000-8000-000000000100",
             "version_id": "00000000-0000-4000-8000-000000000101",
             "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
@@ -446,16 +446,12 @@
         ],
         "repair_ref": {
           "organization_id": "00000000-0000-4000-8000-000000000001",
-          "entity_kind": "regression_requirement",
+          "entity_kind": "repair",
           "entity_id": "00000000-0000-4000-8000-000000000801",
           "version_id": "00000000-0000-4000-8000-000000000802",
           "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         },
         "base_target": {
-          "kind": "agent",
-          "agent_version": "00000000-0000-4000-8000-000000000014"
-        },
-        "candidate_target": {
           "kind": "agent",
           "agent_version": "00000000-0000-4000-8000-000000000014"
         },
@@ -471,8 +467,7 @@
         "prevention_spec_refs": [
           {
             "organization_id": "00000000-0000-4000-8000-000000000001",
-            "entity_kind": "scenario",
-            "entity_id": "00000000-0000-4000-8000-000000000100",
+            "prevention_spec_id": "00000000-0000-4000-8000-000000000100",
             "version_id": "00000000-0000-4000-8000-000000000101",
             "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
           }

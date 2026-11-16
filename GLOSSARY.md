@@ -332,4 +332,46 @@ _Avoid_: Test rerun, retry loop, execution repeat
 The documented and evidenced correspondence between a simulation environment (synthetic pack or vendor sandbox) and production systems, disclosing known limitations and fidelity gaps.
 _Avoid_: Mock accuracy, sandbox parity, simulation equivalence
 
+**Incident**:
+A failure, uncertainty, or safety event requiring investigation, with its own accountable disposition.
+_Avoid_: Error log, handled exception
+
+**Incident Group**:
+A correlation of related incidents that preserves each incident's evidence, ownership, and resolution.
+_Avoid_: Merged incident, shared resolution
+
+**Correction**:
+Authorized human-provided behavior or explanation for a specific case; acceptance as evidence does not establish organizational policy.
+_Avoid_: Approved rule, automatic learning
+
+**Repair Proposal**:
+A bounded, reviewable candidate behavior change intended to address documented failure, distinct from an approved release.
+_Avoid_: Deployed patch, self-modification
+
+**Containment Disposition**:
+An authorized decision to retain documented restrictions instead of claiming the underlying failure is repaired.
+_Avoid_: Successful repair, automatic resume
+
+**Release**:
+An authorization for one immutable agent version or assist plan to execute within a defined operational scope and autonomy stage. It is distinct from evaluation passage and permission for an individual business action.
+_Avoid_: evaluation pass, mutable deployment, action authorization
+
+**Rollout**:
+Controlled activation and expansion of an approved Release across named operational cohorts under approved evidence and stop conditions.
+_Avoid_: release approval, traffic experiment
+
+**Release Cohort**:
+A named group of eligible work within an approved Rollout scope; a Job belongs to one cohort without changing its pinned Agent Version.
+_Avoid_: percentage bucket, employee performance cohort
+
+**Version Restoration**:
+Re-establishing an earlier approved version's current eligibility for future work, without undoing prior business effects.
+_Avoid_: business rollback, job repinning
+
+**Automatic Release Preauthorization**:
+Explicit, scoped, revocable, time-bounded authority for the narrowly eligible automated governance changes named in an approved policy.
+_Avoid_: Approval Delegation, blanket autonomy
+
+
+
 

@@ -5,6 +5,7 @@
 - **Deciders:** Oryn Architecture Guild, Operational Graph Owner, Identity Policy Owner, Workflow Discovery Owner, Control Plane Owner
 - **Consulted:** Release Governance Owner, Agent Factory Owner, Outcome Verification Owner, Local Context HUD Owner, Enterprise Security Lead
 - **Informed:** All Engineering Teams
+- **Amended by:** [ADR-0022](0022-release-eligibility-and-rollout-governance.md)
 
 ## Context and Problem Statement
 
@@ -66,6 +67,9 @@ The Oryn Architecture Guild resolves the core architecture and governance bounda
 - Large recursive graph queries require statement timeouts and background offloading to prevent resource exhaustion.
 - UNIQUE decision table validation requires strict solver constraints and conservative rejection of unproven conditions.
 - Stricter Stage 2 guidance publication gate (minimum two distinct completed examples) prevents immediate one-shot publication of newly observed workflows.
+
+*(Scope Amendment — 2026-11-16): [ADR-0022](0022-release-eligibility-and-rollout-governance.md) requires Operational Graph to verify release-owned `SignedAssistReleaseEligibilityV1` signatures before publishing guidance bundles, and locks candidates against live `graph_knowledge_guard` serialization during release gate evaluation.*
+
 
 ## References
 - [docs/components/operational-graph.md](../components/operational-graph.md)

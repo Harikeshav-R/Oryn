@@ -72,7 +72,7 @@ Job operations must be durable, recoverable, and idempotent. Orchestration owns 
     native_record_id
   }))
   ```
-- **Contract Reference #9 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests eligible active version and scope from [release-governance](release-governance.md) via `ReleaseJobAdmissionPort::resolve`, returning `JobReleaseEligibilityV1`.
+- **Contract Reference #9 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests eligible active version, explicit named cohort, and scope from [release-governance](release-governance.md) via `ReleaseJobAdmissionPort::resolve(&self, tx: &mut TenantTransaction, principal: &VerifiedPrincipal, request: &ReleaseJobAdmissionRequestV1)`, returning `JobReleaseEligibilityV1`. Enforces two-stage admission: preselection context check and final population validation (`population_sha256 = SHA256(RFC8785(ordered_records))`). Rejects ambiguous cohort matches (`RELEASE_COHORT_AMBIGUOUS`). Dispatches synchronous cohort safety fences (`ReleaseCohortFenceV1` under `release_cohort`). Populates `canary_bucket_id` with the chosen named `cohort_id`. Preview (`JobPreviewV1`) and schedule definitions (`ScheduleDefinitionV1`) durably persist the required `cohort_id`.
 - **Contract Reference #10 in [Contracts Catalog](../architecture/contracts/README.md):** Dispatches bounded work assignments (`RuntimeAssignmentV1`) to [agent-runtime](agent-runtime.md) supplying `ExecutionContextV1`. Receives checkpoint commits via `RuntimeCheckpointPort` and value uploads/queries via `RuntimeValuePort`. For production jobs, `orchestration_execution` is owned by an `orchestration_case` (`environment = 'production'`). For Flight Simulator evaluations ([flight-simulator](flight-simulator.md)), `orchestration_execution` is owned by a `simulation_attempt` (`environment = 'simulation'`) without fabricating dummy jobs or cases; both environments share the same checkpoint, encrypted value custody, action generation CAS, and runtime worker seams.
 - **Contract Reference #11 in [Contracts Catalog](../architecture/contracts/README.md):** Synchronizes approval wait states and admission fence status with [identity-policy](identity-policy.md). Ingests `ScheduledExecutionAuthorityV1` for recurring runs. Tier 3 proposals use `SignedApprovalProposalV1` and are governed by `pending_approval_seconds` bounds. Synchronous safety containment writes `OrchestrationSafetyFenceV1` to Identity authority recovery journals.
 - **Contract Reference #14 in [Contracts Catalog](../architecture/contracts/README.md):** Ingests independent verification verdicts from [outcome-verification](outcome-verification.md) to transition case states. Immutable historical verdicts are preserved; subsequent readback evaluations generate distinct verifier request and result records.
@@ -151,16 +151,46 @@ pub trait JobOrchestrationPort: Send + Sync {
         case_id: &str,
         command: CaseReconciliationCommandV1,
     ) -> Result<CaseViewV1, JobProblemV1>;
+
+    async fn set_incident_restriction(
+        &self,
+        tx: &mut TenantTransaction,
+        principal: &VerifiedPrincipal,
+        command: SetIncidentRestrictionCommandV1,
+    ) -> Result<OrchestrationSafetyFenceV1, JobProblemV1>;
+
+    async fn clear_incident_restriction(
+        &self,
+        tx: &mut TenantTransaction,
+        principal: &VerifiedPrincipal,
+        command: ClearIncidentRestrictionCommandV1,
+    ) -> Result<OrchestrationSafetyFenceV1, JobProblemV1>;
+
+    async fn set_release_restriction(
+        &self,
+        tx: &mut TenantTransaction,
+        principal: &VerifiedPrincipal,
+        fence: ReleaseCohortFenceV1,
+    ) -> Result<OrchestrationSafetyFenceV1, JobProblemV1>;
+
+    async fn clear_release_restriction(
+        &self,
+        tx: &mut TenantTransaction,
+        principal: &VerifiedPrincipal,
+        release_id: Uuid,
+        cohort_id: &str,
+        expected_generation: &str,
+        approval_refs: &[OwnerRecordRefV1],
+    ) -> Result<OrchestrationSafetyFenceV1, JobProblemV1>;
 }
 
 #[async_trait]
 pub trait ReleaseJobAdmissionPort: Send + Sync {
     async fn resolve(
         &self,
+        tx: &mut TenantTransaction,
         principal: &VerifiedPrincipal,
-        agent_id: &str,
-        requested_version_id: Option<Uuid>,
-        selection_scope: &ScopeV1,
+        request: &ReleaseJobAdmissionRequestV1,
     ) -> Result<JobReleaseEligibilityV1, JobProblemV1>;
 }
 
@@ -203,13 +233,15 @@ sequenceDiagram
     participant AR as Agent Runtime
     participant OV as Outcome Verification
 
-    Operator->>CP: POST /v1/jobs/previews
+    Operator->>CP: POST /v1/jobs/previews (JobPreviewRequestV1)
     CP->>JO: preview(request)
-    JO->>RG: resolve(agent_id, version, scope)
-    RG-->>JO: JobReleaseEligibilityV1
+    JO->>RG: resolve(tx, principal, ReleaseJobAdmissionRequestV1 preselection)
+    RG-->>JO: JobReleaseEligibilityV1 (context precheck)
     JO->>AA: select(query, ordering, limit)
-    AA-->>JO: AdapterRecordSelectionPageV1 (sealed)
-    JO-->>CP: JobPreviewV1 (population_sha256)
+    AA-->>JO: AdapterRecordSelectionPageV1 (ordered records)
+    JO->>RG: resolve(tx, principal, ReleaseJobAdmissionRequestV1 with population)
+    RG-->>JO: JobReleaseEligibilityV1 (sealed)
+    JO-->>CP: JobPreviewV1 (cohort_id, population_sha256)
     CP-->>Operator: 201 Created (preview details)
 
     Operator->>CP: POST /v1/jobs (StartJobCommandV1)
@@ -367,6 +399,7 @@ CREATE TABLE orchestration_job (
     manifest_sha256 TEXT NOT NULL,
     release_id UUID NOT NULL,
     release_revision NUMERIC(20,0) NOT NULL,
+    cohort_id TEXT NOT NULL,
     population_sha256 TEXT NOT NULL,
     population_count INTEGER NOT NULL,
     host JSONB NOT NULL,
@@ -442,6 +475,7 @@ CREATE TABLE orchestration_selection (
     behavior_sha256 TEXT NOT NULL,
     release_id UUID NOT NULL,
     release_revision NUMERIC(20,0) NOT NULL,
+    cohort_id TEXT NOT NULL,
     population_sha256 TEXT NOT NULL,
     population_count INTEGER NOT NULL,
     more_available BOOLEAN NOT NULL,
@@ -898,8 +932,37 @@ CREATE TABLE orchestration_safety_fence (
     event_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     PRIMARY KEY (organization_id, fence_id),
     CONSTRAINT uk_safety_fence_gen UNIQUE (organization_id, subject_kind, subject_id, generation),
-    CONSTRAINT ck_safety_fence_kind CHECK (subject_kind IN ('job', 'schedule', 'case', 'action_intent', 'budget', 'occurrence'))
+    CONSTRAINT ck_safety_fence_kind CHECK (subject_kind IN ('job', 'schedule', 'case', 'action_intent', 'budget', 'occurrence', 'incident_restriction', 'release_cohort'))
 );
+
+-- 26. Active Incident Containment Restrictions
+CREATE TABLE orchestration_incident_restriction (
+    organization_id UUID NOT NULL,
+    restriction_id UUID NOT NULL,
+    generation NUMERIC(20,0) NOT NULL,
+    incident_id UUID NOT NULL,
+    target_kind TEXT NOT NULL,
+    target JSONB NOT NULL,
+    effect TEXT NOT NULL,
+    state TEXT NOT NULL,
+    approval_refs JSONB NOT NULL DEFAULT '[]'::jsonb,
+    has_unresolved_effects BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    PRIMARY KEY (organization_id, restriction_id),
+    CONSTRAINT ck_restriction_effect CHECK (effect IN ('pause_execution', 'pause_writes', 'stop_new_jobs')),
+    CONSTRAINT ck_restriction_state CHECK (state IN ('active', 'cleared')),
+    CONSTRAINT ck_restriction_target_kind CHECK (target_kind IN ('case', 'job', 'schedule', 'agent_version', 'connection', 'operation', 'capability', 'rule', 'worker', 'organization'))
+);
+CREATE INDEX idx_incident_restriction_active ON orchestration_incident_restriction (organization_id, target_kind, state) WHERE state = 'active';
+
+ALTER TABLE orchestration_incident_restriction ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orchestration_incident_restriction FORCE ROW LEVEL SECURITY;
+CREATE POLICY orchestration_incident_restriction_isolation ON orchestration_incident_restriction
+    FOR ALL TO oryn_app
+    USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::UUID)
+    WITH CHECK (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::UUID);
+
 
 -- Row-Level Security Enablement across All Tenant Tables
 ALTER TABLE orchestration_job ENABLE ROW LEVEL SECURITY;

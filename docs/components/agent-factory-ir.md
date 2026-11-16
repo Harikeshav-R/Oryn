@@ -434,11 +434,15 @@ Synthesis invokes governed `text.reason`, purpose `agent_candidate_synthesize`, 
 
 `RuntimeModelBindingV1` pins `{binding_id, route_id, route_revision, model_revision, prompt_template, prompt_sha256, output_schema_id:"agent.runtime-value.v1", output_type, output_schema_sha256, max_input_bytes, max_output_bytes, timeout_ms}`. Prompt limit is 32768 characters; input limit 1–32768 bytes, output limit 1–16384 bytes, timeout 1–30000 ms. Hash prompt UTF-8 bytes and canonical output type respectively. Runtime calls governed `text.reason` purpose `agent_runtime_reason`; revoked or unavailable pins pause without substitution. `RuntimeModelResultV1` is `{kind:"value", binding_id, value}` or `{kind:"unknown", binding_id, reason:"insufficient_evidence"|"conflicting_evidence"|"unsupported_input"}`. Values use only null, Boolean, strings, arrays and records, never JSON numbers; context validates exact declared type and allowed choices.
 
-`RepairCandidateCommandV1` is `{base_agent_version_id, expected_draft_revision, incident_refs, repair_ref, regression_requirement_refs, replacement}`. It binds 1–32 incident and 1–128 regression references. A stale base conflicts; current-base repair goes through ordinary validation and materiality as a new candidate. No JSON Patch, raw executable import, in-place released-version edit or policy/permission authority is implied.
+`RepairCandidateCommandV1` is `{base_agent_version_id, expected_draft_revision, incident_refs, repair_ref, regression_requirement_refs, replacement}`. It binds 1–32 incident references (`IncidentRefV1`) and 1–128 regression references (`SimulationRegressionRequirementRefV1`). Factory validates current base/revision and referenced repair/requirements: requirement base and repair must match command; union of requirement incident references must equal command incident references (mismatch fails with `FACTORY_BINDING_INVALID`; stale base returns 409 `FACTORY_REVISION_CONFLICT`).
+Submission returns the existing 201 `AgentDraftV1` and atomically persists draft revision plus immutable `AgentRepairContextV1` (`agent.repair-context.v1`) containing the command's base/incident/repair/regression bindings. Later draft edits carry this context forward. A cosmetic-only or unchanged replacement cannot establish a behavioral repair; it returns the normal materiality result and keeps the incident unresolved.
+Compilation is requested separately as an asynchronous 202 `OperationV1`. Outside-lock compilation includes repair context in the compile-attempt fingerprint (not executable `behavior_sha256`). Guarded finalization atomically commits the candidate, attestation, and `RepairCandidateBindingV1` (`agent.repair-candidate-binding.v1` binding `context` and `candidate_identity`). Simulator loads this metadata through `CandidateBundlePort::load` via `CandidateEvaluationBundleV1.repair_bindings` (empty for ordinary candidates; exactly one binding for repair candidates). No JSON Patch, raw executable import, in-place released-version edit or policy/permission authority is implied.
 
 ### Qualification and stage gates
 
-All executable bindings, postconditions, source authority, signatures and complete manifests precede simulation admission. Missing demonstrated-history counts or scenario passage are release blockers, not automatic simulation blockers. Release Governance enforces Stage 3: five verified human examples and 25 distinct scenarios including five edge/negative; Stage 4: twenty consecutive outcome-verified supervised cases and 100 scenarios including twenty edge/failure/negative; Stage 5: complete regression suite, affected failures and five nearby variations. Counts alone never establish readiness. Independent authorized human assessment can verify supervised Stage 3 outcomes; human-only verification cannot qualify unattended Stage 4 completion. A narrower agent remains visibly partial and never claims the unsupported original objective completed.
+All executable bindings, postconditions, source authority, signatures and complete manifests precede simulation admission. Missing demonstrated-history counts or scenario passage are release blockers, not automatic simulation blockers. Release Governance enforces Stage 3: five verified human examples and 25 distinct scenarios including five edge/negative; Stage 4: twenty consecutive outcome-verified supervised cases and 100 scenarios including twenty edge/failure/negative; Stage 5: complete regression suite, affected failures and five nearby variations. Ordinary material replacements reset the 20-case supervised streak with no inheritance. Counts alone never establish readiness. Independent authorized human assessment can verify supervised Stage 3 outcomes; human-only verification cannot qualify unattended Stage 4 completion. A narrower agent remains visibly partial and never claims the unsupported original objective completed.
+
+`ExecutableAgentBodyV1.requested_stage` represents the requested autonomy ceiling, not currently granted authority. A candidate compiling with `requested_stage: 4` or `5` may first receive a Stage 3 supervised Release without changing its immutable body. Once deployed, the exact same immutable candidate can earn its 20-case consecutive supervised streak in production, allowing Release Governance to promote the release to Stage 4 without mutating the candidate's body or altering its `behavior_sha256`. Factory compiles and qualifies candidates but never approves release readiness. Factory provides protected structural AST diff projections to the Release Governance `ReleaseDiffClassifier` to support material diff analysis (`ReleaseDiffV1`).
 
 ### Immutable identity and admission
 
@@ -653,11 +657,59 @@ ALTER TABLE factory_compile_attempt ADD CONSTRAINT fk_factory_compile_committed_
     FOREIGN KEY (organization_id, committed_version_id)
     REFERENCES factory_agent_version (organization_id, agent_version_id) ON DELETE RESTRICT;
 
+CREATE TABLE factory_repair_context (
+    organization_id UUID NOT NULL,
+    agent_id UUID NOT NULL,
+    draft_revision BIGINT NOT NULL,
+    base_agent_version_id UUID NOT NULL,
+    repair_ref_json JSONB NOT NULL,
+    incident_refs_json JSONB NOT NULL,
+    regression_requirement_refs_json JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (organization_id, agent_id, draft_revision),
+    CONSTRAINT fk_factory_repair_context_draft FOREIGN KEY (organization_id, agent_id, draft_revision)
+        REFERENCES factory_draft_revision (organization_id, agent_id, revision) ON DELETE RESTRICT,
+    CONSTRAINT fk_factory_repair_context_base FOREIGN KEY (organization_id, base_agent_version_id)
+        REFERENCES factory_agent_version (organization_id, agent_version_id) ON DELETE RESTRICT
+);
+
+ALTER TABLE factory_repair_context ENABLE ROW LEVEL SECURITY;
+ALTER TABLE factory_repair_context FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY factory_repair_context_isolation ON factory_repair_context
+    USING (organization_id = current_setting('oryn.organization_id', true)::uuid)
+    WITH CHECK (organization_id = current_setting('oryn.organization_id', true)::uuid);
+
+CREATE TABLE factory_repair_candidate_binding (
+    organization_id UUID NOT NULL,
+    binding_id UUID NOT NULL,
+    agent_id UUID NOT NULL,
+    agent_version_id UUID NOT NULL,
+    draft_revision BIGINT NOT NULL,
+    context_json JSONB NOT NULL,
+    candidate_identity_json JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (organization_id, binding_id),
+    CONSTRAINT uq_factory_repair_candidate_binding_version UNIQUE (organization_id, agent_version_id),
+    CONSTRAINT fk_factory_repair_binding_version FOREIGN KEY (organization_id, agent_version_id)
+        REFERENCES factory_agent_version (organization_id, agent_version_id) ON DELETE RESTRICT,
+    CONSTRAINT fk_factory_repair_binding_draft FOREIGN KEY (organization_id, agent_id, draft_revision)
+        REFERENCES factory_draft_revision (organization_id, agent_id, revision) ON DELETE RESTRICT
+);
+
+ALTER TABLE factory_repair_candidate_binding ENABLE ROW LEVEL SECURITY;
+ALTER TABLE factory_repair_candidate_binding FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY factory_repair_candidate_binding_isolation ON factory_repair_candidate_binding
+    USING (organization_id = current_setting('oryn.organization_id', true)::uuid)
+    WITH CHECK (organization_id = current_setting('oryn.organization_id', true)::uuid);
+
 -- Deployment migration applies SELECT and INSERT, but not UPDATE or DELETE,
 -- to each existing non-BYPASSRLS application role on these four tables.
 -- Role names come from the existing Control Plane deployment, not a new role.
 REVOKE UPDATE, DELETE ON factory_draft_revision, factory_synthesis_proposal,
-    factory_agent_version, factory_candidate_attestation FROM PUBLIC;
+    factory_agent_version, factory_candidate_attestation,
+    factory_repair_context, factory_repair_candidate_binding FROM PUBLIC;
 ```
 
 ### State Machines and Lifecycle

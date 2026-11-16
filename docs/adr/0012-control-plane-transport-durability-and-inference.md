@@ -5,6 +5,7 @@
 **Deciders:** User-Approved Architecture Review  
 **Authority:** Technical Architecture & Security Engineering  
 **Amends:** [ADR-0010](0010-contribution-delivery-and-guidance-sync.md), [ADR-0011](0011-identity-authority-and-approval-fencing.md)  
+**Amended by:** [ADR-0022](0022-release-eligibility-and-rollout-governance.md)  
 **Normative Specification:** [docs/components/control-plane.md](../components/control-plane.md)
 
 ---
@@ -71,3 +72,6 @@ Oryn's enterprise multi-tenant control plane coordinates client ingress, domain 
 - High-volume event throughput is bounded by PostgreSQL write capacity (acceptable within pilot envelope of 25 req/s).
 - Dropped WebSocket connections terminate meeting transcription without seamless resumption, requiring client reconnect.
 - Offline long-polling clients must maintain active HTTP connections, requiring careful connection pool offloading.
+
+*(Scope Amendment — 2026-11-16): [ADR-0022](0022-release-eligibility-and-rollout-governance.md) incorporates release governance routes and `durability_pending` transaction commitments, requiring complete signed authority checkpointing before newly expanded release authority is acknowledged or exposed to admission traffic.*
+

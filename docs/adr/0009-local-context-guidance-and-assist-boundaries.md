@@ -3,7 +3,7 @@
 **Status:** accepted  
 **Date:** 2026-11-09  
 **Deciders:** Architecture and Security Review  
-**Amended by:** [ADR-0010](0010-contribution-delivery-and-guidance-sync.md), [ADR-0011](0011-identity-authority-and-approval-fencing.md), [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md)  
+**Amended by:** [ADR-0010](0010-contribution-delivery-and-guidance-sync.md), [ADR-0011](0011-identity-authority-and-approval-fencing.md), [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md), [ADR-0022](0022-release-eligibility-and-rollout-governance.md)  
 
 ## Context
 Oryn provides employees with real-time contextual guidance, peer error fixes, commitment reminders, and supervised assistance during desktop and browser work. Designing the boundary between local context understanding and execution assistance involves key architectural tensions:
@@ -46,4 +46,7 @@ Oryn provides employees with real-time contextual guidance, peer error fixes, co
 *(Scope Amendment — 2026-11-14): [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md) amends execution reservation and native actuation: unifies local execution reservation under `LocalExecutionReservationBroker` managed by Privacy Helper, preventing concurrent browser or native actuation across jobs and assists. Restricts native automation strictly to Stage 3 semantic actuation under Shell supervision via `shell-adapter.v1` (major 1, minor 0).*
 
 *(Scope Amendment — 2026-11-15): [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md) defines immutable `AssistExecutableBodyV1` (`guidance.assist-executable-body.v1`) and canonical preimage `plan_sha256 = SHA256(RFC8785(AssistExecutableBodyV1))`. Published `AssistPlanV1` binds `{body, plan_sha256, owner_approval_ref, eligibility}`. Actions declare explicit `action_id`, `argument_bindings`, `result_bindings`, `capability_ref`, `adapter_operation_id`, and `verification_requirement_ids`. Assist evaluation bundles (`AssistEvaluationBundleV1`) are evaluated in Flight Simulator via the identical deterministic reducer seam `reduce(state, input, now)` against scripted presentation inputs on enrolled lab devices. Desktop Shell protocol baseline advances to `shell-hud.v1` major 1, minor 1 (negotiating `assist_executable_body_v1` and `evaluation_execution_v1`).*
+
+*(Scope Amendment — 2026-11-16): [ADR-0022](0022-release-eligibility-and-rollout-governance.md) replaces unsigned `AssistPlanEligibilityV1` in `AssistPlanV1.eligibility` with release-signed `SignedAssistReleaseEligibilityV1` (`release.assist-eligibility.v1`), signed by Vault with purpose `policy`. Extends `ExecutionContextV1` assist arm with required `release_id: Uuid`, `release_cohort_id: Identifier`, `release_eligibility_generation: U64`, and `plan_sha256: Sha256Hex`, binding assist execution and action consumption strictly to the approved release cohort and live generation.*
+
 

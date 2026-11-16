@@ -4,7 +4,7 @@
     {
       "key_id": "key_policy_2026_01",
       "purpose": "policy",
-      "public_key": "zptsxN9KpxNS1RT0Yokwcrix4KnbeCMt-i_eHj89gwg"
+      "public_key": "6WJM7ogska4um20HH5xxccFAmqlCEs07MDJm0fgmF18"
     },
     {
       "key_id": "key_device_macbook_01",
@@ -60,7 +60,7 @@
         "issued_at": "2026-11-10T15:00:00Z",
         "not_after": "2026-11-10T15:05:00Z"
       },
-      "signature": "Tlb3y5vNmLM7GUw8YolpKeLKRHUXj0RfUEzgtvpieUOxZIxTezJTv94HRtn-VDRrjgvbf2DPMDJXRnhhX2f_AA"
+      "signature": "_Aw1CUXeXIIgSoTCt1TxfyY2zjt4ItWPIyXGOyBtdwI5QLSHGqDW1NmP3JS3KSUPmLPWCKe00jtuLE2ceRtTDw"
     },
     {
       "schema_id": "privacy.authorization-context.v1",

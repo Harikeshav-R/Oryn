@@ -87,11 +87,17 @@ The Contribution and Synchronization Gateway mediates the boundary between priva
 - **Payload:** `ReviewedContributionV1` where `kind = "meeting_handoff"` and `content` is `ReviewedMeetingHandoffProposal` (`meeting.reviewed-handoff.v1`).
 - **Invariants:** Text-only excerpt and structured business context. `artifacts` must be empty. Meeting session identifiers remain local and are never transmitted over the wire. In `graph_handoff_intake`, `recipient_state` is a coarse intake projection (`proposed`, `accepted`, `rejected`, `cancelled`); detailed assignment, work progression, blockers, and independent completion assessments live solely in Operational Graph's canonical `graph_handoff` table.
 
+### 2.1 Contract 26: Reviewed Incident Correction (`incident.reviewed-correction.v1`)
+- **Producer:** `incident-correction-repair` / `local-privacy-storage` via `contribution-sync`
+- **Consumer:** `incident-correction-repair` via HTTPS `POST /v1/sync/submissions` (routing destination `incident_correction_repair`)
+- **Payload:** `ReviewedContributionV1` where `kind = "reviewed_correction"` and `content` is `ReviewedCorrectionV1` (`incident.reviewed-correction.v1`).
+- **Invariants:** Sanitized text only (`artifacts` must be empty, `maxItems: 0`). Carries incident reference, execution context, learning type, generality, sanitized text (≤ 8,192 chars), evidence refs, and `source_expires_at`. Wrapped in existing `ReviewedContributionV1` with `purpose: "incident_correction"`, signed review attestation, and release permit. No audio, transcript archive, media handles, or local paths. Intake verifies purpose, audience, source expiry, and Privacy Helper release fence before custodial acceptance.
+
 ### 3. Contract 3: Published Guidance Bundles (`hud.guidance-bundle.v1`)
 - **Producer:** `operational-graph` via HTTPS `GET /v1/sync/guidance/bundles/{sha256}`
 - **Consumer:** `local-context-hud` via `desktop-shell`
 - **Payload:** `SignedGuidanceBundleV1` (`sync.signed-guidance-bundle.v1`) containing `GuidanceBundleV1` and `SignedPublisherSignatureV1`.
-- **Invariants:** Bundles are strictly immutable and version-pinned by `content_sha256`. Steps declare an explicit DAG via `step_edges` (0..256 unique records). Successor evaluation is fail-closed. Manifest generation and bundle retrieval evaluate the full conjunction of Discovery source audiences (`DiscoveryAudienceV1`) live against the requesting principal; coarse role/team metadata inside the bundle payload is non-authoritative display metadata, not an authorization boundary.
+- **Invariants:** Bundles are strictly immutable and version-pinned by `content_sha256`. Steps declare an explicit DAG via `step_edges` (0..256 unique records). Successor evaluation is fail-closed. Manifest generation and bundle retrieval evaluate the full conjunction of Discovery source audiences (`DiscoveryAudienceV1`) live against the requesting principal; coarse role/team metadata inside the bundle payload is non-authoritative display metadata, not an authorization boundary. Bundles may contain Stage 3 approved assist plans (`AssistPlanV1`) embedding Vault-signed `SignedAssistReleaseEligibilityV1` envelopes; sync caches signed bundles unchanged; Desktop Shell renders presentation without computing authority; Local Context HUD validates both Operational Graph publisher signature and Release Governance Vault `policy` signature before assist plan execution.
 ### 4. Contract 20 Relay: Atomic HUD Guidance Transfer
 Relayed over `shell-hud.v1` data rails using closed IPC types:
 - `BeginGuidanceGeneration`: Declares generation UUID, manifest revision, manifest SHA-256, sorted object hashes, and signed access lease.
@@ -843,7 +849,7 @@ CREATE TABLE queue_entries (
     contribution_id TEXT NOT NULL,
     revision INTEGER NOT NULL,
     content_digest TEXT NOT NULL,
-    kind TEXT NOT NULL CHECK(kind IN ('workflow', 'meeting_handoff')),
+    kind TEXT NOT NULL CHECK(kind IN ('workflow', 'meeting_handoff', 'reviewed_correction')),
     review_receipt_id TEXT NOT NULL,
     custody_mode TEXT NOT NULL CHECK(custody_mode IN ('durable', 'volatile')),
     payload_blob_id TEXT,
@@ -1030,7 +1036,7 @@ CREATE TABLE domain_inbox (
    - If row exists with differing digest, return 409 `SYNC_DIGEST_CONFLICT`.
    - If row exists with matching accepted identity and retained receipt, return 200 OK with original receipt (validating current caller access before replay).
 5. **Atomic Intake Commit:**
-   - For newly inserted identity only: insert destination intake rows (`discovery_contribution_intake` or `graph_handoff_intake`), image rows into `sync_artifact`, original signed receipt, audit entries, committed event into `domain_outbox`, and minimal recovery-journal outbox entry in this single transaction. Commit transaction.
+   - For newly inserted identity only: insert destination intake rows (`discovery_contribution_intake`, `graph_handoff_intake`, or `incident_correction_intake`), image rows into `sync_artifact` (empty for reviewed corrections), original signed receipt, audit entries, committed event into `domain_outbox`, and minimal recovery-journal outbox entry in this single transaction. Commit transaction.
    - Return first-acceptance HTTP 201 only after commit and independent custody checkpoint.
 6. **Receipt Signing:** Construct and sign `DeliveryReceiptV1` via Vault Transit receipt-purpose signing port under 500 ms timeout. Key is not exported. Failure before commit rolls back entire transaction.
 7. **Durability Checkpoint:** Append minimal 5-field custody projection to independent recovery journal after commit. No SQL transaction remains open during independent append. Checkpoint failure returns explicitly unknown/reconcile status; consumers cannot process intake behind a pending custody durability guard.

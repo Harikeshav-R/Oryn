@@ -1,0 +1,1121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:release-governance:v1",
+  "title": "Oryn Release, Rollout, and Change Governance Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for Oryn release definitions, rollout policies, cohort admissions, readiness gates, observations, assist attestation, and emergency version restoration.",
+  "oneOf": [
+    { "$ref": "#/$defs/ReleaseDefinitionV1" },
+    { "$ref": "#/$defs/RolloutPolicyV1" },
+    { "$ref": "#/$defs/ReleaseReadinessV1" },
+    { "$ref": "#/$defs/ReleaseJobAdmissionRequestV1" },
+    { "$ref": "#/$defs/ReleaseCohortFenceV1" },
+    { "$ref": "#/$defs/RolloutObservationV1" },
+    { "$ref": "#/$defs/ReleaseCommandV1" },
+    { "$ref": "#/$defs/ReleaseViewV1" },
+    { "$ref": "#/$defs/ReleaseApprovalSubjectV1" },
+    { "$ref": "#/$defs/SignedAssistReleaseEligibilityV1" },
+    { "$ref": "#/$defs/AssistReleaseAdmissionRequestV1" },
+    { "$ref": "#/$defs/ReleaseDiffV1" },
+    { "$ref": "#/$defs/ReleasePreauthorizationV1" },
+    { "$ref": "#/$defs/ReleaseProblemV1" }
+  ],
+  "$defs": {
+    "Base64Url64": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "ReleaseErrorCodeV1": {
+      "type": "string",
+      "enum": [
+        "RELEASE_NOT_AUTHORIZED",
+        "RELEASE_REVISION_CONFLICT",
+        "RELEASE_TARGET_MISMATCH",
+        "RELEASE_EVALUATION_INVALID",
+        "RELEASE_STAGE_GATE_UNMET",
+        "RELEASE_REGRESSION_PRESENT",
+        "RELEASE_KNOWLEDGE_INELIGIBLE",
+        "RELEASE_QUALIFICATION_INVALID",
+        "RELEASE_SCOPE_UNPROVEN",
+        "RELEASE_COHORT_AMBIGUOUS",
+        "RELEASE_COHORT_INELIGIBLE",
+        "RELEASE_POLICY_INCOMPLETE",
+        "RELEASE_APPROVAL_STALE",
+        "RELEASE_PREAUTHORIZATION_INVALID",
+        "RELEASE_PATCH_INELIGIBLE",
+        "RELEASE_OBSERVATION_INCOMPLETE",
+        "RELEASE_TELEMETRY_STALE",
+        "RELEASE_RESTORE_INELIGIBLE",
+        "RELEASE_RECOVERY_INCOMPLETE",
+        "RELEASE_LIMIT_EXCEEDED"
+      ]
+    },
+    "ReleaseOperationBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_id",
+        "capability_id",
+        "operation_id",
+        "connection_id",
+        "connection_revision",
+        "vendor_account_id",
+        "scope",
+        "operation_contract_sha256"
+      ],
+      "properties": {
+        "application_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "capability_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "operation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "connection_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "vendor_account_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "scope": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ScopeV1" },
+        "operation_contract_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" }
+      }
+    },
+    "ReleaseCohortV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cohort_id",
+        "name",
+        "scope",
+        "connection_id",
+        "connection_revision",
+        "vendor_account_id",
+        "record_type",
+        "selection_capability_ref",
+        "selection_operation_id",
+        "operation_bindings"
+      ],
+      "properties": {
+        "cohort_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "scope": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ScopeV1" },
+        "connection_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "vendor_account_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "record_type": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "selection_capability_ref": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1" },
+        "selection_operation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "operation_bindings": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": { "$ref": "#/$defs/ReleaseOperationBindingV1" }
+        }
+      }
+    },
+    "RolloutHealthPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation_window_seconds",
+        "min_verified_cases",
+        "max_failed_cases",
+        "max_unknown_cases",
+        "max_failure_rate_bps",
+        "max_unknown_rate_bps",
+        "max_telemetry_lag_seconds"
+      ],
+      "properties": {
+        "observation_window_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "min_verified_cases": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_failed_cases": { "$ref": "#/$defs/U64" },
+        "max_unknown_cases": { "$ref": "#/$defs/U64" },
+        "max_failure_rate_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "max_unknown_rate_bps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "max_telemetry_lag_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "RolloutPhaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase_id",
+        "cohort_ids",
+        "health_policy"
+      ],
+      "properties": {
+        "phase_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "cohort_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "health_policy": { "$ref": "#/$defs/RolloutHealthPolicyV1" }
+      }
+    },
+    "RolloutPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "policy_id",
+        "revision",
+        "cohorts",
+        "phases",
+        "progression_mode",
+        "accountable_actor_id",
+        "recovery"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.rollout-policy.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "policy_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "cohorts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/ReleaseCohortV1" }
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/RolloutPhaseV1" }
+        },
+        "progression_mode": {
+          "type": "string",
+          "enum": ["human", "preauthorized"]
+        },
+        "accountable_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "recovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "predecessor_release_id",
+            "predecessor_definition_sha256"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["pause_only", "restore_named"]
+            },
+            "predecessor_release_id": {
+              "oneOf": [
+                { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                { "type": "null" }
+              ]
+            },
+            "predecessor_definition_sha256": {
+              "oneOf": [
+                { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+                { "type": "null" }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ReleaseGateFindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "subject_ref",
+        "json_pointer",
+        "message",
+        "next_action"
+      ],
+      "properties": {
+        "code": { "$ref": "#/$defs/ReleaseErrorCodeV1" },
+        "subject_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "json_pointer": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "next_action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "ReleaseDefinitionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "release_id",
+        "definition_revision",
+        "target_identity",
+        "agent_id",
+        "workflow_id",
+        "requested_autonomy_stage",
+        "risk_tier",
+        "owner_actor_id",
+        "proposer_actor_id",
+        "predecessor_release_id",
+        "evaluation_report_id",
+        "rollout_policy",
+        "repair_refs",
+        "preauthorization_id"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.definition.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "definition_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "target_identity": { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1" },
+        "agent_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "workflow_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "requested_autonomy_stage": {
+          "type": "integer",
+          "enum": [3, 4, 5]
+        },
+        "risk_tier": {
+          "type": "integer",
+          "enum": [0, 1, 2, 3]
+        },
+        "owner_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "proposer_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "predecessor_release_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "evaluation_report_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "rollout_policy": { "$ref": "#/$defs/RolloutPolicyV1" },
+        "repair_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" }
+        },
+        "preauthorization_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "ReleaseReadinessV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "release_id",
+        "definition_sha256",
+        "target_identity",
+        "report_id",
+        "human_example_count",
+        "supervised_streak_count",
+        "distinct_scenario_count",
+        "edge_negative_count",
+        "knowledge_generation",
+        "adapter_generation",
+        "checked_at",
+        "valid_until",
+        "status",
+        "findings"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.readiness.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "definition_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "target_identity": { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1" },
+        "report_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "human_example_count": { "$ref": "#/$defs/U64" },
+        "supervised_streak_count": { "$ref": "#/$defs/U64" },
+        "distinct_scenario_count": { "$ref": "#/$defs/U64" },
+        "edge_negative_count": { "$ref": "#/$defs/U64" },
+        "knowledge_generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "adapter_generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "checked_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "valid_until": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "status": {
+          "type": "string",
+          "enum": ["eligible", "blocked"]
+        },
+        "findings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "#/$defs/ReleaseGateFindingV1" }
+        }
+      }
+    },
+    "ReleaseJobAdmissionRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "agent_id",
+        "requested_version_id",
+        "cohort_id",
+        "selection_scope",
+        "selection",
+        "population"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.job-admission-request.v1" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "requested_version_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "cohort_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "selection_scope": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ScopeV1" },
+        "selection": { "$ref": "urn:oryn:schemas:job-orchestration:v1#/$defs/JobSelectionSpecV1" },
+        "population": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["ordered_records", "population_sha256"],
+              "properties": {
+                "ordered_records": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1000,
+                  "items": { "$ref": "urn:oryn:schemas:application-adapters:v1#/$defs/ApplicationRecordRefV1" }
+                },
+                "population_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" }
+              }
+            },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "ReleaseCohortFenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "kind",
+        "organization_id",
+        "release_id",
+        "cohort_id",
+        "generation",
+        "state",
+        "effect",
+        "reason_code",
+        "reason_ref",
+        "has_unresolved_effects",
+        "approval_refs"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.cohort-fence.v1" },
+        "kind": { "const": "release_cohort" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "cohort_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "state": {
+          "type": "string",
+          "enum": ["active", "cleared"]
+        },
+        "effect": {
+          "type": "string",
+          "enum": ["pause_execution", "pause_writes", "stop_new_jobs"]
+        },
+        "reason_code": { "$ref": "#/$defs/ReleaseErrorCodeV1" },
+        "reason_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "has_unresolved_effects": { "type": "boolean" },
+        "approval_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" }
+        }
+      }
+    },
+    "RolloutObservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "observation_id",
+        "revision",
+        "release_id",
+        "definition_sha256",
+        "phase_id",
+        "cohort_ids",
+        "window_start",
+        "window_end",
+        "source_high_watermark",
+        "source_reconciled_at",
+        "case_manifest_sha256",
+        "started_case_count",
+        "verified_case_count",
+        "failed_case_count",
+        "mismatch_case_count",
+        "unknown_case_count",
+        "pending_case_count",
+        "expected_rejection_case_count",
+        "escalated_case_count",
+        "canceled_case_count",
+        "new_incident_count",
+        "incident_manifest_sha256",
+        "has_known_applicable_regression",
+        "completeness",
+        "health",
+        "recovery_criteria_met"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.rollout-observation.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "observation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "definition_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "phase_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "cohort_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "window_start": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "window_end": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "source_high_watermark": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "source_reconciled_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "case_manifest_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "started_case_count": { "$ref": "#/$defs/U64" },
+        "verified_case_count": { "$ref": "#/$defs/U64" },
+        "failed_case_count": { "$ref": "#/$defs/U64" },
+        "mismatch_case_count": { "$ref": "#/$defs/U64" },
+        "unknown_case_count": { "$ref": "#/$defs/U64" },
+        "pending_case_count": { "$ref": "#/$defs/U64" },
+        "expected_rejection_case_count": { "$ref": "#/$defs/U64" },
+        "escalated_case_count": { "$ref": "#/$defs/U64" },
+        "canceled_case_count": { "$ref": "#/$defs/U64" },
+        "new_incident_count": { "$ref": "#/$defs/U64" },
+        "incident_manifest_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "has_known_applicable_regression": { "type": "boolean" },
+        "completeness": {
+          "type": "string",
+          "enum": ["complete", "incomplete"]
+        },
+        "health": {
+          "type": "string",
+          "enum": ["insufficient_evidence", "passing", "breached", "telemetry_stale"]
+        },
+        "recovery_criteria_met": { "type": "boolean" }
+      }
+    },
+    "ReleaseCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "release_id",
+        "expected_revision",
+        "action",
+        "reason",
+        "approval_proposal_id",
+        "observation_id",
+        "cohort_ids"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.command.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "expected_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "action": {
+          "type": "string",
+          "enum": [
+            "request_review",
+            "withdraw",
+            "activate",
+            "expand",
+            "pause",
+            "resume",
+            "restore",
+            "retire",
+            "archive"
+          ]
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            { "type": "null" }
+          ]
+        },
+        "approval_proposal_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "observation_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "cohort_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        }
+      }
+    },
+    "ReleaseViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "definition",
+        "definition_sha256",
+        "revision",
+        "state",
+        "active_phase_id",
+        "active_cohort_ids",
+        "readiness",
+        "latest_observation",
+        "approval_refs",
+        "cohort_fences",
+        "durability_pending",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.view.v1" },
+        "definition": { "$ref": "#/$defs/ReleaseDefinitionV1" },
+        "definition_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "state": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review_requested",
+            "changes_requested",
+            "rejected",
+            "approved",
+            "limited_release",
+            "active",
+            "paused",
+            "restricted",
+            "needs_revalidation",
+            "superseded",
+            "retired",
+            "withdrawn",
+            "reverted",
+            "archived"
+          ]
+        },
+        "active_phase_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "active_cohort_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "readiness": {
+          "oneOf": [
+            { "$ref": "#/$defs/ReleaseReadinessV1" },
+            { "type": "null" }
+          ]
+        },
+        "latest_observation": {
+          "oneOf": [
+            { "$ref": "#/$defs/RolloutObservationV1" },
+            { "type": "null" }
+          ]
+        },
+        "approval_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" }
+        },
+        "cohort_fences": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/ReleaseCohortFenceV1" }
+        },
+        "durability_pending": { "type": "boolean" },
+        "created_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "updated_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "ReleaseApprovalSubjectV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "release_id",
+        "expected_release_revision",
+        "definition_sha256",
+        "action",
+        "target_phase_id",
+        "cohort_ids",
+        "observation_id",
+        "observation_revision",
+        "observation_sha256",
+        "policy_sha256",
+        "preauthorization_sha256",
+        "predecessor_release_id",
+        "predecessor_definition_sha256"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.approval-subject.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "expected_release_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "definition_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "action": {
+          "type": "string",
+          "enum": [
+            "activate",
+            "expand",
+            "resume",
+            "restore",
+            "approve_policy",
+            "enable_preauthorization"
+          ]
+        },
+        "target_phase_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "cohort_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "observation_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "observation_revision": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+            { "type": "null" }
+          ]
+        },
+        "observation_sha256": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+            { "type": "null" }
+          ]
+        },
+        "policy_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "preauthorization_sha256": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+            { "type": "null" }
+          ]
+        },
+        "predecessor_release_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "predecessor_definition_sha256": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "AssistReleaseEligibilityPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "release_id",
+        "release_revision",
+        "definition_sha256",
+        "cohort",
+        "eligibility",
+        "manifest_sha256",
+        "eligibility_generation",
+        "issued_at",
+        "not_after"
+      ],
+      "properties": {
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "definition_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "cohort": { "$ref": "#/$defs/ReleaseCohortV1" },
+        "eligibility": { "$ref": "urn:oryn:schemas:guidance-sync:v1#/$defs/AssistPlanEligibilityV1" },
+        "manifest_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "eligibility_generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "issued_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "not_after": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "SignedAssistReleaseEligibilityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.assist-eligibility.v1" },
+        "key_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "payload": { "$ref": "#/$defs/AssistReleaseEligibilityPayloadV1" },
+        "signature": { "$ref": "#/$defs/Base64Url64" }
+      }
+    },
+    "AssistReleaseAdmissionRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "release_id",
+        "cohort_id",
+        "target_identity",
+        "selection_scope",
+        "source_connection_id",
+        "source_connection_revision",
+        "record_ref",
+        "expected_eligibility_generation"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.assist-admission-request.v1" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "cohort_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "target_identity": { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1" },
+        "selection_scope": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ScopeV1" },
+        "source_connection_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "source_connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "record_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:application-adapters:v1#/$defs/ApplicationRecordRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "expected_eligibility_generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" }
+      }
+    },
+    "ReleaseDiffV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "release_id",
+        "base_target_identity",
+        "head_target_identity",
+        "base_definition_sha256",
+        "head_definition_sha256",
+        "changed_json_pointers",
+        "change_classes",
+        "material",
+        "invalidates_evaluation",
+        "base_owner_record_ref",
+        "head_owner_record_ref",
+        "findings",
+        "added_dependency_refs",
+        "removed_dependency_refs"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.diff.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "base_target_identity": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1" },
+            { "type": "null" }
+          ]
+        },
+        "head_target_identity": { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1" },
+        "base_definition_sha256": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+            { "type": "null" }
+          ]
+        },
+        "head_definition_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "changed_json_pointers": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
+        "change_classes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "display",
+              "behavior",
+              "rule",
+              "permission",
+              "scope",
+              "verification",
+              "application_binding",
+              "model",
+              "ownership",
+              "rollout_policy"
+            ]
+          }
+        },
+        "material": { "type": "boolean" },
+        "invalidates_evaluation": { "type": "boolean" },
+        "base_owner_record_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "head_owner_record_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "findings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "#/$defs/ReleaseGateFindingV1" }
+        },
+        "added_dependency_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" }
+        },
+        "removed_dependency_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" }
+        }
+      }
+    },
+    "ReleasePreauthorizationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "preauthorization_id",
+        "revision",
+        "workflow_id",
+        "base_release_id",
+        "base_definition_sha256",
+        "rollout_policy_sha256",
+        "allowed_actions",
+        "allowed_patch_categories",
+        "permitted_node_ids",
+        "permitted_json_pointers",
+        "valid_from",
+        "not_after",
+        "owner_approval_ref",
+        "organization_policy_revision",
+        "generation",
+        "state"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.preauthorization.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "preauthorization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "workflow_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "base_release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "base_definition_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "rollout_policy_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "allowed_actions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["repair_release", "expand", "restore"]
+          }
+        },
+        "allowed_patch_categories": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["interaction_binding", "string_format"]
+          }
+        },
+        "permitted_node_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "permitted_json_pointers": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
+        "valid_from": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "not_after": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "owner_approval_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "organization_policy_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "state": {
+          "type": "string",
+          "enum": ["enabled", "revoked"]
+        }
+      }
+    },
+    "ReleaseProblemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "type",
+        "title",
+        "status",
+        "detail",
+        "instance",
+        "code",
+        "findings",
+        "correlation_id"
+      ],
+      "properties": {
+        "schema_id": { "const": "release.problem.v1" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "integer" },
+        "detail": { "type": "string" },
+        "instance": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "code": { "$ref": "#/$defs/ReleaseErrorCodeV1" },
+        "findings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "#/$defs/ReleaseGateFindingV1" }
+        },
+        "correlation_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        }
+      }
+    }
+  }
+}

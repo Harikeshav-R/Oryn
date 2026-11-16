@@ -14,6 +14,9 @@ Amends:
 - [0017-agent-runtime-execution-and-recovery.md](0017-agent-runtime-execution-and-recovery.md) (`RuntimeExecutionContextV1`, strict `job -> production` and `evaluation -> simulation` constraints, and `shell-runtime.v1` minor 1).
 - [0018-job-orchestration-and-scheduling.md](0018-job-orchestration-and-scheduling.md) (`orchestration_execution` table DDL amended with `environment` and `evaluation_attempt_id`).
 
+Amended by:
+- [0022-release-eligibility-and-rollout-governance.md](0022-release-eligibility-and-rollout-governance.md) (Simulator report `requested_stage: [3, 4]` retained; Stage 5 release is a composite governance check reading Stage 4 report plus repair bindings/obligations; clarifies 30-day adapter qualification validity vs. waiting periods).
+
 ## Context
 
 Oryn requires a rigorous, reproducible, and isolated evaluation subsystem—the Flight Simulator—to evaluate candidate agents and assist plans against representative business scenarios before production release.

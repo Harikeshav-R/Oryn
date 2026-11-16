@@ -8,6 +8,7 @@
     { "$ref": "#/$defs/EvaluationTargetV1" },
     { "$ref": "#/$defs/EvaluationTargetIdentityV1" },
     { "$ref": "#/$defs/SimulationVersionRefV1" },
+    { "$ref": "#/$defs/SimulationScenarioRefV1" },
     { "$ref": "#/$defs/SimulationRegressionRequirementRefV1" },
     { "$ref": "#/$defs/ScenarioExpectedResultV1" },
     { "$ref": "#/$defs/FaultPlanV1" },
@@ -133,6 +134,18 @@
           "type": "object",
           "properties": {
             "entity_kind": { "const": "regression_requirement" }
+          },
+          "required": ["entity_kind"]
+        }
+      ]
+    },
+    "SimulationScenarioRefV1": {
+      "allOf": [
+        { "$ref": "#/$defs/SimulationVersionRefV1" },
+        {
+          "type": "object",
+          "properties": {
+            "entity_kind": { "const": "scenario" }
           },
           "required": ["entity_kind"]
         }
@@ -673,7 +686,12 @@
         "kind": { "$ref": "#/$defs/Identifier" },
         "source_refs": {
           "type": "array",
-          "items": { "$ref": "#/$defs/SimulationVersionRefV1" }
+          "items": {
+            "oneOf": [
+              { "$ref": "#/$defs/SimulationVersionRefV1" },
+              { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/PreventionSpecRefV1" }
+            ]
+          }
         },
         "scenario_version_ids": {
           "type": "array",
@@ -724,7 +742,6 @@
         "incident_refs",
         "repair_ref",
         "base_target",
-        "candidate_target",
         "original_scenario_refs",
         "prevention_spec_refs",
         "variation_parent_refs",
@@ -740,27 +757,27 @@
         "version_id": { "$ref": "#/$defs/UUID" },
         "incident_refs": {
           "type": "array",
-          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentRefV1" },
           "minItems": 1,
           "maxItems": 32
         },
-        "repair_ref": { "$ref": "#/$defs/SimulationVersionRefV1" },
+        "repair_ref": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/RepairRefV1" },
         "base_target": { "$ref": "#/$defs/EvaluationTargetV1" },
-        "candidate_target": { "$ref": "#/$defs/EvaluationTargetV1" },
         "original_scenario_refs": {
           "type": "array",
-          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
-          "minItems": 1,
+          "items": { "$ref": "#/$defs/SimulationScenarioRefV1" },
+          "minItems": 0,
           "maxItems": 64
         },
         "prevention_spec_refs": {
           "type": "array",
-          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/PreventionSpecRefV1" },
+          "minItems": 0,
           "maxItems": 64
         },
         "variation_parent_refs": {
           "type": "array",
-          "items": { "$ref": "#/$defs/SimulationVersionRefV1" },
+          "items": { "$ref": "#/$defs/SimulationScenarioRefV1" },
           "maxItems": 64
         },
         "changed_dimensions": {
@@ -771,7 +788,21 @@
         "content_sha256": { "$ref": "#/$defs/Sha256Hex" },
         "created_by": { "$ref": "#/$defs/Identifier" },
         "created_at": { "$ref": "#/$defs/UtcDateTime" }
-      }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "original_scenario_refs": { "minItems": 1 }
+          },
+          "required": ["original_scenario_refs"]
+        },
+        {
+          "properties": {
+            "prevention_spec_refs": { "minItems": 1 }
+          },
+          "required": ["prevention_spec_refs"]
+        }
+      ]
     },
     "EvaluationReportPayloadV1": {
       "type": "object",

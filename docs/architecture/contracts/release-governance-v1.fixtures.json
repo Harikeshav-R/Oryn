@@ -1,0 +1,2400 @@
+{
+  "schema_id": "release.fixture-set.v1",
+  "validation_cases": [
+    {
+      "case_id": "val_release_definition_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseDefinitionV1",
+      "instance": {
+        "schema_id": "release.definition.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "definition_revision": "1",
+        "target_identity": {
+          "schema_id": "simulation.target-identity.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "target": {
+            "kind": "agent",
+            "agent_version": "44444444-4444-4444-8444-444444444444"
+          },
+          "behavior_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+          "manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        "agent_id": "agent_invoice_processor",
+        "workflow_id": "workflow_invoice_matching",
+        "requested_autonomy_stage": 4,
+        "risk_tier": 2,
+        "owner_actor_id": "actor_workflow_owner",
+        "proposer_actor_id": "actor_agent_author",
+        "predecessor_release_id": "22222222-2222-4222-8222-222222222222",
+        "evaluation_report_id": "88888888-8888-4888-8888-888888888888",
+        "rollout_policy": {
+          "schema_id": "release.rollout-policy.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "policy_id": "33333333-3333-4333-8333-333333333333",
+          "revision": "1",
+          "cohorts": [
+            {
+              "cohort_id": "cohort_finance_us",
+              "name": "Finance US Cohort",
+              "scope": {
+                "team_id": "team_finance_ops",
+                "workflow_id": "wf_invoice_audit",
+                "application_id": "app_erp",
+                "record_ids": []
+              },
+              "connection_id": "conn_erp_prod",
+              "connection_revision": 1,
+              "vendor_account_id": "acc_erp_corp",
+              "record_type": "invoice",
+              "selection_capability_ref": {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "version_id": "018f0000-0000-7000-8000-000000000016",
+                "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+              },
+              "selection_operation_id": "erp.invoice.lookup",
+              "operation_bindings": [
+                {
+                  "application_id": "app_erp",
+                  "capability_id": "invoice_processing",
+                  "operation_id": "erp.invoice.lookup",
+                  "connection_id": "conn_erp_prod",
+                  "connection_revision": 1,
+                  "vendor_account_id": "acc_erp_corp",
+                  "scope": {
+                    "team_id": "team_finance_ops",
+                    "workflow_id": "wf_invoice_audit",
+                    "application_id": "app_erp",
+                    "record_ids": []
+                  },
+                  "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+                }
+              ]
+            }
+          ],
+          "phases": [
+            {
+              "phase_id": "phase_1_limited",
+              "cohort_ids": [
+                "cohort_finance_us"
+              ],
+              "health_policy": {
+                "observation_window_seconds": 3600,
+                "min_verified_cases": 20,
+                "max_failed_cases": "0",
+                "max_unknown_cases": "0",
+                "max_failure_rate_bps": 0,
+                "max_unknown_rate_bps": 0,
+                "max_telemetry_lag_seconds": 300
+              }
+            }
+          ],
+          "progression_mode": "human",
+          "accountable_actor_id": "actor_workflow_owner",
+          "recovery": {
+            "mode": "restore_named",
+            "predecessor_release_id": "22222222-2222-4222-8222-222222222222",
+            "predecessor_definition_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+          }
+        },
+        "repair_refs": [],
+        "preauthorization_id": null
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_release_definition_invalid_risk_tier",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseDefinitionV1",
+      "instance": {
+        "schema_id": "release.definition.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "definition_revision": "1",
+        "target_identity": {
+          "schema_id": "simulation.target-identity.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "target": {
+            "kind": "agent",
+            "agent_version": "44444444-4444-4444-8444-444444444444"
+          },
+          "behavior_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+          "manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        "agent_id": "agent_invoice_processor",
+        "workflow_id": "workflow_invoice_matching",
+        "requested_autonomy_stage": 4,
+        "risk_tier": 4,
+        "owner_actor_id": "actor_workflow_owner",
+        "proposer_actor_id": "actor_agent_author",
+        "predecessor_release_id": "22222222-2222-4222-8222-222222222222",
+        "evaluation_report_id": "88888888-8888-4888-8888-888888888888",
+        "rollout_policy": {
+          "schema_id": "release.rollout-policy.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "policy_id": "33333333-3333-4333-8333-333333333333",
+          "revision": "1",
+          "cohorts": [
+            {
+              "cohort_id": "cohort_finance_us",
+              "name": "Finance US Cohort",
+              "scope": {
+                "team_id": "team_finance_ops",
+                "workflow_id": "wf_invoice_audit",
+                "application_id": "app_erp",
+                "record_ids": []
+              },
+              "connection_id": "conn_erp_prod",
+              "connection_revision": 1,
+              "vendor_account_id": "acc_erp_corp",
+              "record_type": "invoice",
+              "selection_capability_ref": {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "version_id": "018f0000-0000-7000-8000-000000000016",
+                "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+              },
+              "selection_operation_id": "erp.invoice.lookup",
+              "operation_bindings": [
+                {
+                  "application_id": "app_erp",
+                  "capability_id": "invoice_processing",
+                  "operation_id": "erp.invoice.lookup",
+                  "connection_id": "conn_erp_prod",
+                  "connection_revision": 1,
+                  "vendor_account_id": "acc_erp_corp",
+                  "scope": {
+                    "team_id": "team_finance_ops",
+                    "workflow_id": "wf_invoice_audit",
+                    "application_id": "app_erp",
+                    "record_ids": []
+                  },
+                  "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+                }
+              ]
+            }
+          ],
+          "phases": [
+            {
+              "phase_id": "phase_1_limited",
+              "cohort_ids": [
+                "cohort_finance_us"
+              ],
+              "health_policy": {
+                "observation_window_seconds": 3600,
+                "min_verified_cases": 20,
+                "max_failed_cases": "0",
+                "max_unknown_cases": "0",
+                "max_failure_rate_bps": 0,
+                "max_unknown_rate_bps": 0,
+                "max_telemetry_lag_seconds": 300
+              }
+            }
+          ],
+          "progression_mode": "human",
+          "accountable_actor_id": "actor_workflow_owner",
+          "recovery": {
+            "mode": "restore_named",
+            "predecessor_release_id": "22222222-2222-4222-8222-222222222222",
+            "predecessor_definition_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+          }
+        },
+        "repair_refs": [],
+        "preauthorization_id": null
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "val_rollout_policy_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/RolloutPolicyV1",
+      "instance": {
+        "schema_id": "release.rollout-policy.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "policy_id": "33333333-3333-4333-8333-333333333333",
+        "revision": "1",
+        "cohorts": [
+          {
+            "cohort_id": "cohort_finance_us",
+            "name": "Finance US Cohort",
+            "scope": {
+              "team_id": "team_finance_ops",
+              "workflow_id": "wf_invoice_audit",
+              "application_id": "app_erp",
+              "record_ids": []
+            },
+            "connection_id": "conn_erp_prod",
+            "connection_revision": 1,
+            "vendor_account_id": "acc_erp_corp",
+            "record_type": "invoice",
+            "selection_capability_ref": {
+              "application_id": "app_erp",
+              "capability_id": "invoice_processing",
+              "version_id": "018f0000-0000-7000-8000-000000000016",
+              "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+            },
+            "selection_operation_id": "erp.invoice.lookup",
+            "operation_bindings": [
+              {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "operation_id": "erp.invoice.lookup",
+                "connection_id": "conn_erp_prod",
+                "connection_revision": 1,
+                "vendor_account_id": "acc_erp_corp",
+                "scope": {
+                  "team_id": "team_finance_ops",
+                  "workflow_id": "wf_invoice_audit",
+                  "application_id": "app_erp",
+                  "record_ids": []
+                },
+                "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              }
+            ]
+          }
+        ],
+        "phases": [
+          {
+            "phase_id": "phase_1_limited",
+            "cohort_ids": [
+              "cohort_finance_us"
+            ],
+            "health_policy": {
+              "observation_window_seconds": 3600,
+              "min_verified_cases": 20,
+              "max_failed_cases": "0",
+              "max_unknown_cases": "0",
+              "max_failure_rate_bps": 0,
+              "max_unknown_rate_bps": 0,
+              "max_telemetry_lag_seconds": 300
+            }
+          }
+        ],
+        "progression_mode": "human",
+        "accountable_actor_id": "actor_workflow_owner",
+        "recovery": {
+          "mode": "restore_named",
+          "predecessor_release_id": "22222222-2222-4222-8222-222222222222",
+          "predecessor_definition_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        }
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_release_readiness_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseReadinessV1",
+      "instance": {
+        "schema_id": "release.readiness.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+        "target_identity": {
+          "schema_id": "simulation.target-identity.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "target": {
+            "kind": "agent",
+            "agent_version": "44444444-4444-4444-8444-444444444444"
+          },
+          "behavior_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+          "manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        "report_id": "88888888-8888-4888-8888-888888888888",
+        "human_example_count": "5",
+        "supervised_streak_count": "20",
+        "distinct_scenario_count": "100",
+        "edge_negative_count": "20",
+        "knowledge_generation": "1",
+        "adapter_generation": "1",
+        "checked_at": "2026-11-16T12:00:00Z",
+        "valid_until": "2026-12-16T12:00:00Z",
+        "status": "eligible",
+        "findings": []
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_job_admission_request_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseJobAdmissionRequestV1",
+      "instance": {
+        "schema_id": "release.job-admission-request.v1",
+        "agent_id": "agent_invoice_processor",
+        "requested_version_id": "44444444-4444-4444-8444-444444444444",
+        "cohort_id": "cohort_finance_us",
+        "selection_scope": {
+          "team_id": "team_finance_ops",
+          "workflow_id": "wf_invoice_audit",
+          "application_id": "app_erp",
+          "record_ids": []
+        },
+        "selection": {
+          "kind": "explicit",
+          "connection_id": "conn_erp_prod",
+          "connection_revision": 1,
+          "capability_ref": {
+            "application_id": "app_erp",
+            "capability_id": "invoice_processing",
+            "version_id": "018f0000-0000-7000-8000-000000000016",
+            "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+          },
+          "selection_operation_id": "erp.invoice.lookup",
+          "record_type": "invoice",
+          "record_keys": [
+            "inv_1001",
+            "inv_1002"
+          ]
+        },
+        "population": {
+          "ordered_records": [
+            {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "application_id": "app_erp",
+              "connection_id": "conn_erp_prod",
+              "connection_revision": 1,
+              "vendor_account_id": "acc_erp_corp",
+              "environment": "production",
+              "record_type": "invoice",
+              "record_key": "inv_1001",
+              "record_identity_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+              "source_revision": "1"
+            },
+            {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "application_id": "app_erp",
+              "connection_id": "conn_erp_prod",
+              "connection_revision": 1,
+              "vendor_account_id": "acc_erp_corp",
+              "environment": "production",
+              "record_type": "invoice",
+              "record_key": "inv_1002",
+              "record_identity_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+              "source_revision": "1"
+            }
+          ],
+          "population_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_cohort_fence_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseCohortFenceV1",
+      "instance": {
+        "schema_id": "release.cohort-fence.v1",
+        "kind": "release_cohort",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "cohort_id": "cohort_finance_us",
+        "generation": "1",
+        "state": "active",
+        "effect": "pause_execution",
+        "reason_code": "RELEASE_OBSERVATION_INCOMPLETE",
+        "reason_ref": null,
+        "has_unresolved_effects": false,
+        "approval_refs": []
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_rollout_observation_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/RolloutObservationV1",
+      "instance": {
+        "schema_id": "release.rollout-observation.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "observation_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "revision": "1",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+        "phase_id": "phase_1_limited",
+        "cohort_ids": [
+          "cohort_finance_us"
+        ],
+        "window_start": "2026-11-16T12:00:00Z",
+        "window_end": "2026-11-16T13:00:00Z",
+        "source_high_watermark": "100",
+        "source_reconciled_at": "2026-11-16T13:00:00Z",
+        "case_manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "started_case_count": "50",
+        "verified_case_count": "50",
+        "failed_case_count": "0",
+        "mismatch_case_count": "0",
+        "unknown_case_count": "0",
+        "pending_case_count": "0",
+        "expected_rejection_case_count": "0",
+        "escalated_case_count": "0",
+        "canceled_case_count": "0",
+        "new_incident_count": "0",
+        "incident_manifest_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "has_known_applicable_regression": false,
+        "completeness": "complete",
+        "health": "passing",
+        "recovery_criteria_met": true
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_release_command_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseCommandV1",
+      "instance": {
+        "schema_id": "release.command.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "expected_revision": "1",
+        "action": "activate",
+        "reason": "Stage 4 promotion approved by owner",
+        "approval_proposal_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        "observation_id": null,
+        "cohort_ids": [
+          "cohort_finance_us"
+        ]
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_release_view_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseViewV1",
+      "instance": {
+        "schema_id": "release.view.v1",
+        "definition": {
+          "schema_id": "release.definition.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "release_id": "11111111-1111-4111-8111-111111111111",
+          "definition_revision": "1",
+          "target_identity": {
+            "schema_id": "simulation.target-identity.v1",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "target": {
+              "kind": "agent",
+              "agent_version": "44444444-4444-4444-8444-444444444444"
+            },
+            "behavior_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+            "manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+          },
+          "agent_id": "agent_invoice_processor",
+          "workflow_id": "workflow_invoice_matching",
+          "requested_autonomy_stage": 4,
+          "risk_tier": 2,
+          "owner_actor_id": "actor_workflow_owner",
+          "proposer_actor_id": "actor_agent_author",
+          "predecessor_release_id": "22222222-2222-4222-8222-222222222222",
+          "evaluation_report_id": "88888888-8888-4888-8888-888888888888",
+          "rollout_policy": {
+            "schema_id": "release.rollout-policy.v1",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "policy_id": "33333333-3333-4333-8333-333333333333",
+            "revision": "1",
+            "cohorts": [
+              {
+                "cohort_id": "cohort_finance_us",
+                "name": "Finance US Cohort",
+                "scope": {
+                  "team_id": "team_finance_ops",
+                  "workflow_id": "wf_invoice_audit",
+                  "application_id": "app_erp",
+                  "record_ids": []
+                },
+                "connection_id": "conn_erp_prod",
+                "connection_revision": 1,
+                "vendor_account_id": "acc_erp_corp",
+                "record_type": "invoice",
+                "selection_capability_ref": {
+                  "application_id": "app_erp",
+                  "capability_id": "invoice_processing",
+                  "version_id": "018f0000-0000-7000-8000-000000000016",
+                  "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+                },
+                "selection_operation_id": "erp.invoice.lookup",
+                "operation_bindings": [
+                  {
+                    "application_id": "app_erp",
+                    "capability_id": "invoice_processing",
+                    "operation_id": "erp.invoice.lookup",
+                    "connection_id": "conn_erp_prod",
+                    "connection_revision": 1,
+                    "vendor_account_id": "acc_erp_corp",
+                    "scope": {
+                      "team_id": "team_finance_ops",
+                      "workflow_id": "wf_invoice_audit",
+                      "application_id": "app_erp",
+                      "record_ids": []
+                    },
+                    "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+                  }
+                ]
+              }
+            ],
+            "phases": [
+              {
+                "phase_id": "phase_1_limited",
+                "cohort_ids": [
+                  "cohort_finance_us"
+                ],
+                "health_policy": {
+                  "observation_window_seconds": 3600,
+                  "min_verified_cases": 20,
+                  "max_failed_cases": "0",
+                  "max_unknown_cases": "0",
+                  "max_failure_rate_bps": 0,
+                  "max_unknown_rate_bps": 0,
+                  "max_telemetry_lag_seconds": 300
+                }
+              }
+            ],
+            "progression_mode": "human",
+            "accountable_actor_id": "actor_workflow_owner",
+            "recovery": {
+              "mode": "restore_named",
+              "predecessor_release_id": "22222222-2222-4222-8222-222222222222",
+              "predecessor_definition_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+            }
+          },
+          "repair_refs": [],
+          "preauthorization_id": null
+        },
+        "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+        "revision": "1",
+        "state": "limited_release",
+        "active_phase_id": "phase_1_limited",
+        "active_cohort_ids": [
+          "cohort_finance_us"
+        ],
+        "readiness": {
+          "schema_id": "release.readiness.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "release_id": "11111111-1111-4111-8111-111111111111",
+          "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+          "target_identity": {
+            "schema_id": "simulation.target-identity.v1",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "target": {
+              "kind": "agent",
+              "agent_version": "44444444-4444-4444-8444-444444444444"
+            },
+            "behavior_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+            "manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+          },
+          "report_id": "88888888-8888-4888-8888-888888888888",
+          "human_example_count": "5",
+          "supervised_streak_count": "20",
+          "distinct_scenario_count": "100",
+          "edge_negative_count": "20",
+          "knowledge_generation": "1",
+          "adapter_generation": "1",
+          "checked_at": "2026-11-16T12:00:00Z",
+          "valid_until": "2026-12-16T12:00:00Z",
+          "status": "eligible",
+          "findings": []
+        },
+        "latest_observation": {
+          "schema_id": "release.rollout-observation.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "observation_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+          "revision": "1",
+          "release_id": "11111111-1111-4111-8111-111111111111",
+          "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+          "phase_id": "phase_1_limited",
+          "cohort_ids": [
+            "cohort_finance_us"
+          ],
+          "window_start": "2026-11-16T12:00:00Z",
+          "window_end": "2026-11-16T13:00:00Z",
+          "source_high_watermark": "100",
+          "source_reconciled_at": "2026-11-16T13:00:00Z",
+          "case_manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "started_case_count": "50",
+          "verified_case_count": "50",
+          "failed_case_count": "0",
+          "mismatch_case_count": "0",
+          "unknown_case_count": "0",
+          "pending_case_count": "0",
+          "expected_rejection_case_count": "0",
+          "escalated_case_count": "0",
+          "canceled_case_count": "0",
+          "new_incident_count": "0",
+          "incident_manifest_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "has_known_applicable_regression": false,
+          "completeness": "complete",
+          "health": "passing",
+          "recovery_criteria_met": true
+        },
+        "approval_refs": [],
+        "cohort_fences": [],
+        "durability_pending": false,
+        "created_at": "2026-11-16T12:00:00Z",
+        "updated_at": "2026-11-16T12:00:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_approval_subject_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseApprovalSubjectV1",
+      "instance": {
+        "schema_id": "release.approval-subject.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "expected_release_revision": "1",
+        "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+        "action": "activate",
+        "target_phase_id": "phase_1_limited",
+        "cohort_ids": [
+          "cohort_finance_us"
+        ],
+        "observation_id": null,
+        "observation_revision": null,
+        "observation_sha256": null,
+        "policy_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "preauthorization_sha256": null,
+        "predecessor_release_id": null,
+        "predecessor_definition_sha256": null
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_signed_assist_eligibility_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/SignedAssistReleaseEligibilityV1",
+      "instance": {
+        "schema_id": "release.assist-eligibility.v1",
+        "key_id": "release_vault_key_01",
+        "payload": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "release_id": "11111111-1111-4111-8111-111111111111",
+          "release_revision": "1",
+          "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+          "cohort": {
+            "cohort_id": "cohort_finance_us",
+            "name": "Finance US Cohort",
+            "scope": {
+              "team_id": "team_finance_ops",
+              "workflow_id": "wf_invoice_audit",
+              "application_id": "app_erp",
+              "record_ids": []
+            },
+            "connection_id": "conn_erp_prod",
+            "connection_revision": 1,
+            "vendor_account_id": "acc_erp_corp",
+            "record_type": "invoice",
+            "selection_capability_ref": {
+              "application_id": "app_erp",
+              "capability_id": "invoice_processing",
+              "version_id": "018f0000-0000-7000-8000-000000000016",
+              "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+            },
+            "selection_operation_id": "erp.invoice.lookup",
+            "operation_bindings": [
+              {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "operation_id": "erp.invoice.lookup",
+                "connection_id": "conn_erp_prod",
+                "connection_revision": 1,
+                "vendor_account_id": "acc_erp_corp",
+                "scope": {
+                  "team_id": "team_finance_ops",
+                  "workflow_id": "wf_invoice_audit",
+                  "application_id": "app_erp",
+                  "record_ids": []
+                },
+                "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              }
+            ]
+          },
+          "eligibility": {
+            "eligibility_id": "elig_assist_001",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "assist_plan_id": "plan_invoice_review",
+            "assist_plan_version": "1.0.0",
+            "plan_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "playbook_version": "sha256-5555555555555555555555555555555555555555555555555555555555555555",
+            "rule_versions": [
+              "rule_v1"
+            ],
+            "application_profile_versions": [
+              "profile_v1"
+            ],
+            "evaluation_id": "eval_001",
+            "suite_version": "1.0.0",
+            "verified_example_count": 5,
+            "passed_scenario_count": 25,
+            "edge_negative_count": 5,
+            "mandatory_checks_passed": true,
+            "all_branches_covered": true,
+            "owner_approval_ref": "appr_owner_001",
+            "separation_of_duties_satisfied": true,
+            "allowed_scope": [
+              "finance:invoices"
+            ],
+            "status": "approved"
+          },
+          "manifest_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "eligibility_generation": "1",
+          "issued_at": "2026-11-16T12:00:00Z",
+          "not_after": "2026-12-16T12:00:00Z"
+        },
+        "signature": "S6jFoBRw2MonJn64bjmgv_xEEXiIrt8ax2Kf7ulV_ET8TzapvjjX62G5dACHIx_xxMslIOwK0XxVXoNeh0EFAA"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_assist_admission_request_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/AssistReleaseAdmissionRequestV1",
+      "instance": {
+        "schema_id": "release.assist-admission-request.v1",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "cohort_id": "cohort_finance_us",
+        "target_identity": {
+          "schema_id": "simulation.target-identity.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "target": {
+            "kind": "assist_plan",
+            "assist_plan_id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+            "assist_plan_version": "1.0.0",
+            "plan_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "playbook_version": "1.0.0"
+          },
+          "behavior_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+          "manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        "selection_scope": {
+          "team_id": "team_finance_ops",
+          "workflow_id": "wf_invoice_audit",
+          "application_id": "app_erp",
+          "record_ids": []
+        },
+        "source_connection_id": "conn_erp_prod",
+        "source_connection_revision": 1,
+        "record_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "application_id": "app_erp",
+          "connection_id": "conn_erp_prod",
+          "connection_revision": 1,
+          "vendor_account_id": "acc_erp_corp",
+          "environment": "production",
+          "record_type": "invoice",
+          "record_key": "inv_1001",
+          "record_identity_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "source_revision": "1"
+        },
+        "expected_eligibility_generation": "1"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_release_diff_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseDiffV1",
+      "instance": {
+        "schema_id": "release.diff.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "base_target_identity": {
+          "schema_id": "simulation.target-identity.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "target": {
+            "kind": "agent",
+            "agent_version": "44444444-4444-4444-8444-444444444444"
+          },
+          "behavior_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+          "manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        "head_target_identity": {
+          "schema_id": "simulation.target-identity.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "target": {
+            "kind": "agent",
+            "agent_version": "44444444-4444-4444-8444-444444444444"
+          },
+          "behavior_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+          "manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        "base_definition_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+        "head_definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+        "changed_json_pointers": [
+          "/rollout_policy/phases/0/health_policy/min_verified_cases"
+        ],
+        "change_classes": [
+          "rollout_policy"
+        ],
+        "material": false,
+        "invalidates_evaluation": false,
+        "base_owner_record_ref": null,
+        "head_owner_record_ref": null,
+        "findings": [],
+        "added_dependency_refs": [],
+        "removed_dependency_refs": []
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_release_preauthorization_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleasePreauthorizationV1",
+      "instance": {
+        "schema_id": "release.preauthorization.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "preauthorization_id": "ffffffff-ffff-4fff-8fff-ffffffffffff",
+        "revision": "1",
+        "workflow_id": "workflow_invoice_matching",
+        "base_release_id": "11111111-1111-4111-8111-111111111111",
+        "base_definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+        "rollout_policy_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "allowed_actions": [
+          "repair_release"
+        ],
+        "allowed_patch_categories": [
+          "interaction_binding"
+        ],
+        "permitted_node_ids": [
+          "node_erp_lookup"
+        ],
+        "permitted_json_pointers": [
+          "/steps/0/interaction_binding"
+        ],
+        "valid_from": "2026-11-16T12:00:00Z",
+        "not_after": "2026-12-16T12:00:00Z",
+        "owner_approval_ref": "appr_owner_001",
+        "organization_policy_revision": "1",
+        "generation": "1",
+        "state": "enabled"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_release_problem_valid",
+      "schema_ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseProblemV1",
+      "instance": {
+        "schema_id": "release.problem.v1",
+        "type": "https://errors.oryn.io/release/cohort-ambiguous",
+        "title": "Release Cohort Ambiguous",
+        "status": 422,
+        "detail": "Multiple eligible cohorts matched record population without explicit cohort selection.",
+        "instance": "/v1/releases/jobs/admissions",
+        "code": "RELEASE_COHORT_AMBIGUOUS",
+        "findings": [
+          {
+            "code": "RELEASE_COHORT_AMBIGUOUS",
+            "subject_ref": null,
+            "json_pointer": "/cohort_id",
+            "message": "Selection spans cohorts cohort_finance_us and cohort_finance_eu",
+            "next_action": "Supply an explicit cohort_id in JobPreviewRequestV1"
+          }
+        ],
+        "correlation_id": "00000000-0000-4000-8000-000000000001"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_cross_repair_release_observation_valid",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/RepairReleaseObservationV1",
+      "instance": {
+        "schema_id": "incident.release-observation.v1",
+        "incident_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "incident",
+          "entity_id": "018f0000-0000-7000-8000-000000000010",
+          "version_id": "018f0000-0000-7000-8000-000000000011",
+          "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "repair_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "repair",
+          "entity_id": "018f0000-0000-7000-8000-000000000020",
+          "version_id": "018f0000-0000-7000-8000-000000000021",
+          "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "base_target": {
+          "kind": "agent",
+          "agent_version": "44444444-4444-4444-8444-444444444444"
+        },
+        "candidate_identity": {
+          "schema_id": "simulation.target-identity.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "target": {
+            "kind": "agent",
+            "agent_version": "44444444-4444-4444-8444-444444444444"
+          },
+          "behavior_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+          "manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        "release_ref": {
+          "owner_component": "release_governance",
+          "resource_kind": "release",
+          "resource_id": "11111111-1111-4111-8111-111111111111",
+          "version_id": "1",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "observation_ref": {
+          "owner_component": "release_governance",
+          "resource_kind": "rollout_observation",
+          "resource_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+          "version_id": "1",
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "evaluation_ref": {
+          "owner_component": "flight_simulator",
+          "resource_kind": "evaluation_report",
+          "resource_id": "88888888-8888-4888-8888-888888888888",
+          "version_id": "1",
+          "content_sha256": "8888888888888888888888888888888888888888888888888888888888888888"
+        },
+        "rollout_policy_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "observation_window_start": "2026-11-16T12:00:00Z",
+        "observation_window_end": "2026-11-16T13:00:00Z",
+        "verified_case_count": "50",
+        "mismatch_case_count": "0",
+        "unknown_case_count": "0",
+        "new_incident_count": "0",
+        "new_incident_refs": [],
+        "incident_refs_complete": true,
+        "incident_manifest_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "recovery_criteria_met": true
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_cross_assist_execution_context_valid",
+      "schema_ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1",
+      "instance": {
+        "kind": "assist",
+        "assist_session_id": "session_001",
+        "assist_plan_id": "plan_invoice_review",
+        "assist_plan_version": "1.0.0",
+        "playbook_version": "1.0.0",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "release_cohort_id": "cohort_finance_us",
+        "release_eligibility_generation": "1",
+        "plan_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_cross_release_automation_policy_valid",
+      "schema_ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ReleaseAutomationPolicyV1",
+      "instance": {
+        "schema_id": "identity.release-automation-policy.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "revision": "1",
+        "allowed_actions": [
+          "repair_release",
+          "expand"
+        ],
+        "allowed_patch_categories": [
+          "interaction_binding",
+          "string_format"
+        ],
+        "valid_from": "2026-11-16T12:00:00Z",
+        "not_after": "2026-12-16T12:00:00Z",
+        "security_approval_ref": "appr_sec_001",
+        "state": "enabled"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_cross_governance_consumption_valid",
+      "schema_ref": "urn:oryn:schemas:identity-policy:v1#/$defs/GovernanceConsumptionV1",
+      "instance": {
+        "schema_id": "identity.governance-consumption.v1",
+        "consumption_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "proposal_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        "proposal_revision": "1",
+        "object_digest": "9999999999999999999999999999999999999999999999999999999999999999",
+        "approval_refs": [
+          "appr_owner_001"
+        ],
+        "consumed_at": "2026-11-16T12:05:00Z"
+      },
+      "expected_valid": true
+    }
+  ],
+  "semantic_cases": [
+    {
+      "case_id": "sem_cohort_single_match",
+      "kind": "cohort_choice",
+      "inputs": {
+        "matches": [
+          "cohort_us_east"
+        ],
+        "requested": null
+      },
+      "expected": "cohort_us_east"
+    },
+    {
+      "case_id": "sem_cohort_zero_matches",
+      "kind": "cohort_choice",
+      "inputs": {
+        "matches": [],
+        "requested": null
+      },
+      "expected": "RELEASE_COHORT_INELIGIBLE"
+    },
+    {
+      "case_id": "sem_cohort_ambiguous_two_matches",
+      "kind": "cohort_choice",
+      "inputs": {
+        "matches": [
+          "cohort_us_east",
+          "cohort_us_west"
+        ],
+        "requested": null
+      },
+      "expected": "RELEASE_COHORT_AMBIGUOUS"
+    },
+    {
+      "case_id": "sem_cohort_explicit_choice_valid",
+      "kind": "cohort_choice",
+      "inputs": {
+        "matches": [
+          "cohort_us_east",
+          "cohort_us_west"
+        ],
+        "requested": "cohort_us_west"
+      },
+      "expected": "cohort_us_west"
+    },
+    {
+      "case_id": "sem_cohort_explicit_choice_invalid",
+      "kind": "cohort_choice",
+      "inputs": {
+        "matches": [
+          "cohort_us_east",
+          "cohort_us_west"
+        ],
+        "requested": "cohort_eu_central"
+      },
+      "expected": "RELEASE_COHORT_INELIGIBLE"
+    },
+    {
+      "case_id": "sem_streak_20_consecutive_valid",
+      "kind": "supervised_streak",
+      "inputs": {
+        "rows": [
+          {
+            "ordinal": 1,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 2,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 3,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 4,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 5,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 6,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 7,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 8,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 9,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 10,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 11,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 12,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 13,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 14,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 15,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 16,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 17,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 18,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 19,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 20,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          }
+        ]
+      },
+      "expected": 20
+    },
+    {
+      "case_id": "sem_streak_pending_barrier_resets",
+      "kind": "supervised_streak",
+      "inputs": {
+        "rows": [
+          {
+            "ordinal": 1,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 2,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 3,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 4,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 5,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 6,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 7,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 8,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 9,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 10,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 11,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 12,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 13,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 14,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 15,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 16,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 17,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 18,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 19,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 20,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 21,
+            "state": "pending",
+            "system_evidence": true,
+            "ever_disqualified": false
+          }
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "case_id": "sem_streak_reverified_disqualified_preserves_break",
+      "kind": "supervised_streak",
+      "inputs": {
+        "rows": [
+          {
+            "ordinal": 1,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 2,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 3,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 4,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 5,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 6,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 7,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 8,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 9,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 10,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": true
+          },
+          {
+            "ordinal": 11,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 12,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 13,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 14,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 15,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 16,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 17,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 18,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 19,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 20,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          }
+        ]
+      },
+      "expected": 10
+    },
+    {
+      "case_id": "sem_streak_out_of_order_preserves_monotonic_count",
+      "kind": "supervised_streak",
+      "inputs": {
+        "rows": [
+          {
+            "ordinal": 2,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 1,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 4,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 3,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          }
+        ]
+      },
+      "expected": 4
+    },
+    {
+      "case_id": "sem_streak_human_only_breaks",
+      "kind": "supervised_streak",
+      "inputs": {
+        "rows": [
+          {
+            "ordinal": 1,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 2,
+            "state": "verified_complete",
+            "system_evidence": false,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 3,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          }
+        ]
+      },
+      "expected": 1
+    },
+    {
+      "case_id": "sem_streak_expected_rejection_breaks",
+      "kind": "supervised_streak",
+      "inputs": {
+        "rows": [
+          {
+            "ordinal": 1,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 2,
+            "state": "expected_rejection",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 3,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          }
+        ]
+      },
+      "expected": 1
+    },
+    {
+      "case_id": "sem_streak_escalated_breaks",
+      "kind": "supervised_streak",
+      "inputs": {
+        "rows": [
+          {
+            "ordinal": 1,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 2,
+            "state": "escalated",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 3,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          }
+        ]
+      },
+      "expected": 1
+    },
+    {
+      "case_id": "sem_streak_started_cancel_breaks",
+      "kind": "supervised_streak",
+      "inputs": {
+        "rows": [
+          {
+            "ordinal": 1,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 2,
+            "state": "canceled",
+            "system_evidence": true,
+            "ever_disqualified": false
+          },
+          {
+            "ordinal": 3,
+            "state": "verified_complete",
+            "system_evidence": true,
+            "ever_disqualified": false
+          }
+        ]
+      },
+      "expected": 1
+    },
+    {
+      "case_id": "sem_health_passing_complete",
+      "kind": "rollout_health",
+      "inputs": {
+        "started": 50,
+        "verified": 50,
+        "failed": 0,
+        "unknown": 0,
+        "pending": 0,
+        "telemetry_fresh": true,
+        "regression": false,
+        "safety_failure": false,
+        "complete": true,
+        "window_elapsed": true,
+        "min_verified": 20,
+        "max_failed": 1,
+        "max_unknown": 1,
+        "failure_bps": 500,
+        "unknown_bps": 500
+      },
+      "expected": "passing"
+    },
+    {
+      "case_id": "sem_health_zero_traffic_insufficient",
+      "kind": "rollout_health",
+      "inputs": {
+        "started": 0,
+        "verified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "pending": 0,
+        "telemetry_fresh": true,
+        "regression": false,
+        "safety_failure": false,
+        "complete": true,
+        "window_elapsed": true,
+        "min_verified": 20,
+        "max_failed": 1,
+        "max_unknown": 1,
+        "failure_bps": 500,
+        "unknown_bps": 500
+      },
+      "expected": "insufficient_evidence"
+    },
+    {
+      "case_id": "sem_health_delayed_telemetry_stale",
+      "kind": "rollout_health",
+      "inputs": {
+        "started": 50,
+        "verified": 50,
+        "failed": 0,
+        "unknown": 0,
+        "pending": 0,
+        "telemetry_fresh": false,
+        "regression": false,
+        "safety_failure": false,
+        "complete": true,
+        "window_elapsed": true,
+        "min_verified": 20,
+        "max_failed": 1,
+        "max_unknown": 1,
+        "failure_bps": 500,
+        "unknown_bps": 500
+      },
+      "expected": "telemetry_stale"
+    },
+    {
+      "case_id": "sem_health_pending_cases_insufficient",
+      "kind": "rollout_health",
+      "inputs": {
+        "started": 50,
+        "verified": 48,
+        "failed": 0,
+        "unknown": 0,
+        "pending": 2,
+        "telemetry_fresh": true,
+        "regression": false,
+        "safety_failure": false,
+        "complete": true,
+        "window_elapsed": true,
+        "min_verified": 20,
+        "max_failed": 1,
+        "max_unknown": 1,
+        "failure_bps": 500,
+        "unknown_bps": 500
+      },
+      "expected": "insufficient_evidence"
+    },
+    {
+      "case_id": "sem_health_boundary_rate_equal_passing",
+      "kind": "rollout_health",
+      "inputs": {
+        "started": 100,
+        "verified": 95,
+        "failed": 5,
+        "unknown": 0,
+        "pending": 0,
+        "telemetry_fresh": true,
+        "regression": false,
+        "safety_failure": false,
+        "complete": true,
+        "window_elapsed": true,
+        "min_verified": 20,
+        "max_failed": 5,
+        "max_unknown": 5,
+        "failure_bps": 500,
+        "unknown_bps": 500
+      },
+      "expected": "passing"
+    },
+    {
+      "case_id": "sem_health_boundary_rate_breached",
+      "kind": "rollout_health",
+      "inputs": {
+        "started": 100,
+        "verified": 94,
+        "failed": 6,
+        "unknown": 0,
+        "pending": 0,
+        "telemetry_fresh": true,
+        "regression": false,
+        "safety_failure": false,
+        "complete": true,
+        "window_elapsed": true,
+        "min_verified": 20,
+        "max_failed": 10,
+        "max_unknown": 5,
+        "failure_bps": 500,
+        "unknown_bps": 500
+      },
+      "expected": "breached"
+    },
+    {
+      "case_id": "sem_health_regression_breached",
+      "kind": "rollout_health",
+      "inputs": {
+        "started": 100,
+        "verified": 100,
+        "failed": 0,
+        "unknown": 0,
+        "pending": 0,
+        "telemetry_fresh": true,
+        "regression": true,
+        "safety_failure": false,
+        "complete": true,
+        "window_elapsed": true,
+        "min_verified": 20,
+        "max_failed": 10,
+        "max_unknown": 5,
+        "failure_bps": 500,
+        "unknown_bps": 500
+      },
+      "expected": "breached"
+    },
+    {
+      "case_id": "sem_health_safety_failure_breached",
+      "kind": "rollout_health",
+      "inputs": {
+        "started": 100,
+        "verified": 100,
+        "failed": 0,
+        "unknown": 0,
+        "pending": 0,
+        "telemetry_fresh": true,
+        "regression": false,
+        "safety_failure": true,
+        "complete": true,
+        "window_elapsed": true,
+        "min_verified": 20,
+        "max_failed": 10,
+        "max_unknown": 5,
+        "failure_bps": 500,
+        "unknown_bps": 500
+      },
+      "expected": "breached"
+    }
+  ],
+  "digest_vectors": [
+    {
+      "case_id": "dig_release_definition",
+      "preimage": {
+        "schema_id": "release.definition.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "definition_revision": "1",
+        "target_identity": {
+          "schema_id": "simulation.target-identity.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "target": {
+            "kind": "agent",
+            "agent_version": "44444444-4444-4444-8444-444444444444"
+          },
+          "behavior_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+          "manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        "agent_id": "agent_invoice_processor",
+        "workflow_id": "workflow_invoice_matching",
+        "requested_autonomy_stage": 4,
+        "risk_tier": 2,
+        "owner_actor_id": "actor_workflow_owner",
+        "proposer_actor_id": "actor_agent_author",
+        "predecessor_release_id": "22222222-2222-4222-8222-222222222222",
+        "evaluation_report_id": "88888888-8888-4888-8888-888888888888",
+        "rollout_policy": {
+          "schema_id": "release.rollout-policy.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "policy_id": "33333333-3333-4333-8333-333333333333",
+          "revision": "1",
+          "cohorts": [
+            {
+              "cohort_id": "cohort_finance_us",
+              "name": "Finance US Cohort",
+              "scope": {
+                "team_id": "team_finance_ops",
+                "workflow_id": "wf_invoice_audit",
+                "application_id": "app_erp",
+                "record_ids": []
+              },
+              "connection_id": "conn_erp_prod",
+              "connection_revision": 1,
+              "vendor_account_id": "acc_erp_corp",
+              "record_type": "invoice",
+              "selection_capability_ref": {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "version_id": "018f0000-0000-7000-8000-000000000016",
+                "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+              },
+              "selection_operation_id": "erp.invoice.lookup",
+              "operation_bindings": [
+                {
+                  "application_id": "app_erp",
+                  "capability_id": "invoice_processing",
+                  "operation_id": "erp.invoice.lookup",
+                  "connection_id": "conn_erp_prod",
+                  "connection_revision": 1,
+                  "vendor_account_id": "acc_erp_corp",
+                  "scope": {
+                    "team_id": "team_finance_ops",
+                    "workflow_id": "wf_invoice_audit",
+                    "application_id": "app_erp",
+                    "record_ids": []
+                  },
+                  "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+                }
+              ]
+            }
+          ],
+          "phases": [
+            {
+              "phase_id": "phase_1_limited",
+              "cohort_ids": [
+                "cohort_finance_us"
+              ],
+              "health_policy": {
+                "observation_window_seconds": 3600,
+                "min_verified_cases": 20,
+                "max_failed_cases": "0",
+                "max_unknown_cases": "0",
+                "max_failure_rate_bps": 0,
+                "max_unknown_rate_bps": 0,
+                "max_telemetry_lag_seconds": 300
+              }
+            }
+          ],
+          "progression_mode": "human",
+          "accountable_actor_id": "actor_workflow_owner",
+          "recovery": {
+            "mode": "restore_named",
+            "predecessor_release_id": "22222222-2222-4222-8222-222222222222",
+            "predecessor_definition_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+          }
+        },
+        "repair_refs": [],
+        "preauthorization_id": null
+      },
+      "expected_sha256": "9fc12f1a011ac076d1230bca63021d5a0ebab6a104190708313421bf1f3b14b2"
+    },
+    {
+      "case_id": "dig_rollout_policy",
+      "preimage": {
+        "schema_id": "release.rollout-policy.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "policy_id": "33333333-3333-4333-8333-333333333333",
+        "revision": "1",
+        "cohorts": [
+          {
+            "cohort_id": "cohort_finance_us",
+            "name": "Finance US Cohort",
+            "scope": {
+              "team_id": "team_finance_ops",
+              "workflow_id": "wf_invoice_audit",
+              "application_id": "app_erp",
+              "record_ids": []
+            },
+            "connection_id": "conn_erp_prod",
+            "connection_revision": 1,
+            "vendor_account_id": "acc_erp_corp",
+            "record_type": "invoice",
+            "selection_capability_ref": {
+              "application_id": "app_erp",
+              "capability_id": "invoice_processing",
+              "version_id": "018f0000-0000-7000-8000-000000000016",
+              "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+            },
+            "selection_operation_id": "erp.invoice.lookup",
+            "operation_bindings": [
+              {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "operation_id": "erp.invoice.lookup",
+                "connection_id": "conn_erp_prod",
+                "connection_revision": 1,
+                "vendor_account_id": "acc_erp_corp",
+                "scope": {
+                  "team_id": "team_finance_ops",
+                  "workflow_id": "wf_invoice_audit",
+                  "application_id": "app_erp",
+                  "record_ids": []
+                },
+                "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              }
+            ]
+          }
+        ],
+        "phases": [
+          {
+            "phase_id": "phase_1_limited",
+            "cohort_ids": [
+              "cohort_finance_us"
+            ],
+            "health_policy": {
+              "observation_window_seconds": 3600,
+              "min_verified_cases": 20,
+              "max_failed_cases": "0",
+              "max_unknown_cases": "0",
+              "max_failure_rate_bps": 0,
+              "max_unknown_rate_bps": 0,
+              "max_telemetry_lag_seconds": 300
+            }
+          }
+        ],
+        "progression_mode": "human",
+        "accountable_actor_id": "actor_workflow_owner",
+        "recovery": {
+          "mode": "restore_named",
+          "predecessor_release_id": "22222222-2222-4222-8222-222222222222",
+          "predecessor_definition_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        }
+      },
+      "expected_sha256": "be25093ea37a9bcaf5bf35054bead2a7a6e9e7e35dac79ac3942d9196dd6fc4b"
+    },
+    {
+      "case_id": "dig_protected_safety_projection",
+      "preimage": {
+        "workflow_id": "workflow_invoice_matching",
+        "requested_autonomy_stage": 4,
+        "risk_tier": 2,
+        "operation_identities": [
+          "erp.invoice.lookup"
+        ],
+        "topology_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+        "verification_binding_ids": [
+          "vspec_invoice_match"
+        ]
+      },
+      "expected_sha256": "dbd1f45f6e51dbd5438c1d87f08445ba2173f4da145b9918b7266577e4b383ed"
+    },
+    {
+      "case_id": "dig_cohort_fence_identity",
+      "preimage": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "release_id": "11111111-1111-4111-8111-111111111111",
+        "cohort_id": "cohort_finance_us"
+      },
+      "expected_sha256": "62e25735003bf43aecc110d61b01ca880680f3072a414b91f8d2911de9109747"
+    }
+  ],
+  "signature_vectors": [
+    {
+      "case_id": "sig_assist_attestation_valid",
+      "envelope": {
+        "schema_id": "release.assist-eligibility.v1",
+        "key_id": "release_vault_key_01",
+        "payload": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "release_id": "11111111-1111-4111-8111-111111111111",
+          "release_revision": "1",
+          "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+          "cohort": {
+            "cohort_id": "cohort_finance_us",
+            "name": "Finance US Cohort",
+            "scope": {
+              "team_id": "team_finance_ops",
+              "workflow_id": "wf_invoice_audit",
+              "application_id": "app_erp",
+              "record_ids": []
+            },
+            "connection_id": "conn_erp_prod",
+            "connection_revision": 1,
+            "vendor_account_id": "acc_erp_corp",
+            "record_type": "invoice",
+            "selection_capability_ref": {
+              "application_id": "app_erp",
+              "capability_id": "invoice_processing",
+              "version_id": "018f0000-0000-7000-8000-000000000016",
+              "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+            },
+            "selection_operation_id": "erp.invoice.lookup",
+            "operation_bindings": [
+              {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "operation_id": "erp.invoice.lookup",
+                "connection_id": "conn_erp_prod",
+                "connection_revision": 1,
+                "vendor_account_id": "acc_erp_corp",
+                "scope": {
+                  "team_id": "team_finance_ops",
+                  "workflow_id": "wf_invoice_audit",
+                  "application_id": "app_erp",
+                  "record_ids": []
+                },
+                "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              }
+            ]
+          },
+          "eligibility": {
+            "eligibility_id": "elig_assist_001",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "assist_plan_id": "plan_invoice_review",
+            "assist_plan_version": "1.0.0",
+            "plan_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "playbook_version": "sha256-5555555555555555555555555555555555555555555555555555555555555555",
+            "rule_versions": [
+              "rule_v1"
+            ],
+            "application_profile_versions": [
+              "profile_v1"
+            ],
+            "evaluation_id": "eval_001",
+            "suite_version": "1.0.0",
+            "verified_example_count": 5,
+            "passed_scenario_count": 25,
+            "edge_negative_count": 5,
+            "mandatory_checks_passed": true,
+            "all_branches_covered": true,
+            "owner_approval_ref": "appr_owner_001",
+            "separation_of_duties_satisfied": true,
+            "allowed_scope": [
+              "finance:invoices"
+            ],
+            "status": "approved"
+          },
+          "manifest_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "eligibility_generation": "1",
+          "issued_at": "2026-11-16T12:00:00Z",
+          "not_after": "2026-12-16T12:00:00Z"
+        },
+        "signature": "S6jFoBRw2MonJn64bjmgv_xEEXiIrt8ax2Kf7ulV_ET8TzapvjjX62G5dACHIx_xxMslIOwK0XxVXoNeh0EFAA"
+      },
+      "public_key": "m8MR1lmoeNFSObitXonnYCn_h4Z6hRsZW6vVeBlAyps",
+      "expected_valid": true
+    },
+    {
+      "case_id": "sig_assist_attestation_altered_plan",
+      "envelope": {
+        "schema_id": "release.assist-eligibility.v1",
+        "key_id": "release_vault_key_01",
+        "payload": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "release_id": "11111111-1111-4111-8111-111111111111",
+          "release_revision": "1",
+          "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+          "cohort": {
+            "cohort_id": "cohort_finance_us",
+            "name": "Finance US Cohort",
+            "scope": {
+              "team_id": "team_finance_ops",
+              "workflow_id": "wf_invoice_audit",
+              "application_id": "app_erp",
+              "record_ids": []
+            },
+            "connection_id": "conn_erp_prod",
+            "connection_revision": 1,
+            "vendor_account_id": "acc_erp_corp",
+            "record_type": "invoice",
+            "selection_capability_ref": {
+              "application_id": "app_erp",
+              "capability_id": "invoice_processing",
+              "version_id": "018f0000-0000-7000-8000-000000000016",
+              "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+            },
+            "selection_operation_id": "erp.invoice.lookup",
+            "operation_bindings": [
+              {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "operation_id": "erp.invoice.lookup",
+                "connection_id": "conn_erp_prod",
+                "connection_revision": 1,
+                "vendor_account_id": "acc_erp_corp",
+                "scope": {
+                  "team_id": "team_finance_ops",
+                  "workflow_id": "wf_invoice_audit",
+                  "application_id": "app_erp",
+                  "record_ids": []
+                },
+                "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              }
+            ]
+          },
+          "eligibility": {
+            "eligibility_id": "elig_assist_001",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "assist_plan_id": "plan_invoice_review",
+            "assist_plan_version": "1.0.0",
+            "plan_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "playbook_version": "sha256-5555555555555555555555555555555555555555555555555555555555555555",
+            "rule_versions": [
+              "rule_v1"
+            ],
+            "application_profile_versions": [
+              "profile_v1"
+            ],
+            "evaluation_id": "eval_001",
+            "suite_version": "1.0.0",
+            "verified_example_count": 5,
+            "passed_scenario_count": 25,
+            "edge_negative_count": 5,
+            "mandatory_checks_passed": true,
+            "all_branches_covered": true,
+            "owner_approval_ref": "appr_owner_001",
+            "separation_of_duties_satisfied": true,
+            "allowed_scope": [
+              "finance:invoices"
+            ],
+            "status": "approved"
+          },
+          "manifest_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "eligibility_generation": "1",
+          "issued_at": "2026-11-16T12:00:00Z",
+          "not_after": "2026-12-16T12:00:00Z"
+        },
+        "signature": "S6jFoBRw2MonJn64bjmgv_xEEXiIrt8ax2Kf7ulV_ET8TzapvjjX62G5dACHIx_xxMslIOwK0XxVXoNeh0EFAA"
+      },
+      "public_key": "m8MR1lmoeNFSObitXonnYCn_h4Z6hRsZW6vVeBlAyps",
+      "expected_valid": false
+    },
+    {
+      "case_id": "sig_assist_attestation_altered_cohort",
+      "envelope": {
+        "schema_id": "release.assist-eligibility.v1",
+        "key_id": "release_vault_key_01",
+        "payload": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "release_id": "11111111-1111-4111-8111-111111111111",
+          "release_revision": "1",
+          "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+          "cohort": {
+            "cohort_id": "cohort_finance_eu",
+            "name": "Finance US Cohort",
+            "scope": {
+              "team_id": "team_finance_ops",
+              "workflow_id": "wf_invoice_audit",
+              "application_id": "app_erp",
+              "record_ids": []
+            },
+            "connection_id": "conn_erp_prod",
+            "connection_revision": 1,
+            "vendor_account_id": "acc_erp_corp",
+            "record_type": "invoice",
+            "selection_capability_ref": {
+              "application_id": "app_erp",
+              "capability_id": "invoice_processing",
+              "version_id": "018f0000-0000-7000-8000-000000000016",
+              "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+            },
+            "selection_operation_id": "erp.invoice.lookup",
+            "operation_bindings": [
+              {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "operation_id": "erp.invoice.lookup",
+                "connection_id": "conn_erp_prod",
+                "connection_revision": 1,
+                "vendor_account_id": "acc_erp_corp",
+                "scope": {
+                  "team_id": "team_finance_ops",
+                  "workflow_id": "wf_invoice_audit",
+                  "application_id": "app_erp",
+                  "record_ids": []
+                },
+                "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              }
+            ]
+          },
+          "eligibility": {
+            "eligibility_id": "elig_assist_001",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "assist_plan_id": "plan_invoice_review",
+            "assist_plan_version": "1.0.0",
+            "plan_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "playbook_version": "sha256-5555555555555555555555555555555555555555555555555555555555555555",
+            "rule_versions": [
+              "rule_v1"
+            ],
+            "application_profile_versions": [
+              "profile_v1"
+            ],
+            "evaluation_id": "eval_001",
+            "suite_version": "1.0.0",
+            "verified_example_count": 5,
+            "passed_scenario_count": 25,
+            "edge_negative_count": 5,
+            "mandatory_checks_passed": true,
+            "all_branches_covered": true,
+            "owner_approval_ref": "appr_owner_001",
+            "separation_of_duties_satisfied": true,
+            "allowed_scope": [
+              "finance:invoices"
+            ],
+            "status": "approved"
+          },
+          "manifest_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "eligibility_generation": "1",
+          "issued_at": "2026-11-16T12:00:00Z",
+          "not_after": "2026-12-16T12:00:00Z"
+        },
+        "signature": "S6jFoBRw2MonJn64bjmgv_xEEXiIrt8ax2Kf7ulV_ET8TzapvjjX62G5dACHIx_xxMslIOwK0XxVXoNeh0EFAA"
+      },
+      "public_key": "m8MR1lmoeNFSObitXonnYCn_h4Z6hRsZW6vVeBlAyps",
+      "expected_valid": false
+    },
+    {
+      "case_id": "sig_assist_attestation_wrong_schema",
+      "envelope": {
+        "schema_id": "release.assist-eligibility.v1",
+        "key_id": "release_vault_key_01",
+        "payload": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "release_id": "11111111-1111-4111-8111-111111111111",
+          "release_revision": "1",
+          "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+          "cohort": {
+            "cohort_id": "cohort_finance_us",
+            "name": "Finance US Cohort",
+            "scope": {
+              "team_id": "team_finance_ops",
+              "workflow_id": "wf_invoice_audit",
+              "application_id": "app_erp",
+              "record_ids": []
+            },
+            "connection_id": "conn_erp_prod",
+            "connection_revision": 1,
+            "vendor_account_id": "acc_erp_corp",
+            "record_type": "invoice",
+            "selection_capability_ref": {
+              "application_id": "app_erp",
+              "capability_id": "invoice_processing",
+              "version_id": "018f0000-0000-7000-8000-000000000016",
+              "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+            },
+            "selection_operation_id": "erp.invoice.lookup",
+            "operation_bindings": [
+              {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "operation_id": "erp.invoice.lookup",
+                "connection_id": "conn_erp_prod",
+                "connection_revision": 1,
+                "vendor_account_id": "acc_erp_corp",
+                "scope": {
+                  "team_id": "team_finance_ops",
+                  "workflow_id": "wf_invoice_audit",
+                  "application_id": "app_erp",
+                  "record_ids": []
+                },
+                "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              }
+            ]
+          },
+          "eligibility": {
+            "eligibility_id": "elig_assist_001",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "assist_plan_id": "plan_invoice_review",
+            "assist_plan_version": "1.0.0",
+            "plan_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "playbook_version": "sha256-5555555555555555555555555555555555555555555555555555555555555555",
+            "rule_versions": [
+              "rule_v1"
+            ],
+            "application_profile_versions": [
+              "profile_v1"
+            ],
+            "evaluation_id": "eval_001",
+            "suite_version": "1.0.0",
+            "verified_example_count": 5,
+            "passed_scenario_count": 25,
+            "edge_negative_count": 5,
+            "mandatory_checks_passed": true,
+            "all_branches_covered": true,
+            "owner_approval_ref": "appr_owner_001",
+            "separation_of_duties_satisfied": true,
+            "allowed_scope": [
+              "finance:invoices"
+            ],
+            "status": "approved"
+          },
+          "manifest_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "eligibility_generation": "1",
+          "issued_at": "2026-11-16T12:00:00Z",
+          "not_after": "2026-12-16T12:00:00Z"
+        },
+        "signature": "1ddsGfmXcuKS13PXYWwR6owQvgcMTttHjdZooTM6CZDpyDXpT3BetbmHKRKDuKgxcNrnAp3hgBXPgtks_jOPAg"
+      },
+      "public_key": "m8MR1lmoeNFSObitXonnYCn_h4Z6hRsZW6vVeBlAyps",
+      "expected_valid": false
+    },
+    {
+      "case_id": "sig_assist_attestation_corrupted_signature",
+      "envelope": {
+        "schema_id": "release.assist-eligibility.v1",
+        "key_id": "release_vault_key_01",
+        "payload": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "release_id": "11111111-1111-4111-8111-111111111111",
+          "release_revision": "1",
+          "definition_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+          "cohort": {
+            "cohort_id": "cohort_finance_us",
+            "name": "Finance US Cohort",
+            "scope": {
+              "team_id": "team_finance_ops",
+              "workflow_id": "wf_invoice_audit",
+              "application_id": "app_erp",
+              "record_ids": []
+            },
+            "connection_id": "conn_erp_prod",
+            "connection_revision": 1,
+            "vendor_account_id": "acc_erp_corp",
+            "record_type": "invoice",
+            "selection_capability_ref": {
+              "application_id": "app_erp",
+              "capability_id": "invoice_processing",
+              "version_id": "018f0000-0000-7000-8000-000000000016",
+              "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+            },
+            "selection_operation_id": "erp.invoice.lookup",
+            "operation_bindings": [
+              {
+                "application_id": "app_erp",
+                "capability_id": "invoice_processing",
+                "operation_id": "erp.invoice.lookup",
+                "connection_id": "conn_erp_prod",
+                "connection_revision": 1,
+                "vendor_account_id": "acc_erp_corp",
+                "scope": {
+                  "team_id": "team_finance_ops",
+                  "workflow_id": "wf_invoice_audit",
+                  "application_id": "app_erp",
+                  "record_ids": []
+                },
+                "operation_contract_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+              }
+            ]
+          },
+          "eligibility": {
+            "eligibility_id": "elig_assist_001",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "assist_plan_id": "plan_invoice_review",
+            "assist_plan_version": "1.0.0",
+            "plan_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "playbook_version": "sha256-5555555555555555555555555555555555555555555555555555555555555555",
+            "rule_versions": [
+              "rule_v1"
+            ],
+            "application_profile_versions": [
+              "profile_v1"
+            ],
+            "evaluation_id": "eval_001",
+            "suite_version": "1.0.0",
+            "verified_example_count": 5,
+            "passed_scenario_count": 25,
+            "edge_negative_count": 5,
+            "mandatory_checks_passed": true,
+            "all_branches_covered": true,
+            "owner_approval_ref": "appr_owner_001",
+            "separation_of_duties_satisfied": true,
+            "allowed_scope": [
+              "finance:invoices"
+            ],
+            "status": "approved"
+          },
+          "manifest_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "eligibility_generation": "1",
+          "issued_at": "2026-11-16T12:00:00Z",
+          "not_after": "2026-12-16T12:00:00Z"
+        },
+        "signature": "A6jFoBRw2MonJn64bjmgv_xEEXiIrt8ax2Kf7ulV_ET8TzapvjjX62G5dACHIx_xxMslIOwK0XxVXoNeh0EFAA"
+      },
+      "public_key": "m8MR1lmoeNFSObitXonnYCn_h4Z6hRsZW6vVeBlAyps",
+      "expected_valid": false
+    }
+  ]
+}

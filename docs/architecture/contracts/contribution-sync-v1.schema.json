@@ -770,7 +770,8 @@
         "kind": {
           "enum": [
             "workflow",
-            "meeting_handoff"
+            "meeting_handoff",
+            "reviewed_correction"
           ]
         },
         "purpose": {
@@ -801,6 +802,9 @@
             },
             {
               "$ref": "#/$defs/ReviewedMeetingHandoffProposal"
+            },
+            {
+              "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/ReviewedCorrectionV1"
             }
           ]
         },
@@ -848,6 +852,25 @@
             "properties": {
               "content": {
                 "$ref": "#/$defs/ReviewedMeetingHandoffProposal"
+              },
+              "artifacts": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "reviewed_correction"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "content": {
+                "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/ReviewedCorrectionV1"
               },
               "artifacts": {
                 "maxItems": 0
@@ -1207,7 +1230,8 @@
             "kind": {
               "enum": [
                 "workflow",
-                "meeting_handoff"
+                "meeting_handoff",
+                "reviewed_correction"
               ]
             },
             "review_receipt_id": {
@@ -1216,7 +1240,8 @@
             "destination": {
               "enum": [
                 "workflow_discovery",
-                "operational_graph"
+                "operational_graph",
+                "incident_correction_repair"
               ]
             },
             "accepted_at": {

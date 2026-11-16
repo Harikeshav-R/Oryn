@@ -118,14 +118,15 @@ Channel 4 is allocated strictly for browser meeting tab audio bytes forwarded fr
 When spawning `oryn-privacy-helper` and `oryn-hud-helper`, the host creates a dedicated connected Unix domain stream socket pair (`socketpair`) on macOS or an anonymous pipe pair (`CreatePipe`) on Windows. The host passes one end to `oryn-privacy-helper` and the counterpart end to `oryn-hud-helper`, verifies the digital signatures of both child binaries, and immediately closes its own copies of both descriptors. This establishes a direct, peer-to-peer helper channel for Contract 25 (`privacy-context.v1`), allowing sanitized observations and demonstration proposals to flow directly between privacy and HUD engines without multiplexing onto the shell control channel (Contract 19) or routing through the shell broker.
 
 #### Protocol Handshake (`shell-privacy.v1`)
-Immediately following channel creation, the host and helper execute a mandatory protocol handshake. The protocol version is `shell-privacy.v1` (major 1, minor 2).
+Immediately following channel creation, the host and helper execute a mandatory protocol handshake. The protocol version is `shell-privacy.v1` (major 1, minor 3), negotiating feature `incident_correction_audio_v1`.
 **Host Handshake Hello:**
 ```json
 {
   "type": "HandshakeHello",
   "protocol_version": "shell-privacy.v1",
   "protocol_major": 1,
-  "protocol_minor": 2,
+  "protocol_minor": 3,
+  "supported_features": ["incident_correction_audio_v1"],
   "shell_build": "2026.11.08.1",
   "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
   "organization_id": "org_enterprise_corp",
@@ -138,7 +139,8 @@ Immediately following channel creation, the host and helper execute a mandatory 
 {
   "type": "HandshakeAck",
   "protocol_major": 1,
-  "protocol_minor": 2,
+  "protocol_minor": 3,
+  "negotiated_features": ["incident_correction_audio_v1"],
   "helper_build": "2026.11.08.1",
   "session_epoch": "b5e9f1a0-3c2b-4e89-9a12-87c1f8d204e1",
   "status": "ready"
@@ -205,16 +207,53 @@ All employee-initiated mutations carry an idempotent command envelope:
    - **Payload:** `{"confirm_local_deletion": true}`
    - **Semantics:** Directs privacy storage to verify legal hold constraints, halt capture, securely purge non-held local private material, and return a purge receipt (`ready`) or a hold block (`blocked`).
 
-#### The Six Category Identifiers
-The system strictly enforces these six canonical category identifiers:
+#### The Seven Category Identifiers
+The system strictly enforces these seven canonical category identifiers:
 1. `visual_work_observation`: Screen capture, window geometry, and UI state tracking.
 2. `contextual_work_application_recognition`: Active application, process identity, and window titles.
 3. `personal_history_retention`: Local timeline persistence and candidate aggregation.
 4. `organizational_sharing`: Eligibility to prepare and review sanitized shared playbooks.
 5. `meeting_transcription`: Real-time audio capture and speech-to-text processing.
 6. `meeting_commitment_extraction`: Inference of action items and commitments from transcripts.
+7. `incident_correction_audio`: Desktop-only online audio dictation for attributable incident corrections (default disabled/unconsented). Preserves the distinction between employee preference categories and Identity's acquisition `CaptureCategory` enum.
 
-Meeting categories (5 and 6) belong to a separately typed meeting interface; generic `ResumeCapture` rejects requests containing them.
+Meeting categories (5 and 6) and correction dictation (7) belong to separately typed interfaces; generic `ResumeCapture` rejects requests containing them.
+
+#### Incident Correction Audio Capture Interface
+Desktop shell supports desktop-only online audio dictation for attributable incident corrections using the dedicated Privacy Helper `CorrectionMicrophoneSource` mode. It reuses helper microphone mechanics while keeping correction capture strictly separated from meeting sessions. Web console supports typed corrections and reviewed evidence only.
+
+##### Commands
+1. **`StartCorrectionCapture`**
+   - **Payload:** `{"incident_id": "<UUIDv4>", "capture_id": "<UUIDv4>", "notice_revision": "<DecimalString>"}`
+   - **Semantics:** Requires foreground incident pane, genuine native held input (push-to-talk), independent `incident_correction_audio` category consent, cloud disclosure notice acceptance, valid capture lease (`incident_correction_audio_permitted: true`), active shell visibility, OS microphone permission, an available certified transcription route, and no active meeting capture. Renderer messages alone cannot assert held input.
+   - **Response:** `{"command_id": "...", "status": "acknowledged", "capture_id": "..."}`
+2. **`StopCorrectionCapture`**
+   - **Payload:** `{"capture_id": "<UUIDv4>", "reason": "released" | "limit_reached" | "focus_lost" | "pointer_cancelled" | "employee_cancelled" | "policy" | "fault"}`
+   - **Semantics:** Stops audio recording. Bypasses stale revisions. `released` or `limit_reached` triggers exactly one authorized batch transcription. Other reasons discard unfinished audio and cancel pending inference.
+3. **`PrepareCorrectionShare`**
+   - **Payload:** `{"capture_id": "<UUIDv4>", "expected_text_revision": "<DecimalString>", "edited_text": string}`
+   - **Semantics:** Prepares reviewed correction text (≤ 8,192 characters) for sharing. Returns preview ID, digest, and expiration.
+4. **`ApproveCorrectionShare`**
+   - **Payload:** `{"preview_id": "<UUIDv4>", "expected_preview_revision": "<DecimalString>", "content_digest": "<Sha256>", "decision": "approve" | "decline"}`
+   - **Semantics:** Final employee approval or decline of reviewed correction text. If approved, Privacy Helper signs `ReviewedCorrectionV1` wrapped in `ReviewedContributionV1` and hands off to `oryn-sync-helper`.
+5. **`RenewCorrectionHold` (Host Ephemeral Control)**
+   - **Payload:** `{"session_epoch": "<UUIDv4>", "capture_id": "<UUIDv4>", "hold_sequence": "<DecimalString>"}`
+   - **Semantics:** Native-only push-to-talk hold heartbeat emitted every 100 ms while physical input remains held. Expires within 300 ms if unrenewed.
+
+##### Binary Audio Framing (`ORYC` v1)
+Microphone audio is transmitted from the capture worker to the privacy helper using binary `ORYC` version 1 frames with the standard 64-byte native audio header layout, substituting correction capture UUID for meeting-session UUID:
+- Distinct frame tag `ORYC` (0x4F 0x52 0x59 0x43), never overloading meeting `ORYA`.
+- 16-kHz mono PCM, signed 16-bit little-endian, 100-ms packets (≤ 3,200 audio bytes).
+- Never acquires application-loopback, browser tab, or system audio.
+- Rejected on browser Channel 4; correction frames rejected under meeting permits.
+- An attempted meeting start stops and discards active correction recording first.
+
+##### Retention and Quotas
+At most one correction capture is permitted per workstation.
+- When `personal_history_retention=false`: volatile memory only, maximum 10 seconds / 320,000 audio bytes, absolute 30-second lifetime from first acquisition.
+- Otherwise: maximum 60 seconds / 1,920,000 audio bytes under local raw-retention policy and earlier source deadlines.
+- 6-MiB per-capture memory cap covers PCM, encoding buffers, and transcript.
+- No offline/local-only capture mode, deferred transcription, reconnect upload, or auto-retry.
 
 ### Downstream Integration Interfaces
 
@@ -564,6 +603,7 @@ export interface CaptureSnapshot {
   sequence: string;                // Stream monotonic decimal string representation of u64
   enrollment: "not_enrolled" | "notice_required" | "permissions_required" | "ready";
   meeting: MeetingCaptureSummary | null; // Nullable meeting capture projection
+  correction: CorrectionCaptureSummary | null; // Nullable correction dictation projection
   categories: CategoryState[];
   sources: CaptureSourceState[];   // Per-source operational health and category activity
   employee_paused: boolean;        // Durable employee pause flag
@@ -580,9 +620,22 @@ export interface CaptureSnapshot {
 export interface CategoryState {
   category: "visual_work_observation" | "contextual_work_application_recognition" |
             "personal_history_retention" | "organizational_sharing" |
-            "meeting_transcription" | "meeting_commitment_extraction";
+            "meeting_transcription" | "meeting_commitment_extraction" |
+            "incident_correction_audio";
   consented: boolean;
   enabled: boolean;
+  permission: "granted" | "denied" | "not_required";
+  activity: "active" | "stopped" | "unknown";
+}
+
+export interface CorrectionCaptureSummary {
+  capture_id: string;              // UUIDv4 of active correction capture
+  incident_id: string;             // UUIDv4 of target incident
+  state: "holding" | "recording" | "transcribing" | "reviewing" | "cancelled";
+  duration_ms: number;
+  byte_count: number;
+  quality_status: "reliable" | "unreliable" | "inaudible" | null;
+}
   permission: "granted" | "denied" | "not_required";
   activity: "active" | "stopped" | "unknown";
 }

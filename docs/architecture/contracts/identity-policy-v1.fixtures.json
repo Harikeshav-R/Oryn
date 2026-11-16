@@ -4,7 +4,7 @@
     {
       "key_id": "key_policy_2026_01",
       "purpose": "policy",
-      "public_key": "zptsxN9KpxNS1RT0Yokwcrix4KnbeCMt-i_eHj89gwg"
+      "public_key": "6WJM7ogska4um20HH5xxccFAmqlCEs07MDJm0fgmF18"
     },
     {
       "key_id": "key_device_macbook_01",
@@ -89,7 +89,7 @@
         "not_after": "2026-11-11T15:00:00Z",
         "proposal_digest": "sha256-f2b4c20444c756a1ea2cebf68d5e6bd4b1d44db8d252c849012cf0116c64213f"
       },
-      "signature": "YWgNiDz5J9XUsWzQXIoeUy0HXyNEclSGJeQC57hACuRHQJtSbjD2Sx_mQ12Yz4hExJ35pjSd5TSCMjetk9UNCg"
+      "signature": "JDMoMlA2p4T4ERHEbXzZ8WC7zYvFkKXRcTfYWLkr8mHBI0flVVeuvmejmiOmTQZvOkXFlRv5zktr62LSGFHEBw"
     },
     {
       "schema_id": "identity.action-authorization.v1",
@@ -120,7 +120,7 @@
         "issued_at": "2026-11-10T15:05:00Z",
         "not_after": "2026-11-10T15:05:30Z"
       },
-      "signature": "KXBui6F8ZFI8-uOVrnh6vt-Y19O20d5PYOuYfphOzwkhCsR8Ud-dJpuTfzaijTTgKVLh2ptdPrB3k6pjTIcVBA"
+      "signature": "SPS2aVD8smGbNMBIMrAp8OTmebWNLuNDoTIgagAAFdDsFJgv_CAB3xaE-wYQtxKUHPvvRqpsM-rsVMoHBmE9BA"
     },
     {
       "schema_id": "identity.action-approval.v1",
@@ -146,7 +146,7 @@
         "decided_at": "2026-11-10T15:04:30Z",
         "not_after": "2026-11-10T15:19:30Z"
       },
-      "signature": "eCWzU3zROhWAkCSbesP7SpULLtuMfyssEGcqrtGEbZ0ttUOe0ZuBl0nzrb484wtxkiyHpnvHmwx1wzCl-lGODw"
+      "signature": "z1PDzmXtgSjFsbpE9C9DO2dT06Dbn3gfIGPJppAgyvZgOHzF2drcJhHa-LnPA4T8m6b52nvHyfflEXW9wuHEDQ"
     },
     {
       "schema_id": "identity.action-admission.v1",
@@ -171,7 +171,7 @@
         "consumed_at": "2026-11-10T15:05:05Z",
         "not_after": "2026-11-10T15:05:30Z"
       },
-      "signature": "0qkXLw-ATNOL039z3-U9ObNwz0pv-fLlQlviT30CVCwNd1QJouRwCwqoQQ2yLYCK_EmfwwjzFaJlDXoaSv2sAw"
+      "signature": "WbPEavMU_eQEctdE9HSNiOtuPhLu6WbHwv8dUCkLb8psEXYtSgNMfwuE9YsgV7FrRrOy2UPuCg-8wY8PIUKrAg"
     },
     {
       "schema_id": "identity.governance-proposal.v1",
@@ -215,7 +215,7 @@
         "not_after": "2026-11-11T14:00:00Z",
         "proposal_digest": "sha256-29e42d94b0c39e9be6b0f9cbf863e91ab5130b14fe639bc7d40acbb06b989bf4"
       },
-      "signature": "KJfh4Ey0Pdwo1OkMeU9Y2NlfJ5rD3U98aOaQcHhiogKldc0UcmFOeifZlERju6awKsDARAtaT76-BBh_IsUcAQ"
+      "signature": "tyD6wLZGl_XjRLg0wdul0aAbbHl6i6vqv6JPRWu2Xccu-5xRJHOHWjAoPH9a4NIokyY0IN6Ei3W99bSO6Ek3DQ"
     },
     {
       "schema_id": "privacy.authorization-context.v1",
@@ -283,9 +283,10 @@
         "max_offline_seconds": 86400,
         "revocation_generation": "1",
         "issued_at": "2026-11-10T08:00:00Z",
-        "not_after": "2026-11-11T08:00:00Z"
+        "not_after": "2026-11-11T08:00:00Z",
+        "incident_correction_audio_permitted": false
       },
-      "signature": "FM7U2T-98bi71TSZYaZliERfcdxG-kz6b85zXnrQWWGy5Q8aDCcP-8yk7KxAtkLaevwDuIkydlcHXysOAtgXCg"
+      "signature": "36YhypOp2fOz_eA8o6Otc_X77KXYA66p8t528cdVLQgiywW5r6hrFtdi89PPzJSvLV2kCzHWjfvB_MAma7LkCA"
     },
     {
       "schema_id": "privacy.retention-verdict.v1",
@@ -315,7 +316,7 @@
         "issued_at": "2026-11-10T08:00:00Z",
         "not_after": "2026-11-11T08:00:00Z"
       },
-      "signature": "-kFW4A4hxz8fFw0ej6J2LeuQLTdIv5o_vN2lgkUX1F315-bZLAnT2nXsCac20d14YR6w1QX07xUx8HVt9SSYCQ"
+      "signature": "3Ay_z8NWb_3g3wiTE8nCoJ1e8_3BBTQcBf4BLJPFkZEPG2PED4uHI2L_ICq_mmTcJGLzPWcsgMApFISCnNkRBA"
     },
     {
       "schema_id": "inference.authorization.v1",
@@ -348,7 +349,7 @@
         },
         "privacy_context_sha256": "1111222233334444555566667777888811112222333344445555666677778888"
       },
-      "signature": "i0JasHBapUxF6PdgcvhYLuQpm5BDKQr_omnK_rfcFGm3YgQH5ytRJvPKQzoYWPe-ZH6P_iYAhThoxWjLLHLpBQ"
+      "signature": "cGrzlPR6i9you1-pv2fNJBZxvL5wlsfBEhKtFbvyQkNpa-oJWG2zy5VR056FdTQroKxoQFZIrtUhaDRnWo2lCA"
     },
     {
       "schema_id": "hud.guidance-access-lease.v1",
@@ -367,7 +368,7 @@
         "not_after": "2026-11-11T08:00:00Z",
         "read_only": true
       },
-      "signature": "dP_H7ptxQ0hhiiWq-ahZyM1GVRazsFnBvW5FB5vFUt515Esb37RP6TdNEBTWIhvT2Hi9hpd7dYQIhuVVbSIgAA"
+      "signature": "3BFCNT2JcXiR25BWxaA4hgoJQNg1wQZy5cKiCE4LRDqlsJ_stJFpczJCGffK6wUtEStOrMykhDj95wmRIXeSDA"
     },
     {
       "schema_id": "sync.trust-keyset.v1",

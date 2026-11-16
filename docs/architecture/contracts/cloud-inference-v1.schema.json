@@ -133,7 +133,8 @@
           "enum": [
             "screen",
             "meeting",
-            "organizational_artifact"
+            "organizational_artifact",
+            "incident_correction_audio"
           ]
         },
         "source_ref": {

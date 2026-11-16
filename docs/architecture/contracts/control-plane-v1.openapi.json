@@ -10173,6 +10173,1550 @@
           }
         }
       }
+    },
+    "/v1/incidents/signals": {
+      "post": {
+        "operationId": "ingestIncidentSignal",
+        "summary": "Ingest incident signal",
+        "description": "Ingests authoritative failure or safety signal from verified producer or authorized operator.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentSignalV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signal ingested or replayed existing incident",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict: duplicate source key with mismatched payload",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents": {
+      "get": {
+        "operationId": "queryIncidents",
+        "summary": "List incidents",
+        "description": "Lists incidents matching bounded query criteria with cursor pagination.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Incident page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "total_count": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "next_cursor",
+                    "total_count"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}": {
+      "get": {
+        "operationId": "getIncident",
+        "summary": "Get incident details",
+        "description": "Retrieves authoritative incident record, version, severity, and references.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Incident record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Incident not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}/transitions": {
+      "post": {
+        "operationId": "transitionIncident",
+        "summary": "Transition incident state",
+        "description": "Transitions incident status, severity, or ownership with expected revision protection.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/TransitionIncidentCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated incident record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or invalid transition",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}/containments": {
+      "post": {
+        "operationId": "setIncidentContainment",
+        "summary": "Establish containment restriction",
+        "description": "Synchronously establishes scoped safety restriction and journals to Identity/Orchestration.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/SetIncidentRestrictionCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Containment restriction established",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or pending clearance",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}/containment-clearances": {
+      "post": {
+        "operationId": "clearIncidentContainment",
+        "summary": "Clear containment restriction",
+        "description": "Clears a specific containment restriction with generation check; does not resume execution.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/ClearIncidentRestrictionCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Containment restriction cleared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Generation conflict or unauthorized clearance",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}/diagnoses": {
+      "post": {
+        "operationId": "requestIncidentDiagnosis",
+        "summary": "Request bounded diagnosis",
+        "description": "Starts asynchronous bounded diagnostic hypothesis generation under text.reason.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/RequestDiagnosisCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Diagnosis operation admitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}/questions": {
+      "post": {
+        "operationId": "createCorrectionQuestion",
+        "summary": "Post focused expert question",
+        "description": "Posts one focused expert inquiry question to an assigned domain team or SME.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/CorrectionQuestionV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Question created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/CorrectionQuestionV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}/questions/{question_id}/responses": {
+      "post": {
+        "operationId": "respondCorrectionQuestion",
+        "summary": "Answer expert inquiry question",
+        "description": "Submits closed response variant for an unresolved expert question.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/AnswerCorrectionQuestionCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Answer recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/CorrectionQuestionV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}/corrections": {
+      "post": {
+        "operationId": "submitCorrection",
+        "summary": "Submit attributable correction",
+        "description": "Submits human correction explanation or verified reviewed-correction receipt.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/SubmitCorrectionCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Correction submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/CorrectionV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}/corrections/{correction_id}/decisions": {
+      "post": {
+        "operationId": "decideCorrection",
+        "summary": "Review and decide correction",
+        "description": "Accepts correction as evidence (not policy) or requests additional evidence/rejects.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "correction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/ReviewCorrectionCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Correction decision recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/CorrectionV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}/repairs": {
+      "post": {
+        "operationId": "proposeIncidentRepair",
+        "summary": "Propose repair patch",
+        "description": "Submits explicit bounded repair proposal or queues 202 background proposal generation.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/ProposeRepairCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Repair proposal created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/RepairProposalV1"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Repair generation operation queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/repairs/{repair_id}": {
+      "get": {
+        "operationId": "getRepairProposal",
+        "summary": "Get repair proposal details",
+        "description": "Retrieves exact diff, citations, required approvals, and associations for a repair proposal.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "repair_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Repair proposal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/RepairProposalV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Repair not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/repairs/{repair_id}/decisions": {
+      "post": {
+        "operationId": "decideRepairProposal",
+        "summary": "Decide repair proposal",
+        "description": "Accepts proposal for draft creation, requests changes, rejects, or withdraws.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "repair_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/ReviewRepairCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Repair decision recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/RepairProposalV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incident-groups": {
+      "get": {
+        "operationId": "listIncidentGroups",
+        "summary": "List incident groups",
+        "description": "Queries incident groups with distinct case counts and signatures.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "maximum": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Group page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentGroupV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "total_count": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "next_cursor",
+                    "total_count"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incident-groups/{group_id}": {
+      "get": {
+        "operationId": "getIncidentGroup",
+        "summary": "Get incident group details",
+        "description": "Retrieves incident group summary and paginated member incidents.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Incident group",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentGroupV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incident-groups/{group_id}/memberships": {
+      "post": {
+        "operationId": "decideGroupMembership",
+        "summary": "Decide incident group membership",
+        "description": "Adds or removes an incident from a group with attributable justification.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./incident-correction-repair-v1.schema.json#/$defs/DecideGroupMembershipCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Membership updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentGroupV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/incidents/{incident_id}/evidence/{evidence_id}": {
+      "get": {
+        "operationId": "getIncidentEvidence",
+        "summary": "Materialize authorized evidence",
+        "description": "Returns authorized bounded evidence excerpt or 410 if expired/destroyed.",
+        "security": [
+          {
+            "BffSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "incident_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evidence excerpt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./incident-correction-repair-v1.schema.json#/$defs/IncidentEvidenceRefV1"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Evidence expired or destroyed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/releases": {
+      "post": {
+        "operationId": "createRelease",
+        "summary": "Create release draft",
+        "description": "Creates a new release definition in draft state.",
+        "security": [
+          { "BffSessionCookie": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseDefinitionV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Release created in draft state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseViewV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid release payload",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized to author release",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Release definition semantically invalid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listReleases",
+        "summary": "List releases",
+        "description": "Returns authorized release views with cursor pagination.",
+        "security": [
+          { "BffSessionCookie": [] }
+        ],
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "workflow_id",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "maximum": 100 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized release page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseViewV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": ["string", "null"]
+                    },
+                    "total_count": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["items", "next_cursor", "total_count"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/releases/{release_id}": {
+      "get": {
+        "operationId": "getRelease",
+        "summary": "Get release view",
+        "description": "Retrieves the current release view by release identifier.",
+        "security": [
+          { "BffSessionCookie": [] }
+        ],
+        "parameters": [
+          {
+            "name": "release_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Release view",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseViewV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Release not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/releases/{release_id}/readiness": {
+      "get": {
+        "operationId": "getReleaseReadiness",
+        "summary": "Evaluate release readiness",
+        "description": "Returns current readiness evaluation findings without granting release authority.",
+        "security": [
+          { "BffSessionCookie": [] }
+        ],
+        "parameters": [
+          {
+            "name": "release_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Release readiness evaluation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseReadinessV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Release not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/releases/{release_id}/diff": {
+      "get": {
+        "operationId": "getReleaseDiff",
+        "summary": "Get release diff",
+        "description": "Returns structural diff between base and head definitions with gate findings.",
+        "security": [
+          { "BffSessionCookie": [] }
+        ],
+        "parameters": [
+          {
+            "name": "release_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Release diff view",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseDiffV1"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Release not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/releases/{release_id}/commands": {
+      "post": {
+        "operationId": "submitReleaseCommand",
+        "summary": "Submit release command",
+        "description": "Executes a state transition or governance command on a release.",
+        "security": [
+          { "BffSessionCookie": [] }
+        ],
+        "parameters": [
+          {
+            "name": "release_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseCommandV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Command applied synchronously",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseViewV1"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Command accepted pending authority checkpoint durability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/OperationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command payload",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Command not authorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or command race",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Semantic command precondition failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Required governance dependency unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/releases/{release_id}/observations": {
+      "get": {
+        "operationId": "listReleaseObservations",
+        "summary": "List rollout observations",
+        "description": "Returns paginated immutable rollout observations for a release.",
+        "security": [
+          { "BffSessionCookie": [] }
+        ],
+        "parameters": [
+          {
+            "name": "release_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "maximum": 100 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rollout observation page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./release-governance-v1.schema.json#/$defs/RolloutObservationV1"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": ["string", "null"]
+                    },
+                    "total_count": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["items", "next_cursor", "total_count"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/releases/{release_id}/observations/{observation_id}/members": {
+      "get": {
+        "operationId": "getReleaseObservationMembers",
+        "summary": "Get observation case/incident members",
+        "description": "Returns paginated content-free case and incident references with manifest digest proof.",
+        "security": [
+          { "BffSessionCookie": [] }
+        ],
+        "parameters": [
+          {
+            "name": "release_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "observation_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["case", "incident"]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "maximum": 100 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observation member page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "./incident-correction-repair-v1.schema.json#/$defs/OwnerRecordRefV1"
+                      }
+                    },
+                    "manifest_sha256": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "next_cursor": {
+                      "type": ["string", "null"]
+                    },
+                    "total_count": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["items", "manifest_sha256", "next_cursor", "total_count"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/releases/preauthorizations": {
+      "post": {
+        "operationId": "createReleasePreauthorization",
+        "summary": "Stage release preauthorization",
+        "description": "Creates a staged release preauthorization proposal awaiting formal owner approval.",
+        "security": [
+          { "BffSessionCookie": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./release-governance-v1.schema.json#/$defs/ReleasePreauthorizationV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Preauthorization staged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleasePreauthorizationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid preauthorization proposal",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized to create preauthorization",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Semantic preauthorization validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/releases/preauthorizations/{preauthorization_id}/revocations": {
+      "post": {
+        "operationId": "revokeReleasePreauthorization",
+        "summary": "Revoke release preauthorization",
+        "description": "Revokes an active release preauthorization grant.",
+        "security": [
+          { "BffSessionCookie": [] }
+        ],
+        "parameters": [
+          {
+            "name": "preauthorization_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["expected_generation", "reason"],
+                "properties": {
+                  "expected_generation": { "type": "string" },
+                  "reason": { "type": "string", "minLength": 1, "maxLength": 1024 }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preauthorization revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleasePreauthorizationV1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid revocation request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./control-plane-v1.schema.json#/$defs/ControlPlaneProblemV1"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized to revoke preauthorization",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Generation conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "./release-governance-v1.schema.json#/$defs/ReleaseProblemV1"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

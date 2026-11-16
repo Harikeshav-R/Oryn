@@ -1454,6 +1454,53 @@ CREATE INDEX idx_guide_checkpoint_expiry ON guide_checkpoints(expires_at_utc, st
 CREATE INDEX idx_guide_checkpoint_profile ON guide_checkpoints(profile_id, updated_at_utc DESC);
 ```
 
+#### Incident Correction Audio Storage and Lifecycle (`CorrectionCaptureRecordV1`)
+Desktop incident correction dictation is captured through Privacy Helper's `CorrectionMicrophoneSource` mode under employee category `incident_correction_audio`. Private correction capture metadata is stored in private partition SQLite storage:
+
+```sql
+CREATE TABLE correction_capture_records (
+    capture_id TEXT PRIMARY KEY,              -- UUIDv4 capture identifier
+    incident_id TEXT NOT NULL,                -- Target incident UUIDv4
+    device_id TEXT NOT NULL,                  -- Enrolled device identifier
+    profile_id TEXT NOT NULL,                 -- Employee profile identifier
+    input_revision TEXT NOT NULL,             -- Decimal string u64
+    text_revision TEXT NOT NULL,              -- Decimal string u64
+    capture_revision TEXT NOT NULL,           -- Decimal string u64
+    consent_revision TEXT NOT NULL,           -- Decimal string u64
+    deletion_generation TEXT NOT NULL,        -- Decimal string u64
+    source_epoch TEXT NOT NULL,               -- Source epoch UUIDv4
+    sample_count INTEGER NOT NULL,            -- 1 to 960,000 samples
+    sample_rate INTEGER NOT NULL DEFAULT 16000,
+    channels INTEGER NOT NULL DEFAULT 1,
+    audio_blob_id TEXT,                       -- Nullable private encrypted blob ref
+    transcript_text TEXT,                     -- Nullable transcribed text (max 8,192 chars)
+    quality_status TEXT,                      -- 'reliable' | 'unreliable' | 'inaudible'
+    processing_state TEXT NOT NULL,           -- 'recording' | 'transcribing' | 'review_ready' | 'shared' | 'cancelled' | 'expired'
+    request_id TEXT,                          -- Cloud inference admission request UUIDv4
+    route_id TEXT,                            -- Certified transcription route UUIDv4
+    preview_id TEXT,                          -- Preview identifier for employee review
+    content_digest TEXT,                      -- SHA-256 of canonical ReviewedCorrectionV1
+    expires_at_utc TEXT NOT NULL,             -- RFC 3339 UTC
+    created_at_utc TEXT NOT NULL,
+    updated_at_utc TEXT NOT NULL
+);
+
+CREATE INDEX idx_correction_capture_expiry ON correction_capture_records(expires_at_utc, processing_state);
+```
+
+##### Retention, Memory Caps, and Ephemerality
+- **Zero-Retention Mode (`personal_history_retention=false`):** Audio PCM and transcript buffers are maintained strictly in volatile RAM. Maximum duration is 10 seconds (≤ 320,000 audio bytes); absolute lifetime is 30 seconds from initial acquisition. If unreviewed or incomplete at 30 seconds, audio is wiped from RAM immediately.
+- **Retained Mode (`personal_history_retention=true`):** Audio duration is capped at 60 seconds (≤ 1,920,000 audio bytes) under local raw-retention policy and earlier source deadlines. Retained audio is stored in local encrypted private storage (`correction_capture_records` / private blobs), never in control partitions or cloud storage.
+- **Memory Cap:** Strict 6-MiB per-capture memory ceiling encompassing PCM ring buffers, encoding buffers, and transcript results.
+- **Late Result Rejection:** Pending inference results are rejected and discarded immediately upon capture expiration, changed text, revoked consent, deletion generation advance, or explicit cancellation. Copying data cannot reset a source deadline.
+
+##### Release Fence Integration
+When an employee approves a reviewed correction:
+1. Privacy Helper deterministically sanitizes the text and constructs `ReviewedCorrectionV1` with incident target, purpose `incident_correction`, audience, source expiry, and content digest.
+2. The payload is wrapped in `ReviewedContributionV1` (`kind: "reviewed_correction"`, `purpose: "incident_correction"`, `artifacts: []`) and signed with the device private key.
+3. A `release_fences` row is atomically inserted into the control store with `dependent_evidence_ids` binding the private correction capture record.
+4. `oryn-sync-helper` delivers the sanitized text payload to Incident intake under existing custody and release-fence rules. If a local deletion job touches the underlying capture before sync completes, the release fence is cancelled immediately (`cancellation_reason = 'source_deleted'`).
+
 ### Media Blob Encryption Specification
 - Media files are stored in 1 MiB chunks encrypted with AES-256-GCM.
 - Each media blob has a unique random 256-bit data key.

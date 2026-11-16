@@ -153,6 +153,9 @@ The obsolete `ExecutionContextJobV1` definition is eliminated. `job` implies `pr
 - The execution principal binds `organization_id`, `execution_context`, `host`, `assignment_id`, `assignment_epoch`, and `recovery_epoch`.
 - When adapters dispatch operations, the adapter process records the worker ID as an authenticated dispatching principal while acting as an authorized delegate. Adapter and broker validate the delegate against the server-owned winning action/attempt and execution guard.
 
+### Synchronous Containment Enforcement
+Before assignment dispatch, action admission, or step execution, `RuntimeCoordinator` enforces active incident restrictions (`orchestration_incident_restriction`) and safety fences (`OrchestrationSafetyFenceV1`) within the current `TenantTransaction`. Fences take the Identity authority guard before adapter or Graph guards. If an active containment restriction matches the running case, job, schedule, agent version, connection, operation, capability, rule, or worker, dispatch immediately halts (`pause_execution`), mutations are blocked (`pause_writes`), or job admission is denied (`stop_new_jobs`). Containment commits synchronously in PostgreSQL with sub-second latency; connected workers acknowledge safe boundaries within <=2 seconds or remain in an explicit `acknowledgment_pending` state. Containment never rolls back already-transmitted external actions; unconfirmed external mutations remain flagged as unresolved until reconciled by `JobOrchestrationPort::reconcile`.
+
 ---
 
 ## Internal architecture

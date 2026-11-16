@@ -7,7 +7,7 @@ Date: 2026-11-15
 Accepted
 
 Amends [0017-agent-runtime-execution-and-recovery.md](0017-agent-runtime-execution-and-recovery.md) (value custody, continuation executions, wide owner identifiers, and synchronous containment fencing).
-Amended by [0019-flight-simulator-isolation-and-evaluation-evidence.md](0019-flight-simulator-isolation-and-evaluation-evidence.md) (evaluation-owned execution persistence in `orchestration_execution`).
+Amended by [0019-flight-simulator-isolation-and-evaluation-evidence.md](0019-flight-simulator-isolation-and-evaluation-evidence.md) (evaluation-owned execution persistence in `orchestration_execution`), [0021-incident-correction-and-repair-governance.md](0021-incident-correction-and-repair-governance.md) (`incident_restriction` safety fences), [0022-release-eligibility-and-rollout-governance.md](0022-release-eligibility-and-rollout-governance.md) (`ReleaseJobAdmissionPort` cutover, named cohorts in preview/schedule, and `release_cohort` safety fences).
 
 ## Context
 
@@ -89,4 +89,13 @@ Emergency stops and high/critical security containment commands execute synchron
 3. Makes `job_id` and `case_id` nullable, adding composite foreign key `fk_exec_sim_attempt` referencing `simulation_attempt (organization_id, attempt_id)`.
 4. Enforces check constraint `ck_orchestration_execution_owner`: requires either `(environment = 'production' AND job_id IS NOT NULL AND case_id IS NOT NULL AND evaluation_attempt_id IS NULL)` or `(environment = 'simulation' AND job_id IS NULL AND case_id IS NULL AND evaluation_attempt_id IS NOT NULL)`.
 This allows Flight Simulator evaluations to share existing checkpoint, encrypted value custody, action generation CAS, and worker seams without fabricating dummy production jobs or cases.
+
+## Amendment: Release Cohort Admission and Scoped Fences (ADR-0022)
+
+[ADR-0022](0022-release-eligibility-and-rollout-governance.md) amends Job Orchestration interfaces and safety boundaries:
+1. Replaces `ReleaseJobAdmissionPort::resolve` signature to take `ReleaseJobAdmissionRequestV1` (with required concrete ordered population for final resolution).
+2. Adds required nullable `cohort_id` to `JobPreviewRequestV1` and required non-null `cohort_id` to `JobPreviewV1` and `ScheduleDefinitionV1`.
+3. Adds `release_cohort` subject kind to `OrchestrationSafetyFenceV1`, referencing `ReleaseCohortFenceV1` directly as closed after-state.
+4. Requires allocating supervised sequence ordinals synchronously before real case execution start, locking sequence heads before case rows.
+
 

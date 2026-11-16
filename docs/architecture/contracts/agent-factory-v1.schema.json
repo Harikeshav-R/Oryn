@@ -26,6 +26,8 @@
     { "$ref": "#/$defs/ReplaceAgentDraftCommandV1" },
     { "$ref": "#/$defs/PreviewAgentEditCommandV1" },
     { "$ref": "#/$defs/RepairCandidateCommandV1" },
+    { "$ref": "#/$defs/AgentRepairContextV1" },
+    { "$ref": "#/$defs/RepairCandidateBindingV1" },
     { "$ref": "#/$defs/AgentFactoryFixtureSetV1" }
   ],
   "$defs": {
@@ -1746,7 +1748,8 @@
         "attestation",
         "compile_report",
         "evaluation_target",
-        "coverage_requirements"
+        "coverage_requirements",
+        "repair_bindings"
       ],
       "properties": {
         "schema_id": { "type": "string", "const": "agent.evaluation-bundle.v1" },
@@ -1767,6 +1770,11 @@
         "coverage_requirements": {
           "type": "array",
           "items": { "$ref": "#/$defs/CoverageRequirementV1" }
+        },
+        "repair_bindings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RepairCandidateBindingV1" },
+          "maxItems": 1
         }
       }
     },
@@ -2103,9 +2111,9 @@
           "type": "array",
           "minItems": 1,
           "maxItems": 32,
-          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentRefV1" }
         },
-        "repair_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+        "repair_ref": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/RepairRefV1" },
         "regression_requirement_refs": {
           "type": "array",
           "minItems": 1,
@@ -2113,6 +2121,54 @@
           "items": { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/SimulationRegressionRequirementRefV1" }
         },
         "replacement": { "$ref": "#/$defs/EditableAgentPlanV1" }
+      }
+    },
+    "AgentRepairContextV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "base_agent_version_id",
+        "incident_refs",
+        "repair_ref",
+        "regression_requirement_refs"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.repair-context.v1" },
+        "base_agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "incident_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentRefV1" }
+        },
+        "repair_ref": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/RepairRefV1" },
+        "regression_requirement_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/SimulationRegressionRequirementRefV1" }
+        }
+      }
+    },
+    "RepairCandidateBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "agent_id",
+        "draft_revision",
+        "context",
+        "candidate_identity"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.repair-candidate-binding.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "draft_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "context": { "$ref": "#/$defs/AgentRepairContextV1" },
+        "candidate_identity": { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1" }
       }
     },
     "FixtureBindingInputsV1": {

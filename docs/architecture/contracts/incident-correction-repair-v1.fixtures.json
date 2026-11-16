@@ -1,0 +1,603 @@
+{
+  "schema_id": "incident.fixture-set.v1",
+  "validation_cases": [
+    {
+      "case_id": "val_signal_valid",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentSignalV1",
+      "instance": {
+        "schema_id": "incident.signal.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "signal_id": "11111111-1111-4111-8111-111111111111",
+        "producer": "verifier",
+        "source_event_id": "req_verif_001",
+        "source_ref": {
+          "owner_component": "outcome_verification",
+          "resource_kind": "verification_run",
+          "resource_id": "req_verif_001",
+          "version_id": null,
+          "content_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_inv_01",
+          "case_id": "case_100",
+          "agent_version": "2026.11.08.1"
+        },
+        "agent_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "agent",
+          "entity_id": "ag_invoice_processor",
+          "version_id": "2026.11.08.1",
+          "content_sha256": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+        },
+        "capability_ref": null,
+        "branch_id": "br_currency_parse",
+        "node_id": "node_extract_total",
+        "responsible_team_id": "team_finance_ops",
+        "category_codes": [
+          "data_document_format_drift",
+          "verification_failure"
+        ],
+        "observed_fact_refs": [
+          {
+            "owner_component": "outcome_verification",
+            "resource_kind": "readback_evidence",
+            "resource_id": "rb_001",
+            "version_id": "1",
+            "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+          }
+        ],
+        "expected_state_refs": [
+          {
+            "owner_component": "operational_graph",
+            "resource_kind": "rule",
+            "resource_id": "rule_currency_format",
+            "version_id": "v1",
+            "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "owner_ref": {
+              "owner_component": "outcome_verification",
+              "resource_kind": "mismatch_evidence",
+              "resource_id": "ev_001",
+              "version_id": null,
+              "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "sensitivity": "confidential_business",
+            "availability": "available",
+            "source_expires_at": "2026-11-20T00:00:00Z"
+          }
+        ],
+        "error_code": "ERR_CURRENCY_MISMATCH",
+        "submission_state": "acknowledged",
+        "occurred_at": "2026-11-15T23:00:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_signal_invalid_producer",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentSignalV1",
+      "instance": {
+        "schema_id": "incident.signal.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "signal_id": "11111111-1111-4111-8111-111111111111",
+        "producer": "untrusted_third_party",
+        "source_event_id": "req_verif_001",
+        "source_ref": {
+          "owner_component": "outcome_verification",
+          "resource_kind": "verification_run",
+          "resource_id": "req_verif_001",
+          "version_id": null,
+          "content_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        },
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_inv_01",
+          "case_id": "case_100",
+          "agent_version": "2026.11.08.1"
+        },
+        "agent_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "agent",
+          "entity_id": "ag_invoice_processor",
+          "version_id": "2026.11.08.1",
+          "content_sha256": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+        },
+        "capability_ref": null,
+        "branch_id": "br_currency_parse",
+        "node_id": "node_extract_total",
+        "responsible_team_id": "team_finance_ops",
+        "category_codes": [
+          "data_document_format_drift",
+          "verification_failure"
+        ],
+        "observed_fact_refs": [
+          {
+            "owner_component": "outcome_verification",
+            "resource_kind": "readback_evidence",
+            "resource_id": "rb_001",
+            "version_id": "1",
+            "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+          }
+        ],
+        "expected_state_refs": [
+          {
+            "owner_component": "operational_graph",
+            "resource_kind": "rule",
+            "resource_id": "rule_currency_format",
+            "version_id": "v1",
+            "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "owner_ref": {
+              "owner_component": "outcome_verification",
+              "resource_kind": "mismatch_evidence",
+              "resource_id": "ev_001",
+              "version_id": null,
+              "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "sensitivity": "confidential_business",
+            "availability": "available",
+            "source_expires_at": "2026-11-20T00:00:00Z"
+          }
+        ],
+        "error_code": "ERR_CURRENCY_MISMATCH",
+        "submission_state": "acknowledged",
+        "occurred_at": "2026-11-15T23:00:00Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "val_incident_valid",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentV1",
+      "instance": {
+        "schema_id": "incident.record.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "incident_id": "22222222-2222-4222-8222-222222222222",
+        "version_id": "33333333-3333-4333-8333-333333333333",
+        "revision": "1",
+        "responsible_team_id": "team_finance_ops",
+        "owner_actor_id": "00000000-0000-4000-8000-000000000042",
+        "severity": "critical",
+        "status": "contained",
+        "source_signal_refs": [
+          {
+            "owner_component": "incident_correction_repair",
+            "resource_kind": "signal",
+            "resource_id": "11111111-1111-4111-8111-111111111111",
+            "version_id": "1",
+            "content_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        ],
+        "affected_context_refs": [
+          {
+            "owner_component": "job_orchestration",
+            "resource_kind": "case",
+            "resource_id": "case_100",
+            "version_id": null,
+            "content_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+          }
+        ],
+        "agent_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "agent",
+            "entity_id": "ag_invoice_processor",
+            "version_id": "2026.11.08.1",
+            "content_sha256": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+          }
+        ],
+        "symptom_ref": {
+          "owner_component": "outcome_verification",
+          "resource_kind": "mismatch_diagnosis",
+          "resource_id": "diag_001",
+          "version_id": null,
+          "content_sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+        },
+        "expectation_ref": {
+          "owner_component": "operational_graph",
+          "resource_kind": "rule",
+          "resource_id": "rule_currency_format",
+          "version_id": "v1",
+          "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "impact_ref": {
+          "owner_component": "incident_correction_repair",
+          "resource_kind": "impact_assessment",
+          "resource_id": "imp_001",
+          "version_id": null,
+          "content_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        "evidence_availability": "available",
+        "containment_refs": [
+          {
+            "owner_component": "job_orchestration",
+            "resource_kind": "incident_restriction",
+            "resource_id": "rest_001",
+            "version_id": "1",
+            "content_sha256": "8888888888888888888888888888888888888888888888888888888888888888"
+          }
+        ],
+        "correction_refs": [],
+        "repair_refs": [],
+        "created_at": "2026-11-15T23:01:00Z",
+        "updated_at": "2026-11-15T23:01:00Z",
+        "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_incident_invalid_severity",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentV1",
+      "instance": {
+        "schema_id": "incident.record.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "incident_id": "22222222-2222-4222-8222-222222222222",
+        "version_id": "33333333-3333-4333-8333-333333333333",
+        "revision": "1",
+        "responsible_team_id": "team_finance_ops",
+        "owner_actor_id": "00000000-0000-4000-8000-000000000042",
+        "severity": "catastrophic",
+        "status": "contained",
+        "source_signal_refs": [
+          {
+            "owner_component": "incident_correction_repair",
+            "resource_kind": "signal",
+            "resource_id": "11111111-1111-4111-8111-111111111111",
+            "version_id": "1",
+            "content_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        ],
+        "affected_context_refs": [
+          {
+            "owner_component": "job_orchestration",
+            "resource_kind": "case",
+            "resource_id": "case_100",
+            "version_id": null,
+            "content_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+          }
+        ],
+        "agent_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "agent",
+            "entity_id": "ag_invoice_processor",
+            "version_id": "2026.11.08.1",
+            "content_sha256": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+          }
+        ],
+        "symptom_ref": {
+          "owner_component": "outcome_verification",
+          "resource_kind": "mismatch_diagnosis",
+          "resource_id": "diag_001",
+          "version_id": null,
+          "content_sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+        },
+        "expectation_ref": {
+          "owner_component": "operational_graph",
+          "resource_kind": "rule",
+          "resource_id": "rule_currency_format",
+          "version_id": "v1",
+          "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "impact_ref": {
+          "owner_component": "incident_correction_repair",
+          "resource_kind": "impact_assessment",
+          "resource_id": "imp_001",
+          "version_id": null,
+          "content_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        "evidence_availability": "available",
+        "containment_refs": [
+          {
+            "owner_component": "job_orchestration",
+            "resource_kind": "incident_restriction",
+            "resource_id": "rest_001",
+            "version_id": "1",
+            "content_sha256": "8888888888888888888888888888888888888888888888888888888888888888"
+          }
+        ],
+        "correction_refs": [],
+        "repair_refs": [],
+        "created_at": "2026-11-15T23:01:00Z",
+        "updated_at": "2026-11-15T23:01:00Z",
+        "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "val_reviewed_correction_valid",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/ReviewedCorrectionV1",
+      "instance": {
+        "schema_id": "incident.reviewed-correction.v1",
+        "correction_id": "44444444-4444-4444-8444-444444444444",
+        "incident_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "incident",
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "version_id": "33333333-3333-4333-8333-333333333333",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_inv_01",
+          "case_id": "case_100",
+          "agent_version": "2026.11.08.1"
+        },
+        "learning_type": "interface_workaround",
+        "generality": "proposed_reusable",
+        "sanitized_text": "Vendor uses German comma as decimal separator. Values must be normalized to standard decimal point before posting to ERP.",
+        "evidence_refs": [
+          {
+            "owner_ref": {
+              "owner_component": "local_privacy_storage",
+              "resource_kind": "correction_note",
+              "resource_id": "note_001",
+              "version_id": "1",
+              "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "sensitivity": "internal_guidance",
+            "availability": "available",
+            "source_expires_at": "2026-11-25T00:00:00Z"
+          }
+        ],
+        "source_expires_at": "2026-11-25T00:00:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_reviewed_correction_text_too_long",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/ReviewedCorrectionV1",
+      "instance": {
+        "schema_id": "incident.reviewed-correction.v1",
+        "correction_id": "44444444-4444-4444-8444-444444444444",
+        "incident_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "incident",
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "version_id": "33333333-3333-4333-8333-333333333333",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_inv_01",
+          "case_id": "case_100",
+          "agent_version": "2026.11.08.1"
+        },
+        "learning_type": "interface_workaround",
+        "generality": "proposed_reusable",
+        "sanitized_text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "evidence_refs": [
+          {
+            "owner_ref": {
+              "owner_component": "local_privacy_storage",
+              "resource_kind": "correction_note",
+              "resource_id": "note_001",
+              "version_id": "1",
+              "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "sensitivity": "internal_guidance",
+            "availability": "available",
+            "source_expires_at": "2026-11-25T00:00:00Z"
+          }
+        ],
+        "source_expires_at": "2026-11-25T00:00:00Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "val_prevention_spec_valid",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/PreventionSpecificationV1",
+      "instance": {
+        "schema_id": "incident.prevention-spec.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "prevention_spec_id": "55555555-5555-4555-8555-555555555555",
+        "version_id": "66666666-6666-4666-8666-666666666666",
+        "incident_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "incident",
+            "entity_id": "22222222-2222-4222-8222-222222222222",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+          }
+        ],
+        "scenario_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "scenario",
+            "entity_id": "00000000-0000-4000-8000-000000000100",
+            "version_id": "00000000-0000-4000-8000-000000000101",
+            "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        ],
+        "rationale_ref": {
+          "owner_component": "incident_correction_repair",
+          "resource_kind": "correction",
+          "resource_id": "44444444-4444-4444-8444-444444444444",
+          "version_id": "1",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "created_by": "user_expert_finance",
+        "created_at": "2026-11-15T23:05:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_prevention_spec_empty_scenarios",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/PreventionSpecificationV1",
+      "instance": {
+        "schema_id": "incident.prevention-spec.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "prevention_spec_id": "55555555-5555-4555-8555-555555555555",
+        "version_id": "66666666-6666-4666-8666-666666666666",
+        "incident_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "incident",
+            "entity_id": "22222222-2222-4222-8222-222222222222",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+          }
+        ],
+        "scenario_refs": [],
+        "rationale_ref": {
+          "owner_component": "incident_correction_repair",
+          "resource_kind": "correction",
+          "resource_id": "44444444-4444-4444-8444-444444444444",
+          "version_id": "1",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "created_by": "user_expert_finance",
+        "created_at": "2026-11-15T23:05:00Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "val_set_restriction_valid",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/SetIncidentRestrictionCommandV1",
+      "instance": {
+        "restriction_id": "77777777-7777-4777-8777-777777777777",
+        "expected_generation": "0",
+        "incident_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "incident",
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "version_id": "33333333-3333-4333-8333-333333333333",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "target": {
+          "kind": "connection",
+          "connection_id": "conn_sap_eu_prod",
+          "environment": "production"
+        },
+        "effect": "pause_writes",
+        "state": "active",
+        "reason_ref": {
+          "owner_component": "incident_correction_repair",
+          "resource_kind": "incident",
+          "resource_id": "22222222-2222-4222-8222-222222222222",
+          "version_id": "1",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "approval_refs": []
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_set_restriction_invalid_effect",
+      "schema_ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/SetIncidentRestrictionCommandV1",
+      "instance": {
+        "restriction_id": "77777777-7777-4777-8777-777777777777",
+        "expected_generation": "0",
+        "incident_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "incident",
+          "entity_id": "22222222-2222-4222-8222-222222222222",
+          "version_id": "33333333-3333-4333-8333-333333333333",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "target": {
+          "kind": "connection",
+          "connection_id": "conn_sap_eu_prod",
+          "environment": "production"
+        },
+        "effect": "terminate_system",
+        "state": "active",
+        "reason_ref": {
+          "owner_component": "incident_correction_repair",
+          "resource_kind": "incident",
+          "resource_id": "22222222-2222-4222-8222-222222222222",
+          "version_id": "1",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "approval_refs": []
+      },
+      "expected_valid": false
+    }
+  ],
+  "digest_vectors": [
+    {
+      "case_id": "digest_vector_0",
+      "preimage": {
+        "incident_id": "22222222-2222-4222-8222-222222222222",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "revision": "1",
+        "severity": "critical",
+        "status": "contained"
+      },
+      "expected_sha256": "7dd51ed6b6ea4dd6802542283801f55df496d0d6ce37941fbb8fe48693bb2d77"
+    },
+    {
+      "case_id": "digest_vector_1",
+      "preimage": {
+        "group_signature": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "category": "data_document_format_drift",
+          "agent_behavior_digest": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+          "node_id": "node_extract_total",
+          "error_code": "ERR_CURRENCY_MISMATCH"
+        }
+      },
+      "expected_sha256": "3f5af981eea35d5f8cbc6fa8efec9e0e79bb57e5ff85a01d3d4c3b6ebead3a75"
+    },
+    {
+      "case_id": "digest_vector_2",
+      "preimage": {
+        "prevention_spec": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "prevention_spec_id": "55555555-5555-4555-8555-555555555555",
+          "version_id": "66666666-6666-4666-8666-666666666666"
+        }
+      },
+      "expected_sha256": "5f2aec631ab0b508d3c9bc75058ca242ec76fcfaa11a5bef53bcd2c20446be28"
+    }
+  ],
+  "signature_vectors": [
+    {
+      "case_id": "sig_valid_incident_record",
+      "envelope": {
+        "schema_id": "incident.record.v1",
+        "payload": {
+          "incident_id": "22222222-2222-4222-8222-222222222222",
+          "severity": "critical"
+        },
+        "signature": "JcIi_2ceYN9P36M1_wuz6AVTSjsXxdDyewDun0QThQFdJ4-XXfGEkCVQ8yuRMs4L5cdb3x4lxDUCpS1il_xCBw"
+      },
+      "public_key": "cQ5PTdQuV9TnFqUsZCXt3ocRCjT9ZjhtHiL581GTEiA",
+      "expected_valid": true
+    },
+    {
+      "case_id": "sig_valid_prevention_spec",
+      "envelope": {
+        "schema_id": "incident.prevention-spec.v1",
+        "payload": {
+          "prevention_spec_id": "55555555-5555-4555-8555-555555555555",
+          "version_id": "1"
+        },
+        "signature": "bPqbUy84k3Vr9Ueu2Grrn3_wBlaGIqaDvLzNZMzDYLcejfmm6btAhHdGeu_EkAWBtKczDXrtI9oYg83gwVRjDQ"
+      },
+      "public_key": "-bdzyDzi0wuxfdaR0L-iKwYciU7t6YeVXtjD_yeNrDM",
+      "expected_valid": true
+    },
+    {
+      "case_id": "sig_invalid_tampered_payload",
+      "envelope": {
+        "schema_id": "incident.record.v1",
+        "payload": {
+          "incident_id": "22222222-2222-4222-8222-222222222222",
+          "severity": "low"
+        },
+        "signature": "JcIi_2ceYN9P36M1_wuz6AVTSjsXxdDyewDun0QThQFdJ4-XXfGEkCVQ8yuRMs4L5cdb3x4lxDUCpS1il_xCBw"
+      },
+      "public_key": "cQ5PTdQuV9TnFqUsZCXt3ocRCjT9ZjhtHiL581GTEiA",
+      "expected_valid": false
+    }
+  ]
+}

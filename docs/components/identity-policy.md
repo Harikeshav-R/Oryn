@@ -90,7 +90,7 @@ Identity is implemented as a pure, deterministic Rust logical module embedded di
 | **ORY-027** | Tier 4 Execution Prohibition | Hardcoded, non-overridable code guard denying automated execution attempts for Tier 4 operations. |
 | **ORY-028** | Strict Scope Containment | Closed `ScopeV1` typed record enforcement; multi-tenant RLS partitioning; missing or null organization denied. |
 | **ORY-029** | No Silent Privilege Expansion | Agent repairs or rule changes cannot expand operational permissions without explicit administrator re-authorization. |
-| **ORY-030** | Autonomy Stage Progression Gates | Formal governance proposals (`SignedGovernanceProposalV1`) requiring independent Workflow Owner and Security Admin approval remits. |
+| **ORY-030** | Autonomy Stage Progression Gates | Formal governance proposals (`SignedGovernanceProposalV1`) requiring Workflow Owner approval by default, and Security Admin approval when permissions expand or policy explicitly demands stricter fencing. |
 | **ORY-041** | Target Generation Staleness | Validation of live document generation, surface generation, and record revision; generation drift invalidates authorization and requires revised proposal. |
 | **ORY-045** | Durable One-Use Consumption Fence | Atomically locks `identity_action_fence` keyed by `(organization_id, execution_context_sha256, action_id)`; duplicate attempts rejected. |
 | **ORY-046** | Honest Outcome Boundary | Permission consumption and dispatch admission are distinct from external outcome verification; unverified external results report `Outcome Unknown`. |
@@ -167,7 +167,7 @@ An `ApprovalDelegationV1` is strictly decoupled from basic role assignments:
 - **Monetary Constraints:** `AmountLimitV1` specifies `max_minor_units` (nonnegative decimal integer string, semantic max signed 64-bit integer `9223372036854775807`) and a 3-letter ISO-4217 `currency` string. Currency conversion, floating-point arithmetic, split-action downgrade, or missing amount limits are strictly prohibited.
 - **Bootstrap Invariant:** The power to *establish* a delegation is separated from the power to *exercise* it. Security Admin plus applicable Workflow Owner establish initial delegation ceilings without holding an action-approval delegation themselves. Operators and owners cannot redelegate.
 - **Self-Approval Rules:** A job initiator or assist employee may approve its own staged action only if they hold an active, matching `ApprovalDelegationV1` and the organization policy has `distinct_initiator_required: false`. If organization policy requires distinct humans, self-approval is denied with `IDENTITY_SEPARATION_REQUIRED`.
-- **Release Separation:** A Tier 3 agent release always requires a Workflow Owner distinct from its proposer.
+- **Release Separation:** A production release requires a Workflow Owner distinct from its proposer. Production release authorization defaults to the designated Workflow Owner; Security Officer approval is required only when permissions expand or organizational policy explicitly demands stricter fencing. Universal dual Owner/Security sign-offs are not required for standard releases. Missing workflow Owner blocks final approval; Organization Admin must assign an Owner rather than substitute themselves.
 
 ---
 
@@ -357,7 +357,7 @@ Browser clients never receive Auth0 tokens or Oryn bearer credentials:
 #### Execution Contexts and Test-Realm Isolation
 `ExecutionContextV1` enforces closed context typing across production and evaluation:
 - `job`: Production job execution binding `job_id`, `case_id`, `job_type`, `agent_version_id`, `risk_tier`. Environment must be `production`.
-- `assist`: Real-time desktop assist guidance binding `session_id`, `actor_id`, `playbook_id`, `playbook_version`.
+- `assist`: Real-time desktop assist guidance binding `assist_session_id`, `actor_id`, `assist_plan_id`, `assist_plan_version`, `playbook_version`, `release_id`, `release_cohort_id`, `release_eligibility_generation`, and `plan_sha256`. Environment must be `production`.
 - `evaluation`: Flight simulator candidate evaluation binding `evaluation_id`, `scenario_version_id`, `attempt_id`, and `evaluation_target` (`agent` or `assist_plan`). Environment must be `simulation`.
 
 Scripted simulation actors exist in an Identity-owned test realm; they are not real memberships and cannot acquire production sessions, credentials, governance grants, or business authority. Scripted approval and clarification events bind exact proposed values, action/proposal digests, record/surface generations, and test-realm authority. They are labeled simulated and never count as human examples or supervised history. Tier 4 remains denied.
@@ -561,8 +561,24 @@ To guarantee zero race conditions between permission revocation and action dispa
 PostgreSQL backups are susceptible to snapshot restore rollbacks that could resurrect revoked credentials or unconsume action fences. Oryn mitigates this through an independent durable Authority Recovery Journal:
 - **Append on Commit:** Every state transition, governance consumption, action admission, runtime retention fence, and orchestration safety fence writes an `AuthorityJournalEntryV1` to the database outbox and appends to an external immutable audit journal before final response release. This includes:
   - `kind: "runtime_retention_fenced"` with after-images in `orchestration_retention_fence` using `RuntimeRetentionFenceV1`.
-  - `kind: "orchestration_safety_fenced"` with after-images in `orchestration_safety_fence` using `OrchestrationSafetyFenceV1`, binding monotonic generations for subjects `job`, `schedule`, `case`, `action_intent`, `budget`, and `occurrence`.
-- **Durability Gate:** Transitions commit with `durability_pending = true`. The operation is acknowledged to the client only after receiving a cryptographically signed `SignedAuthorityCheckpointV1` from the journal receipt signer.
+  - `kind: "orchestration_safety_fenced"` with after-images in `orchestration_safety_fence` using `OrchestrationSafetyFenceV1`, binding monotonic generations for subjects `job`, `schedule`, `case`, `action_intent`, `budget`, `occurrence`, `incident_restriction`, and `release_cohort` (binding `ReleaseCohortFenceV1`). Active containment restrictions lock target selectors taking the Identity authority guard before adapter/Graph guards.
+  - `kind: "governance_consumed"` recording one-use formal governance approval consumption (`GovernanceConsumptionV1`) via `consume_governance` within a strict 15-minute consumption window and 24-hour proposal ceiling.
+  - `kind: "release_changed"` and `kind: "release_preauthorization_changed"` with typed after-images for `release_head`, `release_cohort_binding`, `release_cohort_fence`, `release_preauthorization`, and `release_approval_consumption`.
+- **Governance Proposal Consumption Seam:**
+  ```rust
+  async fn consume_governance(
+      &self,
+      tx: &mut TenantTransaction,
+      principal: &VerifiedPrincipal,
+      proposal_id: Uuid,
+      expected_object_sha256: &str,
+  ) -> Result<GovernanceConsumptionV1, IdentityProblemV1>;
+  ```
+  Enforces exactly one consumption per `(organization_id, proposal_id, proposal_revision)` and rejects stale approvals past 15 minutes.
+- **Expiring Automation Policies (`ReleaseAutomationPolicyV1`):** Configured via `set_release_automation_policy` administrative command on `OrganizationPolicyV1.release_automation_policy`, defining finite validity intervals (`valid_from` to `not_after`), allowed actions (`repair_release`, `expand`, `restore`), and allowed patch categories (`interaction_binding`, `string_format`), requiring `security_policy.manage` and fresh MFA.
+- **Incident Response Policy (`IncidentResponsePolicyV1`):** Configured on `OrganizationPolicyV1.incident_response_policy`, controlling background diagnosis enablement (default false), deterministic signature escalation rules, interview response deadlines, and timed escalation paths. Escalation rules specify observation windows, minimum case thresholds, severity floors, and target containment effects without inventing default thresholds.
+- **Correction Voice Consent (`incident_correction_audio_permitted`):** Extends `SignedCapturePolicyLease` with dedicated `incident_correction_audio_permitted` boolean flag. True requires active employee consent and existing `audio` acquisition permission; missing or false fails closed.
+- **Durability Gate:** Transitions commit with `durability_pending = true`. The operation is acknowledged to the client only after receiving a cryptographically signed `SignedAuthorityCheckpointV1` from the journal receipt signer. If a mutation produces >128 after-images, it splits into consecutive entries of at most 128 under one mutation ID with one checkpoint on the final entry.
 - **Restore Protocol:** Following a database restore from backup, privileged traffic remains completely disabled. The recovery coordinator queries the external journal for the latest signed checkpoint, replays all missing entries into PostgreSQL, and reconstructs action fences, retention fences, orchestration safety fences, and high-water mark revision counters. All recorded occurrence keys are reconstructed from journaled occurrence entries before any scheduler or slot allocation runs. Retention fences must be replayed before DEK unwrapping or owner review; missing or gapped reconciliation denies value reads. Surviving fences are not proof that a lost receipt means no dispatch was sent. Any detected gap or unreachable journal returns `IDENTITY_RECOVERY_INCOMPLETE`, keeping the organization restricted.
 
 ---

@@ -5,7 +5,7 @@
 **Deciders:** User-Approved Architecture Review  
 **Authority:** Technical Architecture & Security Engineering  
 **Amends:** [ADR-0001](0001-desktop-runtime-and-presentation.md), [ADR-0007](0007-private-evidence-storage-and-retention.md), [ADR-0008](0008-reviewed-still-image-sharing.md), [ADR-0009](0009-local-context-guidance-and-assist-boundaries.md)  
-**Amended by:** [ADR-0011](0011-identity-authority-and-approval-fencing.md)  
+**Amended by:** [ADR-0011](0011-identity-authority-and-approval-fencing.md), [ADR-0022](0022-release-eligibility-and-rollout-governance.md)  
 **Normative Specification:** [docs/components/contribution-sync.md](../components/contribution-sync.md)
 
 ---
@@ -69,3 +69,4 @@ Oryn mediates the critical boundary between an employee's private on-device work
 - Amends [ADR-0007](0007-private-evidence-storage-and-retention.md) by specifying the `privacy-sync.v1` protocol and release fence coordination.
 - Amends [ADR-0008](0008-reviewed-still-image-sharing.md) by formalizing artifact policy verification and PostgreSQL `bytea` intake.
 - Amends [ADR-0009](0009-local-context-guidance-and-assist-boundaries.md) by defining the two-phase HUD generation intake protocol over Contract 20.
+- *(Scope Amendment — 2026-11-16): [ADR-0022](0022-release-eligibility-and-rollout-governance.md) requires guidance bundle publication to retain release-owned `SignedAssistReleaseEligibilityV1` within `AssistPlanV1.eligibility`. Sync helper and HUD must verify dual signatures (publisher and release governance) and current eligibility generation before activating assist plans for execution.*

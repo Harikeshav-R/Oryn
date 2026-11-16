@@ -153,6 +153,12 @@
     },
     {
       "$ref": "#/$defs/SignedVerificationReadLeaseV1"
+    },
+    {
+      "$ref": "#/$defs/GovernanceConsumptionV1"
+    },
+    {
+      "$ref": "#/$defs/ReleaseAutomationPolicyV1"
     }
   ],
   "$defs": {
@@ -281,7 +287,8 @@
         "vision.extract",
         "text.reason",
         "text.embed",
-        "text.rerank"
+        "text.rerank",
+        "incident.transcribe_correction"
       ]
     },
     "RoleId": {
@@ -383,6 +390,18 @@
             },
             "playbook_version": {
               "$ref": "#/$defs/Identifier"
+            },
+            "release_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "release_cohort_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "release_eligibility_generation": {
+              "$ref": "#/$defs/U64"
+            },
+            "plan_sha256": {
+              "$ref": "#/$defs/Sha256Hex"
             }
           },
           "required": [
@@ -390,7 +409,11 @@
             "assist_session_id",
             "assist_plan_id",
             "assist_plan_version",
-            "playbook_version"
+            "playbook_version",
+            "release_id",
+            "release_cohort_id",
+            "release_eligibility_generation",
+            "plan_sha256"
           ]
         },
         {
@@ -1931,6 +1954,26 @@
         },
         "verification_policy": {
           "$ref": "#/$defs/VerificationPolicyConfigV1"
+        },
+        "incident_response_policy": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/IncidentResponsePolicyV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "release_automation_policy": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ReleaseAutomationPolicyV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -1950,7 +1993,8 @@
         "inference_budget_limit_microusd",
         "inference_budget_window",
         "execution_limits",
-        "verification_policy"
+        "verification_policy",
+        "release_automation_policy"
       ]
     },
     "ExecutionLimitsPolicyV1": {
@@ -2146,7 +2190,12 @@
             "identity_recovery_overlay",
             "identity_recovery_epoch_state",
             "orchestration_retention_fence",
-            "orchestration_safety_fence"
+            "orchestration_safety_fence",
+            "release_head",
+            "release_cohort_binding",
+            "release_cohort_fence",
+            "release_preauthorization",
+            "release_approval_consumption"
           ]
         },
         "record_id": {
@@ -2193,6 +2242,81 @@
             "properties": {
               "state_after": {
                 "$ref": "urn:oryn:schemas:job-orchestration:v1#/$defs/OrchestrationSafetyFenceV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "release_cohort_fence" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseCohortFenceV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "release_preauthorization" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleasePreauthorizationV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "release_approval_consumption" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "#/$defs/GovernanceConsumptionV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "release_head" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "#/$defs/ReleaseHeadAfterStateV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "release_cohort_binding" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "#/$defs/ReleaseCohortBindingAfterStateV1"
               }
             }
           }
@@ -2792,6 +2916,37 @@
           },
           "required": [
             "kind",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_release_automation_policy"
+            },
+            "release_automation_policy": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ReleaseAutomationPolicyV1"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "security_approval_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "release_automation_policy",
+            "security_approval_id",
             "reason"
           ]
         }
@@ -3868,6 +4023,9 @@
             "playbook_publication",
             "business_rule",
             "agent_release",
+            "assist_release",
+            "release_rollout_policy",
+            "release_preauthorization",
             "permission_expansion",
             "security_policy",
             "legal_hold_release",
@@ -4944,7 +5102,9 @@
             "organization_deleted",
             "sync_custody_changed",
             "runtime_retention_fenced",
-            "orchestration_safety_fenced"
+            "orchestration_safety_fenced",
+            "release_changed",
+            "release_preauthorization_changed"
           ]
         },
         "record_after_images": {
@@ -5087,6 +5247,9 @@
         "research_extension_permitted": {
           "type": "boolean"
         },
+        "incident_correction_audio_permitted": {
+          "type": "boolean"
+        },
         "max_offline_seconds": {
           "type": "integer",
           "minimum": 1,
@@ -5116,6 +5279,7 @@
         "excluded_url_patterns",
         "max_raw_retention_days",
         "research_extension_permitted",
+        "incident_correction_audio_permitted",
         "max_offline_seconds",
         "revocation_generation",
         "issued_at",
@@ -6149,6 +6313,123 @@
         }
       }
     },
+    "IncidentResponsePolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "revision",
+        "background_diagnosis_enabled",
+        "escalation_rules",
+        "interview_response_deadline_seconds",
+        "timed_escalation_policy"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.incident-response-policy.v1"
+        },
+        "revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "background_diagnosis_enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "escalation_rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentEscalationRuleV1"
+          },
+          "maxItems": 64
+        },
+        "interview_response_deadline_seconds": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 604800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timed_escalation_policy": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "unassigned_escalate_seconds",
+                "escalation_team_id"
+              ],
+              "properties": {
+                "unassigned_escalate_seconds": {
+                  "type": "integer",
+                  "minimum": 60
+                },
+                "escalation_team_id": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "IncidentEscalationRuleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id",
+        "signature_selector",
+        "observation_window_seconds",
+        "min_distinct_cases",
+        "severity_floor",
+        "target_effect",
+        "governance_approval_ref"
+      ],
+      "properties": {
+        "rule_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "signature_selector": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "observation_window_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2592000
+        },
+        "min_distinct_cases": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "severity_floor": {
+          "type": "string",
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "target_effect": {
+          "type": "string",
+          "enum": [
+            "pause_execution",
+            "pause_writes",
+            "stop_new_jobs"
+          ]
+        },
+        "governance_approval_ref": {
+          "$ref": "#/$defs/Identifier"
+        }
+      }
+    },
     "VerificationReadContextV1": {
       "type": "object",
       "oneOf": [
@@ -6508,6 +6789,156 @@
         "not_after": {
           "$ref": "#/$defs/UtcDateTime"
         }
+      }
+    },
+    "ReleaseAutomationPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "revision",
+        "allowed_actions",
+        "allowed_patch_categories",
+        "valid_from",
+        "not_after",
+        "security_approval_ref",
+        "state"
+      ],
+      "properties": {
+        "schema_id": { "const": "identity.release-automation-policy.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "revision": { "$ref": "#/$defs/U64" },
+        "allowed_actions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["repair_release", "expand", "restore"]
+          }
+        },
+        "allowed_patch_categories": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["interaction_binding", "string_format"]
+          }
+        },
+        "valid_from": { "$ref": "#/$defs/UtcDateTime" },
+        "not_after": { "$ref": "#/$defs/UtcDateTime" },
+        "security_approval_ref": { "$ref": "#/$defs/Identifier" },
+        "state": {
+          "type": "string",
+          "enum": ["enabled", "revoked"]
+        }
+      }
+    },
+    "GovernanceConsumptionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "consumption_id",
+        "organization_id",
+        "proposal_id",
+        "proposal_revision",
+        "object_digest",
+        "approval_refs",
+        "consumed_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "identity.governance-consumption.v1" },
+        "consumption_id": { "$ref": "#/$defs/UUID" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "proposal_id": { "$ref": "#/$defs/UUID" },
+        "proposal_revision": { "$ref": "#/$defs/U64" },
+        "object_digest": { "$ref": "#/$defs/Sha256Hex" },
+        "approval_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": { "$ref": "#/$defs/Identifier" }
+        },
+        "consumed_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "ReleaseHeadAfterStateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_id",
+        "revision",
+        "definition_sha256",
+        "state",
+        "active_phase_id",
+        "durability_pending",
+        "updated_at"
+      ],
+      "properties": {
+        "release_id": { "$ref": "#/$defs/UUID" },
+        "revision": { "$ref": "#/$defs/U64" },
+        "definition_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "state": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review_requested",
+            "changes_requested",
+            "rejected",
+            "approved",
+            "limited_release",
+            "active",
+            "paused",
+            "restricted",
+            "needs_revalidation",
+            "superseded",
+            "retired",
+            "withdrawn",
+            "reverted",
+            "archived"
+          ]
+        },
+        "active_phase_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "durability_pending": { "type": "boolean" },
+        "updated_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "ReleaseCohortBindingAfterStateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cohort_id",
+        "release_id",
+        "agent_version_id",
+        "generation",
+        "state",
+        "updated_at"
+      ],
+      "properties": {
+        "cohort_id": { "$ref": "#/$defs/Identifier" },
+        "release_id": { "$ref": "#/$defs/UUID" },
+        "agent_version_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/UUID" },
+            { "type": "null" }
+          ]
+        },
+        "generation": { "$ref": "#/$defs/U64" },
+        "state": {
+          "type": "string",
+          "enum": ["active", "superseded", "paused"]
+        },
+        "updated_at": { "$ref": "#/$defs/UtcDateTime" }
       }
     }
   }

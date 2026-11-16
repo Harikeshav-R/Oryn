@@ -48,6 +48,7 @@ The component is partitioned into eleven internal modules:
 10. `InferenceSessionCoordinator`: WebSocket connection affinity, chunk proof verification, and streaming proxying to LiteLLM.
 11. `JobOrchestration`: Coordinates job previews, starts, controls, case reconciliations, schedules, activations, sponsor confirmations, employee local consents, and internal trigger events via `JobOrchestrationPort` under `control-plane-v1.openapi.json`.
 12. `OutcomeVerificationCoordinator`: Pure deterministic evaluation library `oryn-verification-core`, verification spec catalog, readback coordination with application adapters, postcondition assessment handling, standalone Graph handoff verifications, advisory explanations, and 13 Control Plane routes under `control-plane-v1.openapi.json`.
+13. `IncidentRepairCoordinator`: Pure deterministic evaluation library `oryn-reliability-core` embedded in the Rust control plane, managing `IncidentIntake`, `IncidentCorrelator`, `ContainmentCoordinator`, `CorrectionCoordinator`, `DiagnosisCoordinator`, `RepairCoordinator`, and `IncidentQuery` modules under `IncidentRepairPort` across 18 Control Plane REST endpoints mounted in `control-plane-v1.openapi.json`.
 
 ```rust
 // Core Domain Command & Handler Interfaces (Specification Reference)
@@ -58,6 +59,29 @@ pub struct RequestContext {
     pub principal: VerifiedPrincipal,
     pub deadline: MonotonicDeadline,
 }
+
+pub trait IncidentRepairPort: Send + Sync {
+    fn ingest<'a>(
+        &'a self,
+        tx: &'a mut TenantTransaction,
+        principal: &'a VerifiedPrincipal,
+        signal: IncidentSignalV1,
+    ) -> impl Future<Output = Result<IncidentV1, IncidentErrorV1>> + Send + 'a;
+
+    fn apply<'a>(
+        &'a self,
+        tx: &'a mut TenantTransaction,
+        principal: &'a VerifiedPrincipal,
+        command: IncidentCommandV1,
+    ) -> impl Future<Output = Result<IncidentCommandResultV1, IncidentErrorV1>> + Send + 'a;
+
+    fn query<'a>(
+        &'a self,
+        principal: &'a VerifiedPrincipal,
+        query: IncidentQueryV1,
+    ) -> impl Future<Output = Result<IncidentPageV1, IncidentErrorV1>> + Send + 'a;
+}
+
 
 pub trait DomainCommand: Send {
     type Response: Send;

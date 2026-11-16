@@ -88,6 +88,7 @@ Every operation submitted to the gateway MUST specify one of the following exact
 - `meeting.transcribe.chunk`: Bounded audio chunk transcription (near-live mode).
 - `meeting.transcribe.final`: Authoritative final session transcription and diarization (capped at 128 MiB / 134,217,728 bytes).
 - `meeting.extract_commitments`: Extraction of commitments, obligations, constraints, and dependencies from finalized transcripts.
+- `incident.transcribe_correction`: Batch audio transcription of employee incident correction dictation (capped at 1,920,000 decoded bytes / 2,621,440 bytes JSON).
 - `vision.extract`: OCR and visual structure extraction from privacy-masked screen captures.
 - `text.reason`: General reasoning, structured extraction, workflow synthesis, agent generation, diagnostic hypothesis formation, verification assistance, and repair proposal generation.
 - `text.embed`: Dense vector generation for knowledge retrieval.
@@ -102,7 +103,7 @@ Inference authorizations strictly link admitted requests to verified input data 
 2. **RAM-Only Source Scopes:** `InputScopeV1` and `StreamScopeV1` contain transient window/segment references verified entirely in memory; they are never persisted to database tables.
 3. **Signed Chunk Proofs (`SignedInferenceChunkProofV1`):** Every 100 ms audio chunk (16 kHz, 16-bit mono PCM, max 3,200 bytes) sent over WebSocket includes a header signed by the enrolled device key (`privacy.inference-chunk.v1`). Server validates `sample_start`, `sample_end`, sequence monotonicity, and consent revision before forwarding bytes to LiteLLM.
 4. **Child Token Audience:** Desktop employee inference uses Identity child tokens with `audience: "inference"` and scopes `inference:authorize`, `inference:submit`, `inference:cancel`, `inference:read_route`.
-5. **Payload Size Caps:** Bounded standard JSON bodies ≤ 256 KiB; general inference input ≤ 10 MiB (10,485,760 bytes). For `meeting.transcribe.final` only, input bodies up to 128 MiB (134,217,728 bytes) are admitted provided the route certifies streaming multipart diarization.
+5. **Payload Size Caps:** Bounded standard JSON bodies ≤ 256 KiB; general inference input ≤ 10 MiB (10,485,760 bytes). For `incident.transcribe_correction`, the operation-specific JSON-body ceiling is 2,621,440 bytes (to accommodate base64-encoded PCM audio ≤ 1,920,000 decoded bytes). For `meeting.transcribe.final` only, input bodies up to 128 MiB (134,217,728 bytes) are admitted provided the route certifies streaming multipart diarization.
 6. **Budget Accounting & Reservations:** Organizations define `inference_budget_limit_microusd` over `calendar_month_utc` windows in `OrganizationPolicyV1`. Control Plane atomically reserves estimated maximum spend in `inference_reservation` prior to upstream transmission; unknown outcomes remain encumbered until billing reconciliation.
 
 ### 3.2 InferenceRoute
@@ -400,6 +401,31 @@ The Outcome Verification (`outcome-verification`) component consumes on-demand, 
    - **Concurrency & Rate Ceilings:** At most 2 concurrent explanation calls per tenant; no automatic retries.
    - **Governance & Provenance:** Strictly advisory; off unless explicitly enabled and requested. Persists only validated labeled advisory outputs and provenance in expiring encrypted custody, not raw prompts, completions, or model reasoning. Inference failures or outages return unavailable explanation metadata and leave the already-finalized verdict bytes unchanged.
    - **Route Pinning & Retries:** Pinned model route, US-only/ZDR/no-training agreements, budget reservations, rejection of invented citations or stale inputs, zero provider fallback.
+
+### 3.13 Incident Correction, Diagnosis, and Repair Semantic Contracts
+
+The Incident, Correction, and Repair (`incident-correction-repair`) component consumes cloud inference via the LiteLLM gateway under Contract 22 for three specialized purposes across desktop audio transcription and server-side reasoning:
+
+1. **`incident_correction_transcription` (Operation: `incident.transcribe_correction`):**
+   - **Purpose:** Performs batch audio transcription of employee correction dictation captured exclusively via the desktop Privacy Helper's `CorrectionMicrophoneSource` mode.
+   - **Output Schema:** `incident.correction-transcript.v1` (enforcing `CorrectionTranscriptV1 {schema_id, capture_id, text, quality_status, language, sample_count}`). Quality status is `reliable`, `unreliable`, or `inaudible`; text ≤ 8,192 characters, language ≤ 35 characters, sample count 1–960,000. An unreliable or inaudible transcript cannot auto-submit a correction; the employee must review and edit the exact text first.
+   - **Input Scope:** Exactly one `incident_correction_audio` source part in `audio/pcm` format (16-kHz, mono, signed 16-bit little-endian PCM). Input capped at 1,920,000 decoded bytes; operation-specific JSON-body ceiling 2,621,440 bytes accommodates base64 encoding. Output capped at 16 KiB. Timeout ≤ 30 seconds (volatile memory mode timeout ≤ 10 seconds and remaining absolute source lifetime).
+   - **Concurrency & Rate Ceilings:** At most 2 concurrent transcription requests per tenant; at most 1 per device. No tools, diarization, commitments extraction, provider fallback, or automatic retries.
+   - **Route Pinning & Security:** Pinned US-only/ZDR/no-training route; employee principal with verified child token and device/profile privacy proof.
+
+2. **`incident_diagnose` (Operation: `text.reason`):**
+   - **Purpose:** Formulates diagnostic hypotheses (`DiagnosisV1`), identifies candidate first-divergence references, suggests category claims, and generates focused expert interview questions (`CorrectionQuestionV1`) by comparing authorized failed context and relevant verified successful baseline cases pinned to compatible versions.
+   - **Output Schema:** `incident.diagnosis.v1` (enforcing `DiagnosisV1` with immutable input digest, observed facts, hypotheses with evidence references and review state, category claims, divergence references, missing evidence, suggested expert question, citations, and synthesis provenance).
+   - **Input Scope:** Minimized authorized failure context and compatible baseline cases; strictly excludes unencrypted private captures, credentials, and deleted evidence. Input capped at 64 KiB; output capped at 32 KiB. Timeout: 30 seconds.
+   - **Concurrency & Rate Ceilings:** At most 2 concurrent reasoning jobs per tenant shared across `incident_diagnose` and `repair_propose`.
+   - **Governance & Provenance:** On-demand by default; organization policy can opt into bounded background diagnosis (`background_diagnosis_enabled`). Persists only validated outputs and `SynthesisProvenanceV1`, never raw prompts, chain-of-thought, or unvalidated completions. Diagnostic hypotheses remain strictly unverified until confirmed by human experts with evidence; no auto-retry or provider substitution.
+
+3. **`repair_propose` (Operation: `text.reason`):**
+   - **Purpose:** Generates bounded repair proposals (`RepairProposalV1`) targeting agent IR (`EditableAgentPlanV1`), guidance playbooks, assist executables, or adapter change proposals (`AdapterChangeProposalV1`) from accepted corrections, validated diagnoses, and base definitions.
+   - **Output Schema:** `repair.patch.v1` (enforcing proposal replacement bodies conforming to the target domain's canonical format).
+   - **Input Scope:** Pinned base version, accepted correction citations, diagnostic divergence findings, and declared repair scope (`RepairScopeV1`). Input capped at 256 KiB; output capped at 128 KiB. Timeout: 120 seconds.
+   - **Concurrency & Rate Ceilings:** At most 2 concurrent reasoning jobs per tenant shared across `incident_diagnose` and `repair_propose`.
+   - **Governance & Provenance:** Generates proposed replacements within declared structural bounds only; does not accept generated code or advance the Factory authoring head. Diagnostic evidence alone may start interaction/data-format proposals within existing approved behavior; business rule/knowledge/policy changes require accepted corrections and upstream owner approvals. No auto-retry or provider substitution; never auto-rebases repairs.
 ---
 
 ## 4. Control Plane and Gateway Interfaces
@@ -556,7 +582,7 @@ All 21 Oryn components interface with model inference according to the following
 | `16. agent-runtime` | Uses `text.reason` for step decisions within strict action and tool boundaries. | Model decisions are bounded by assigned risk tier and require human sign-off for Tier 3. |
 | `17. flight-simulator` | Uses `text.reason` to generate synthetic test scenarios and evaluate mock behavior. | Simulated execution cannot touch production systems or bypass test oracles. |
 | `18. outcome-verification` | Uses `text.reason` as a verification assistant. | Model judgment alone cannot certify business correctness; requires deterministic oracle checks. |
-| `19. incident-correction-repair` | Uses `text.reason` to formulate diagnostic hypotheses and propose IR patches. | AI diagnoses remain unverified hypotheses until confirmed by human experts. |
+| `19. incident-correction-repair` | Submits batch `incident.transcribe_correction` for dictation; consumes `text.reason` for bounded `incident_diagnose` and `repair_propose`. | AI diagnoses remain unverified hypotheses; repairs bounded by declared scope; models cannot approve repairs, advance draft heads, or clear restrictions. |
 | `20. release-governance` | Enforces release gates, canary limits, and approval policies. | Release promotion cannot be authorized by model inference. |
 | `21. command-center-analytics` | Exposes role-scoped reporting and governance views. | Excludes private raw capture, transcripts, and employee surveillance metrics. |
 

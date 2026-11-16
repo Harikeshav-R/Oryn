@@ -8,6 +8,7 @@
         "schema_id": "job.preview-request.v1",
         "agent_id": "agent_lead_enrichment",
         "agent_version_id": "44444444-4444-4444-8444-444444444444",
+        "cohort_id": "cohort_leads_tier1",
         "selection": {
           "kind": "explicit",
           "connection_id": "conn_salesforce_prod",
@@ -47,6 +48,7 @@
         "schema_id": "job.preview-request.v1",
         "agent_id": "agent_lead_enrichment",
         "agent_version_id": "44444444-4444-4444-8444-444444444444",
+        "cohort_id": "cohort_leads_tier1",
         "selection": {
           "kind": "explicit",
           "connection_id": "conn_salesforce_prod",
@@ -94,6 +96,7 @@
         "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
         "release_id": "44444444-4444-4444-8444-444444444444",
         "release_revision": "1",
+        "cohort_id": "cohort_leads_tier1",
         "selection": {
           "kind": "explicit",
           "connection_id": "conn_salesforce_prod",
@@ -286,6 +289,7 @@
         "revision": "1",
         "workflow_id": "55555555-5555-4555-8555-555555555555",
         "agent_id": "agent_lead_enrichment",
+        "cohort_id": "cohort_leads_tier1",
         "owner_actor_id": "22222222-2222-4222-8222-222222222222",
         "sponsor_actor_id": "33333333-3333-4333-8333-333333333333",
         "trigger": {
@@ -413,6 +417,41 @@
           "control_intent": "pause",
           "state": "paused",
           "has_unresolved_effects": true
+        }
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_safety_fence_incident_restriction_valid",
+      "schema_ref": "urn:oryn:schemas:job-orchestration:v1#/$defs/OrchestrationSafetyFenceV1",
+      "instance": {
+        "schema_id": "job.safety-fence.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "fence_id": "77777777-7777-4777-8777-777777777777",
+        "generation": "1",
+        "subject_kind": "incident_restriction",
+        "subject_id": "77777777-7777-4777-8777-777777777777",
+        "state_ref_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+        "after_state": {
+          "kind": "incident_restriction",
+          "restriction_id": "77777777-7777-4777-8777-777777777777",
+          "incident_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "incident",
+            "entity_id": "22222222-2222-4222-8222-222222222222",
+            "version_id": "33333333-3333-4333-8333-333333333333",
+            "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+          },
+          "target": {
+            "kind": "connection",
+            "connection_id": "conn_sap_eu_prod",
+            "environment": "production"
+          },
+          "effect": "pause_writes",
+          "state": "active",
+          "generation": "1",
+          "approval_refs": [],
+          "has_unresolved_effects": false
         }
       },
       "expected_valid": true
