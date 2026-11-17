@@ -534,10 +534,12 @@ model_list:
 ### 6.2 Multipart and Audio Spooling Protections
 
 When audio or image files are uploaded for chunk or batch inference:
-1. **Memory-Backed Temp Storage:** Upload spooling must use a private, size-limited RAM disk (`tmpfs` or `ramfs`). Persistent disk volumes are prohibited for payload spooling.
+1. **Memory-Backed Temp Storage:** Upload spooling must use a private, size-limited RAM disk (`tmpfs` or `ramfs`). Persistent disk volumes are strictly prohibited for payload spooling. Each inference worker pod mounts a dedicated 256 MiB RAM-disk (`tmpfs`) scratch volume (`size=256m,noexec,nosuid,nodev`).
 2. **OS Hardening:** Host swap space and kernel core dumps are disabled on inference gateway worker nodes.
-3. **Strict Size Admission:** Requests exceeding `max_input_bytes` or available memory allocation are rejected before reading the body.
-4. **Immediate Cleanup:** Temp spool allocations are explicitly unlinked and overwritten upon request completion, cancellation, or failure.
+3. **Strict Size Admission & Input Limits:** Requests exceeding `max_input_bytes` or available memory allocation are rejected before reading the body. The authoritative final meeting transcription payload (`meeting.transcribe.final`) is strictly capped at 128 MiB (134,217,728 bytes); general inference inputs are capped at 10 MiB; and incident transcription dictations are capped at 2,621,440 bytes.
+4. **Concurrency & Capacity Ceilings:** Gateway infrastructure enforces a hard ceiling of 20 global concurrent inference sessions across the cluster, and at most 12 concurrent active sessions per individual pod, strictly bounding concurrent RAM-disk spooling pressure.
+5. **Immediate Cleanup:** Temp spool allocations are explicitly unlinked and overwritten upon request completion, cancellation, or failure.
+6. **mTLS Transport & US Confinement:** Ingress from Control Plane `InferenceSessionCoordinator` to LiteLLM Proxy pods transits over mutual TLS (mTLS) with SPIFFE identity verification. Upstream egress to certified cloud AI providers is strictly confined to United States regions over TLS 1.3. Zero content retention, zero body logging, zero caching, and no automatic cross-provider fallback are non-negotiable invariants.
 
 ### 6.3 Local Pre-Transfer Sanitization
 

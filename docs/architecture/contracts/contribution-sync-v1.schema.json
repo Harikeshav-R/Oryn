@@ -991,110 +991,6 @@
         }
       }
     },
-    "SignedArtifactPolicy": {
-      "type": "object",
-      "required": [
-        "schema_id",
-        "key_id",
-        "payload",
-        "signature"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "schema_id": {
-          "const": "privacy.artifact-policy.v1"
-        },
-        "key_id": {
-          "$ref": "#/$defs/Identifier"
-        },
-        "payload": {
-          "type": "object",
-          "required": [
-            "organization_id",
-            "policy_revision",
-            "issued_at",
-            "not_after",
-            "allowed_purposes",
-            "allowed_audiences",
-            "max_lifetime_days",
-            "max_dimensions",
-            "max_byte_length",
-            "max_image_count"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "organization_id": {
-              "$ref": "#/$defs/OrganizationId"
-            },
-            "policy_revision": {
-              "$ref": "#/$defs/Identifier"
-            },
-            "issued_at": {
-              "$ref": "#/$defs/Utc"
-            },
-            "not_after": {
-              "$ref": "#/$defs/Utc"
-            },
-            "allowed_purposes": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 128,
-              "uniqueItems": true,
-              "items": {
-                "$ref": "#/$defs/Identifier"
-              }
-            },
-            "allowed_audiences": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 128,
-              "uniqueItems": true,
-              "items": {
-                "$ref": "#/$defs/Identifier"
-              }
-            },
-            "max_lifetime_days": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 365
-            },
-            "max_dimensions": {
-              "type": "object",
-              "required": [
-                "width",
-                "height"
-              ],
-              "additionalProperties": false,
-              "properties": {
-                "width": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "maximum": 1920
-                },
-                "height": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "maximum": 1080
-                }
-              }
-            },
-            "max_byte_length": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 1048576
-            },
-            "max_image_count": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 4
-            }
-          }
-        },
-        "signature": {
-          "$ref": "#/$defs/Signature"
-        }
-      }
-    },
     "SignedTrustKeysetV1": {
       "type": "object",
       "required": [
@@ -1589,7 +1485,7 @@
         "artifact_policy": {
           "oneOf": [
             {
-              "$ref": "#/$defs/SignedArtifactPolicy"
+              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/SignedArtifactPolicy"
             },
             {
               "type": "null"

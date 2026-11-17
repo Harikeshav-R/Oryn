@@ -5,7 +5,7 @@
 **Deciders:** User-Approved Architecture Review  
 **Authority:** Technical Architecture & Security Engineering  
 **Amends:** [ADR-0008](0008-reviewed-still-image-sharing.md), [ADR-0009](0009-local-context-guidance-and-assist-boundaries.md), [ADR-0010](0010-contribution-delivery-and-guidance-sync.md)  
-**Amended by:** [ADR-0012](0012-control-plane-transport-durability-and-inference.md), [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md), [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md), [ADR-0022](0022-release-eligibility-and-rollout-governance.md)  
+**Amended by:** [ADR-0012](0012-control-plane-transport-durability-and-inference.md), [ADR-0016](0016-application-adapter-qualification-and-dispatch-boundaries.md), [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md), [ADR-0022](0022-release-eligibility-and-rollout-governance.md), [ADR-0024](0024-infrastructure-security-custody-and-recovery.md)  
 **Normative Specification:** [docs/components/identity-policy.md](../components/identity-policy.md)
 
 ---
@@ -78,6 +78,8 @@ Oryn governs the execution boundary between autonomous AI agents, desktop human 
 *(Scope Amendment — 2026-11-15): [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md) amends `ExecutionContextV1` with the `evaluation` variant (`{kind: "evaluation", evaluation_id, scenario_version_id, attempt_id, evaluation_target}`). Introduces `SignedSimulationAdmissionV1` (`identity.simulation-admission.v1`) under `policy` key purpose, authenticates test-realm scripted actors with simulation-only authority (prohibiting fake human examples or supervised history), adds dedicated `evaluation` key purpose to `SignedTrustKeysetV1`, and adds simulation capabilities `simulation.read`, `simulation.edit`, `simulation.evaluate`, `simulation.review`, and `simulation.manage_policy`.*
 
 *(Scope Amendment — 2026-11-16): [ADR-0022](0022-release-eligibility-and-rollout-governance.md) replaces universal dual-remit approval with product-minimum remits (Workflow Owner default; Security approval for permission expansion or stricter org policy). Defines transaction-taking `consume_governance` producing `GovernanceConsumptionV1`, adds expiring `ReleaseAutomationPolicyV1` on `OrganizationPolicyV1`, extends subject kinds with `assist_release`, `release_rollout_policy`, and `release_preauthorization`, adds journal kinds `release_changed` and `release_preauthorization_changed`, and extends `RecordAfterImageV1` with release tables.*
+
+*(Infrastructure & Custody Amendment — 2026-11-16): [ADR-0024](0024-infrastructure-security-custody-and-recovery.md) extends the Identity journal with kind `payload_key_custody_changed`, and `RecordAfterImageV1.table_name` with `infrastructure_payload_key_fence` and `infrastructure_payload_custody_generation` with typed after-images. Mandates storage certification (`SignedStorageCertificationV1`) gate for active artifact policies, WORM projection sanitization (omitting `proposal_json` and token nonces from archive projections), and sets the fixed 64-connection database pool budget.*
 
 
 

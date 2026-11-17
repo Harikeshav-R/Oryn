@@ -1075,7 +1075,9 @@ Audit views record significant user-visible and agent actions: enrollment/consen
 
 ### 25.9 Data access, removal, and organization offboarding
 
-Authorized admins can export published organizational knowledge and the audit artifacts they are entitled to retain. They can remove team memberships, restrict access, archive playbooks, retire agents, and request data deletion according to policy. An organization offboarding flow must list current agents, scheduled jobs, pending approvals, retained audit records, shared knowledge, and the consequence of deactivation. No agent may continue initiating jobs once the organization is deactivated.
+Authorized admins can export published organizational knowledge and the audit artifacts they are entitled to retain. They can remove team memberships, restrict access, archive playbooks, retire agents, and request data deletion according to policy. An organization offboarding flow must list current agents, scheduled jobs, pending approvals, retained audit records, shared knowledge, and the consequence of deactivation.
+
+Deactivation immediately halts new capture authority and agent job dispatch without undoing past business effects or immediately deleting records subject to governed retention. Organization erasure disposes of eligible cloud evidence payloads and cloud decryption keys under approved retention schedules; immutable WORM audit records and sparse deduplication metadata remain intact until their statutory compliance locks expire. Erasure does not promise instantaneous physical media overwriting or retroactive retraction of external exports. If a catastrophic regional loss permanently destroys cloud evidence wrapping keys, the resulting evidence custody loss is disclosed honestly rather than falsely claiming successful payload recovery under ordinary recovery objectives. Employee-local private evidence remains strictly bounded to local endpoints, protected by the operator/employee-private boundary, and is never backed up to central cloud infrastructure. No agent may continue initiating jobs once the organization is deactivated.
 
 ### 25.10 Malicious or misleading content
 

@@ -5,7 +5,7 @@
 **Deciders:** User-Approved Architecture Review  
 **Authority:** Technical Architecture & Security Engineering  
 **Amends:** [ADR-0010](0010-contribution-delivery-and-guidance-sync.md), [ADR-0011](0011-identity-authority-and-approval-fencing.md)  
-**Amended by:** [ADR-0022](0022-release-eligibility-and-rollout-governance.md), [ADR-0023](0023-command-center-reporting-privacy-and-delivery.md)  
+**Amended by:** [ADR-0022](0022-release-eligibility-and-rollout-governance.md), [ADR-0023](0023-command-center-reporting-privacy-and-delivery.md), [ADR-0024](0024-infrastructure-security-custody-and-recovery.md)  
 **Normative Specification:** [docs/components/control-plane.md](../components/control-plane.md)
 
 ---
@@ -76,5 +76,7 @@ Oryn's enterprise multi-tenant control plane coordinates client ingress, domain 
 *(Scope Amendment — 2026-11-16): [ADR-0022](0022-release-eligibility-and-rollout-governance.md) incorporates release governance routes and `durability_pending` transaction commitments, requiring complete signed authority checkpointing before newly expanded release authority is acknowledged or exposed to admission traffic.*
 
 *(Scope Amendment — 2026-11-16): [ADR-0023](0023-command-center-reporting-privacy-and-delivery.md) incorporates Command Center, Notifications, and Analytics routes; multi-channel notification delivery via Desktop Shell (`shell-sync.v1` major 1, minor 1) and isolated Notification Egress Broker (AWS SES in `us-east-1`); governed export streaming via isolated Export Artifact Broker and sandboxed Export Render Worker (AWS S3 in `us-east-1`); and Authority Recovery Journal disclosure checkpointing (`analytics_disclosure_changed`).*
+
+*(Infrastructure & Custody Amendment — 2026-11-16): [ADR-0024](0024-infrastructure-security-custody-and-recovery.md) refines the database deployment from cluster wording to a single RDS DB Instance (`db.r6i.xlarge`) with Multi-AZ synchronous standby in `us-east-1`, establishes an engineering failover target of ≤120s, caps the fixed database connection pool budget at 64 connections (allocating 16 to Workers with max 4 Discovery concurrent), enforces dual-copy S3 durability gating for WORM recovery journals, and defines SOC broker fabric connectivity.*
 
 

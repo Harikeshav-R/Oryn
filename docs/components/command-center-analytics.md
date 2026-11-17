@@ -16,7 +16,7 @@ The Command Center, Notifications, and Analytics component is the unified presen
 - **Baseline Duration & Assumption Governance:** Workflow human baseline duration approvals, hourly wage assumptions, revision tracking, and basis documentation.
 - **14-Calendar-Day Evaluation Pilots:** Pilot lifecycle management (`scheduled` -> `active` -> `completed` / `paused` / `aborted`), participant roster enrollment, time-window boundary enforcement across daylight saving time (DST) shifts, and pilot-scoped reporting.
 - **Immutable Report Snapshots:** Asynchronous compilation of frozen report snapshots with methodology identifiers, source watermarks, cryptographic manifest digests, and 90-day retention lifecycles.
-- **Compliance Export Engine:** Sandboxed export generation for signed audit packages, runbooks, and reporting snapshots in CSV, ZIP, and PDF formats, with automatic chunk partitioning at 100MB and CSV formula injection neutralization.
+- **Compliance Export Engine:** Sandboxed export generation for signed audit packages, runbooks, and reporting snapshots in CSV, ZIP, and PDF formats, with automatic chunk partitioning at 256 MiB part thresholds (up to a 5 GiB export ceiling), authenticated Range streaming via the Export Artifact Broker, and CSV formula injection neutralization.
 - **Audit Journal Read Projections:** Verifiable audit query interface over the immutable hash-chained event journal.
 
 ### Explicitly Does NOT Own
@@ -79,9 +79,9 @@ Command Center, Notifications, and Analytics implements the complete operational
 
 7. **Audit-Grade Compliance Exports (`ORY-065`):**
    - Asynchronous export generation producing cryptographically sealed ZIP, CSV, and PDF packages.
-   - Part splitting at 100MB thresholds with individual SHA-256 manifests.
+   - Part splitting at 256 MiB thresholds (total export capped at 5 GiB) with individual SHA-256 manifests.
    - Neutralization of CSV formula injection attacks by prefixing formula trigger characters (`=`, `+`, `-`, `@`, `\t`, `\r`) with a single quote (`'`).
-   - Short-lived signed S3 download URLs expiring after 24 hours.
+   - Authenticated streaming downloads via the internal Export Artifact Broker over mTLS with Range resumption (re-evaluating authorization every 1 MiB or 2 seconds); presigned URLs and direct S3 public access are prohibited. S3 export storage is homed in `us-east-1` with pre-provisioned activation in disaster recovery region `us-east-2`. Lifecycle expiration purges artifacts after 24 hours.
 
 8. **Global Search and Quick Action Rail (`ORY-066`):**
    - Instant search across workflows, playbooks, incidents, candidates, and jobs, respecting caller role capabilities.
@@ -121,7 +121,7 @@ flowchart TD
         QE -->|"REST API / Contract 18"| SPA["Command Center React SPA"]
         NE -->|"shell-sync.v1 (1.1)"| DS["Desktop Shell"]
         NE -->|"Egress Broker (SES)"| EMAIL["AWS SES (us-east-1)"]
-        EE -->|"Signed Stream"| S3["AWS S3 Export Bucket (us-east-1)"]
+        EE -->|"mTLS Stream"| S3["AWS S3 Export Bucket (us-east-1 / DR us-east-2)"]
     end
 ```
 
@@ -221,15 +221,16 @@ Command Center operates across three distinct security and execution tiers:
    - Web application contains zero signing keys, credential secrets, or direct database connections.
 
 2. **Control Plane / Analytics Service Tier (Cloud Core):**
-   - Deployed within private VPC in AWS us-east-1.
-   - Internal API endpoints authenticating via mutual TLS (mTLS) or internal service Bearer tokens.
-   - Database isolation: reporting projections reside in dedicated PostgreSQL read schemas with separate database credentials and strictly budgeted connection pools (maximum 2 concurrent reporting connections, 1 export connection) preventing reporting spikes from starving transactional orchestration.
-   - Row-Level Security (RLS) is enabled on all tables, enforcing tenant boundary checks (`organization_id = current_setting('app.current_org_id')`).
+   - Deployed within private VPC in AWS `us-east-1` with pre-provisioned cold standby recovery in `us-east-2`.
+   - Ingress terminates at the Backend-For-Frontend (BFF) layer validating opaque session cookies (`__Host-oryn_session`); internal service-to-service endpoints authenticate exclusively over mutual TLS (mTLS) with pinned SPIFFE IDs.
+   - Database isolation: reporting and audit read projections reside in dedicated PostgreSQL read schemas on the read replica, populated from primary owner event projections. Access uses strictly budgeted connection pools (maximum 2 concurrent reporting read connections, 1 export worker connection) preventing reporting spikes from starving transactional orchestration.
+   - Row-Level Security (RLS) is enabled on all tables, enforcing canonical tenant boundary checks (`organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid`).
 
 3. **External Integration & Worker Egress Tier:**
    - **AWS SES Egress Broker:** Operates in `us-east-1` with dedicated IAM roles, enforcing outbound rate limits and recipient domain validations.
-   - **AWS S3 Export Broker:** Storage bucket in `us-east-1` configured with SSE-KMS encryption, private ACLs, and automatic 24-hour lifecycle expiration rules. Pre-signed URLs are signed with 15-minute expirations.
-   - **Export Worker Sandbox:** Heavy CSV/PDF generation executes in isolated worker containers with non-root execution, restricted memory (1GB), ephemeral local scratch storage, and no network access during rendering.
+   - **AWS S3 Export Broker:** Storage bucket homed in `us-east-1` with cross-region replication / pre-provisioned activation in approved disaster recovery region `us-east-2`, configured with SSE-KMS encryption, private ACLs, and automatic 24-hour lifecycle expiration rules. Presigned URLs and direct S3 public access are strictly prohibited; clients stream downloads through the authenticated Export Artifact Broker over mTLS with Range resumption (re-evaluating tenant authorization every 1 MiB or 2 seconds).
+   - **Export Worker Sandbox:** Heavy CSV/PDF generation executes in isolated worker containers with non-root execution, restricted memory (1 GiB), ephemeral local scratch storage, and no network access during rendering. Part size is capped at 256 MiB with a total export cap of 5 GiB.
+   - **Audit Journal Read Port:** Dedicated projection interface serving verifiable audit queries from the immutable hash-chained event journal with primary owner projection back pressure and cryptographic manifest verification.
 
 ---
 
@@ -261,8 +262,9 @@ Command Center Analytics consists of five decoupled subsystems within the Contro
 
 ### 5. Export Broker Engine
 - Accepts export requests, validating requester role permissions and rate limits.
-- Background worker queries reporting marts, serializes rows, applies CSV formula neutralization, chunks output at 100MB boundaries, and streams encrypted parts to S3.
+- Background worker queries reporting marts, serializes rows, applies CSV formula neutralization, chunks output at 256 MiB boundaries (up to 5 GiB total), and streams encrypted parts to S3 via mTLS.
 - Writes final `ExportManifestV1` with part hashes and total byte counts.
+- Serves authenticated chunk streams and Range requests to clients via mTLS without issuing presigned URLs.
 
 ### PostgreSQL Relational Schema DDL
 ```sql
@@ -466,27 +468,27 @@ ALTER TABLE export_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics_disclosure_commitments ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY tenant_isolation_watermarks ON analytics_watermarks
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 CREATE POLICY tenant_isolation_source_facts ON analytics_source_facts
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 CREATE POLICY tenant_isolation_baselines ON reporting_baselines
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 CREATE POLICY tenant_isolation_pilots ON evaluation_pilots
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 CREATE POLICY tenant_isolation_participants ON pilot_participants
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 CREATE POLICY tenant_isolation_reports ON report_snapshots
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 CREATE POLICY tenant_isolation_notifications ON notifications
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 CREATE POLICY tenant_isolation_preferences ON notification_preferences
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 CREATE POLICY tenant_isolation_receipts ON notification_delivery_receipts
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 CREATE POLICY tenant_isolation_exports ON export_views
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 CREATE POLICY tenant_isolation_commitments ON analytics_disclosure_commitments
-    FOR ALL USING (organization_id = NULLIF(current_setting('app.current_org_id', true), '')::uuid);
+    FOR ALL USING (organization_id = NULLIF(current_setting('oryn.organization_id', true), '')::uuid);
 ```
 
 ---
@@ -619,8 +621,8 @@ In accordance with ADR-0023, high-impact administrative actions append tamper-ev
 | **Tampering** | Attacker attempts to alter immutable historical report snapshot or baseline | Database constraints forbid updates to published report snapshots; SHA-256 pre-computed manifests; audit journal verification. |
 | **Repudiation** | Operator denies approving a low baseline duration | Baseline approvals require signed session context, recorded with principal ID, timestamp, and reason in tamper-evident journal. |
 | **Information Disclosure** | Contributor individual performance inferred through small cohort query | Strict 5-contributor floor enforced in-engine; weekly 72-hour sealed partitions; suppressed cells emit generic reason code. |
-| **Information Disclosure** | Cross-tenant access to report snapshots or export downloads | Tenant RLS on all tables; cross-tenant queries return 404; S3 download links use single-use signed URLs with 15-minute TTL. |
-| **Denial of Service** | Massive analytics query or large CSV export exhausts database memory | Dedicated read replica; strict connection pool budget (max 2 reporting, 1 export); query pagination and 100MB part streaming. |
+| **Information Disclosure** | Cross-tenant access to report snapshots or export downloads | Tenant RLS on all tables; cross-tenant queries return 404; S3 download access requires authenticated Export Artifact Broker streaming over mTLS with Range resumption; presigned URLs are prohibited. |
+| **Denial of Service** | Massive analytics query or large CSV export exhausts database memory | Dedicated read replica; strict connection pool budget (max 2 reporting read, 1 export worker); 64MB work_mem limit; query pagination and 256 MiB part streaming up to 5 GiB total cap. |
 | **Elevation of Privilege** | User without export rights triggers bulk audit log export | RBAC capability check enforces required permissions prior to job queuing; worker verifies capability token before streaming. |
 
 ### Formula Injection Sanitization Pattern
@@ -654,7 +656,7 @@ pub fn sanitize_csv_cell(input: &str) -> String {
 ### 3. Integration & Boundary Testing
 - RLS policy test suites verify that multi-tenant concurrent sessions cannot query or observe records from other organizations.
 - Long-poll boundary tests verify clean 25-second timeouts and prompt wake-up upon event insertion.
-- Export broker tests verify chunk part creation at exactly 100MB thresholds and proper part manifest generation.
+- Export broker tests verify chunk part creation at exactly 256 MiB thresholds, Range request resumption, and proper part manifest generation.
 
 ---
 
@@ -665,15 +667,15 @@ pub fn sanitize_csv_cell(input: &str) -> String {
 - **Reporting Mart Query Latency:** P95 < 250ms for pre-aggregated rollups; P95 < 1500ms for arbitrary custom date-window queries.
 - **Watermark Ingestion Lag:** Monitored high-water mark lag < 60 seconds from operational event occurrence under standard load.
 - **Desktop Notification Delivery:** P95 < 2000ms from alert creation to desktop shell presentation.
-- **Export Processing:** Standard report bundle (< 100MB) ready for download within 30 seconds of request.
+- **Export Processing:** Standard report bundle (< 256 MiB) ready for download within 30 seconds of request.
 
 ### Database Connection & Resource Governance
-- Max 2 concurrent read connections dedicated to analytics queries.
+- Max 2 concurrent read connections dedicated to analytics queries on the read replica.
 - Max 1 connection dedicated to export workers.
 - Work memory (`work_mem`) restricted to 64MB per connection on reporting pools to prevent memory exhaustion during complex window aggregations.
 
 ### Data Retention Schedules
-- **Analytics Source Facts:** Retained for 24 months, then archived to cold storage.
+- **Analytics Source Facts:** Retained for 730 days online in PostgreSQL reporting marts, then 365 days in cold archive storage, after which permanently purged.
 - **Report Snapshots:** Active for 90 days, then purged automatically.
 - **Notifications & Receipts:** Retained for 90 days.
 - **Export Artifacts (S3):** Expire and purged automatically after 24 hours.

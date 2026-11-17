@@ -7,7 +7,7 @@ Date: 2026-11-15
 Accepted
 
 Amends [0017-agent-runtime-execution-and-recovery.md](0017-agent-runtime-execution-and-recovery.md) (value custody, continuation executions, wide owner identifiers, and synchronous containment fencing).
-Amended by [0019-flight-simulator-isolation-and-evaluation-evidence.md](0019-flight-simulator-isolation-and-evaluation-evidence.md) (evaluation-owned execution persistence in `orchestration_execution`), [0021-incident-correction-and-repair-governance.md](0021-incident-correction-and-repair-governance.md) (`incident_restriction` safety fences), [0022-release-eligibility-and-rollout-governance.md](0022-release-eligibility-and-rollout-governance.md) (`ReleaseJobAdmissionPort` cutover, named cohorts in preview/schedule, and `release_cohort` safety fences).
+Amended by [0019-flight-simulator-isolation-and-evaluation-evidence.md](0019-flight-simulator-isolation-and-evaluation-evidence.md) (evaluation-owned execution persistence in `orchestration_execution`), [0021-incident-correction-and-repair-governance.md](0021-incident-correction-and-repair-governance.md) (`incident_restriction` safety fences), [0022-release-eligibility-and-rollout-governance.md](0022-release-eligibility-and-rollout-governance.md) (`ReleaseJobAdmissionPort` cutover, named cohorts in preview/schedule, and `release_cohort` safety fences), [0024-infrastructure-security-custody-and-recovery.md](0024-infrastructure-security-custody-and-recovery.md) (post-restore replay fences, per-value DEK lifecycle, and occurrence lock recovery).
 
 ## Context
 
@@ -97,5 +97,12 @@ This allows Flight Simulator evaluations to share existing checkpoint, encrypted
 2. Adds required nullable `cohort_id` to `JobPreviewRequestV1` and required non-null `cohort_id` to `JobPreviewV1` and `ScheduleDefinitionV1`.
 3. Adds `release_cohort` subject kind to `OrchestrationSafetyFenceV1`, referencing `ReleaseCohortFenceV1` directly as closed after-state.
 4. Requires allocating supervised sequence ordinals synchronously before real case execution start, locking sequence heads before case rows.
+
+## Amendment: Infrastructure Custody, Restore Replay Fences, and Scheduler Locks (ADR-0024)
+
+[ADR-0024](0024-infrastructure-security-custody-and-recovery.md) amends Job Orchestration in the following specific areas:
+1. **Per-Immutable-Value DEK Lifecycle:** Coordinates encrypted value payloads under per-immutable-value DEKs with two-phase destruction, preventing resurrection upon database restore.
+2. **Post-Restore Recovery Replay Fences:** Following database restore, orchestration reconstructs highest admitted generations and occurrence keys from WORM recovery journals before admitting fresh scheduler or worker dispatch.
+3. **Occurrence Lock Governance:** Schedulers acquire and lock `orchestration_occurrence` keys before case rows are dispatched, preventing duplicate executions during failover recovery.
 
 

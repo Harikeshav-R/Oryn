@@ -2339,7 +2339,9 @@
             "release_cohort_fence",
             "release_preauthorization",
             "release_approval_consumption",
-            "analytics_disclosure_commitment"
+            "analytics_disclosure_commitment",
+            "infrastructure_payload_key_fence",
+            "infrastructure_payload_custody_generation"
           ]
         },
         "record_id": {
@@ -2476,6 +2478,66 @@
             "properties": {
               "state_after": {
                 "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/AnalyticsDisclosureCommitmentV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "sync_submission_identity" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:contribution-sync:v1#/$defs/SyncSubmissionIdentityV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "identity_recovery_epoch_state" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "#/$defs/IdentityRecoveryEpochStateV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "infrastructure_payload_key_fence" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/PayloadKeyFenceV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "infrastructure_payload_custody_generation" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/PayloadCustodyGenerationV1"
               }
             }
           }
@@ -5294,7 +5356,8 @@
             "orchestration_safety_fenced",
             "release_changed",
             "release_preauthorization_changed",
-            "analytics_disclosure_changed"
+            "analytics_disclosure_changed",
+            "payload_key_custody_changed"
           ]
         },
         "record_after_images": {

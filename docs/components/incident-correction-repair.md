@@ -206,12 +206,14 @@ Closing an incident requires `ResolveIncidentCommandV1` with an explicit disposi
 - `accepted_containment`: The organization consciously retains documented safety restrictions rather than repairing root-cause code. Requires accountable owner, documented operational consequences, and optional review deadline. Critical accepted containment additionally mandates Security sign-off.
 
 ### Evidence Retention and Cryptographic Erasure
-- **Encrypted Payloads:** Sensitive explanation bodies, interview transcripts, and diagnosis details are encrypted using AES-256-GCM data encryption keys (DEKs) wrapped by Vault.
+- **Per-Immutable-Value Envelope Encryption:** Sensitive explanation bodies, interview transcripts, and diagnosis details are encrypted using AES-256-GCM with fresh 96-bit nonces. Per-artifact Data Encryption Keys (DEKs) are wrapped by dedicated, independently deletable Vault Transit wrapping keys in the Expiring Payload Vault (`disable_upsert=true`).
+- **Canonical AAD Binding:** Additional Authenticated Data binds canonical bytes `UTF8("oryn.payload-key-binding.v1") + LF + RFC8785(binding)` containing `organization_id`, `incident_id`, `subject_ref`, `key_ref`, `custody_generation`, and purpose.
 - **Retention Schedule:**
   - Earliest source expiry.
   - 7 days following terminal disposition (`resolved` or `dismissed_non_issue`).
   - 30 days without semantic progress.
-- **Key Destruction:** Upon reaching the deadline, the payload DEK is destroyed in Vault and an entry written to `incident_evidence_destruction`. Subsequent read attempts return HTTP 410 (`INCIDENT_EVIDENCE_UNAVAILABLE`). Immutable audit logs and RFC 8785 content hashes persist for 24 months.
+- **Two-Phase Destruction:** Upon reaching the deadline, the coordinator first commits an irreversible `PayloadKeyFenceV1 { state: "destroy_pending" }` to the independent journal, deletes the Transit key in Expiring Payload Vault, and commits `state: "destroyed"`. Subsequent read attempts return HTTP 410 (`INCIDENT_EVIDENCE_UNAVAILABLE` / `INFRA_CUSTODY_UNAVAILABLE`).
+- **Regional Custody Loss Exception:** Regional loss or unrecoverable quorum loss of the Expiring Payload Vault permanently loses affected evidence payload access. The old generation is marked `lost` and future payloads allocate a fresh generation; immutable content-free audit logs and RFC 8785 hashes persist for 24 months. Database restores cannot decrypt shredded or lost data.
 
 ## Error and edge-case behavior
 

@@ -386,10 +386,10 @@ Every committed step appends an append-only trace record to `orchestration_trace
 - **Content-Free Boundary:** Raw prompt text, LLM completions, DOM trees, screenshots, customer PII, and vendor tokens are strictly excluded from telemetry and traces.
 
 ### Sensitive Value Encryption and Custody
-- Typed checkpoint values are encrypted with **AES-256-GCM** using a 96-bit random nonce and per-execution DEK wrapped through HashiCorp Vault.
-- Additional Authenticated Data (AAD) cryptographically binds `organization_id`, `execution_id`, `binding_id`, `value_revision`, and `behavior_sha256`.
-- Only the central Coordinator unwraps keys for active, authenticated assignments or authorized human audit. Workers possess no direct key custody.
-- Plaintext values are purged 7 days after case termination; resumability expires after 30 days of inactivity.
+- **Per-Immutable-Value Envelope Encryption:** Amending ADR-0017, runtime value custody cuts over from per-execution DEKs to independently generated per-immutable-value/artifact AES-256-GCM DEKs (fresh 96-bit random nonce) wrapped via dedicated, independently deletable Vault Transit keys in the Expiring Payload Vault (`disable_upsert=true`, non-derived, nonconvergent keys, no plaintext backup, no deleted-name reuse).
+- **Canonical AAD Binding:** Additional Authenticated Data (AAD) binds the canonical byte format `UTF8("oryn.payload-key-binding.v1") + LF + RFC8785(binding)`, where binding includes `organization_id`, `execution_id`, `binding_id`, `value_revision`, `behavior_sha256`, plus `key_ref`, `custody_generation`, and purpose. This binding is authenticated both when wrapping the DEK and encrypting the payload.
+- **Worker Isolation:** Central owner modules encrypt/decrypt; workers receive authorized runtime values over mTLS, possessing zero direct Vault access, wrapping keys, or DEK custody.
+- **Two-Phase Destruction & Custody Loss:** Destruction operations commit an irreversible `destroy_pending` fence to the independent journal, delete the Transit key in Expiring Payload Vault, and commit a `destroyed` fence. Catastrophic regional loss of the Expiring Payload Vault permanently loses affected payload access; the custody generation is marked `lost` and future payloads initialize a new generation, while content-free outcome verdicts and audit trails remain preserved. Plaintext values are purged 7 days after case termination; resumability expires after 30 days of inactivity.
 
 ---
 

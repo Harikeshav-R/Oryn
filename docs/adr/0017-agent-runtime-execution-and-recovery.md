@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-15
-- **Amended by:** [ADR-0018](0018-job-orchestration-and-scheduling.md), [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md)
+- **Amended by:** [ADR-0018](0018-job-orchestration-and-scheduling.md), [ADR-0019](0019-flight-simulator-isolation-and-evaluation-evidence.md), [ADR-0024](0024-infrastructure-security-custody-and-recovery.md)
 - **Deciders:** Oryn Architecture Guild, Agent Runtime Owner, Job Orchestration Owner, Identity Policy Owner, Application Adapters Owner, Outcome Verification Owner, Infrastructure Security Lead
 - **Consulted:** Desktop Shell Owner, Browser Extension Owner, Local Context HUD Owner, Operational Graph Owner
 - **Informed:** All Engineering Teams
@@ -116,5 +116,12 @@ This decision amends relevant execution, authority, and reservation assumptions 
 1. **Runtime Execution Context Typing:** Replaces the obsolete `ExecutionContextJobV1` with `RuntimeExecutionContextV1`, enforcing `job -> environment: production` and `evaluation -> environment: simulation`. In simulation, `evaluation_target` must resolve to `{kind: "agent", agent_version: UUID}` matching the candidate under test.
 2. **Simulation Host Isolation:** In simulation, cloud execution runs on fresh, single-use gVisor sandboxes; local desktop execution runs strictly on dedicated enrolled Windows/macOS lab devices (`identity_simulation_lab_device`), never ordinary employee workstations.
 3. **IPC Baselines:** Advances Desktop Shell worker supervision baseline to `shell-runtime.v1` major 1, minor 1, negotiating `evaluation_execution_v1`.
+
+## Amendment: Infrastructure Custody, Per-Value Encryption, and Destruction (ADR-0024)
+
+[ADR-0024](0024-infrastructure-security-custody-and-recovery.md) amends this record in the following specific areas:
+1. **Per-Immutable-Value DEK Cutover:** Transitions encrypted value storage from per-execution DEKs to per-immutable-value DEKs wrapped under AWS KMS Transit keys (`oryn/tenant/<org_id>/transit`), with canonical AAD byte binding `UTF-8(organization_id) + 0x0A + UTF-8(value_id)`.
+2. **Two-Phase Destruction:** Implements explicit two-phase cryptographic destruction (`destroy_pending` -> delete Transit DEK in KMS -> `destroyed`), eliminating resurrection via backup restore.
+3. **Regional Custody Loss Accounting:** Unrecoverable loss of evidence resulting from catastrophic regional failure is recorded as an explicit `Evidence Custody Loss` entry in the immutable audit journal, rather than silent deletion.
 
 

@@ -10,6 +10,9 @@ Amends:
 - [0012-control-plane-transport-durability-and-inference.md](0012-control-plane-transport-durability-and-inference.md) (Adds Command Center, Notifications, and Analytics routes; multi-channel notification delivery via Desktop Shell `shell-sync.v1` major 1, minor 1 and isolated Notification Egress Broker; governed export streaming via isolated Export Artifact Broker and sandboxed Export Render Worker; expands Authority Recovery Journal kinds with `analytics_disclosure_changed`).
 - [0013-workflow-discovery-evidence-and-review-boundaries.md](0013-workflow-discovery-evidence-and-review-boundaries.md) (Replaces leaky `OpportunityV1` with a discriminated union `available | suppressed | unavailable`, eliminating numeric/ranking key leakage on suppressed opportunities; adds `HumanTaskReportingFactV1` to Discovery's schema; adds nullable `observed_task_completed_at` to `WorkflowContributionContentV1` and `DemonstrationProposalV1`).
 
+Amended by:
+- [0024-infrastructure-security-custody-and-recovery.md](0024-infrastructure-security-custody-and-recovery.md) (Export recovery-region pin in `us-east-2`, corrected export transport references prohibiting presigned URLs, and finite reporting archive retention).
+
 ## Context
 
 The Command Center, Notifications, and Analytics component delivers organization-scoped web management interfaces, notifications, aggregate operational analytics, X-Ray pilot reports, and governed exports under PRODUCT.md §§22–24, 26, 30 and TECHNICAL.md §§5.7, 7.3, 14.1.
@@ -70,3 +73,5 @@ Previous design briefs left critical architectural tensions across seven dimensi
 - Strict 5-contributor floor leaves small teams or low-volume workflows quantitatively suppressed until sufficient diversity is observed.
 - Export size caps (5 GiB, 200 PDF pages) require users to narrow export query filters for high-volume audit logs.
 - Dual long-poll connections on Desktop Sync Helper increase local socket count from 1 to 2.
+
+*(Infrastructure & Security Amendment — 2026-11-16): [ADR-0024](0024-infrastructure-security-custody-and-recovery.md) pins S3 export storage to `us-east-1` with pre-provisioned activation in disaster recovery region `us-east-2`, mandates authenticated Export Artifact Broker streaming over mTLS with Range resumption (presigned URLs strictly prohibited), and defines finite reporting archive retention (730 days online, 365 days cold archive, then purged).*

@@ -1048,13 +1048,13 @@ Oryn will need the following logical storage capabilities:
 
 - **Local private structured store:** Task and UI-event indexes, permitted local context and metadata.
 - **Local private media store:** Screen/audio evidence subject to automatic expiration and deletion.
-- **Central transactional store:** Identities, memberships, workflow/agent versions, policies, jobs, approvals, outcomes, incidents, release state.
+- **Central transactional store:** RDS PostgreSQL 18 Multi-AZ DB Instance (synchronous standby + dedicated reporting read replica) in `us-east-1`, forced Row-Level Security (RLS), and canonical session GUC `oryn.organization_id`. Node failover target is ≤120 seconds; ordinary regional recovery targets RPO ≤15 minutes and RTO ≤4 hours.
+- **Independent append-only authority & audit journal:** Dual-region private S3 buckets (`us-east-1` and `us-east-2`) with Object Lock in Compliance Mode (24 months retention), coordinated by DynamoDB Multi-Region Strong Consistency (MRSC) global tables with witness in `us-west-2`.
+- **Split cryptographic key custody:** Two physically separated 3-voter Vault clusters on dedicated EC2 instances: Platform Vault (KMS multi-region auto-unseal, 5-minute encrypted Raft snapshots, 7-day retention) and Expiring Payload Vault (disposable per-immutable-value wrapping keys, strictly non-backed-up, subject to explicit regional evidence custody loss exception).
 - **Knowledge relationship/search layer:** Authoritative dependency links plus optional semantic retrieval.
 - **Approved artifact storage:** Sanitized exports, customer-authorized evidence, evaluation reports, synthetic fixture assets.
 - **Durable job state/history:** Long-running execution/approval coordination and replay-safe checkpoints.
 - **Audit/telemetry storage:** Authorized security and business transitions, not prohibited raw employee surveillance.
-
-A practical starting design may use a local embedded database, a central relational database with vector search, controlled object storage, and a durable orchestration system. Exact products, physical schemas, encryption methods, indexes, replication, and backup design are deferred.
 
 ### 10.3 Retention and deletion
 
@@ -1199,8 +1199,9 @@ Scale each of these concerns independently as usage grows: desktop users and loc
 ### 12.5 Cost boundaries
 
 Model usage, simulation workload, browser/runtime resources, third-party API consumption, retained artifacts, and notification/exports may have materially different costs. Cost estimates and budget controls belong to job/simulation governance, with organization-level limits. The product must distinguish actual automation consumption from **estimated** labor time avoided.
-- **Egress & Broker Boundaries:** Outbound email notification dispatch operates exclusively through AWS Simple Email Service (SES) in AWS region `us-east-1`. Export artifact streaming utilizes private AWS S3 buckets in `us-east-1` with 100MB chunk thresholds and pre-signed URLs expiring in 15 minutes.
-- **Database Connection Governance:** Managed PostgreSQL read replicas govern dedicated connection pool allocations, strictly capping analytics reporting queries at maximum 2 concurrent connections and export jobs at 1 connection, ensuring reporting traffic never starves transactional execution pools.
+- **Egress & Broker Boundaries:** Outbound email notification dispatch operates exclusively through AWS Simple Email Service (SES) in AWS region `us-east-1` (pre-provisioned in recovery region `us-east-2`). Export artifact streaming utilizes private AWS S3 buckets with SSE-KMS, 256 MiB maximum part sizes, 5 GiB total export cap, 24-hour lifetime, and authenticated Range downloads via the internal Export Artifact Broker; pre-signed URLs are strictly prohibited. In declared disaster recovery, S3 exports activate pre-provisioned infrastructure in `us-east-2`. Security log delivery operates via an isolated Security Log Egress Broker emitting sanitized OTLP/HTTP JSON to customer SOC endpoints (`https://<host>:443/v1/logs`) with strict destination allowlisting, public IP validation, batch caps (128 records, 256 KiB), and failure quarantine.
+- **Database Connection Governance:** The global database connection ceiling is strictly 64 connections across primary and read replica: API 20, reporting reader 2, export reader 1, headroom 1, Workers 16 (Discovery capped at 4), Inference 8, and safety/LISTEN/recovery reserve 16 (never borrowable for reporting). Deployments enforce zero-surge rolling updates (`maxSurge: 0, maxUnavailable: 1`).
+- **Disaster Recovery Objectives & Fencing:** Ordinary regional recovery achieves RPO ≤ 15 minutes and RTO ≤ 4 hours; node-level failover target is ≤ 120 seconds. In catastrophic loss of `us-east-1`, declared disaster replaces the replica set with `us-east-2`/`us-west-2` under two-person approval. Irrecoverable quorum loss of the Expiring Payload Vault incurs an explicit evidence custody loss exception; content-free audit records and historical outcome verdicts remain unmutated.
 
 ### 12.6 Extensibility
 

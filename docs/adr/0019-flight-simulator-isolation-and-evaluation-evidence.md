@@ -16,6 +16,7 @@ Amends:
 
 Amended by:
 - [0022-release-eligibility-and-rollout-governance.md](0022-release-eligibility-and-rollout-governance.md) (Simulator report `requested_stage: [3, 4]` retained; Stage 5 release is a composite governance check reading Stage 4 report plus repair bindings/obligations; clarifies 30-day adapter qualification validity vs. waiting periods).
+- [0024-infrastructure-security-custody-and-recovery.md](0024-infrastructure-security-custody-and-recovery.md) (Dedicated simulation AWS account, separate EKS cluster, and qualified sandbox account proof).
 
 ## Context
 
@@ -87,3 +88,5 @@ To prevent stochastic passes from certifying unreliable agents:
 - **Runtime:** Dispatches under `RuntimeExecutionContextV1::Evaluation` with gVisor container isolation and IPC capability negotiation (`evaluation_execution_v1`).
 - **Orchestration:** Persists simulation executions in `orchestration_execution` keyed by `evaluation_attempt_id` without creating dummy jobs or cases.
 - **Release Governance:** Evaluates immutable signed reports from Flight Simulator, requiring full suite passage, verified coverage obligations, and separate production equivalence before production release.
+
+*(Infrastructure & Security Amendment — 2026-11-16): [ADR-0024](0024-infrastructure-security-custody-and-recovery.md) mandates that Flight Simulator cloud execution runs in a dedicated simulation AWS account on a separate EKS cluster from production, enforces qualified sandbox account/environment proof (DNS allowlists alone are insufficient), and quarantines resources upon unverified vendor reset proofs.*

@@ -396,7 +396,15 @@ _Avoid_: public report link
 An attributable indication that a recipient acknowledged an alert; not business-action approval or incident resolution.
 _Avoid_: incident resolution
 
+**Organization Deactivation**:
+Ending an organization’s current product access and authority without undoing past business effects or immediately deleting records subject to retention.
+_Avoid_: immediate tenant deletion, data purge, business rollback
 
+**Organization Erasure**:
+Governed disposal of eligible organizational information, distinct from deactivation and from instant removal of retained backups or external copies.
+_Avoid_: instant media wipe, backup destruction, retroactive purge
 
-
+**Evidence Custody Loss**:
+Irreversible loss of access to organizational evidence because required decryption custody is unavailable; not proof that a requested destruction operation completed.
+_Avoid_: successful destruction receipt, recoverable evidence, key backup
 

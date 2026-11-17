@@ -1304,6 +1304,66 @@
         "ORY-069",
         "ORY-046"
       ]
+    },
+    {
+      "case_id": "case_35_payload_key_custody_changed_journal_fence",
+      "description": "Payload key custody change writes typed journal after-images for infrastructure_payload_key_fence and infrastructure_payload_custody_generation; two-phase destruction fences prevent resurrection.",
+      "input": {
+        "kind": "payload_key_custody_changed",
+        "table_name": "infrastructure_payload_key_fence",
+        "fence_state": "destroy_pending"
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "destroy_pending",
+      "expected_effects": [
+        "custody_fenced_reads_denied",
+        "destruction_barrier_committed"
+      ],
+      "criterion_refs": [
+        "ORY-069",
+        "ORY-070"
+      ]
+    },
+    {
+      "case_id": "case_36_signed_artifact_policy_version_invariants",
+      "description": "SignedArtifactPolicy enforces policy_version U64 binding; rejects deprecated policy_revision.",
+      "input": {
+        "policy_version": "5",
+        "policy_revision_attempted": false
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "active",
+      "expected_effects": [
+        "canonical_policy_version_bound",
+        "duplicate_definition_rejected"
+      ],
+      "criterion_refs": [
+        "ORY-008",
+        "ORY-068"
+      ]
+    },
+    {
+      "case_id": "case_37_authority_after_image_projection_omits_sensitive_proposals",
+      "description": "Authority journal after-image projection for identity_approval_proposal omits sensitive proposal_json and action token nonces from central WORM archives.",
+      "input": {
+        "table_name": "identity_approval_proposal",
+        "projected_columns": ["proposal_id", "organization_id", "execution_context", "action_sha256", "proposal_digest"],
+        "omitted_columns": ["proposal_json", "token_nonce"]
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "projected",
+      "expected_effects": [
+        "sensitive_proposal_json_excluded_from_worm",
+        "token_nonce_excluded_from_worm",
+        "restoration_uses_overlay_blocked_state"
+      ],
+      "criterion_refs": [
+        "ORY-006",
+        "ORY-070"
+      ]
     }
   ]
 }

@@ -343,20 +343,22 @@ Control Plane binaries are deployed into three distinct, non-overlapping Kuberne
 2. **Durable Worker Role (`oryn-worker`):**
    - Consumes PostgreSQL transactional outbox rows and executes asynchronous background jobs.
    - Manages queue delivery leases, consumer retries, and quarantine handling.
-   - Replicas: 2 | CPU: 250m req / 1000m lim | RAM: 256Mi req / 512Mi lim | DB Pool: 8 per pod.
+   - Replicas: 2 | CPU: 2 vCPU request and limit | RAM: 2 GiB request and limit | DB Pool: 8 per pod (Workflow Discovery restricted to at most 4 slots within it).
 
 3. **Inference Worker Role (`oryn-inference`):**
    - Terminates WebSocket connections and streams live audio to LiteLLM.
-   - Operates entirely in memory; mounts no writable disk volumes.
+   - Operates entirely in memory; mounts no writable disk volumes (256 MiB tmpfs scratch ceiling, 128 MiB final-meeting input limit).
    - Replicas: 2 | CPU: 500m req / 2000m lim | RAM: 512Mi req / 1Gi lim | DB Pool: 4 per pod.
    - Admitted pilot capacity: 20 concurrent sessions cluster-wide (12 max per pod).
 
-### Database Connection Allocation
-The total application PostgreSQL connection budget is capped at 64 connections across the cluster:
-- 2 API pods × 12 connections = 24
-- 2 Worker pods × 8 connections = 16
-- 2 Inference pods × 4 connections = 8
-- Dedicated reserve for LISTEN notifications, recovery journal completion, and safety operations = 16.
+### Database Connection Allocation and Topology
+Control Plane connects to an RDS PostgreSQL 18 Multi-AZ DB Instance with synchronous standby in `us-east-1` (node failover target ≤120s; RPO ≤15m, RTO ≤4h) and a dedicated reporting read replica. The global database connection budget is capped at 64 connections across writer and reporting connections:
+- **API Family (24 slots):** 2 API pods × 10 connections = 20, 2 reporting-reader connections, 1 export-reader connection, and 1 unassigned headroom slot.
+- **Background Workers (16 slots):** 2 Worker pods × 8 connections = 16 (Discovery capped at 4 slots within it).
+- **Inference Pods (8 slots):** 2 Inference pods × 4 connections = 8.
+- **Safety & Recovery Reserve (16 slots):** Dedicated reserve for LISTEN notifications, recovery journal completion, and emergency incident containment (strictly reserved; never borrowed for reporting).
+
+Deployments of database-connected pods strictly enforce zero-surge rolling updates (`maxSurge: 0, maxUnavailable: 1`) so old and new pods never exceed the 64-connection ceiling. Canonical tenant session variable is `oryn.organization_id`.
 Long polls and streaming WebSocket connections release database connections immediately after query execution and must NEVER hold connection pool slots while waiting.
 
 ### Container Security Hardening

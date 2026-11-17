@@ -43,7 +43,7 @@ The component governs:
 - `SanitizationReviewCoordinator`: Deterministic minimization, PII/credential masking, candidate review management, redacted still-image derivation, review attestation signing, and authoritative release cancellation fences.
 - `InferenceEgressClient`: Attaches signed `InferenceAuthorization` tokens to minimized payloads, routes requests to the LiteLLM gateway, tracks request/response generations, and cancels remote work upon capture stop or consent revocation.
 - `PrivacyContextPort`: Implements the `privacy-context.v1` interface, managing length-prefixed streaming of permitted observations to `local-context-hud` and validating reverse demonstration proposals.
-- `PolicyVerifier`: Cryptographic verification of identity-policy signed artifacts (`SignedCapturePolicyLease`, `SignedRetentionVerdict`, `SignedArtifactPolicy`) using pinned Ed25519 issuer public keys.
+- `PolicyVerifier`: Cryptographic verification of identity-policy signed artifacts (`SignedCapturePolicyLease`, `SignedRetentionVerdict`, `SignedArtifactPolicy` binding canonical `policy_version` and requiring active cloud storage certification under [infrastructure-security](infrastructure-security.md)) using pinned Ed25519 issuer public keys.
 
 ### Priority Timer and Control Path Isolation
 To guarantee responsiveness and fail-closed privacy:

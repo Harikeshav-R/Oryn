@@ -77,14 +77,24 @@ Application execution maintains strict segregation between ten distinct classes 
 ### Explicit Holds and Obligations
 Legal holds, compliance retention, or contractual requirements block voluntary deletion of eligible evidence strictly within its existing configured retention deadline. Holds cannot authorize new capture, cannot provide manager or administrative browsing access to raw timelines, and cannot extend retention beyond the original raw retention deadline. Expired records are permanently purged regardless of hold status. Raw media must not be sequestered into permanent shadow storage.
 
-### Deletion and Independent State Separation
-When an employee requests deletion of local data, the system must clearly distinguish six distinct states:
+### Deletion, Destruction, and Independent State Separation
+When an employee or tenant administrator requests deletion of data, the system strictly separates retention lifecycles and distinguishes operational deletion, two-phase cryptographic destruction, organization deactivation, organization erasure, and evidence custody loss:
+
 1. **Private Original Capture:** Purged immediately and permanently from the local disk via cryptographic key destruction and partition unlinking. Discarded raw media cannot be recovered from organizational dashboards.
 2. **Independently Saved Commitments:** Confirmed personal obligations survive source evidence expiration or source-only deletion with `evidence_status = "unavailable"`. Explicit full personal data purge / supported client uninstall permanently purges eligible saved commitments too.
 3. **Reviewed Shared Contributions:** If already submitted to workflow discovery, the employee is presented with a separate contribution-removal flow.
 4. **Published Organizational Knowledge:** Deleting a local recording does not automatically erase independently approved, anonymized company playbooks derived from it.
-5. **Execution Evidence:** Verification readbacks and transaction receipts remain intact for operational integrity.
-6. **Audit Obligations:** Consequential action audit logs cannot be truncated by individual user deletion requests.
+5. **Execution Evidence & Two-Phase Destruction:** Encrypted intermediate values (`orchestration_value`), incident payloads, and verification artifacts are wrapped using per-immutable-value DEKs under AWS KMS Transit keys. Deletion executes via two-phase destruction: the record enters `destroy_pending` (blocking all reads/writes), the individual Transit DEK is destroyed in KMS, and the state advances irreversibly to `destroyed`. If a catastrophic regional failure destroys ciphertext storage prior to scheduled lifecycle deletion, the system records an explicit `Evidence Custody Loss` in the audit journal, marking the payload permanently unavailable.
+6. **Audit Obligations & Immutability:** Consequential action audit logs (`audit_journal`) cannot be truncated or altered by individual user deletion requests. Immutability is enforced through dual independent controls: cryptographic hash chaining AND AWS S3 Object Lock in Compliance Mode (WORM) with multi-region replication. Hash chains alone detect tampering but do not prevent physical deletion; WORM storage enforces physical non-erasability for the required 7-year retention period.
+7. **Organization Deactivation vs. Erasure:**
+   - *Organization Deactivation:* Reversible administrative suspension. Blocks active ingestion, worker execution, and user logins. All tenant data is preserved unchanged for up to 90 days pending reactivation or explicit erasure.
+   - *Organization Erasure:* Irreversible cryptographic and physical destruction of tenant data upon contract termination. Within 30 days, tenant KMS keys are scheduled for deletion, primary database records are hard-deleted, and non-WORM S3 buckets are purged. WORM-locked compliance audit logs remain immutable until their statutory retention lock expires.
+8. **Backup and Key Lifetimes:**
+   - *RDS Automated Backups:* Retained for 35 days (Point-In-Time Recovery) with continuous WAL archiving; snapshots replicated from `us-east-1` to disaster recovery region `us-east-2`.
+   - *Transit Encryption Keys:* Per-value DEKs are destroyed immediately upon value lifecycle expiration or two-phase destruction completion.
+   - *Tenant Root KMS Keys:* Rotated annually; destroyed permanently upon organization erasure.
+9. **Sandbox Account and Environment Proof:**
+   - Adapter executions in test or simulation environments require qualified sandbox account/environment proof (cryptographic credentials and API-verified sandbox tenant context; DNS allowlists alone are insufficient) to prevent accidental mutation of production external systems.
 ---
 
 ## Model Processing and Egress Boundaries (TECHNICAL.md §10.4)

@@ -16,6 +16,9 @@ Amends:
 - [0018-job-orchestration-and-scheduling.md](0018-job-orchestration-and-scheduling.md) (Orchestrator-driven verification dispatch, case mapping for `verified`/`mismatch`/`unknown`, and non-mutating `reverify_only` continuation).
 - [0019-flight-simulator-isolation-and-evaluation-evidence.md](0019-flight-simulator-isolation-and-evaluation-evidence.md) (Independent simulation oracle verification over `ScenarioExpectationRefV1` within attempt budget).
 
+Amended by:
+- [0024-infrastructure-security-custody-and-recovery.md](0024-infrastructure-security-custody-and-recovery.md) (Per-immutable-value DEK wrapping, two-phase cryptographic destruction, and explicit regional evidence custody loss accounting).
+
 ## Context
 
 In enterprise automation, submission success does not equal business success. An HTTP 200 receipt or message queue acknowledgment proves only that a target system accepted an ingress payload—not that the invoice posted, the ledger balanced, the shipment scheduled, or the record committed with correct values.
@@ -111,3 +114,5 @@ Explanations (`VerificationExplanationV1`) are generated on demand via the Contr
 - **Job Orchestration:** Orchestrates verification runs, maps verdicts to case state (`verified` -> ready to complete; `mismatch` -> failed/incident; `unknown` -> outcome_unknown), and schedules non-mutating `reverify_only` continuations.
 - **Operational Graph:** Validates handoff obligations via standalone verification bindings and trusted Verifier lookups.
 - **Flight Simulator:** Evaluates candidate agent postconditions against sealed scenario expectations within bounded simulation attempts.
+
+*(Infrastructure & Security Amendment — 2026-11-16): [ADR-0024](0024-infrastructure-security-custody-and-recovery.md) transitions verification evidence storage to per-immutable-value DEKs wrapped under tenant KMS Transit keys, binds AAD bytes, implements two-phase destruction (`destroy_pending` -> delete Transit key -> `destroyed`), and establishes explicit regional evidence custody loss accounting in the immutable audit journal.*

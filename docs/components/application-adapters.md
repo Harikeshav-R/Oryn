@@ -129,7 +129,8 @@ Bounded worker reuse is permitted only within this exact tuple. Credential roles
 
 ### Network and Host Constraints
 - Cloud workers run in unprivileged containers with zero default external network routes; all outbound traffic is routed strictly through Unix domain sockets or internal mTLS to `AdapterEgressBroker`.
-- Production and simulation connections operate on segregated network namespaces, Vault paths, and account credentials. Shared hostnames across environments require account-level and credential-level validation.
+- Production and simulation connections operate on segregated network namespaces, Vault paths, and account credentials. Shared SaaS hostnames across environments require qualified sandbox account/environment/target bindings enforced independently by the simulation broker with separate credentials; if account identity cannot be proved, the broker reports unsupported. DNS allowlisting alone is never equated with account or tenant isolation.
+- Restore replay enforces connection revocation and custody fences from the independent journal before reopening egress; requests referencing pre-restore revisions or lost custody generations are rejected.
 
 ---
 

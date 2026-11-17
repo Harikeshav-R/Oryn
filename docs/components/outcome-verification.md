@@ -499,9 +499,10 @@ Verdict limitations use the closed enum: `source_unavailable`, `source_timeout`,
 ## Security and threat model
 
 ### Cryptographic Envelopes and Storage
-- **Field-Level Encryption:** Sensitive evidence snapshots are encrypted using AES-256-GCM with fresh 96-bit nonces. Per-artifact Data Encryption Keys (DEKs) are wrapped by Vault Transit keys.
-- **Additional Authenticated Data (AAD):** Binds `organization_id`, `verification_id`, `artifact_id`, `schema_version`, and `deletion_generation`.
-- **Cryptographic Purge:** Upon retention expiry or tenant deletion, the DEK is destroyed in Vault and an entry is committed to `verification_evidence_destruction`. Materialization checks this destruction journal; restore of database backups cannot decrypt shredded data.
+- **Per-Immutable-Value Envelope Encryption:** Sensitive evidence snapshots and normalized facts are encrypted using AES-256-GCM with fresh 96-bit nonces. Per-artifact Data Encryption Keys (DEKs) are wrapped by dedicated, independently deletable Vault Transit wrapping keys in the Expiring Payload Vault (`disable_upsert=true`).
+- **Additional Authenticated Data (AAD):** Binds canonical bytes `UTF8("oryn.payload-key-binding.v1") + LF + RFC8785(binding)` containing `organization_id`, `verification_id`, `subject_ref`, `key_ref`, `custody_generation`, and purpose.
+- **Two-Phase Destruction:** Upon retention expiry or tenant deletion, verification first commits an irreversible `PayloadKeyFenceV1 { state: "destroy_pending" }` to the independent journal; then deletes the Transit key in Expiring Payload Vault; then commits `state: "destroyed"`. Timeouts or unverified deletions never produce false completion receipts.
+- **Regional Custody Loss Exception:** Regional destruction or unrecoverable quorum loss of the Expiring Payload Vault permanently loses affected evidence payload decryption. The old generation is marked `lost` and future payloads allocate a new generation; content-free verdict bytes, timestamps, attestations, and audit records remain completely unmutated. Database restores cannot decrypt shredded or lost data.
 
 ### Threat Scenarios & Mitigations
 1. **Runner Collusion / Self-Certification:** Untrusted runners assert successful completion without external effects. *Mitigation:* Verifier ignores runner logs; execution requires independent readback via out-of-process credential egress.

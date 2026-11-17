@@ -19,6 +19,7 @@ Amends:
 
 Amended by:
 - [0022-release-eligibility-and-rollout-governance.md](0022-release-eligibility-and-rollout-governance.md) (Amends `RepairReleaseObservationV1` with `observation_ref`, `new_incident_count`, `incident_refs_complete`, and `incident_manifest_sha256`; requires complete observation provenance and qualifies containment claims).
+- [0024-infrastructure-security-custody-and-recovery.md](0024-infrastructure-security-custody-and-recovery.md) (Per-immutable-value DEK wrapping, two-phase cryptographic destruction, and explicit regional evidence custody loss accounting).
 
 ## Context
 
@@ -66,3 +67,5 @@ Enterprise autonomous agents encounter operational anomalies, verification misma
 - Requires maintaining dual selector tables (`orchestration_incident_restriction` and `orchestration_safety_fence`) during transactional admission checks.
 - Repair evaluation requires running full regression suites plus 5 nearby variations, increasing Simulator compute requirements.
 - Desktop dictation requires native push-to-talk coordination and dual audio framing (`ORYC` vs. `ORYA`).
+
+*(Infrastructure & Security Amendment — 2026-11-16): [ADR-0024](0024-infrastructure-security-custody-and-recovery.md) transitions incident payload storage to per-immutable-value DEKs wrapped under tenant KMS Transit keys, binds AAD bytes, implements two-phase destruction (`destroy_pending` -> delete Transit key -> `destroyed`), and establishes explicit regional evidence custody loss accounting in the immutable audit journal.*

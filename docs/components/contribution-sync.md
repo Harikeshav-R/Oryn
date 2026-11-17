@@ -21,7 +21,7 @@ The Contribution and Synchronization Gateway mediates the boundary between priva
 ### Consumes
 - Sanitized, employee-reviewed task contributions with cryptographic Ed25519 review attestations from [local-privacy-storage](local-privacy-storage.md) over private protocol `privacy-sync.v1`.
 - Centrally published playbooks, rules, and guidance manifest changes from [operational-graph](operational-graph.md) and [control-plane](control-plane.md) via HTTPS.
-- Authoritative trust keysets (`sync.trust-keyset.v1`), signed artifact policies (`privacy.artifact-policy.v1`), signed control snapshots (`sync.control-snapshot.v1`), and change pages (`sync.change-page.v1`) from [identity-policy](identity-policy.md).
+- Authoritative trust keysets (`sync.trust-keyset.v1`), canonical signed artifact policies (`privacy.artifact-policy.v1` binding `policy_version` and gated by active 24-hour storage certification under [infrastructure-security](infrastructure-security.md)), signed control snapshots (`sync.control-snapshot.v1`), and change pages (`sync.change-page.v1`) from [identity-policy](identity-policy.md).
 - Network interface status and supervisor lifecycle events from [desktop-shell](desktop-shell.md) over `shell-sync.v1`.
 
 ### Produces
@@ -182,9 +182,7 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
   "key_id": "key_policy_01",
   "payload": {
     "organization_id": "00000000-0000-4000-8000-000000000001",
-    "policy_revision": "art_pol_rev_05",
-    "issued_at": "2026-11-09T00:00:00Z",
-    "not_after": "2026-12-09T00:00:00Z",
+    "policy_version": "5",
     "allowed_purposes": [
       "workflow_sharing",
       "handoff_coordination"
@@ -199,7 +197,9 @@ Operates over private inherited socketpairs between `oryn-privacy-helper` and `o
       "height": 1080
     },
     "max_byte_length": 1048576,
-    "max_image_count": 4
+    "max_image_count": 4,
+    "issued_at": "2026-11-09T00:00:00Z",
+    "not_after": "2026-12-09T00:00:00Z"
   },
   "signature": "KGD5MYof_8JcnUwmLXdeTsBK2le1AvkkLCMvQX2QnV7olhyNNjR6KKVmsMKGof6Ocz8VmOjV0xLoFrG0ZWsKBA"
 }

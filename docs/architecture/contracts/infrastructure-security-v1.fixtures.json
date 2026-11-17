@@ -1,0 +1,1283 @@
+{
+  "schema_id": "infrastructure.fixture-set.v1",
+  "public_keys": [
+    {
+      "key_id": "key_receipt_infra_01",
+      "purpose": "receipt",
+      "public_key": "Vc6n-zpEUIdIkDi5CIfHAlyQ-GvJqVButr6MPP-cSR0"
+    },
+    {
+      "key_id": "key_eval_infra_01",
+      "purpose": "evaluation",
+      "public_key": "q-zQQNk5I8_a122IvlxotGHXcXrkxUoPjMJsc4Cv9SA"
+    },
+    {
+      "key_id": "key_policy_infra_01",
+      "purpose": "policy",
+      "public_key": "YVb_USVwhrPhX7J770E76wHQzd2urKe7usOwwUE1SsI"
+    },
+    {
+      "key_id": "key_root_infra_01",
+      "purpose": "root",
+      "public_key": "j-WU8n22M8hM9svrS5DipoaMr3yMi1O3RWyHG4NGe6Q"
+    },
+    {
+      "key_id": "key_publisher_infra_01",
+      "purpose": "publisher",
+      "public_key": "9pwNuYiEolIQ_NQ4n5XGPaTeNOL0RCbUJ_va_E7WYcc"
+    }
+  ],
+  "signed_envelope_examples": [
+    {
+      "schema_id": "infrastructure.signed-audit-archive-seal.v1",
+      "key_id": "key_receipt_infra_01",
+      "payload": {
+        "schema_id": "infrastructure.audit-archive-seal.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "through_sequence": "100",
+        "entry_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "persisted_at": "2026-11-16T19:00:00Z"
+      },
+      "signature": "VMPTSfcYxgwJxUad7Vu78if_11xzf_mZYxJpF3AIX5mrbYgBA2IIw0WGiKeTCndJtAXqCL1S26VzV-CGojkLDw"
+    },
+    {
+      "schema_id": "infrastructure.signed-storage-certification.v1",
+      "key_id": "key_receipt_infra_01",
+      "payload": {
+        "schema_id": "infrastructure.storage-certification.v1",
+        "certificate_id": "11111111-2222-4333-8444-555555555555",
+        "configuration_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "inventory_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "regions": [
+          "us-east-1",
+          "us-east-2"
+        ],
+        "key_custody_generation": "33333333-3333-4333-8333-333333333333",
+        "covered_storage_classes": [
+          "primary",
+          "wal",
+          "read_replica",
+          "backup",
+          "object",
+          "key_custody"
+        ],
+        "verified_at": "2026-11-16T18:00:00Z",
+        "not_after": "2026-11-17T18:00:00Z",
+        "status": "active"
+      },
+      "signature": "A68OzowvIQnt1oJWFJlQDGv0z8g0XrGUrBwEDyeE4wR-KxqHCk1chMJJjD8fqfjNGQKxOAi_yj2VyAPxznSuCQ"
+    },
+    {
+      "schema_id": "infrastructure.signed-recovery-baseline.v1",
+      "key_id": "key_receipt_infra_01",
+      "payload": {
+        "schema_id": "infrastructure.recovery-baseline.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "recovery_epoch": "44444444-4444-4444-8444-444444444444",
+        "through_sequence": "5000",
+        "entry_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "previous_baseline_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+        "projection_parts": [
+          {
+            "key": "baselines/00000000-0000-4000-8000-000000000001/part-001.bin",
+            "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+          }
+        ],
+        "created_at": "2026-11-16T12:00:00Z"
+      },
+      "signature": "2qmLi-RJ338zeXso8Y2Ac0hrA1rox33NOnHV9zHDeLvXbPJQHU08D2I3hpjdZbRet7oxpBYFqRf_aOTPyt48Bw"
+    }
+  ],
+  "digest_vectors": [
+    {
+      "vector_id": "vec_dedup_01",
+      "target": "infrastructure.transport-dedup.v1",
+      "input": {
+        "schema_id": "infrastructure.transport-dedup.v1",
+        "scope_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+        "idempotency_key": "018f6c56-789a-7bc1-8def-0123456789ab",
+        "request_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+        "outcome_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+        "response_expires_at": "2026-11-16T20:00:00Z",
+        "tombstone_expires_at": "2026-11-17T20:00:00Z"
+      },
+      "expected_sha256": "6208cccd7daddd098f6833032ab65fd5553d1cae7fd99ac9e093d47c44de09cf"
+    },
+    {
+      "vector_id": "vec_storage_cert_01",
+      "target": "infrastructure.storage-certification.v1",
+      "input": {
+        "schema_id": "infrastructure.storage-certification.v1",
+        "certificate_id": "11111111-2222-4333-8444-555555555555",
+        "configuration_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "inventory_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "regions": [
+          "us-east-1",
+          "us-east-2"
+        ],
+        "key_custody_generation": "33333333-3333-4333-8333-333333333333",
+        "covered_storage_classes": [
+          "primary",
+          "wal",
+          "read_replica",
+          "backup",
+          "object",
+          "key_custody"
+        ],
+        "verified_at": "2026-11-16T18:00:00Z",
+        "not_after": "2026-11-17T18:00:00Z",
+        "status": "active"
+      },
+      "expected_sha256": "7091de489ff4fd944102f0dcd963c3b5b6fb44b76f63915af321857a8f3b8ce4"
+    }
+  ],
+  "validation_cases": [
+    {
+      "case_id": "pos_JournalHeadV1_open",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/JournalHeadV1",
+      "instance": {
+        "schema_id": "infrastructure.journal-head.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "head_version": "42",
+        "writer_generation": "3",
+        "writer_identity": "writer_worker_pod_01",
+        "recovery_epoch": "44444444-4444-4444-8444-444444444444",
+        "replica_set_epoch": "1",
+        "mode": "open",
+        "committed": {
+          "completion_ref": {
+            "key": "completions/mut_001.bin",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "checkpoint": {
+            "schema_id": "identity.authority-checkpoint.v1",
+            "key_id": "key_receipt_transit_01",
+            "payload": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "recovery_epoch": "44444444-4444-4444-8444-444444444444",
+              "through_sequence": "42",
+              "entry_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "persisted_at": "2026-11-16T19:00:00Z",
+              "request_nonce": "nonce_secret_abcdef0123456789abcdef01234567"
+            },
+            "signature": "znn7Tsh2rKACF2H_ZhsR3HfOX5GyPBrEUtYweXl5UeFUbD6_M_TU-CQPIZ0xFD0A2CvbDya1ym7yvXVJkFD2Bg"
+          }
+        },
+        "pending": null,
+        "baseline_ref": {
+          "key": "baselines/base_001.bin",
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "recovery_activation_ref": null
+      },
+      "expected_valid": true,
+      "note": "Valid open JournalHead with committed checkpoint and baseline"
+    },
+    {
+      "case_id": "pos_AuditJournalHeadV1_open",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/AuditJournalHeadV1",
+      "instance": {
+        "schema_id": "infrastructure.audit-journal-head.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "head_version": "100",
+        "writer_generation": "1",
+        "writer_identity": "writer_audit_01",
+        "recovery_epoch": "44444444-4444-4444-8444-444444444444",
+        "replica_set_epoch": "1",
+        "mode": "open",
+        "committed": {
+          "completion_ref": {
+            "key": "audit_completions/mut_001.bin",
+            "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          },
+          "checkpoint": {
+            "schema_id": "infrastructure.signed-audit-archive-seal.v1",
+            "key_id": "key_receipt_infra_01",
+            "payload": {
+              "schema_id": "infrastructure.audit-archive-seal.v1",
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "through_sequence": "100",
+              "entry_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "persisted_at": "2026-11-16T19:00:00Z"
+            },
+            "signature": "VMPTSfcYxgwJxUad7Vu78if_11xzf_mZYxJpF3AIX5mrbYgBA2IIw0WGiKeTCndJtAXqCL1S26VzV-CGojkLDw"
+          }
+        },
+        "pending": null,
+        "baseline_ref": null,
+        "recovery_activation_ref": null
+      },
+      "expected_valid": true,
+      "note": "Valid AuditJournalHead with SignedAuditArchiveSealV1 checkpoint"
+    },
+    {
+      "case_id": "pos_MutationManifestV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/MutationManifestV1",
+      "instance": {
+        "schema_id": "infrastructure.mutation-manifest.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "recovery_epoch": "44444444-4444-4444-8444-444444444444",
+        "writer_generation": "1",
+        "mutation_id": "11111111-1111-4111-8111-111111111111",
+        "previous_completion_ref": {
+          "key": "completions/prev.bin",
+          "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        },
+        "entry_sha256s": [
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        ],
+        "request_nonce": "55555555-5555-4555-8555-555555555555",
+        "transport_dedup": {
+          "schema_id": "infrastructure.transport-dedup.v1",
+          "scope_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+          "idempotency_key": "018f6c56-789a-7bc1-8def-0123456789ab",
+          "request_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+          "outcome_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+          "response_expires_at": "2026-11-16T20:00:00Z",
+          "tombstone_expires_at": "2026-11-17T20:00:00Z"
+        },
+        "journal_kind": "authority"
+      },
+      "expected_valid": true,
+      "note": "Valid authority mutation manifest with transport dedup"
+    },
+    {
+      "case_id": "pos_TransportDedupV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/TransportDedupV1",
+      "instance": {
+        "schema_id": "infrastructure.transport-dedup.v1",
+        "scope_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+        "idempotency_key": "018f6c56-789a-7bc1-8def-0123456789ab",
+        "request_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+        "outcome_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+        "response_expires_at": "2026-11-16T20:00:00Z",
+        "tombstone_expires_at": "2026-11-17T20:00:00Z"
+      },
+      "expected_valid": true,
+      "note": "Valid transport deduplication record with UUIDv7"
+    },
+    {
+      "case_id": "pos_ReplicaSetActivationV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/ReplicaSetActivationV1",
+      "instance": {
+        "schema_id": "infrastructure.replica-set-activation.v1",
+        "transition_id": "66666666-6666-4666-8666-666666666666",
+        "incident_id": "inc_dr_failover_2026_01",
+        "old_replica_set_epoch": "1",
+        "new_replica_set_epoch": "2",
+        "old_regions": [
+          "us-east-1",
+          "us-east-2"
+        ],
+        "new_regions": [
+          "us-east-2",
+          "us-west-2"
+        ],
+        "scope_registry_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "frozen_heads_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "copied_inventory_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "approval_refs": [
+          "appr_lead_sec_01",
+          "appr_dir_ops_02"
+        ],
+        "activated_at": "2026-11-16T19:30:00Z"
+      },
+      "expected_valid": true,
+      "note": "Valid declared disaster replica set replacement with two distinct approvals"
+    },
+    {
+      "case_id": "pos_RecoveryActivationV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/RecoveryActivationV1",
+      "instance": {
+        "schema_id": "infrastructure.recovery-activation.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "recovery_epoch": "77777777-7777-4777-8777-777777777777",
+        "database_incarnation": "2",
+        "reopening_at": "2026-11-16T19:40:00Z",
+        "recovery_admission_floor": "2026-11-16T19:40:05Z",
+        "writer_generation": "2",
+        "replica_set_epoch": "2"
+      },
+      "expected_valid": true,
+      "note": "Valid recovery activation with +5s admission floor"
+    },
+    {
+      "case_id": "pos_PayloadKeyFenceV1_active",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/PayloadKeyFenceV1",
+      "instance": {
+        "schema_id": "infrastructure.payload-key-fence.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "subject_ref": "art_redacted_frame_001",
+        "key_ref": "transit_key_art_001",
+        "custody_generation": "88888888-8888-4888-8888-888888888888",
+        "deletion_generation": null,
+        "retention_deadline": "2026-11-30T00:00:00Z",
+        "state": "active"
+      },
+      "expected_valid": true,
+      "note": "Valid active payload key fence"
+    },
+    {
+      "case_id": "pos_PayloadKeyFenceV1_destroyed",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/PayloadKeyFenceV1",
+      "instance": {
+        "schema_id": "infrastructure.payload-key-fence.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "subject_ref": "art_redacted_frame_001",
+        "key_ref": "transit_key_art_001",
+        "custody_generation": "88888888-8888-4888-8888-888888888888",
+        "deletion_generation": "1",
+        "retention_deadline": "2026-11-30T00:00:00Z",
+        "state": "destroyed"
+      },
+      "expected_valid": true,
+      "note": "Valid destroyed payload key fence"
+    },
+    {
+      "case_id": "pos_PayloadCustodyGenerationV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/PayloadCustodyGenerationV1",
+      "instance": {
+        "schema_id": "infrastructure.payload-custody-generation.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "custody_generation": "88888888-8888-4888-8888-888888888888",
+        "state": "active"
+      },
+      "expected_valid": true,
+      "note": "Valid active payload custody generation"
+    },
+    {
+      "case_id": "pos_StorageCertificationV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/StorageCertificationV1",
+      "instance": {
+        "schema_id": "infrastructure.storage-certification.v1",
+        "certificate_id": "11111111-2222-4333-8444-555555555555",
+        "configuration_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "inventory_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "regions": [
+          "us-east-1",
+          "us-east-2"
+        ],
+        "key_custody_generation": "33333333-3333-4333-8333-333333333333",
+        "covered_storage_classes": [
+          "primary",
+          "wal",
+          "read_replica",
+          "backup",
+          "object",
+          "key_custody"
+        ],
+        "verified_at": "2026-11-16T18:00:00Z",
+        "not_after": "2026-11-17T18:00:00Z",
+        "status": "active"
+      },
+      "expected_valid": true,
+      "note": "Valid storage compliance certification"
+    },
+    {
+      "case_id": "pos_SignedStorageCertificationV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/SignedStorageCertificationV1",
+      "instance": {
+        "schema_id": "infrastructure.signed-storage-certification.v1",
+        "key_id": "key_receipt_infra_01",
+        "payload": {
+          "schema_id": "infrastructure.storage-certification.v1",
+          "certificate_id": "11111111-2222-4333-8444-555555555555",
+          "configuration_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "inventory_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "regions": [
+            "us-east-1",
+            "us-east-2"
+          ],
+          "key_custody_generation": "33333333-3333-4333-8333-333333333333",
+          "covered_storage_classes": [
+            "primary",
+            "wal",
+            "read_replica",
+            "backup",
+            "object",
+            "key_custody"
+          ],
+          "verified_at": "2026-11-16T18:00:00Z",
+          "not_after": "2026-11-17T18:00:00Z",
+          "status": "active"
+        },
+        "signature": "A68OzowvIQnt1oJWFJlQDGv0z8g0XrGUrBwEDyeE4wR-KxqHCk1chMJJjD8fqfjNGQKxOAi_yj2VyAPxznSuCQ"
+      },
+      "expected_valid": true,
+      "note": "Valid signed storage certification envelope"
+    },
+    {
+      "case_id": "pos_AuditEventV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/AuditEventV1",
+      "instance": {
+        "schema_id": "infrastructure.audit-event.v1",
+        "event_id": "018f6c56-789a-7bc1-8def-0123456789ab",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "occurred_at": "2026-11-16T19:00:00Z",
+        "source_workload": "api_control_plane_01",
+        "actor": {
+          "kind": "user",
+          "actor_id": "usr_sec_admin_01"
+        },
+        "action_type": "payload_key_destroy",
+        "object_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "evidence_artifact",
+          "entity_id": "art_redacted_001",
+          "version_id": "1",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "outcome": "succeeded",
+        "reason_code": null,
+        "correlation_id": "corr_req_12345",
+        "artifact_sha256s": [
+          "9999999999999999999999999999999999999999999999999999999999999999"
+        ]
+      },
+      "expected_valid": true,
+      "note": "Valid content-free AuditEventV1 referencing Analytics ResourceRefV1"
+    },
+    {
+      "case_id": "pos_AuditArchiveEntryV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/AuditArchiveEntryV1",
+      "instance": {
+        "schema_id": "infrastructure.audit-archive-entry.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "sequence": "100",
+        "previous_entry_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+        "event": {
+          "schema_id": "infrastructure.audit-event.v1",
+          "event_id": "018f6c56-789a-7bc1-8def-0123456789ab",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "occurred_at": "2026-11-16T19:00:00Z",
+          "source_workload": "api_control_plane_01",
+          "actor": {
+            "kind": "workload",
+            "actor_id": "wrk_job_scheduler"
+          },
+          "action_type": "job_dispatch_fenced",
+          "object_ref": {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "job_schedule",
+            "entity_id": "sched_001",
+            "version_id": "1",
+            "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+          },
+          "outcome": "allowed",
+          "reason_code": null,
+          "correlation_id": "corr_req_12346",
+          "artifact_sha256s": []
+        }
+      },
+      "expected_valid": true,
+      "note": "Valid AuditArchiveEntry with contained AuditEvent"
+    },
+    {
+      "case_id": "pos_SocDestinationV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/SocDestinationV1",
+      "instance": {
+        "schema_id": "infrastructure.soc-destination.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "destination_id": "99999999-9999-4999-8999-999999999999",
+        "revision": "1",
+        "url": "https://siem.customer-enterprise.com:443/v1/logs",
+        "credential_ref": "vault_cred_siem_token_01",
+        "status": "active"
+      },
+      "expected_valid": true,
+      "note": "Valid HTTPS SOC destination with no plaintext credential"
+    },
+    {
+      "case_id": "pos_VerifiedJournalWriterV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/VerifiedJournalWriterV1",
+      "instance": {
+        "schema_id": "infrastructure.verified-journal-writer.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "workload_identity": "writer_worker_pod_01",
+        "writer_generation": "1",
+        "recovery_epoch": "44444444-4444-4444-8444-444444444444",
+        "replica_set_epoch": "1"
+      },
+      "expected_valid": true,
+      "note": "Valid authenticated journal writer tuple"
+    },
+    {
+      "case_id": "pos_InfrastructureProblemV1",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/InfrastructureProblemV1",
+      "instance": {
+        "schema_id": "infrastructure.infrastructure-problem.v1",
+        "code": "INFRA_ARCHIVE_INTEGRITY_FAILED",
+        "correlation_id": "corr_err_987",
+        "retryable": false
+      },
+      "expected_valid": true,
+      "note": "Valid platform problem details record"
+    },
+    {
+      "case_id": "neg_JournalHead_UnknownField",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/JournalHeadV1",
+      "instance": {
+        "schema_id": "infrastructure.journal-head.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "head_version": "1",
+        "writer_generation": "1",
+        "writer_identity": null,
+        "recovery_epoch": "44444444-4444-4444-8444-444444444444",
+        "replica_set_epoch": "1",
+        "mode": "open",
+        "committed": null,
+        "pending": null,
+        "baseline_ref": null,
+        "recovery_activation_ref": null,
+        "rogue_field": "disallowed"
+      },
+      "expected_valid": false,
+      "note": "Disallows unknown fields via additionalProperties: false"
+    },
+    {
+      "case_id": "neg_JournalHead_MalformedHash",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/JournalHeadV1",
+      "instance": {
+        "schema_id": "infrastructure.journal-head.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "head_version": "1",
+        "writer_generation": "1",
+        "writer_identity": null,
+        "recovery_epoch": "44444444-4444-4444-8444-444444444444",
+        "replica_set_epoch": "1",
+        "mode": "open",
+        "committed": null,
+        "pending": null,
+        "baseline_ref": {
+          "key": "baselines/01.bin",
+          "sha256": "not_a_valid_sha256_hex"
+        },
+        "recovery_activation_ref": null
+      },
+      "expected_valid": false,
+      "note": "Rejects malformed SHA256 string"
+    },
+    {
+      "case_id": "neg_ReplicaSetActivation_DuplicateApproval",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/ReplicaSetActivationV1",
+      "instance": {
+        "schema_id": "infrastructure.replica-set-activation.v1",
+        "transition_id": "66666666-6666-4666-8666-666666666666",
+        "incident_id": "inc_001",
+        "old_replica_set_epoch": "1",
+        "new_replica_set_epoch": "2",
+        "old_regions": [
+          "us-east-1",
+          "us-east-2"
+        ],
+        "new_regions": [
+          "us-east-2",
+          "us-west-2"
+        ],
+        "scope_registry_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "frozen_heads_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "copied_inventory_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "approval_refs": [
+          "appr_same_user_01",
+          "appr_same_user_01"
+        ],
+        "activated_at": "2026-11-16T19:30:00Z"
+      },
+      "expected_valid": false,
+      "note": "Rejects identical approval references (must be 2 distinct persons)"
+    },
+    {
+      "case_id": "neg_ReplicaSetActivation_InvalidRegionCount",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/ReplicaSetActivationV1",
+      "instance": {
+        "schema_id": "infrastructure.replica-set-activation.v1",
+        "transition_id": "66666666-6666-4666-8666-666666666666",
+        "incident_id": "inc_001",
+        "old_replica_set_epoch": "1",
+        "new_replica_set_epoch": "2",
+        "old_regions": [
+          "us-east-1"
+        ],
+        "new_regions": [
+          "us-east-2",
+          "us-west-2"
+        ],
+        "scope_registry_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "frozen_heads_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "copied_inventory_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "approval_refs": [
+          "appr_user_01",
+          "appr_user_02"
+        ],
+        "activated_at": "2026-11-16T19:30:00Z"
+      },
+      "expected_valid": false,
+      "note": "Rejects region pair with fewer than 2 regions"
+    },
+    {
+      "case_id": "neg_SocDestination_PrivateAddress",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/SocDestinationV1",
+      "instance": {
+        "schema_id": "infrastructure.soc-destination.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "destination_id": "99999999-9999-4999-8999-999999999999",
+        "revision": "1",
+        "url": "http://169.254.169.254/latest/meta-data",
+        "credential_ref": "token_01",
+        "status": "active"
+      },
+      "expected_valid": false,
+      "note": "Rejects non-HTTPS or non-/v1/logs SOC URL"
+    },
+    {
+      "case_id": "neg_MutationManifest_ZeroEntries",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/MutationManifestV1",
+      "instance": {
+        "schema_id": "infrastructure.mutation-manifest.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "recovery_epoch": "44444444-4444-4444-8444-444444444444",
+        "writer_generation": "1",
+        "mutation_id": "11111111-1111-4111-8111-111111111111",
+        "previous_completion_ref": null,
+        "entry_sha256s": [],
+        "request_nonce": "55555555-5555-4555-8555-555555555555",
+        "transport_dedup": null,
+        "journal_kind": "authority"
+      },
+      "expected_valid": false,
+      "note": "Rejects empty entry_sha256s array (minItems: 1)"
+    },
+    {
+      "case_id": "neg_SignedArchiveSeal_MalformedSignature",
+      "schema_ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/SignedAuditArchiveSealV1",
+      "instance": {
+        "schema_id": "infrastructure.signed-audit-archive-seal.v1",
+        "key_id": "key_receipt_infra_01",
+        "payload": {
+          "schema_id": "infrastructure.audit-archive-seal.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "through_sequence": "100",
+          "entry_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "persisted_at": "2026-11-16T19:00:00Z"
+        },
+        "signature": "short_sig"
+      },
+      "expected_valid": false,
+      "note": "Rejects signature shorter than 86 base64url characters"
+    }
+  ],
+  "semantic_cases": [
+    {
+      "case_id": "sem_01_schema_and_integrity",
+      "initial_state": {
+        "head": "open",
+        "head_version": "1",
+        "recovery_epoch": "44444444-4444-4444-8444-444444444444",
+        "replica_set_epoch": "1"
+      },
+      "operations": [
+        {
+          "op": "validate_schema_invariants",
+          "target": "all_types",
+          "assert": "valid"
+        },
+        {
+          "op": "inject_invalid_enum",
+          "type": "PayloadKeyFenceV1",
+          "state": "corrupted",
+          "assert": "rejected"
+        },
+        {
+          "op": "inject_duplicate_approvals",
+          "type": "ReplicaSetActivationV1",
+          "assert": "rejected"
+        }
+      ],
+      "expected_observations": {
+        "schema_conformance": "passed",
+        "negative_rejections_confirmed": 3
+      },
+      "note": "Validates schema typing and negative boundary checks across all platform types"
+    },
+    {
+      "case_id": "sem_02_after_image_chunking",
+      "initial_state": {
+        "chunk_counts_to_test": [
+          0,
+          1,
+          128,
+          129,
+          256,
+          257
+        ],
+        "max_images_per_entry": 128,
+        "max_entry_bytes": 1048576,
+        "max_single_image_bytes": 262144
+      },
+      "operations": [
+        {
+          "op": "chunk_mutation",
+          "image_count": 0,
+          "expected_entries": 1,
+          "expected_checkpoints": 1
+        },
+        {
+          "op": "chunk_mutation",
+          "image_count": 1,
+          "expected_entries": 1,
+          "expected_checkpoints": 1
+        },
+        {
+          "op": "chunk_mutation",
+          "image_count": 128,
+          "expected_entries": 1,
+          "expected_checkpoints": 1
+        },
+        {
+          "op": "chunk_mutation",
+          "image_count": 129,
+          "expected_entries": 2,
+          "expected_checkpoints": 1
+        },
+        {
+          "op": "chunk_mutation",
+          "image_count": 256,
+          "expected_entries": 2,
+          "expected_checkpoints": 1
+        },
+        {
+          "op": "chunk_mutation",
+          "image_count": 257,
+          "expected_entries": 3,
+          "expected_checkpoints": 1
+        },
+        {
+          "op": "chunk_large_images",
+          "image_count": 5,
+          "image_size_bytes": 250000,
+          "expected_entries": 2,
+          "expected_checkpoints": 1
+        }
+      ],
+      "expected_observations": {
+        "entry_counts": [
+          1,
+          1,
+          1,
+          2,
+          2,
+          3
+        ],
+        "single_checkpoint_per_mutation": true,
+        "intermediate_chunk_release_forbidden": true
+      },
+      "note": "Proves 0,1,128,129,256,257 yield 1,1,1,2,2,3 entries and large images split at 1 MiB"
+    },
+    {
+      "case_id": "sem_03_crash_recovery_matrix",
+      "initial_state": {
+        "pending_mutation": "mut_crash_test_001",
+        "steps": [
+          "put_s3_primary",
+          "put_s3_secondary",
+          "cas_pending",
+          "sign_checkpoint",
+          "put_completion",
+          "cas_committed",
+          "sql_callback"
+        ]
+      },
+      "operations": [
+        {
+          "op": "simulate_crash",
+          "after_step": "put_s3_primary",
+          "assert": "unacknowledged_and_fenced"
+        },
+        {
+          "op": "simulate_crash",
+          "after_step": "cas_pending",
+          "assert": "helper_completes_committed_receipt"
+        },
+        {
+          "op": "simulate_crash",
+          "after_step": "put_completion",
+          "assert": "helper_completes_committed_receipt"
+        },
+        {
+          "op": "simulate_crash",
+          "after_step": "cas_committed",
+          "assert": "exact_committed_receipt_returned_no_false_ack"
+        }
+      ],
+      "expected_observations": {
+        "zero_false_acknowledgments": true,
+        "deterministic_helper_resolution": true
+      },
+      "note": "Verifies crash boundaries across dual-put, pending CAS, completion put, and committed CAS"
+    },
+    {
+      "case_id": "sem_04_idempotency_and_conflict",
+      "initial_state": {
+        "committed_mutation_id": "mut_idemp_001",
+        "committed_manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receipt": "sig_receipt_001"
+      },
+      "operations": [
+        {
+          "op": "resubmit_exact",
+          "mutation_id": "mut_idemp_001",
+          "manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "expected_result": "sig_receipt_001"
+        },
+        {
+          "op": "resubmit_altered",
+          "mutation_id": "mut_idemp_001",
+          "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "expected_error": "IDENTITY_IDEMPOTENCY_CONFLICT"
+        },
+        {
+          "op": "competing_sequence_append",
+          "sequence": "42",
+          "expected_error": "fenced_no_silent_resequence"
+        },
+        {
+          "op": "stale_sql_callback",
+          "expected_effect": "ignored_newer_pending_fence_preserved"
+        }
+      ],
+      "expected_observations": {
+        "idempotency_preserved": true,
+        "payload_conflict_rejected": true,
+        "silent_resequencing_blocked": true
+      },
+      "note": "Proves duplicate submission returns prior receipt; altered payload fails conflict; old callbacks cannot clear newer fences"
+    },
+    {
+      "case_id": "sem_05_stale_head_rejection",
+      "initial_state": {
+        "strongly_read_head": "10",
+        "stale_signed_checkpoint_head": "8"
+      },
+      "operations": [
+        {
+          "op": "submit_stale_checkpoint_with_fresh_nonce",
+          "expected_result": "rejected_strongly_read_newer_head_authoritative"
+        },
+        {
+          "op": "inspect_uncommitted_s3_orphan_objects",
+          "expected_result": "ignored_does_not_establish_tip"
+        },
+        {
+          "op": "inspect_high_sequence_uncommitted_objects",
+          "expected_result": "ignored_tip_derived_from_mrsc_cas_only"
+        }
+      ],
+      "expected_observations": {
+        "stale_checkpoint_overridden": true,
+        "orphan_tip_derivation_rejected": true
+      },
+      "note": "Proves strongly read committed head prevails over stale signed checkpoints and uncommitted orphan objects"
+    },
+    {
+      "case_id": "sem_06_restore_preceding_snapshot",
+      "initial_state": {
+        "snapshot_timestamp": "2026-11-15T00:00:00Z",
+        "unrestored_journal_events": [
+          {
+            "type": "role_revocation",
+            "role_id": "role_admin_01",
+            "at": "2026-11-15T02:00:00Z"
+          },
+          {
+            "type": "action_consumed",
+            "action_id": "act_disburse_01",
+            "at": "2026-11-15T03:00:00Z"
+          },
+          {
+            "type": "contribution_accepted",
+            "payload_id": "art_capture_01",
+            "at": "2026-11-15T04:00:00Z"
+          },
+          {
+            "type": "destruction_fence",
+            "key_id": "key_disposable_01",
+            "at": "2026-11-15T05:00:00Z"
+          },
+          {
+            "type": "analytics_disclosure",
+            "commitment_id": "comm_week_45",
+            "at": "2026-11-15T06:00:00Z"
+          }
+        ]
+      },
+      "operations": [
+        {
+          "op": "replay_journal_suffix_before_scheduling",
+          "assert": "restrictions_reconstructed"
+        },
+        {
+          "op": "evaluate_consumed_action",
+          "action_id": "act_disburse_01",
+          "expected_state": "consumed_no_redispatch"
+        },
+        {
+          "op": "inspect_missing_payload",
+          "payload_id": "art_capture_01",
+          "expected_state": "lost_after_restore"
+        },
+        {
+          "op": "evaluate_revocation",
+          "role_id": "role_admin_01",
+          "expected_state": "revoked_not_resurrected"
+        }
+      ],
+      "expected_observations": {
+        "no_resurrection_of_revoked_roles": true,
+        "consumed_actions_remain_consumed": true,
+        "missing_payload_classified_lost_after_restore": true,
+        "zero_automatic_redispatch": true
+      },
+      "note": "Reconstructs restrictions before privilege dispatch; missing payloads classified lost_after_restore"
+    },
+    {
+      "case_id": "sem_07_replica_set_fencing_and_replacement",
+      "initial_state": {
+        "active_pair": [
+          "us-east-1",
+          "us-east-2"
+        ],
+        "replica_set_epoch": "1",
+        "primary_region_status": "inaccessible"
+      },
+      "operations": [
+        {
+          "op": "old_writer_races_fencing",
+          "assert": "rejected_once_fenced"
+        },
+        {
+          "op": "freeze_all_registered_scopes",
+          "assert": "all_heads_cas_to_recovering"
+        },
+        {
+          "op": "verify_canonical_closure_us_east_2",
+          "assert": "contiguous_cut_verified"
+        },
+        {
+          "op": "copy_inventory_to_us_west_2",
+          "assert": "dual_copies_verified"
+        },
+        {
+          "op": "publish_replica_set_activation",
+          "new_pair": [
+            "us-east-2",
+            "us-west-2"
+          ],
+          "approvals": 2,
+          "assert": "epoch_2_activated"
+        }
+      ],
+      "expected_observations": {
+        "old_writer_fenced_permanently": true,
+        "surviving_closure_mandatory": true,
+        "two_person_approval_verified": true,
+        "two_copy_durability_restored": true
+      },
+      "note": "Simulates declared disaster replica set replacement with global scope freeze and two-copy activation"
+    },
+    {
+      "case_id": "sem_08_daily_baseline_reconstruction",
+      "initial_state": {
+        "baseline_sequence": "1000",
+        "deleted_role_id": "role_contractor_temp",
+        "historical_sql_dump": "contains_active_role_contractor_temp"
+      },
+      "operations": [
+        {
+          "op": "generate_daily_baseline",
+          "through_sequence": "1000",
+          "assert": "omits_deleted_role"
+        },
+        {
+          "op": "restore_from_historical_sql",
+          "assert": "baseline_replay_re-deletes_role"
+        },
+        {
+          "op": "replay_compacted_mutation",
+          "expected_result": "status_only_prior_outcome_no_append"
+        }
+      ],
+      "expected_observations": {
+        "deleted_role_not_resurrected": true,
+        "compacted_replay_returns_prior_outcome": true
+      },
+      "note": "Proves daily baseline omits deleted roles and prevents resurrecting past database grants"
+    },
+    {
+      "case_id": "sem_09_two_phase_destruction",
+      "initial_state": {
+        "artifact_a": {
+          "key_ref": "key_art_a",
+          "state": "active"
+        },
+        "artifact_b": {
+          "key_ref": "key_art_b",
+          "state": "active"
+        }
+      },
+      "operations": [
+        {
+          "op": "stage_destroy_pending",
+          "target": "artifact_a",
+          "assert": "state_destroy_pending_reads_denied"
+        },
+        {
+          "op": "delete_transit_wrapping_key",
+          "target": "key_art_a",
+          "assert": "vault_returns_404_not_found"
+        },
+        {
+          "op": "commit_destroyed_fence",
+          "target": "artifact_a",
+          "assert": "state_destroyed"
+        },
+        {
+          "op": "read_artifact_b",
+          "assert": "readable_unaffected"
+        },
+        {
+          "op": "attempt_read_artifact_a_with_old_ciphertext",
+          "assert": "denied_INFRA_CUSTODY_UNAVAILABLE"
+        },
+        {
+          "op": "attempt_unwrap_wrong_aad_or_tenant",
+          "assert": "denied_crypto_tag_mismatch"
+        }
+      ],
+      "expected_observations": {
+        "artifact_a_irreversibly_destroyed": true,
+        "artifact_b_remains_readable": true,
+        "tampered_aad_denied": true
+      },
+      "note": "Verifies two-phase destruction fencing, independent DEK shredding, and AAD binding integrity"
+    },
+    {
+      "case_id": "sem_10_lost_custody_generation",
+      "initial_state": {
+        "custody_generation": "gen_2026_01",
+        "state": "active",
+        "historical_outcome_records": [
+          {
+            "case_id": "case_101",
+            "verdict": "verified_passed",
+            "verdict_bytes_sha256": "1234123412341234123412341234123412341234123412341234123412341234"
+          }
+        ]
+      },
+      "operations": [
+        {
+          "op": "declare_generation_lost",
+          "generation": "gen_2026_01",
+          "assert": "state_lost"
+        },
+        {
+          "op": "attempt_evidence_read",
+          "generation": "gen_2026_01",
+          "assert": "denied_lost_generation"
+        },
+        {
+          "op": "verify_historical_outcome",
+          "case_id": "case_101",
+          "assert": "verdict_unmutated_bytes_match"
+        },
+        {
+          "op": "initialize_future_payloads",
+          "assert": "new_empty_generation_gen_2026_02_allocated"
+        },
+        {
+          "op": "attempt_revive_with_old_disk",
+          "assert": "blocked_lost_is_terminal"
+        }
+      ],
+      "expected_observations": {
+        "lost_generation_terminal": true,
+        "historical_verdicts_unmutated": true,
+        "fresh_generation_isolated": true
+      },
+      "note": "Proves Expiring Vault loss leaves historical verdicts intact and prevents lost generation revival"
+    },
+    {
+      "case_id": "sem_11_connection_allocation_and_watermark",
+      "initial_state": {
+        "global_connection_cap": 64,
+        "allocations": {
+          "api": 20,
+          "reporting_reader": 2,
+          "export_reader": 1,
+          "headroom": 1,
+          "workers": 16,
+          "inference": 8,
+          "safety_reserve": 16
+        }
+      },
+      "operations": [
+        {
+          "op": "verify_allocation_sum",
+          "assert": "equals_64"
+        },
+        {
+          "op": "discovery_worker_limit",
+          "max_worker_slots": 4,
+          "assert": "within_worker_pool_16"
+        },
+        {
+          "op": "attempt_borrow_safety_reserve_for_reporting",
+          "assert": "rejected"
+        },
+        {
+          "op": "simulate_zero_surge_rollout",
+          "max_surge": 0,
+          "max_unavailable": 1,
+          "assert": "peak_connections_le_64"
+        },
+        {
+          "op": "query_stale_read_replica",
+          "watermark_lag_seconds": 45,
+          "assert": "returns_stale_read_fallback_or_waits"
+        }
+      ],
+      "expected_observations": {
+        "sum_equals_64": true,
+        "reserve_borrowing_prohibited": true,
+        "zero_surge_enforced": true,
+        "stale_read_replica_guarded": true
+      },
+      "note": "Proves 64-connection budget, zero-surge deploy invariants, and reporting watermark fences"
+    },
+    {
+      "case_id": "sem_12_storage_certification_expiry",
+      "initial_state": {
+        "storage_cert": {
+          "verified_at": "2026-11-16T00:00:00Z",
+          "not_after": "2026-11-17T00:00:00Z",
+          "covered_classes": [
+            "primary",
+            "wal",
+            "read_replica",
+            "backup",
+            "object",
+            "key_custody"
+          ],
+          "status": "active"
+        }
+      },
+      "operations": [
+        {
+          "op": "request_image_artifact_policy",
+          "at": "2026-11-16T12:00:00Z",
+          "assert": "granted"
+        },
+        {
+          "op": "request_image_artifact_policy",
+          "at": "2026-11-17T00:00:01Z",
+          "assert": "rejected_certification_expired"
+        },
+        {
+          "op": "revoke_certification",
+          "assert": "image_policy_immediately_halted"
+        },
+        {
+          "op": "inspect_retained_encrypted_backups",
+          "assert": "does_not_restore_readability_past_deadline"
+        }
+      ],
+      "expected_observations": {
+        "active_cert_enables_image_policies": true,
+        "expired_or_revoked_cert_fails_closed": true,
+        "retained_backups_deny_access": true
+      },
+      "note": "Verifies 24-hour storage certification lifecycle and fail-closed image policy issuance"
+    },
+    {
+      "case_id": "sem_13_governed_export_and_soc",
+      "initial_state": {
+        "export_id": "exp_001",
+        "max_part_size_bytes": 268435456,
+        "max_total_size_bytes": 5368709120,
+        "authorized_region": "us-east-1"
+      },
+      "operations": [
+        {
+          "op": "request_range_download_resume",
+          "part": 1,
+          "offset": 1048576,
+          "assert": "re-evaluates_authorization_granted"
+        },
+        {
+          "op": "attempt_presigned_s3_url_generation",
+          "assert": "rejected_presigned_urls_prohibited"
+        },
+        {
+          "op": "deliver_soc_log",
+          "destination_url": "https://siem.corporate.com/v1/logs",
+          "resolved_ip": "198.51.100.10",
+          "assert": "delivered"
+        },
+        {
+          "op": "deliver_soc_log",
+          "destination_url": "https://siem.corporate.com/v1/logs",
+          "resolved_ip": "169.254.169.254",
+          "assert": "rejected_metadata_address"
+        },
+        {
+          "op": "deliver_soc_log_with_http_redirect",
+          "assert": "rejected_redirects_prohibited"
+        },
+        {
+          "op": "soc_endpoint_offline",
+          "max_retries": 8,
+          "assert": "quarantined_canonical_containment_not_blocked"
+        }
+      ],
+      "expected_observations": {
+        "authenticated_range_resume_verified": true,
+        "presigned_urls_forbidden": true,
+        "soc_ssrf_mitigated": true,
+        "soc_failure_quarantined": true
+      },
+      "note": "Proves governed authenticated export streaming and SOC egress public-IP / redirect security checks"
+    },
+    {
+      "case_id": "sem_14_artifact_policy_version_cutover",
+      "initial_state": {
+        "canonical_schema_id": "privacy.artifact-policy.v1",
+        "authoritative_field": "policy_version",
+        "deprecated_field": "policy_revision"
+      },
+      "operations": [
+        {
+          "op": "validate_identity_signed_artifact_policy",
+          "field": "policy_version",
+          "assert": "valid"
+        },
+        {
+          "op": "validate_contribution_sync_schema_ref",
+          "assert": "resolves_to_identity_urn"
+        },
+        {
+          "op": "verify_no_duplicate_definition_in_contribution_sync",
+          "assert": "no_local_definition"
+        },
+        {
+          "op": "submit_policy_with_policy_revision",
+          "assert": "rejected_unknown_field_or_missing_policy_version"
+        }
+      ],
+      "expected_observations": {
+        "clean_cutover_to_policy_version": true,
+        "zero_duplicate_definitions_in_sync": true,
+        "policy_revision_rejected_in_artifact_policy": true
+      },
+      "note": "Proves complete cutover of SignedArtifactPolicy to Identity's policy_version U64 definition"
+    }
+  ]
+}
