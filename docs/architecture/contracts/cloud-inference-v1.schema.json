@@ -1,0 +1,1024 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:cloud-inference:v1",
+  "title": "Oryn Cloud Inference Transport, Stream Proof, and Budget Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for Oryn transient cloud inference admission, input manifests, stream scopes, chunk proofs, real-time events, budget reservations, and certified route pricing.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/InferenceAuthorizationRequestV1"
+    },
+    {
+      "$ref": "#/$defs/InferenceAdmissionResultV1"
+    },
+    {
+      "$ref": "#/$defs/InferenceRequestV1"
+    },
+    {
+      "$ref": "#/$defs/InferenceResultV1"
+    },
+    {
+      "$ref": "#/$defs/SignedInferenceChunkProofV1"
+    },
+    {
+      "$ref": "#/$defs/InferenceEventV1"
+    },
+    {
+      "$ref": "#/$defs/InferenceRoutePricingV1"
+    },
+    {
+      "$ref": "#/$defs/InferenceReservationV1"
+    },
+    {
+      "$ref": "#/$defs/InferenceFixtureSetV1"
+    }
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "OrganizationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Secret": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 4096
+    },
+    "Base64Url64": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    },
+    "MinorUnitString": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "InputBindingV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "batch"
+            },
+            "input_scope_sha256": {
+              "$ref": "#/$defs/Sha256Hex"
+            },
+            "input_manifest_sha256": {
+              "$ref": "#/$defs/Sha256Hex"
+            }
+          },
+          "required": [
+            "kind",
+            "input_scope_sha256",
+            "input_manifest_sha256"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "stream"
+            },
+            "stream_scope_sha256": {
+              "$ref": "#/$defs/Sha256Hex"
+            },
+            "stream_id": {
+              "$ref": "#/$defs/UUIDv4"
+            },
+            "stream_epoch": {
+              "$ref": "#/$defs/UUIDv4"
+            }
+          },
+          "required": [
+            "kind",
+            "stream_scope_sha256",
+            "stream_id",
+            "stream_epoch"
+          ]
+        }
+      ]
+    },
+    "SourceScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "part_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "source_kind": {
+          "type": "string",
+          "enum": [
+            "screen",
+            "meeting",
+            "organizational_artifact",
+            "incident_correction_audio"
+          ]
+        },
+        "source_ref": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "source_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "acquired_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "expires_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "retention_mode": {
+          "type": "string",
+          "enum": [
+            "ephemeral",
+            "retained"
+          ]
+        }
+      },
+      "required": [
+        "part_id",
+        "source_kind",
+        "source_ref",
+        "source_revision",
+        "acquired_at",
+        "expires_at",
+        "retention_mode"
+      ]
+    },
+    "InputScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "purpose": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SourceScopeV1"
+          },
+          "minItems": 1,
+          "maxItems": 128
+        }
+      },
+      "required": [
+        "purpose",
+        "sources"
+      ]
+    },
+    "InputManifestEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "part_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "media_type": {
+          "type": "string",
+          "enum": [
+            "text/plain",
+            "application/json",
+            "image/png",
+            "audio/ogg",
+            "audio/wav",
+            "audio/pcm"
+          ]
+        },
+        "byte_length": {
+          "$ref": "#/$defs/U64"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "sample_start": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/U64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sample_end": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/U64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "part_id",
+        "media_type",
+        "byte_length",
+        "sha256",
+        "sample_start",
+        "sample_end"
+      ]
+    },
+    "InputManifestV1": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/InputManifestEntryV1"
+      },
+      "maxItems": 128
+    },
+    "StreamScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stream_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "stream_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "meeting_session_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "segment_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "track_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "minItems": 1,
+          "maxItems": 2
+        },
+        "encoding": {
+          "const": "pcm_s16le"
+        },
+        "sample_rate": {
+          "const": 16000
+        },
+        "channels": {
+          "const": 1
+        },
+        "max_bytes": {
+          "$ref": "#/$defs/U64"
+        },
+        "max_samples": {
+          "$ref": "#/$defs/U64"
+        },
+        "absolute_not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "stream_id",
+        "stream_epoch",
+        "meeting_session_id",
+        "segment_id",
+        "track_ids",
+        "encoding",
+        "sample_rate",
+        "channels",
+        "max_bytes",
+        "max_samples",
+        "absolute_not_after"
+      ]
+    },
+    "InferenceAuthorizationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "inference.authorization-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "purpose": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "operation": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/InferenceOperation"
+        },
+        "input_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "deletion_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "input_binding": {
+          "$ref": "#/$defs/InputBindingV1"
+        },
+        "privacy_context": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/SignedPrivacyAuthorizationContextV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_scope": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/InputScopeV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_manifest": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/InputManifestV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stream_scope": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/StreamScopeV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_schema_id": {
+          "$ref": "#/$defs/Identifier"
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "purpose",
+        "operation",
+        "input_revision",
+        "deletion_generation",
+        "input_binding",
+        "privacy_context",
+        "input_scope",
+        "input_manifest",
+        "stream_scope",
+        "output_schema_id"
+      ]
+    },
+    "InferenceAdmissionResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "inference.admission-result.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "authorization": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/SignedInferenceAuthorizationV1"
+        },
+        "session_handle": {
+          "$ref": "#/$defs/Secret"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "authorization",
+        "session_handle",
+        "not_after"
+      ]
+    },
+    "InferenceContentPartV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "part_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "media_type": {
+          "type": "string"
+        },
+        "text_content": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "json_content": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "binary_base64": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "part_id",
+        "media_type",
+        "text_content",
+        "json_content",
+        "binary_base64"
+      ]
+    },
+    "InferenceRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "inference.request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "authorization_ref": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "operation": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/InferenceOperation"
+        },
+        "route_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "route_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "schema_id_expected": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "input_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "deletion_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "input_manifest": {
+          "$ref": "#/$defs/InputManifestV1"
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InferenceContentPartV1"
+          }
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "authorization_ref",
+        "operation",
+        "route_id",
+        "route_revision",
+        "schema_id_expected",
+        "input_revision",
+        "deletion_generation",
+        "input_manifest",
+        "content"
+      ]
+    },
+    "InferenceUsageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "audio_milliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "settled_cost_microusd": {
+          "$ref": "#/$defs/MinorUnitString"
+        }
+      },
+      "required": [
+        "input_tokens",
+        "output_tokens",
+        "total_tokens",
+        "audio_milliseconds",
+        "settled_cost_microusd"
+      ]
+    },
+    "InferenceResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "inference.result.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "operation": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/InferenceOperation"
+        },
+        "model_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "output": {
+          "type": "object"
+        },
+        "usage": {
+          "$ref": "#/$defs/InferenceUsageV1"
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "operation",
+        "model_id",
+        "output",
+        "usage"
+      ]
+    },
+    "InferenceChunkProofPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "authorization_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "stream_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "stream_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "track_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "sample_start": {
+          "$ref": "#/$defs/U64"
+        },
+        "sample_end": {
+          "$ref": "#/$defs/U64"
+        },
+        "byte_length": {
+          "$ref": "#/$defs/U64"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "consent_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "notice_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "input_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "deletion_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "request_id",
+        "authorization_id",
+        "stream_id",
+        "stream_epoch",
+        "track_id",
+        "sequence",
+        "sample_start",
+        "sample_end",
+        "byte_length",
+        "sha256",
+        "consent_revision",
+        "notice_revision",
+        "input_revision",
+        "deletion_generation",
+        "issued_at",
+        "not_after"
+      ]
+    },
+    "SignedInferenceChunkProofV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "privacy.inference-chunk.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/InferenceChunkProofPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "InferenceEventPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text_delta": {
+          "type": "string"
+        },
+        "partial_transcript": {
+          "type": "string"
+        },
+        "final_transcript": {
+          "type": "string"
+        },
+        "error_code": {
+          "type": "string"
+        },
+        "error_message": {
+          "type": "string"
+        },
+        "gap_samples": {
+          "type": "integer"
+        }
+      }
+    },
+    "InferenceEventV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "inference.event.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "stream_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "stream_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "session.started",
+            "transcript.partial",
+            "transcript.final",
+            "output.delta",
+            "usage.updated",
+            "gap",
+            "session.completed",
+            "session.failed",
+            "session.cancelled"
+          ]
+        },
+        "input_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "deletion_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "payload": {
+          "$ref": "#/$defs/InferenceEventPayloadV1"
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "stream_id",
+        "stream_epoch",
+        "sequence",
+        "event_type",
+        "input_revision",
+        "deletion_generation",
+        "payload"
+      ]
+    },
+    "InferenceRoutePricingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "inference.route-pricing.v1"
+        },
+        "route_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "route_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "fixed_charge_microusd": {
+          "$ref": "#/$defs/MinorUnitString"
+        },
+        "rate_numerator": {
+          "$ref": "#/$defs/U64"
+        },
+        "rate_denominator": {
+          "$ref": "#/$defs/U64"
+        },
+        "max_billable_units": {
+          "$ref": "#/$defs/U64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "route_id",
+        "route_revision",
+        "fixed_charge_microusd",
+        "rate_numerator",
+        "rate_denominator",
+        "max_billable_units"
+      ]
+    },
+    "InferenceReservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "inference.reservation.v1"
+        },
+        "reservation_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "authorization_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "purpose": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "operation": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/InferenceOperation"
+        },
+        "reserved_microusd": {
+          "$ref": "#/$defs/MinorUnitString"
+        },
+        "settled_microusd": {
+          "$ref": "#/$defs/MinorUnitString"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "reserved",
+            "dispatched",
+            "settled",
+            "released",
+            "usage_unknown"
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "reservation_id",
+        "request_id",
+        "authorization_id",
+        "organization_id",
+        "purpose",
+        "operation",
+        "reserved_microusd",
+        "settled_microusd",
+        "state"
+      ]
+    },
+    "InferenceFixtureSetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "inference.fixture-set.v1"
+        },
+        "public_keys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "purpose": {
+                "type": "string"
+              },
+              "public_key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "key_id",
+              "purpose",
+              "public_key"
+            ]
+          }
+        },
+        "signed_envelope_examples": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "digest_vectors": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "validation_cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "case_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "schema_ref": {
+                "type": "string"
+              },
+              "instance": {
+                "type": [
+                  "object",
+                  "array",
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              },
+              "expected_valid": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "case_id",
+              "schema_ref",
+              "instance",
+              "expected_valid"
+            ]
+          }
+        },
+        "binding_vectors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "case_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "authorization": {
+                "type": "object"
+              },
+              "privacy_context": {
+                "oneOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "request": {
+                "$ref": "#/$defs/InferenceAuthorizationRequestV1"
+              },
+              "stream_scope": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/StreamScopeV1"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "chunk_proof": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/SignedInferenceChunkProofV1"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "chunk_base64": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "checked_at": {
+                "$ref": "#/$defs/UtcDateTime"
+              },
+              "expected_valid": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "case_id",
+              "authorization",
+              "privacy_context",
+              "request",
+              "stream_scope",
+              "chunk_proof",
+              "chunk_base64",
+              "checked_at",
+              "expected_valid"
+            ]
+          }
+        },
+        "descriptive_cases": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "schema_id",
+        "public_keys",
+        "signed_envelope_examples",
+        "digest_vectors",
+        "validation_cases",
+        "binding_vectors",
+        "descriptive_cases"
+      ]
+    }
+  }
+}

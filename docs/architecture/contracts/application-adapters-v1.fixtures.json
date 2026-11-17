@@ -1,0 +1,1402 @@
+{
+  "public_keys": [
+    {
+      "key_id": "test_publisher_1",
+      "purpose": "publisher",
+      "public_key_base64url": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg",
+      "test_seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "test_only": true
+    }
+  ],
+  "validation_cases": [
+    {
+      "case_id": "valid_operation_qualification",
+      "schema_ref": "urn:oryn:schemas:application-adapters:v1#/$defs/OperationQualificationDefinitionV1",
+      "instance": {
+        "schema_id": "application.operation-qualification.v1",
+        "organization_id": "018f0000-0000-7000-8000-000000000001",
+        "ref": {
+          "qualification_id": "qual_sf_lookup",
+          "version_id": "018f0000-0000-7000-8000-000000000021",
+          "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "body": {
+          "application_id": "salesforce",
+          "pack_ref": "salesforce_pack",
+          "application_profile_ref": {
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "entity_kind": "application_profile",
+            "entity_id": "salesforce_profile",
+            "version_id": "018f0000-0000-7000-8000-000000000014",
+            "content_sha256": "1133450a53d375017c25923e792663c203818082c39c050c46dec6b760ade2b4"
+          },
+          "operation_id": "salesforce.record.lookup",
+          "platform": "api",
+          "execution_location": "cloud",
+          "environment": "production",
+          "external_account_id": "acct_sf_12345",
+          "configuration_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "resource_scope": "Account,Contact",
+          "allowed_stages": [
+            3,
+            4,
+            5
+          ],
+          "verification_binding": {
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "entity_kind": "verification_spec",
+            "entity_id": "sf_status_spec",
+            "version_id": "018f0000-0000-7000-8000-000000000015",
+            "content_sha256": "4741f31f6800b883132d57ee1359a5de956356f8ae03fff04d1871352e3e6d12"
+          },
+          "write_guard": "not_applicable",
+          "automation_effects_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "readback_freshness": null
+        }
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "invalid_operation_qualification_extra_field",
+      "schema_ref": "urn:oryn:schemas:application-adapters:v1#/$defs/OperationQualificationDefinitionV1",
+      "instance": {
+        "schema_id": "application.operation-qualification.v1",
+        "organization_id": "018f0000-0000-7000-8000-000000000001",
+        "ref": {
+          "qualification_id": "qual_sf_lookup",
+          "version_id": "018f0000-0000-7000-8000-000000000021",
+          "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "body": {
+          "application_id": "salesforce",
+          "pack_ref": "salesforce_pack",
+          "application_profile_ref": {
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "entity_kind": "application_profile",
+            "entity_id": "salesforce_profile",
+            "version_id": "018f0000-0000-7000-8000-000000000014",
+            "content_sha256": "1133450a53d375017c25923e792663c203818082c39c050c46dec6b760ade2b4"
+          },
+          "operation_id": "salesforce.record.lookup",
+          "platform": "api",
+          "execution_location": "cloud",
+          "environment": "production",
+          "external_account_id": "acct_sf_12345",
+          "configuration_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "resource_scope": "Account,Contact",
+          "allowed_stages": [
+            3,
+            4,
+            5
+          ],
+          "verification_binding": {
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "entity_kind": "verification_spec",
+            "entity_id": "sf_status_spec",
+            "version_id": "018f0000-0000-7000-8000-000000000015",
+            "content_sha256": "4741f31f6800b883132d57ee1359a5de956356f8ae03fff04d1871352e3e6d12"
+          },
+          "write_guard": "not_applicable",
+          "automation_effects_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "readback_freshness": null
+        },
+        "extra_forbidden": true
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "valid_signed_qualification_attestation",
+      "schema_ref": "urn:oryn:schemas:application-adapters:v1#/$defs/SignedQualificationAttestationV1",
+      "instance": {
+        "schema_id": "application.qualification-attestation.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "qualification_ref": {
+            "qualification_id": "qual_sf_lookup",
+            "version_id": "018f0000-0000-7000-8000-000000000021",
+            "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "configuration_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "evidence_refs": [],
+          "evidence_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "generation": 1,
+          "issued_at": "2026-11-14T10:00:00Z",
+          "not_after": "2026-12-10T10:00:00Z"
+        },
+        "signature": "VRihqJmnt7URF9MdZMMhfjKA7eh-Igye2CnN3FGqQK_WnbJHiK0GhODkrIh014ewrK9MFzBr7O_H7TO1GqhABg"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "valid_application_connection",
+      "schema_ref": "urn:oryn:schemas:application-adapters:v1#/$defs/ApplicationConnectionV1",
+      "instance": {
+        "schema_id": "adapter.connection.v1",
+        "organization_id": "018f0000-0000-7000-8000-000000000001",
+        "connection_id": "conn_salesforce_prod",
+        "revision": 1,
+        "application_id": "salesforce",
+        "identity_kind": "integration_identity",
+        "owner_actor_id": null,
+        "vendor_account_id": "acct_sf_12345",
+        "vendor_subject_id": "subj_sf_sys",
+        "environment": "production",
+        "endpoint_ref": "https://my-domain.salesforce.com",
+        "granted_scopes": [
+          "api",
+          "refresh_token"
+        ],
+        "approved_resource_scope": "Account,Contact",
+        "configuration_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+        "secret_ref": null,
+        "secret_generation": 1,
+        "state": "active",
+        "created_at": "2026-11-14T09:00:00Z",
+        "updated_at": "2026-11-14T09:00:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "invalid_application_connection_bad_state",
+      "schema_ref": "urn:oryn:schemas:application-adapters:v1#/$defs/ApplicationConnectionV1",
+      "instance": {
+        "schema_id": "adapter.connection.v1",
+        "organization_id": "018f0000-0000-7000-8000-000000000001",
+        "connection_id": "conn_salesforce_prod",
+        "revision": 1,
+        "application_id": "salesforce",
+        "identity_kind": "integration_identity",
+        "owner_actor_id": null,
+        "vendor_account_id": "acct_sf_12345",
+        "vendor_subject_id": "subj_sf_sys",
+        "environment": "production",
+        "endpoint_ref": "https://my-domain.salesforce.com",
+        "granted_scopes": [
+          "api",
+          "refresh_token"
+        ],
+        "approved_resource_scope": "Account,Contact",
+        "configuration_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+        "secret_ref": null,
+        "secret_generation": 1,
+        "state": "not_a_real_state",
+        "created_at": "2026-11-14T09:00:00Z",
+        "updated_at": "2026-11-14T09:00:00Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "valid_submission_receipt",
+      "schema_ref": "urn:oryn:schemas:application-adapters:v1#/$defs/AdapterSubmissionReceiptV1",
+      "instance": {
+        "schema_id": "adapter.submission-receipt.v1",
+        "receipt_id": "rcpt_001",
+        "organization_id": "018f0000-0000-7000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_100",
+          "case_id": "case_101",
+          "agent_version": "v1"
+        },
+        "action_id": "act_test_001",
+        "action_sha256": "sha256_1122334455667788990011223344556677889900112233445566778899001122",
+        "attempt_id": "a0000000-0000-4000-8000-000000000001",
+        "connection_id": "conn_salesforce_prod",
+        "connection_revision": 1,
+        "capability_ref": {
+          "application_id": "salesforce",
+          "capability_id": "crm_operations",
+          "version_id": "018f0000-0000-7000-8000-000000000016",
+          "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+        },
+        "operation_id": "salesforce.record.lookup",
+        "authorization_ref": "auth_001",
+        "approval_ref": null,
+        "submission_state": "application_acknowledged",
+        "timestamp_utc": "2026-11-14T10:01:00Z",
+        "external_correlation_ref": "sf_req_9988",
+        "evidence_ref": null,
+        "error_code": null,
+        "source_commit_token": null
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "invalid_submission_receipt_bad_digest_prefix",
+      "schema_ref": "urn:oryn:schemas:application-adapters:v1#/$defs/AdapterSubmissionReceiptV1",
+      "instance": {
+        "schema_id": "adapter.submission-receipt.v1",
+        "receipt_id": "rcpt_001",
+        "organization_id": "018f0000-0000-7000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_100",
+          "case_id": "case_101",
+          "agent_version": "v1"
+        },
+        "action_id": "act_test_001",
+        "action_sha256": "badprefix_1122",
+        "attempt_id": "a0000000-0000-4000-8000-000000000001",
+        "connection_id": "conn_salesforce_prod",
+        "connection_revision": 1,
+        "capability_ref": {
+          "application_id": "salesforce",
+          "capability_id": "crm_operations",
+          "version_id": "018f0000-0000-7000-8000-000000000016",
+          "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+        },
+        "operation_id": "salesforce.record.lookup",
+        "authorization_ref": "auth_001",
+        "approval_ref": null,
+        "submission_state": "application_acknowledged",
+        "timestamp_utc": "2026-11-14T10:01:00Z",
+        "external_correlation_ref": "sf_req_9988",
+        "evidence_ref": null,
+        "error_code": null,
+        "source_commit_token": null
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "valid_signed_readback_evidence",
+      "schema_ref": "urn:oryn:schemas:application-adapters:v1#/$defs/SignedAdapterReadbackEvidenceV1",
+      "instance": {
+        "schema_id": "adapter.readback-evidence.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "evidence_id": "ev_001",
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "verification_spec_ref": {
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "entity_kind": "verification_spec",
+            "entity_id": "sf_status_spec",
+            "version_id": "018f0000-0000-7000-8000-000000000015",
+            "content_sha256": "4741f31f6800b883132d57ee1359a5de956356f8ae03fff04d1871352e3e6d12"
+          },
+          "connection_id": "conn_salesforce_prod",
+          "connection_revision": 1,
+          "vendor_account_id": "acct_sf_12345",
+          "environment": "production",
+          "capability_ref": {
+            "application_id": "salesforce",
+            "capability_id": "crm_operations",
+            "version_id": "018f0000-0000-7000-8000-000000000016",
+            "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+          },
+          "operation_id": "salesforce.record.read",
+          "record_key": "rec_100",
+          "source_version": "v1",
+          "observed_at": "2026-11-14T10:02:00Z",
+          "queried_after": "2026-11-14T10:01:00Z",
+          "consistency": "authoritative",
+          "data_sha256": "9b4e774d9d6cdf1cf4731cfdf0240a39869c0c3b39404f41b220dbc86d91183c",
+          "content_ref": null,
+          "field_provenance": {
+            "status": "api_direct"
+          },
+          "limitations": [],
+          "context": {
+            "kind": "execution_verification",
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "verification_request_id": "00000000-0000-4000-8000-000000000001",
+            "requirement_id": "req_001",
+            "source_id": "src_salesforce_read",
+            "poll_sequence": "1",
+            "execution_context": {
+              "kind": "job",
+              "job_id": "job_100",
+              "case_id": "case_101",
+              "agent_version": "v1"
+            },
+            "request_binding_sha256": "sha256_1122334455667788990011223344556677889900112233445566778899001122"
+          },
+          "prepared_read_id": "prep_001",
+          "read_attempt_id": "00000000-0000-4000-8000-000000000002",
+          "freshness_proof": {
+            "qualification_ref": {
+              "qualification_id": "qual_sf_lookup",
+              "version_id": "018f0000-0000-7000-8000-000000000021",
+              "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "certification_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "mechanism": "read_after_write",
+            "source_token": null,
+            "coverage_through": null
+          }
+        },
+        "signature": "fMCWa1DKNGmiTHA-n6MbOk6NpxSrD7fOyd6K6P7z4UsQG65kRmr2vQq_LPkxywHm4d-EKZcQDU6oRbThFaVEDA"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "valid_environment_binding",
+      "schema_ref": "urn:oryn:schemas:application-adapters:v1#/$defs/AdapterEnvironmentBindingV1",
+      "instance": {
+        "schema_id": "adapter.environment-binding.v1",
+        "candidate_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+        "behavior_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+        "manifest_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+        "capability_ref": {
+          "application_id": "salesforce",
+          "capability_id": "crm_operations",
+          "version_id": "018f0000-0000-7000-8000-000000000016",
+          "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+        },
+        "operation_id": "salesforce.record.lookup",
+        "pack_ref": "salesforce_pack",
+        "production_qualification_ref": {
+          "qualification_id": "qual_sf_lookup",
+          "version_id": "018f0000-0000-7000-8000-000000000021",
+          "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "simulation_qualification_ref": {
+          "qualification_id": "qual_sf_lookup",
+          "version_id": "018f0000-0000-7000-8000-000000000021",
+          "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "simulation_connection_id": "conn_salesforce_sim",
+        "simulation_account_id": "acct_sf_sim_01",
+        "simulation_environment": "simulation",
+        "configuration_equivalence_evidence_ref": {
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "entity_kind": "evidence",
+          "entity_id": "sim_equiv_evidence",
+          "version_id": "018f0000-0000-7000-8000-000000000017",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "production_equivalence_status": "established",
+        "fidelity_gaps": [
+          "sandbox_email_suppressed"
+        ]
+      },
+      "expected_valid": true
+    }
+  ],
+  "digest_vectors": [
+    {
+      "case_id": "digest_capability_body",
+      "kind": "capability_body",
+      "preimage": {
+        "application_profile_ref": {
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "entity_kind": "application_profile",
+          "entity_id": "salesforce_profile",
+          "version_id": "018f0000-0000-7000-8000-000000000014",
+          "content_sha256": "1133450a53d375017c25923e792663c203818082c39c050c46dec6b760ade2b4"
+        },
+        "adapter_id": "salesforce_adapter",
+        "adapter_revision": "v1",
+        "execution_location": "cloud",
+        "platform": "api",
+        "supported_stages": [
+          3,
+          4,
+          5
+        ],
+        "operations": [
+          {
+            "operation_id": "salesforce.record.lookup",
+            "input_type": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "string",
+                    "max_length": 128
+                  },
+                  "nullable": false
+                }
+              ]
+            },
+            "output_type": {
+              "kind": "record",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": {
+                    "kind": "string",
+                    "max_length": 128
+                  },
+                  "nullable": false
+                }
+              ]
+            },
+            "effect": "read",
+            "minimum_risk_tier": 0,
+            "record_types": [
+              "account"
+            ],
+            "allowed_stages": [
+              3,
+              4,
+              5
+            ],
+            "idempotency": "native_key",
+            "reversibility": "reversible",
+            "write_guard": "not_applicable",
+            "verification_spec_refs": [],
+            "policy_fact_fields": [],
+            "max_argument_bytes": 4096
+          }
+        ],
+        "qualification_refs": [
+          {
+            "operation_id": "salesforce.record.lookup",
+            "qualification_ref": {
+              "qualification_id": "qual_sf_lookup",
+              "version_id": "018f0000-0000-7000-8000-000000000021",
+              "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+            }
+          }
+        ]
+      },
+      "expected_sha256": "b18b0312972da450ccd1a400837bd28a79036daaa312db972532a201c6e228f8"
+    },
+    {
+      "case_id": "digest_qualification_body",
+      "kind": "qualification_body",
+      "preimage": {
+        "application_id": "salesforce",
+        "pack_ref": "salesforce_pack",
+        "application_profile_ref": {
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "entity_kind": "application_profile",
+          "entity_id": "salesforce_profile",
+          "version_id": "018f0000-0000-7000-8000-000000000014",
+          "content_sha256": "1133450a53d375017c25923e792663c203818082c39c050c46dec6b760ade2b4"
+        },
+        "operation_id": "salesforce.record.lookup",
+        "platform": "api",
+        "execution_location": "cloud",
+        "environment": "production",
+        "external_account_id": "acct_sf_12345",
+        "configuration_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "resource_scope": "Account,Contact",
+        "allowed_stages": [
+          3,
+          4,
+          5
+        ],
+        "verification_binding": {
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "entity_kind": "verification_spec",
+          "entity_id": "sf_status_spec",
+          "version_id": "018f0000-0000-7000-8000-000000000015",
+          "content_sha256": "4741f31f6800b883132d57ee1359a5de956356f8ae03fff04d1871352e3e6d12"
+        },
+        "write_guard": "not_applicable",
+        "automation_effects_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "expected_sha256": "dc45723cf60598306d08931e20e99a100364a3093dddf5f9b821f809dc70775d"
+    },
+    {
+      "case_id": "digest_adapter_action",
+      "kind": "adapter_action",
+      "preimage": {
+        "kind": "adapter",
+        "organization_id": "018f0000-0000-7000-8000-000000000001",
+        "action_id": "act_sf_lookup_1",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_100",
+          "case_id": "case_101",
+          "agent_version": "v1"
+        },
+        "connection_id": "conn_salesforce_prod",
+        "connection_revision": 1,
+        "vendor_account_id": "acct_sf_12345",
+        "application_id": "salesforce",
+        "capability_ref": {
+          "application_id": "salesforce",
+          "capability_id": "crm_operations",
+          "version_id": "018f0000-0000-7000-8000-000000000016",
+          "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+        },
+        "operation_id": "salesforce.record.lookup",
+        "record_key": "rec_lead_001",
+        "expected_state": {
+          "kind": "api",
+          "vendor_revision": "v1",
+          "before_fields": [
+            {
+              "field_name": "status",
+              "value": "open"
+            }
+          ],
+          "guard": {
+            "kind": "read_only"
+          }
+        },
+        "environment": "production",
+        "argument_sha256": "1122334455667788990011223344556677889900112233445566778899001122"
+      },
+      "expected_sha256": "6a8a9150c2c5b31968d22e9961a23b86dbf31dd6fe76073d9ffefb3901a0b177"
+    },
+    {
+      "case_id": "digest_browser_action",
+      "kind": "browser_action",
+      "preimage": {
+        "action_id": "act_browser_001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_100",
+          "case_id": "case_101",
+          "agent_version": "v1"
+        },
+        "application_id": "app_web_portal",
+        "record_key": "rec_web_001",
+        "operation": "click",
+        "target": {
+          "selector": "#submit-btn",
+          "target_key": "btn_submit"
+        },
+        "argument": null,
+        "document_generation": 4,
+        "surface_generation": 2,
+        "expected_state": {
+          "record_revision": 1,
+          "fields": [
+            {
+              "field_key": "btn_text",
+              "value": "Submit"
+            }
+          ]
+        },
+        "environment": "production"
+      },
+      "expected_sha256": "a78fbb91ffa909ddd7268e052ba37e359a2caac31f03cc51d041b5089a306c8b"
+    },
+    {
+      "case_id": "digest_mail_content",
+      "kind": "mail_content",
+      "preimage": {
+        "sender": "employee@example.com",
+        "to": [
+          "client@example.com"
+        ],
+        "cc": [],
+        "bcc": [],
+        "subject": "Invoice #100 Approved",
+        "body_text": "Please find attached the approved invoice details.",
+        "attachments": [
+          {
+            "filename": "invoice_100.pdf",
+            "content_type": "application/pdf",
+            "byte_size": 10240,
+            "byte_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      "expected_sha256": "3040ea4f4a7cf7290af6249f15162ef8bfe5e7daba94b6bb6f7e0c3946506186"
+    }
+  ],
+  "signed_envelope_examples": [
+    {
+      "case_id": "valid_attestation_signature",
+      "public_key_id": "test_publisher_1",
+      "envelope": {
+        "schema_id": "application.qualification-attestation.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "qualification_ref": {
+            "qualification_id": "qual_sf_lookup",
+            "version_id": "018f0000-0000-7000-8000-000000000021",
+            "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "configuration_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "evidence_refs": [],
+          "evidence_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "generation": 1,
+          "issued_at": "2026-11-14T10:00:00Z",
+          "not_after": "2026-12-10T10:00:00Z"
+        },
+        "signature": "VRihqJmnt7URF9MdZMMhfjKA7eh-Igye2CnN3FGqQK_WnbJHiK0GhODkrIh014ewrK9MFzBr7O_H7TO1GqhABg"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "valid_readback_signature",
+      "public_key_id": "test_publisher_1",
+      "envelope": {
+        "schema_id": "adapter.readback-evidence.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "evidence_id": "ev_001",
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "verification_spec_ref": {
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "entity_kind": "verification_spec",
+            "entity_id": "sf_status_spec",
+            "version_id": "018f0000-0000-7000-8000-000000000015",
+            "content_sha256": "4741f31f6800b883132d57ee1359a5de956356f8ae03fff04d1871352e3e6d12"
+          },
+          "connection_id": "conn_salesforce_prod",
+          "connection_revision": 1,
+          "vendor_account_id": "acct_sf_12345",
+          "environment": "production",
+          "capability_ref": {
+            "application_id": "salesforce",
+            "capability_id": "crm_operations",
+            "version_id": "018f0000-0000-7000-8000-000000000016",
+            "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+          },
+          "operation_id": "salesforce.record.read",
+          "record_key": "rec_100",
+          "source_version": "v1",
+          "observed_at": "2026-11-14T10:02:00Z",
+          "queried_after": "2026-11-14T10:01:00Z",
+          "consistency": "authoritative",
+          "data_sha256": "9b4e774d9d6cdf1cf4731cfdf0240a39869c0c3b39404f41b220dbc86d91183c",
+          "content_ref": null,
+          "field_provenance": {
+            "status": "api_direct"
+          },
+          "limitations": [],
+          "context": {
+            "kind": "execution_verification",
+            "organization_id": "018f0000-0000-7000-8000-000000000001",
+            "verification_request_id": "00000000-0000-4000-8000-000000000001",
+            "requirement_id": "req_001",
+            "source_id": "src_salesforce_read",
+            "poll_sequence": "1",
+            "execution_context": {
+              "kind": "job",
+              "job_id": "job_100",
+              "case_id": "case_101",
+              "agent_version": "v1"
+            },
+            "request_binding_sha256": "sha256_1122334455667788990011223344556677889900112233445566778899001122"
+          },
+          "prepared_read_id": "prep_001",
+          "read_attempt_id": "00000000-0000-4000-8000-000000000002",
+          "freshness_proof": {
+            "qualification_ref": {
+              "qualification_id": "qual_sf_lookup",
+              "version_id": "018f0000-0000-7000-8000-000000000021",
+              "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "certification_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "mechanism": "read_after_write",
+            "source_token": null,
+            "coverage_through": null
+          }
+        },
+        "signature": "fMCWa1DKNGmiTHA-n6MbOk6NpxSrD7fOyd6K6P7z4UsQG65kRmr2vQq_LPkxywHm4d-EKZcQDU6oRbThFaVEDA"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "invalid_tampered_signature",
+      "public_key_id": "test_publisher_1",
+      "envelope": {
+        "schema_id": "application.qualification-attestation.v1",
+        "key_id": "test_publisher_1",
+        "payload": {
+          "qualification_ref": {
+            "qualification_id": "qual_sf_lookup",
+            "version_id": "018f0000-0000-7000-8000-000000000021",
+            "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "configuration_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "evidence_refs": [],
+          "evidence_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+          "generation": 999,
+          "issued_at": "2026-11-14T10:00:00Z",
+          "not_after": "2026-12-10T10:00:00Z"
+        },
+        "signature": "VRihqJmnt7URF9MdZMMhfjKA7eh-Igye2CnN3FGqQK_WnbJHiK0GhODkrIh014ewrK9MFzBr7O_H7TO1GqhABg"
+      },
+      "expected_valid": false
+    }
+  ],
+  "binding_vectors": [
+    {
+      "case_id": "scope_binding_allowed",
+      "kind": "scope_binding",
+      "inputs": {
+        "registered": {
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_100",
+            "case_id": "case_101",
+            "agent_version": "v1"
+          },
+          "connection_id": "conn_salesforce_prod",
+          "connection_revision": 1,
+          "vendor_account_id": "acct_sf_12345",
+          "environment": "production",
+          "capability_ref": {
+            "application_id": "salesforce",
+            "capability_id": "crm_operations",
+            "version_id": "018f0000-0000-7000-8000-000000000016",
+            "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+          },
+          "record_key": "rec_100"
+        },
+        "request": {
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_100",
+            "case_id": "case_101",
+            "agent_version": "v1"
+          },
+          "connection_id": "conn_salesforce_prod",
+          "connection_revision": 1,
+          "vendor_account_id": "acct_sf_12345",
+          "environment": "production",
+          "capability_ref": {
+            "application_id": "salesforce",
+            "capability_id": "crm_operations",
+            "version_id": "018f0000-0000-7000-8000-000000000016",
+            "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+          },
+          "record_key": "rec_100"
+        },
+        "requested_fields": [
+          "status",
+          "total"
+        ],
+        "allowed_fields": [
+          "status",
+          "total",
+          "created_at"
+        ],
+        "record_key": "rec_100",
+        "allowed_record_ids": [
+          "rec_100",
+          "rec_101"
+        ]
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "case_id": "scope_binding_disallowed_field",
+      "kind": "scope_binding",
+      "inputs": {
+        "registered": {
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_100",
+            "case_id": "case_101",
+            "agent_version": "v1"
+          },
+          "connection_id": "conn_salesforce_prod",
+          "connection_revision": 1,
+          "vendor_account_id": "acct_sf_12345",
+          "environment": "production",
+          "capability_ref": {
+            "application_id": "salesforce",
+            "capability_id": "crm_operations",
+            "version_id": "018f0000-0000-7000-8000-000000000016",
+            "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+          },
+          "record_key": "rec_100"
+        },
+        "request": {
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_100",
+            "case_id": "case_101",
+            "agent_version": "v1"
+          },
+          "connection_id": "conn_salesforce_prod",
+          "connection_revision": 1,
+          "vendor_account_id": "acct_sf_12345",
+          "environment": "production",
+          "capability_ref": {
+            "application_id": "salesforce",
+            "capability_id": "crm_operations",
+            "version_id": "018f0000-0000-7000-8000-000000000016",
+            "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+          },
+          "record_key": "rec_100"
+        },
+        "requested_fields": [
+          "status",
+          "unapproved_ssn"
+        ],
+        "allowed_fields": [
+          "status",
+          "total"
+        ],
+        "record_key": "rec_100",
+        "allowed_record_ids": [
+          "rec_100"
+        ]
+      },
+      "expected": {
+        "allowed": false
+      }
+    },
+    {
+      "case_id": "qualification_lifecycle_active",
+      "kind": "qualification_lifecycle",
+      "inputs": {
+        "definition_before": {
+          "op": "lookup",
+          "fields": [
+            "id"
+          ]
+        },
+        "definition_after": {
+          "op": "lookup",
+          "fields": [
+            "id"
+          ]
+        },
+        "issued_at": "2026-11-01T00:00:00Z",
+        "not_after": "2026-11-25T00:00:00Z",
+        "now": "2026-11-14T00:00:00Z",
+        "checks_passed": true,
+        "revoked": false
+      },
+      "expected": {
+        "behavior_unchanged": true,
+        "dispatch_allowed": true
+      }
+    },
+    {
+      "case_id": "qualification_lifecycle_expired",
+      "kind": "qualification_lifecycle",
+      "inputs": {
+        "definition_before": {
+          "op": "lookup",
+          "fields": [
+            "id"
+          ]
+        },
+        "definition_after": {
+          "op": "lookup",
+          "fields": [
+            "id"
+          ]
+        },
+        "issued_at": "2026-10-01T00:00:00Z",
+        "not_after": "2026-10-31T00:00:00Z",
+        "now": "2026-11-14T00:00:00Z",
+        "checks_passed": true,
+        "revoked": false
+      },
+      "expected": {
+        "behavior_unchanged": true,
+        "dispatch_allowed": false
+      }
+    },
+    {
+      "case_id": "submission_transition_happy_path",
+      "kind": "submission_transition",
+      "inputs": {
+        "events": [
+          "admit",
+          "dispatch",
+          "acknowledge"
+        ]
+      },
+      "expected": {
+        "submission_state": "application_acknowledged",
+        "dispatch_count": 1,
+        "duplicate_blocked": false
+      }
+    },
+    {
+      "case_id": "submission_transition_crash_and_duplicate_blocked",
+      "kind": "submission_transition",
+      "inputs": {
+        "events": [
+          "admit",
+          "dispatch",
+          "crash",
+          "retry_same_action"
+        ]
+      },
+      "expected": {
+        "submission_state": "unknown",
+        "dispatch_count": 1,
+        "duplicate_blocked": true
+      }
+    },
+    {
+      "case_id": "write_guard_read_permitted",
+      "kind": "write_guard",
+      "inputs": {
+        "guard": "not_applicable",
+        "effect": "read"
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "case_id": "write_guard_strong_precondition_valid",
+      "kind": "write_guard",
+      "inputs": {
+        "guard": "strong_precondition",
+        "effect": "write",
+        "validator_kind": "strong",
+        "expected_validator": "etag_abc123",
+        "live_validator": "etag_abc123",
+        "formula_target": false
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "case_id": "write_guard_formula_target_blocked",
+      "kind": "write_guard",
+      "inputs": {
+        "guard": "strong_precondition",
+        "effect": "write",
+        "validator_kind": "strong",
+        "expected_validator": "etag_abc123",
+        "live_validator": "etag_abc123",
+        "formula_target": true
+      },
+      "expected": {
+        "allowed": false
+      }
+    },
+    {
+      "case_id": "readback_binding_accepted",
+      "kind": "readback_binding",
+      "inputs": {
+        "subject": {
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_100",
+            "case_id": "case_101",
+            "agent_version": "v1"
+          },
+          "connection_id": "conn_salesforce_prod",
+          "connection_revision": 1,
+          "vendor_account_id": "acct_sf_12345",
+          "environment": "production",
+          "capability_ref": {
+            "application_id": "salesforce",
+            "capability_id": "crm_operations",
+            "version_id": "018f0000-0000-7000-8000-000000000016",
+            "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+          },
+          "record_key": "rec_100"
+        },
+        "evidence": {
+          "organization_id": "018f0000-0000-7000-8000-000000000001",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_100",
+            "case_id": "case_101",
+            "agent_version": "v1"
+          },
+          "connection_id": "conn_salesforce_prod",
+          "connection_revision": 1,
+          "vendor_account_id": "acct_sf_12345",
+          "environment": "production",
+          "capability_ref": {
+            "application_id": "salesforce",
+            "capability_id": "crm_operations",
+            "version_id": "018f0000-0000-7000-8000-000000000016",
+            "content_sha256": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899"
+          },
+          "record_key": "rec_100"
+        },
+        "caller_role": "verifier",
+        "operation_effect": "read",
+        "submitted_at": "2026-11-14T10:00:00Z",
+        "queried_at": "2026-11-14T10:00:05Z",
+        "observed_data": {
+          "record_id": "rec_100",
+          "status": "approved"
+        },
+        "data_sha256": "ac448d23637512a81e572820ea6c41092aa62f55688f7fbe81c06e0597f2ada6"
+      },
+      "expected": {
+        "accepted": true
+      }
+    },
+    {
+      "case_id": "environment_binding_allowed",
+      "kind": "environment_binding",
+      "inputs": {
+        "environment": "simulation",
+        "actual_account": "acct_sim_99",
+        "allowed_simulation_accounts": [
+          "acct_sim_99"
+        ],
+        "production_accounts": [
+          "acct_prod_100"
+        ],
+        "credential_environment": "simulation",
+        "pinned_behavior_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "mapped_behavior_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "pinned_operation_id": "salesforce.record.lookup",
+        "mapped_operation_id": "salesforce.record.lookup"
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "case_id": "environment_binding_prod_account_leak_blocked",
+      "kind": "environment_binding",
+      "inputs": {
+        "environment": "simulation",
+        "actual_account": "acct_prod_100",
+        "allowed_simulation_accounts": [
+          "acct_sim_99"
+        ],
+        "production_accounts": [
+          "acct_prod_100"
+        ],
+        "credential_environment": "simulation",
+        "pinned_behavior_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "mapped_behavior_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "pinned_operation_id": "salesforce.record.lookup",
+        "mapped_operation_id": "salesforce.record.lookup"
+      },
+      "expected": {
+        "allowed": false
+      }
+    },
+    {
+      "case_id": "cell_normalization_set_and_skip",
+      "kind": "cell_normalization",
+      "inputs": {
+        "before": [
+          [
+            {
+              "kind": "string",
+              "value": "OldVal"
+            },
+            {
+              "kind": "string",
+              "value": "KeepVal"
+            }
+          ]
+        ],
+        "changes": [
+          [
+            {
+              "kind": "set",
+              "value": {
+                "kind": "string",
+                "value": "NewVal"
+              }
+            },
+            {
+              "kind": "skip"
+            }
+          ]
+        ],
+        "formula_cells": [],
+        "literal_text_certified": true
+      },
+      "expected": {
+        "accepted": true,
+        "values": [
+          [
+            {
+              "kind": "string",
+              "value": "NewVal"
+            },
+            {
+              "kind": "string",
+              "value": "KeepVal"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "case_id": "cell_normalization_unqualified_formula_blocked",
+      "kind": "cell_normalization",
+      "inputs": {
+        "before": [
+          [
+            {
+              "kind": "string",
+              "value": "OldVal"
+            }
+          ]
+        ],
+        "changes": [
+          [
+            {
+              "kind": "set",
+              "value": {
+                "kind": "string",
+                "value": "=SUM(A1:A10)"
+              }
+            }
+          ]
+        ],
+        "formula_cells": [],
+        "literal_text_certified": false
+      },
+      "expected": {
+        "accepted": false,
+        "values": null
+      }
+    },
+    {
+      "case_id": "mail_snapshot_verified_send",
+      "kind": "mail_snapshot",
+      "inputs": {
+        "approved": {
+          "to": [
+            "bob@example.com"
+          ],
+          "subject": "Update",
+          "body": "All clear"
+        },
+        "prepared": {
+          "to": [
+            "bob@example.com"
+          ],
+          "subject": "Update",
+          "body": "All clear"
+        },
+        "observed_sent_copies": [
+          {
+            "to": [
+              "bob@example.com"
+            ],
+            "subject": "Update",
+            "body": "All clear"
+          }
+        ]
+      },
+      "expected": {
+        "dispatch_allowed": true,
+        "send_verified": true,
+        "delivery_verified": false
+      }
+    },
+    {
+      "case_id": "mail_snapshot_tampered_body_blocked",
+      "kind": "mail_snapshot",
+      "inputs": {
+        "approved": {
+          "to": [
+            "bob@example.com"
+          ],
+          "subject": "Update",
+          "body": "Original"
+        },
+        "prepared": {
+          "to": [
+            "bob@example.com"
+          ],
+          "subject": "Update",
+          "body": "Tampered"
+        },
+        "observed_sent_copies": [
+          {
+            "to": [
+              "bob@example.com"
+            ],
+            "subject": "Update",
+            "body": "Original"
+          }
+        ]
+      },
+      "expected": {
+        "dispatch_allowed": false,
+        "send_verified": true,
+        "delivery_verified": false
+      }
+    },
+    {
+      "case_id": "reservation_available",
+      "kind": "reservation",
+      "inputs": {
+        "owner": null,
+        "request": {
+          "device_id": "macbook_pro_1",
+          "context": "job_123",
+          "modality": "browser",
+          "epoch": 1
+        }
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "case_id": "reservation_conflict_blocked",
+      "kind": "reservation",
+      "inputs": {
+        "owner": {
+          "device_id": "macbook_pro_1",
+          "context": "assist_456",
+          "modality": "native",
+          "epoch": 1
+        },
+        "request": {
+          "device_id": "macbook_pro_1",
+          "context": "job_123",
+          "modality": "browser",
+          "epoch": 1
+        }
+      },
+      "expected": {
+        "allowed": false
+      }
+    }
+  ],
+  "reference_workflows": {
+    "synthetic.erp": {
+      "workflow_id": "synthetic.erp",
+      "name": "ERP Invoice and Purchase Order Reconciliation",
+      "description": "Full lifecycle observe -> guide -> generate -> simulate -> supervised execute -> incident -> correct -> repair -> re-evaluate -> controlled release journey linking boundary owners.",
+      "journey_phases": [
+        {
+          "phase": "observe",
+          "owner": "workflow_discovery",
+          "evidence": "Demonstrated 3 human 3-way match reconciliations"
+        },
+        {
+          "phase": "guide",
+          "owner": "local_context_hud",
+          "evidence": "HUD guide card actively highlighting discrepancies"
+        },
+        {
+          "phase": "generate",
+          "owner": "agent_factory_ir",
+          "evidence": "Compiled AgentIRV1 DAG with 10 explicit nodes"
+        },
+        {
+          "phase": "simulate",
+          "owner": "flight_simulator",
+          "evidence": "Simulation passage across 50 synthetic test scenarios"
+        },
+        {
+          "phase": "supervised_execute",
+          "owner": "agent_runtime",
+          "evidence": "Stage 3 supervised execution with human Review & Submit"
+        },
+        {
+          "phase": "incident",
+          "owner": "incident_review",
+          "evidence": "Ambiguous PO tax line discrepancy flagged"
+        },
+        {
+          "phase": "correct",
+          "owner": "operational_graph",
+          "evidence": "Rule formalization updated by Workflow Owner"
+        },
+        {
+          "phase": "repair",
+          "owner": "agent_factory_ir",
+          "evidence": "Candidate recompiled with updated dependency manifest"
+        },
+        {
+          "phase": "re_evaluate",
+          "owner": "flight_simulator",
+          "evidence": "Simulation matrix re-passed with zero regressions"
+        },
+        {
+          "phase": "controlled_release",
+          "owner": "release_governance",
+          "evidence": "Stage 4 promotion authorized by dual approval"
+        }
+      ],
+      "initial_state": {
+        "invoice_records": [
+          {
+            "id": "inv_101",
+            "vendor": "Acme Corp",
+            "amount": "1500.00",
+            "po_id": "po_901",
+            "status": "pending_match"
+          }
+        ],
+        "purchase_orders": [
+          {
+            "id": "po_901",
+            "vendor": "Acme Corp",
+            "amount": "1500.00",
+            "status": "approved"
+          }
+        ]
+      },
+      "operations": [
+        "netsuite.invoice.read",
+        "netsuite.purchase_order.read",
+        "netsuite.reconciliation.create"
+      ],
+      "expected_outcomes": {
+        "reconciliation_status": "matched",
+        "submission_state": "application_acknowledged",
+        "readback_consistency": "authoritative"
+      },
+      "fault_injections": [
+        {
+          "fault": "timeout_on_post",
+          "expected_handling": "submission_state_unknown_and_fence_preserved"
+        },
+        {
+          "fault": "tax_line_mismatch",
+          "expected_handling": "hold_for_human_review_and_no_blind_retry"
+        }
+      ]
+    },
+    "synthetic.crm": {
+      "workflow_id": "synthetic.crm",
+      "name": "CRM Customer and Order Status Reconciliation",
+      "description": "Synthetic Salesforce/HubSpot lead and note update reconciliation workflow.",
+      "initial_state": {
+        "lead_id": "lead_301",
+        "status": "new",
+        "assigned_rep": "unassigned"
+      },
+      "operations": [
+        "salesforce.record.lookup",
+        "salesforce.record.update_fields",
+        "salesforce.note.create"
+      ],
+      "expected_outcomes": {
+        "lead_status": "contacted",
+        "note_attached": true
+      },
+      "fault_injections": [
+        {
+          "fault": "stale_etag",
+          "expected_handling": "ADAPTER_STATE_STALE"
+        }
+      ]
+    },
+    "synthetic.support": {
+      "workflow_id": "synthetic.support",
+      "name": "Customer Support Exception Triage",
+      "description": "Synthetic support ticket classification, draft preparation, and approval-gated email dispatch.",
+      "initial_state": {
+        "ticket_id": "tkt_501",
+        "priority": "high",
+        "draft_prepared": false
+      },
+      "operations": [
+        "gmail.thread.read",
+        "gmail.draft.create",
+        "gmail.message.send"
+      ],
+      "expected_outcomes": {
+        "draft_id": "draft_g_701",
+        "sent_copy_observed": true
+      },
+      "fault_injections": [
+        {
+          "fault": "missing_approval_receipt",
+          "expected_handling": "ADAPTER_AUTHORITY_INVALID"
+        }
+      ]
+    }
+  }
+}

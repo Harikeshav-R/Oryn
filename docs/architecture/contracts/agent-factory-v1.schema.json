@@ -1,0 +1,2402 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:agent-factory:v1",
+  "title": "Oryn Agent Factory and Operational Capability IR Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for Agent Factory Intermediate Representation (IR), candidate proposals, compilation reports, immutable agent versions, candidate attestations, evaluation bundles, and management DTOs.",
+  "anyOf": [
+    { "$ref": "#/$defs/AgentIRV1" },
+    { "$ref": "#/$defs/CompileInputV1" },
+    { "$ref": "#/$defs/CompileOutputV1" },
+    { "$ref": "#/$defs/DraftAgentIRV1" },
+    { "$ref": "#/$defs/AgentIRCandidateProposalV1" },
+    { "$ref": "#/$defs/RuntimeModelResultV1" },
+    { "$ref": "#/$defs/ExecutableAgentBodyV1" },
+    { "$ref": "#/$defs/AgentVersionV1" },
+    { "$ref": "#/$defs/SignedCandidateAttestationV1" },
+    { "$ref": "#/$defs/CompileReportV1" },
+    { "$ref": "#/$defs/CandidateEvaluationBundleV1" },
+    { "$ref": "#/$defs/AgentDraftV1" },
+    { "$ref": "#/$defs/AgentSummaryV1" },
+    { "$ref": "#/$defs/AgentDetailV1" },
+    { "$ref": "#/$defs/AgentPageV1" },
+    { "$ref": "#/$defs/AgentSynthesisProposalV1" },
+    { "$ref": "#/$defs/CompileAttemptV1" },
+    { "$ref": "#/$defs/MaterialityReportV1" },
+    { "$ref": "#/$defs/CreateAgentCommandV1" },
+    { "$ref": "#/$defs/ReplaceAgentDraftCommandV1" },
+    { "$ref": "#/$defs/PreviewAgentEditCommandV1" },
+    { "$ref": "#/$defs/RepairCandidateCommandV1" },
+    { "$ref": "#/$defs/AgentRepairContextV1" },
+    { "$ref": "#/$defs/RepairCandidateBindingV1" },
+    { "$ref": "#/$defs/AgentFactoryFixtureSetV1" }
+  ],
+  "$defs": {
+    "PortableJsonValueV1": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "boolean" },
+        { "type": "string", "maxLength": 4096 },
+        { "type": "array", "maxItems": 1000, "items": { "$ref": "#/$defs/PortableJsonValueV1" } },
+        { "type": "object", "maxProperties": 128, "additionalProperties": { "$ref": "#/$defs/PortableJsonValueV1" } }
+      ]
+    },
+    "CatalogGenerationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "reference_sha256", "generation"],
+      "properties": {
+        "kind": { "enum": ["application", "verification"] },
+        "reference_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "generation": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 }
+      }
+    },
+    "CompileInputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accepted_plan", "source_playbook", "source_capability", "rules", "application_snapshots", "verification_projections", "dependency_closure", "compiler_revision", "knowledge_generation", "catalog_generations"],
+      "properties": {
+        "accepted_plan": { "$ref": "#/$defs/EditableAgentPlanV1" },
+        "source_playbook": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/PlaybookVersionV1" },
+        "source_capability": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/CapabilityVersionV1" },
+        "rules": { "type": "array", "maxItems": 4096, "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1" } },
+        "application_snapshots": { "type": "array", "maxItems": 128, "items": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilitySnapshotV1" } },
+        "verification_projections": { "type": "array", "maxItems": 128, "items": { "$ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecProjectionV1" } },
+        "dependency_closure": { "type": "array", "maxItems": 4096, "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" } },
+        "compiler_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "knowledge_generation": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+        "catalog_generations": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/CatalogGenerationV1" } }
+      }
+    },
+    "CompileOutputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["body", "report"],
+      "properties": {
+        "body": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/ExecutableAgentBodyV1" }] },
+        "report": { "$ref": "#/$defs/CompileReportV1" }
+      }
+    },
+    "DraftValueRefV1": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/ValueRefV1" }]
+    },
+    "PlanIdentifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "JsonPointerString": {
+      "type": "string",
+      "pattern": "^(/([^/~]|~0|~1)*)*$"
+    },
+    "FactoryErrorCodeV1": {
+      "type": "string",
+      "enum": [
+        "FACTORY_REVISION_CONFLICT",
+        "FACTORY_SOURCE_INELIGIBLE",
+        "FACTORY_UPSTREAM_APPROVAL_REQUIRED",
+        "FACTORY_CAPABILITY_UNAVAILABLE",
+        "FACTORY_RULE_UNQUALIFIED",
+        "FACTORY_VERIFIER_MISSING",
+        "FACTORY_DEPENDENCY_INCOMPLETE",
+        "FACTORY_SCOPE_UNPROVEN",
+        "FACTORY_EVALUATION_NOT_READY",
+        "FACTORY_MODEL_BINDING_UNAVAILABLE",
+        "FACTORY_OPERATION_STALE",
+        "FACTORY_IR_INVALID",
+        "FACTORY_BINDING_INVALID",
+        "FACTORY_RESTRICTED_ACTION",
+        "FACTORY_LIMIT_EXCEEDED",
+        "FACTORY_SIGNING_UNAVAILABLE"
+      ]
+    },
+    "ValueRefV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "name"],
+          "properties": {
+            "kind": { "const": "input" },
+            "name": { "$ref": "#/$defs/PlanIdentifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "node_id", "port", "pointer"],
+          "properties": {
+            "kind": { "const": "node_output" },
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "port": { "$ref": "#/$defs/PlanIdentifier" },
+            "pointer": { "$ref": "#/$defs/JsonPointerString" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "foreach_node_id", "pointer"],
+          "properties": {
+            "kind": { "const": "loop_item" },
+            "foreach_node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "pointer": { "$ref": "#/$defs/JsonPointerString" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "type", "value"],
+          "properties": {
+            "kind": { "const": "literal" },
+            "type": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" },
+            "value": { "$ref": "#/$defs/PortableJsonValueV1" }
+          }
+        }
+      ]
+    },
+    "ValueEvidenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "if": { "properties": { "origin": { "const": "model_inference" } }, "required": ["origin"] },
+      "then": { "properties": { "verification": { "const": "unverified" } } },
+      "required": [
+        "origin",
+        "source_refs",
+        "parent_binding_ids",
+        "verification",
+        "observed_at",
+        "valid_until"
+      ],
+      "properties": {
+        "origin": {
+          "type": "string",
+          "enum": [
+            "approved_literal",
+            "system_evidence",
+            "authorized_reviewer",
+            "model_inference",
+            "derived"
+          ]
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+        },
+        "parent_binding_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/PlanIdentifier" }
+        },
+        "verification": {
+          "type": "string",
+          "enum": ["verified", "unverified"]
+        },
+        "observed_at": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+          ]
+        },
+        "valid_until": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+          ]
+        }
+      }
+    },
+    "InputDefinitionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "nullable", "source_requirement"],
+      "properties": {
+        "name": { "$ref": "#/$defs/PlanIdentifier" },
+        "type": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" },
+        "nullable": { "type": "boolean" },
+        "source_requirement": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/SourceRequirementV1" }
+      }
+    },
+    "IRTransitionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_node_id", "outcome", "to_node_id"],
+      "properties": {
+        "from_node_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "outcome": { "$ref": "#/$defs/PlanIdentifier" },
+        "to_node_id": { "$ref": "#/$defs/PlanIdentifier" }
+      }
+    },
+    "IRNodeV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "capability_ref", "operation_id", "arguments", "output_type"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "read" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "capability_ref": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1" },
+            "operation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "arguments": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/ValueRefV1" }
+            },
+            "output_type": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "operator", "arguments", "result_type", "scale", "rounding"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "transform" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "operator": {
+              "type": "string",
+              "enum": [
+                "copy", "trim", "concat", "parse_decimal", "parse_date",
+                "add", "subtract", "multiply", "quantize"
+              ]
+            },
+            "arguments": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": { "$ref": "#/$defs/ValueRefV1" }
+            },
+            "result_type": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" },
+            "scale": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "integer", "minimum": 0, "maximum": 18 }
+              ]
+            },
+            "rounding": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "string", "enum": ["half_even", "half_up"] }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "model_binding_id", "purpose", "inputs", "output_type", "allowed_choices"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "reason" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "model_binding_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "purpose": {
+              "type": "string",
+              "enum": ["extract", "classify", "draft", "choose_branch"]
+            },
+            "inputs": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/ValueRefV1" }
+            },
+            "output_type": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" },
+            "allowed_choices": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 16,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/PlanIdentifier",
+                "not": { "enum": ["success", "unknown", "pass", "fail", "no_match", "not_submitted", "submission_unknown", "denied", "verified", "mismatch", "answered", "rejected"] }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "rule_ref", "fact_bindings"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "decision" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "rule_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+            "fact_bindings": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/ValueRefV1" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "capability_ref", "operation_id", "arguments", "review_requirement", "verification_requirement_ids"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "action" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "capability_ref": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1" },
+            "operation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "arguments": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/ValueRefV1" }
+            },
+            "review_requirement": {
+              "type": "string",
+              "enum": ["policy", "always"]
+            },
+            "verification_requirement_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "collection", "body_region_id", "max_items", "output_type"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "foreach" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "collection": { "$ref": "#/$defs/ValueRefV1" },
+            "body_region_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "max_items": { "type": "integer", "minimum": 1, "maximum": 1000 },
+            "output_type": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "requirement_ids"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "verify" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "requirement_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "question_template", "response_type", "responder_role"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "human_input" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "question_template": { "type": "string", "minLength": 1, "maxLength": 4096 },
+            "response_type": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" },
+            "responder_role": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RoleId" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "reason_code", "recipient_role", "evidence_bindings"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "escalate" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "reason_code": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "recipient_role": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RoleId" },
+            "evidence_bindings": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "#/$defs/ValueRefV1" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "disposition", "outputs"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "finish" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "disposition": {
+              "type": "string",
+              "enum": [
+                "verification_requested",
+                "expected_rejection",
+                "handoff_required",
+                "iteration_complete"
+              ]
+            },
+            "outputs": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/ValueRefV1" }
+            }
+          }
+        }
+      ]
+    },
+    "IRRegionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["region_id", "entry_node_id", "nodes", "transitions"],
+      "properties": {
+        "region_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "entry_node_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": { "$ref": "#/$defs/IRNodeV1" }
+        },
+        "transitions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 512,
+          "items": { "$ref": "#/$defs/IRTransitionV1" }
+        }
+      }
+    },
+    "AgentIRV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "regions", "root_region_id", "inputs", "output_type"],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.ir.v1" },
+        "regions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 129,
+          "items": { "$ref": "#/$defs/IRRegionV1" }
+        },
+        "root_region_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "inputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "#/$defs/InputDefinitionV1" }
+        },
+        "output_type": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" }
+      }
+    },
+    "DraftIRNodeV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "capability_ref", "operation_id", "arguments", "output_type"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "read" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "capability_ref": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1" }
+              ]
+            },
+            "operation_id": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+              ]
+            },
+            "arguments": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/DraftValueRefV1" }
+            },
+            "output_type": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "operator", "arguments", "result_type", "scale", "rounding"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "transform" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "operator": {
+              "oneOf": [
+                { "type": "null" },
+                {
+                  "type": "string",
+                  "enum": [
+                    "copy", "trim", "concat", "parse_decimal", "parse_date",
+                    "add", "subtract", "multiply", "quantize"
+                  ]
+                }
+              ]
+            },
+            "arguments": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 8,
+              "items": { "$ref": "#/$defs/DraftValueRefV1" }
+            },
+            "result_type": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" }
+              ]
+            },
+            "scale": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "integer", "minimum": 0, "maximum": 18 }
+              ]
+            },
+            "rounding": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "string", "enum": ["half_even", "half_up"] }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "model_binding_id", "purpose", "inputs", "output_type", "allowed_choices"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "reason" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "model_binding_id": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+              ]
+            },
+            "purpose": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "string", "enum": ["extract", "classify", "draft", "choose_branch"] }
+              ]
+            },
+            "inputs": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/DraftValueRefV1" }
+            },
+            "output_type": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" }
+              ]
+            },
+            "allowed_choices": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 16,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "rule_ref", "fact_bindings"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "decision" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "rule_ref": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+              ]
+            },
+            "fact_bindings": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/DraftValueRefV1" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "capability_ref", "operation_id", "arguments", "review_requirement", "verification_requirement_ids"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "action" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "capability_ref": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1" }
+              ]
+            },
+            "operation_id": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+              ]
+            },
+            "arguments": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/DraftValueRefV1" }
+            },
+            "review_requirement": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "string", "enum": ["policy", "always"] }
+              ]
+            },
+            "verification_requirement_ids": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "collection", "body_region_id", "max_items", "output_type"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "foreach" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "collection": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "#/$defs/ValueRefV1" }
+              ]
+            },
+            "body_region_id": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "#/$defs/PlanIdentifier" }
+              ]
+            },
+            "max_items": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "integer", "minimum": 1, "maximum": 1000 }
+              ]
+            },
+            "output_type": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "requirement_ids"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "verify" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "requirement_ids": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "question_template", "response_type", "responder_role"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "human_input" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "question_template": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "string", "minLength": 1, "maxLength": 4096 }
+              ]
+            },
+            "response_type": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" }
+              ]
+            },
+            "responder_role": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RoleId" }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "reason_code", "recipient_role", "evidence_bindings"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "escalate" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "reason_code": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+              ]
+            },
+            "recipient_role": {
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RoleId" }
+              ]
+            },
+            "evidence_bindings": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "#/$defs/DraftValueRefV1" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "node_id", "kind", "source_step_ids", "rule_refs",
+            "disposition", "outputs"
+          ],
+          "properties": {
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "kind": { "const": "finish" },
+            "source_step_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": { "$ref": "#/$defs/PlanIdentifier" }
+            },
+            "rule_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+            },
+            "disposition": {
+              "oneOf": [
+                { "type": "null" },
+                {
+                  "type": "string",
+                  "enum": [
+                    "verification_requested",
+                    "expected_rejection",
+                    "handoff_required",
+                    "iteration_complete"
+                  ]
+                }
+              ]
+            },
+            "outputs": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/DraftValueRefV1" }
+            }
+          }
+        }
+      ]
+    },
+    "DraftIRRegionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["region_id", "entry_node_id", "nodes", "transitions"],
+      "properties": {
+        "region_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "entry_node_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/PlanIdentifier" }
+          ]
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "items": { "$ref": "#/$defs/DraftIRNodeV1" }
+        },
+        "transitions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 512,
+          "items": { "$ref": "#/$defs/IRTransitionV1" }
+        }
+      }
+    },
+    "DraftAgentIRV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "regions", "root_region_id", "inputs", "output_type"],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.draft-ir.v1" },
+        "regions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 129,
+          "items": { "$ref": "#/$defs/DraftIRRegionV1" }
+        },
+        "root_region_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/PlanIdentifier" }
+          ]
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "#/$defs/InputDefinitionV1" }
+        },
+        "output_type": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" }
+          ]
+        }
+      }
+    },
+    "DisplayMetadataV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "step_labels", "condition_explanations"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "description": { "type": "string", "maxLength": 4096 },
+        "step_labels": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,63}$": { "type": "string", "maxLength": 256 }
+          }
+        },
+        "condition_explanations": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,63}$": { "type": "string", "maxLength": 4096 }
+          }
+        }
+      }
+    },
+    "OverlapResolutionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "if": { "properties": { "choice": { "const": "proceed_with_justification" } }, "required": ["choice"] },
+      "then": { "properties": { "justification": { "minLength": 1, "pattern": "\\S" } } },
+      "required": ["agent_ids", "choice", "justification"],
+      "properties": {
+        "agent_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" }
+        },
+        "choice": {
+          "type": "string",
+          "enum": ["extend_existing", "separate_scope", "proceed_with_justification"]
+        },
+        "justification": { "type": "string", "maxLength": 4096 }
+      }
+    },
+    "RuntimeModelBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binding_id",
+        "route_id",
+        "route_revision",
+        "model_revision",
+        "prompt_template",
+        "prompt_sha256",
+        "output_schema_id",
+        "output_type",
+        "output_schema_sha256",
+        "max_input_bytes",
+        "max_output_bytes",
+        "timeout_ms"
+      ],
+      "properties": {
+        "binding_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "route_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "route_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "model_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "prompt_template": { "type": "string", "maxLength": 32768 },
+        "prompt_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "output_schema_id": { "type": "string", "const": "agent.runtime-value.v1" },
+        "output_type": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" },
+        "output_schema_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "max_input_bytes": { "type": "integer", "minimum": 1, "maximum": 32768 },
+        "max_output_bytes": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "timeout_ms": { "type": "integer", "minimum": 1, "maximum": 30000 }
+      }
+    },
+    "RuntimeModelResultV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema_id", "kind", "binding_id", "value"],
+          "properties": {
+            "schema_id": { "type": "string", "const": "agent.runtime-value.v1" },
+            "kind": { "const": "value" },
+            "binding_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "value": { "$ref": "#/$defs/PortableJsonValueV1" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema_id", "kind", "binding_id", "reason"],
+          "properties": {
+            "schema_id": { "type": "string", "const": "agent.runtime-value.v1" },
+            "kind": { "const": "unknown" },
+            "binding_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "reason": {
+              "type": "string",
+              "enum": ["insufficient_evidence", "conflicting_evidence", "unsupported_input"]
+            }
+          }
+        }
+      ]
+    },
+    "EditableAgentPlanV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "display",
+        "objective",
+        "source_playbook_ref",
+        "source_capability_ref",
+        "scope",
+        "record_types",
+        "requested_stage",
+        "raised_risk_tier",
+        "owner_actor_id",
+        "operator_team_ids",
+        "incident_owner_actor_id",
+        "inputs",
+        "outputs",
+        "step_mappings",
+        "verification_requirements",
+        "model_bindings",
+        "residual_obligations",
+        "accepted_proposal_sha256",
+        "overlap_resolution"
+      ],
+      "properties": {
+        "display": { "$ref": "#/$defs/DisplayMetadataV1" },
+        "objective": { "type": "string", "maxLength": 4096 },
+        "source_playbook_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+        "source_capability_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+        "scope": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeScopeV1" }
+          ]
+        },
+        "record_types": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "requested_stage": { "type": "integer", "enum": [3, 4, 5] },
+        "raised_risk_tier": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RiskTier" }
+          ]
+        },
+        "owner_actor_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+          ]
+        },
+        "operator_team_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "incident_owner_actor_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+          ]
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "#/$defs/InputDefinitionV1" }
+        },
+        "outputs": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" }
+          ]
+        },
+        "step_mappings": { "$ref": "#/$defs/DraftAgentIRV1" },
+        "verification_requirements": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRequirementV1" }
+        },
+        "model_bindings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/RuntimeModelBindingV1" }
+        },
+        "residual_obligations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "type": "string", "maxLength": 4096 }
+        },
+        "accepted_proposal_sha256": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" }
+          ]
+        },
+        "overlap_resolution": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/OverlapResolutionV1" }
+          ]
+        }
+      }
+    },
+    "SourceCitationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["proposal_json_pointer", "source_ref", "source_json_pointer"],
+      "properties": {
+        "proposal_json_pointer": { "$ref": "#/$defs/JsonPointerString" },
+        "source_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+        "source_json_pointer": { "$ref": "#/$defs/JsonPointerString" }
+      }
+    },
+    "AgentIRCandidateProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "agent_id",
+        "base_draft_revision",
+        "input_sha256",
+        "proposed_step_mappings",
+        "proposed_verification_requirements",
+        "proposed_model_bindings",
+        "source_citations",
+        "unresolved_questions",
+        "assumptions"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.ir.candidate.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "base_draft_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "input_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "proposed_step_mappings": { "$ref": "#/$defs/DraftAgentIRV1" },
+        "proposed_verification_requirements": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRequirementV1" }
+        },
+        "proposed_model_bindings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/RuntimeModelBindingV1" }
+        },
+        "source_citations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1024,
+          "items": { "$ref": "#/$defs/SourceCitationV1" }
+        },
+        "unresolved_questions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": { "type": "string", "maxLength": 4096 }
+        },
+        "assumptions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": { "type": "string", "maxLength": 4096 }
+        }
+      }
+    },
+    "SynthesisProvenanceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "input_sha256",
+        "route_id",
+        "route_revision",
+        "model_revision",
+        "template_sha256",
+        "output_sha256",
+        "usage"
+      ],
+      "properties": {
+        "request_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "input_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "route_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "route_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "model_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "template_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "output_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "usage": { "$ref": "urn:oryn:schemas:cloud-inference:v1#/$defs/InferenceUsageV1" }
+      }
+    },
+    "AgentSynthesisProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proposal_id",
+        "base_revision",
+        "proposal_sha256",
+        "proposal",
+        "provenance"
+      ],
+      "properties": {
+        "proposal_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "base_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "proposal_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "proposal": { "$ref": "#/$defs/AgentIRCandidateProposalV1" },
+        "provenance": { "$ref": "#/$defs/SynthesisProvenanceV1" }
+      }
+    },
+    "ExecutableAgentBodyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "ir_semantic_revision",
+        "source_playbook_ref",
+        "source_capability_ref",
+        "objective",
+        "scope",
+        "record_types",
+        "requested_stage",
+        "risk_tier",
+        "owner_actor_id",
+        "operator_team_ids",
+        "incident_owner_actor_id",
+        "ir",
+        "application_capability_snapshots",
+        "verification_spec_projections",
+        "verification_requirements",
+        "model_bindings",
+        "residual_obligations",
+        "dependencies"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.executable-body.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "ir_semantic_revision": { "type": "string", "const": "1" },
+        "source_playbook_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+        "source_capability_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+        "objective": { "type": "string", "maxLength": 4096 },
+        "scope": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeScopeV1" },
+        "record_types": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "requested_stage": { "type": "integer", "enum": [3, 4, 5] },
+        "risk_tier": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RiskTier" },
+        "owner_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "operator_team_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "incident_owner_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "ir": { "$ref": "#/$defs/AgentIRV1" },
+        "application_capability_snapshots": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilitySnapshotV1" }
+        },
+        "verification_spec_projections": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationSpecProjectionV1" }
+        },
+        "verification_requirements": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "$ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRequirementV1" }
+        },
+        "model_bindings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/RuntimeModelBindingV1" }
+        },
+        "residual_obligations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": { "type": "string", "maxLength": 4096 }
+        },
+        "dependencies": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+        }
+      }
+    },
+    "AgentVersionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "agent_id",
+        "agent_version_id",
+        "predecessor_version_id",
+        "draft_revision",
+        "body",
+        "behavior_sha256",
+        "compiler_revision",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.version.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "predecessor_version_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" }
+          ]
+        },
+        "draft_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "body": { "$ref": "#/$defs/ExecutableAgentBodyV1" },
+        "behavior_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "compiler_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "created_by": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "created_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "CandidateAttestationPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "agent_id",
+        "agent_version_id",
+        "behavior_sha256",
+        "manifest_sha256",
+        "compiler_revision",
+        "signed_at"
+      ],
+      "properties": {
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "behavior_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "manifest_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "compiler_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "signed_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "SignedCandidateAttestationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "key_id", "payload", "signature"],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.candidate-attestation.v1" },
+        "key_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "payload": { "$ref": "#/$defs/CandidateAttestationPayloadV1" },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{85}[AQgw]$"
+        }
+      }
+    },
+    "CompileDiagnosticV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "gate",
+        "json_pointer",
+        "source_refs",
+        "message",
+        "remedy"
+      ],
+      "properties": {
+        "code": { "$ref": "#/$defs/FactoryErrorCodeV1" },
+        "severity": { "type": "string", "enum": ["error", "warning"] },
+        "gate": {
+          "type": "string",
+          "enum": ["creation", "evaluation", "stage3_release", "stage4_release", "stage5_release"]
+        },
+        "json_pointer": { "$ref": "#/$defs/JsonPointerString" },
+        "source_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+        },
+        "message": { "type": "string", "maxLength": 1024 },
+        "remedy": {
+          "type": "string",
+          "enum": [
+            "edit_plan",
+            "upstream_review",
+            "configure_capability",
+            "configure_verifier",
+            "retry_dependency",
+            "request_evaluation"
+          ]
+        }
+      }
+    },
+    "CompileReportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "compilation_id",
+        "agent_id",
+        "draft_revision",
+        "compiler_revision",
+        "input_sha256",
+        "status",
+        "diagnostics",
+        "risk_tier",
+        "worst_case_node_executions",
+        "required_scenario_categories",
+        "requested_stage",
+        "compiled_agent_version_id"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.compile-report.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "compilation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "draft_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "compiler_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "input_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "status": { "type": "string", "enum": ["blocked", "structurally_valid"] },
+        "diagnostics": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "items": { "$ref": "#/$defs/CompileDiagnosticV1" }
+        },
+        "risk_tier": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RiskTier" },
+        "worst_case_node_executions": { "type": "integer", "minimum": 0, "maximum": 10000 },
+        "required_scenario_categories": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "requested_stage": { "type": "integer", "enum": [3, 4, 5] },
+        "compiled_agent_version_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" }
+          ]
+        }
+      }
+    },
+    "CoverageRequirementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirement_id", "kind", "source_ids", "expected_disposition"],
+      "properties": {
+        "requirement_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "branch", "postcondition", "policy", "exception",
+            "input_boundary", "ambiguous_submission", "model_output",
+            "iteration_boundary", "regression"
+          ]
+        },
+        "source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "expected_disposition": {
+          "type": "string",
+          "enum": ["verified", "safe_escalation", "expected_rejection"]
+        }
+      }
+    },
+    "CandidateEvaluationBundleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "agent_version",
+        "dependency_manifest",
+        "attestation",
+        "compile_report",
+        "evaluation_target",
+        "coverage_requirements",
+        "repair_bindings"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.evaluation-bundle.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_version": { "$ref": "#/$defs/AgentVersionV1" },
+        "dependency_manifest": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DependencyManifestV1" },
+        "attestation": { "$ref": "#/$defs/SignedCandidateAttestationV1" },
+        "compile_report": { "$ref": "#/$defs/CompileReportV1" },
+        "evaluation_target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "agent_version"],
+          "properties": {
+            "kind": { "type": "string", "const": "agent" },
+            "agent_version": { "type": "string" }
+          }
+        },
+        "coverage_requirements": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CoverageRequirementV1" }
+        },
+        "repair_bindings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RepairCandidateBindingV1" },
+          "maxItems": 1
+        }
+      }
+    },
+    "MaterialityReportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "if": { "properties": { "material": { "const": true } }, "required": ["material"] },
+      "then": { "properties": { "invalidates_evaluation": { "const": true } } },
+      "else": { "properties": { "invalidates_evaluation": { "const": false } } },
+      "required": [
+        "base_revision",
+        "replacement_sha256",
+        "material",
+        "changed_json_pointers",
+        "reason_codes",
+        "invalidates_evaluation"
+      ],
+      "properties": {
+        "base_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "replacement_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "material": { "type": "boolean" },
+        "changed_json_pointers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/JsonPointerString" }
+        },
+        "reason_codes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["display_only", "behavior_changed", "forced_material"]
+          }
+        },
+        "invalidates_evaluation": { "type": "boolean" }
+      }
+    },
+    "AgentDraftV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "agent_id",
+        "revision",
+        "current_stage",
+        "product_state",
+        "plan",
+        "active_executable_version_id",
+        "qualification_state",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.draft.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "current_stage": { "type": "integer", "const": 1 },
+        "product_state": { "type": "string", "const": "draft" },
+        "plan": { "$ref": "#/$defs/EditableAgentPlanV1" },
+        "active_executable_version_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" }
+          ]
+        },
+        "qualification_state": {
+          "type": "string",
+          "enum": ["draft_review_required", "blocked", "ready_for_evaluation", "needs_revalidation"]
+        },
+        "created_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "updated_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "AgentSummaryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "agent_id",
+        "display_name",
+        "current_source_capability_ref",
+        "revision",
+        "qualification_state",
+        "current_version_id",
+        "evaluation_state",
+        "release_state",
+        "product_stage",
+        "product_state",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "display_name": { "type": "string", "maxLength": 256 },
+        "current_source_capability_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "qualification_state": {
+          "type": "string",
+          "enum": ["draft_review_required", "blocked", "ready_for_evaluation", "needs_revalidation"]
+        },
+        "current_version_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" }
+          ]
+        },
+        "evaluation_state": { "type": ["string", "null"], "maxLength": 128 },
+        "release_state": { "type": ["string", "null"], "maxLength": 128 },
+        "product_stage": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "product_state": { "type": "string" },
+        "created_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "updated_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "AgentDetailV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "restrictions",
+        "draft",
+        "current_executable",
+        "latest_compile_report",
+        "overlap_warnings",
+        "active_evaluation_ref",
+        "active_release_ref"
+      ],
+      "properties": {
+        "summary": { "$ref": "#/$defs/AgentSummaryV1" },
+        "restrictions": { "type": "array", "maxItems": 128, "items": { "type": "string", "maxLength": 1024 } },
+        "draft": { "$ref": "#/$defs/AgentDraftV1" },
+        "current_executable": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/AgentVersionV1" }
+          ]
+        },
+        "latest_compile_report": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/CompileReportV1" }
+          ]
+        },
+        "overlap_warnings": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "active_evaluation_ref": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+          ]
+        },
+        "active_release_ref": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" }
+          ]
+        }
+      }
+    },
+    "AgentPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agents", "next_cursor"],
+      "properties": {
+        "agents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/AgentSummaryV1" }
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string" }
+          ]
+        }
+      }
+    },
+    "CompileAttemptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "compilation_id",
+        "agent_id",
+        "draft_revision",
+        "compiler_revision",
+        "input_sha256",
+        "state",
+        "report",
+        "prepared_version_id",
+        "committed_version_id",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "compilation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "draft_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "compiler_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "input_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "state": {
+          "type": "string",
+          "enum": [
+            "accepted", "running", "blocked", "prepared",
+            "committed", "stale", "failed", "cancelled"
+          ]
+        },
+        "report": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/CompileReportV1" }
+          ]
+        },
+        "prepared_version_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" }
+          ]
+        },
+        "committed_version_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" }
+          ]
+        },
+        "created_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "updated_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "CreateAgentCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_playbook_ref",
+        "display",
+        "requested_stage",
+        "owner_actor_id",
+        "operator_team_ids",
+        "incident_owner_actor_id"
+      ],
+      "properties": {
+        "source_playbook_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+        "display": { "$ref": "#/$defs/DisplayMetadataV1" },
+        "requested_stage": { "type": "integer", "enum": [3, 4, 5] },
+        "owner_actor_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+          ]
+        },
+        "operator_team_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+        },
+        "incident_owner_actor_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+          ]
+        }
+      }
+    },
+    "ReplaceAgentDraftCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected_revision",
+        "replacement",
+        "replacement_sha256",
+        "force_material",
+        "change_reason"
+      ],
+      "properties": {
+        "expected_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "replacement": { "$ref": "#/$defs/EditableAgentPlanV1" },
+        "replacement_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "force_material": { "type": "boolean" },
+        "change_reason": { "type": "string", "maxLength": 4096 }
+      }
+    },
+    "PreviewAgentEditCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected_revision",
+        "replacement",
+        "force_material"
+      ],
+      "properties": {
+        "expected_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "replacement": { "$ref": "#/$defs/EditableAgentPlanV1" },
+        "force_material": { "type": "boolean" }
+      }
+    },
+    "SynthesizeAgentCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_revision"],
+      "properties": {
+        "expected_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" }
+      }
+    },
+    "CompileAgentCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_revision"],
+      "properties": {
+        "expected_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" }
+      }
+    },
+    "RepairCandidateCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "base_agent_version_id",
+        "expected_draft_revision",
+        "incident_refs",
+        "repair_ref",
+        "regression_requirement_refs",
+        "replacement"
+      ],
+      "properties": {
+        "base_agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "expected_draft_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "incident_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentRefV1" }
+        },
+        "repair_ref": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/RepairRefV1" },
+        "regression_requirement_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/SimulationRegressionRequirementRefV1" }
+        },
+        "replacement": { "$ref": "#/$defs/EditableAgentPlanV1" }
+      }
+    },
+    "AgentRepairContextV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "base_agent_version_id",
+        "incident_refs",
+        "repair_ref",
+        "regression_requirement_refs"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.repair-context.v1" },
+        "base_agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "incident_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentRefV1" }
+        },
+        "repair_ref": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/RepairRefV1" },
+        "regression_requirement_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/SimulationRegressionRequirementRefV1" }
+        }
+      }
+    },
+    "RepairCandidateBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "agent_id",
+        "draft_revision",
+        "context",
+        "candidate_identity"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent.repair-candidate-binding.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "draft_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "context": { "$ref": "#/$defs/AgentRepairContextV1" },
+        "candidate_identity": { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1" }
+      }
+    },
+    "FixtureBindingInputsV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "action_floor": {}, "action_floors": {}, "actual_type": {}, "approved_formal_scope": {}, "approved_objective": {}, "approved_scope": {},
+        "base_agent_version_id": {}, "body": {}, "body_sha256": {}, "bundle": {}, "candidate_condition": {}, "changed_json_pointers": {},
+        "collection": {}, "commit_count": {}, "completed_iterations": {}, "completeness": {}, "conflicting_digests": {}, "consumer": {},
+        "consumer_node_id": {}, "current_agent_version_id": {}, "declared_max_items": {}, "declared_operations": {}, "dependency_count": {},
+        "executable_complete": {}, "expected_type": {}, "explicit_mapping_complete": {}, "failure": {}, "failure_iteration": {}, "force_material": {},
+        "fresh": {}, "idempotency_key": {}, "ir": {}, "left": {}, "live_conflict": {}, "locked_generation": {}, "locked_head_revision": {},
+        "new_upstream_approval": {}, "node_id": {}, "operator": {}, "origin": {}, "outcomes": {}, "pointer": {}, "policy_floors": {},
+        "prepared_generation": {}, "prepared_head_revision": {}, "producer_node_id": {}, "producer_type": {}, "provenance_a": {}, "provenance_b": {},
+        "public_key_id": {}, "raised_tier": {}, "regions": {}, "regression_requirement_refs": {}, "release_approved": {}, "replay_same_command": {},
+        "requested_objective": {}, "requested_operation": {}, "requested_stage": {}, "requirement": {}, "residual_obligations": {}, "review_requirement": {},
+        "right": {}, "role": {}, "root_region_id": {}, "route_available": {}, "same_tenant": {}, "saved_draft": {}, "scenarios": {},
+        "signature_prepared": {}, "source_access": {}, "tier": {}, "unsupported_action": {}, "use": {}, "valid_signature": {}, "value": {},
+        "verification": {}, "verified_human_examples": {}, "within_remit": {},
+        "body_a": { "$ref": "#/$defs/ExecutableAgentBodyV1" },
+        "body_b": { "$ref": "#/$defs/ExecutableAgentBodyV1" },
+        "json_pointer": { "$ref": "#/$defs/JsonPointerString" },
+        "prior_body_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "prior_idempotency_key": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "prior_operation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "replay_operation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "edge_scenarios": { "type": "integer", "minimum": 0 },
+        "evaluation_passed": { "type": "boolean" }
+      }
+    },
+    "FixtureBindingExpectedV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "allowed": {}, "approval_required_per_commit": {}, "child_executions": {}, "claims_original_objective_complete": {}, "code": {},
+        "compiler_issued_pass": {}, "cost": {}, "create_allowed": {}, "currency_conversion": {}, "default_value": {},
+        "deterministic_compile_allowed": {}, "disposition": {}, "dominates": {}, "equal_body_sha256": {}, "evaluation_admitted": {},
+        "evaluation_bundle": {}, "head_advanced": {}, "http_status": {}, "invalidates_evaluation": {}, "job_run_granted": {}, "json_pointer": {},
+        "linked_regressions": {}, "material": {}, "new_attempt": {}, "new_candidate_lineage": {}, "new_version": {}, "outcome": {},
+        "preserved_effect_iterations": {}, "prior_version_mutated": {}, "production_authorized": {}, "production_write_granted": {},
+        "provenance_changes_identity": {}, "provider_substituted": {}, "ready": {}, "reason_codes": {}, "release_eligible": {}, "replay": {},
+        "result": {}, "risk_tier": {}, "rollback_claimed": {}, "same_operation": {}, "state": {}, "synthesis": {}, "truncated": {},
+        "valid": {}, "version_inserted": {}
+      }
+    },
+    "FixtureManifestPreimageV1": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_id", "organization_id", "consumer_ref", "dependencies", "completeness", "owner_component"],
+      "properties": {
+        "schema_id": { "const": "knowledge.dependency-manifest.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "consumer_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" },
+        "dependencies": { "type": "array", "maxItems": 4096, "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1" } },
+        "completeness": { "enum": ["complete", "incomplete"] },
+        "owner_component": { "const": "agent-factory-ir" }
+      }
+    },
+    "FixtureRulePreimageV1": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_id", "organization_id", "rule_id", "version_id", "revision", "predecessor_version_id", "owner_actor_id", "responsible_team_id", "authority_source_refs", "approval_record_ref", "approved_at", "effective_from", "effective_until", "scope", "prose", "formalization"],
+      "properties": {
+        "schema_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/schema_id" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/organization_id" },
+        "rule_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/rule_id" },
+        "version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/version_id" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/revision" },
+        "predecessor_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/predecessor_version_id" },
+        "owner_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/owner_actor_id" },
+        "responsible_team_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/responsible_team_id" },
+        "authority_source_refs": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/authority_source_refs" },
+        "approval_record_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/approval_record_ref" },
+        "approved_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/approved_at" },
+        "effective_from": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/effective_from" },
+        "effective_until": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/effective_until" },
+        "scope": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/scope" },
+        "prose": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/prose" },
+        "formalization": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1/properties/formalization" }
+      }
+    },
+    "FixtureSourceProfilePreimageV1": {
+      "type": "object", "additionalProperties": false,
+      "required": ["application_id", "profile_id", "revision"],
+      "properties": {
+        "application_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "profile_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+      }
+    },
+    "FixtureSourceEvidencePreimageV1": {
+      "type": "object", "additionalProperties": false,
+      "required": ["title", "text"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "text": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      }
+    },
+    "FixtureBodyPreimageV1": {
+      "oneOf": [
+        { "$ref": "#/$defs/ExecutableAgentBodyV1" },
+        { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/CapabilityBodyV1" },
+        { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/PlaybookBodyV1" },
+        { "$ref": "#/$defs/FixtureRulePreimageV1" },
+        { "$ref": "#/$defs/FixtureSourceProfilePreimageV1" },
+        { "$ref": "#/$defs/FixtureSourceEvidencePreimageV1" }
+      ]
+    },
+    "AgentFactoryFixtureSetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "public_keys",
+        "signed_envelope_examples",
+        "digest_vectors",
+        "validation_cases",
+        "binding_vectors",
+        "descriptive_cases"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "const": "agent-factory.fixture-set.v1" },
+        "public_keys": {
+          "type": "array", "maxItems": 128,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["key_id", "purpose", "public_key_base64url", "test_seed_hex", "test_only"],
+            "properties": {
+              "key_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "purpose": { "const": "publisher" },
+              "public_key_base64url": { "type": "string", "pattern": "^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$" },
+              "test_seed_hex": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "test_only": { "const": true }
+            }
+          }
+        },
+        "signed_envelope_examples": {
+          "type": "array", "maxItems": 1024,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["case_id", "envelope", "public_key_id", "expected_valid"],
+            "properties": {
+              "case_id": { "$ref": "#/$defs/PlanIdentifier" },
+              "envelope": { "$ref": "#/$defs/SignedCandidateAttestationV1" },
+              "public_key_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "expected_valid": { "type": "boolean" }
+            }
+          }
+        },
+        "digest_vectors": {
+          "type": "array", "maxItems": 1024,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["case_id", "kind", "preimage", "sha256"],
+            "allOf": [
+              { "if": { "properties": { "kind": { "const": "body" } }, "required": ["kind"] }, "then": { "properties": { "preimage": { "$ref": "#/$defs/FixtureBodyPreimageV1" } } } },
+              { "if": { "properties": { "kind": { "const": "manifest" } }, "required": ["kind"] }, "then": { "properties": { "preimage": { "$ref": "#/$defs/FixtureManifestPreimageV1" } } } }
+            ],
+            "properties": {
+              "case_id": { "$ref": "#/$defs/PlanIdentifier" },
+              "kind": { "enum": ["body", "manifest"] },
+              "preimage": { "oneOf": [{ "$ref": "#/$defs/FixtureBodyPreimageV1" }, { "$ref": "#/$defs/FixtureManifestPreimageV1" }] },
+              "sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" }
+            }
+          }
+        },
+        "validation_cases": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case_id", "schema_ref", "instance", "expected_valid"],
+            "properties": {
+              "case_id": { "type": "string" },
+              "schema_ref": { "type": "string" },
+              "instance": {},
+              "expected_valid": { "type": "boolean" }
+            }
+          }
+        },
+        "binding_vectors": {
+          "type": "array", "maxItems": 4096,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["case_id", "kind", "inputs", "expected"],
+            "properties": {
+              "case_id": { "$ref": "#/$defs/PlanIdentifier" },
+              "kind": { "$ref": "#/$defs/PlanIdentifier" },
+              "inputs": { "$ref": "#/$defs/FixtureBindingInputsV1" },
+              "expected": { "$ref": "#/$defs/FixtureBindingExpectedV1" }
+            }
+          }
+        },
+        "descriptive_cases": {
+          "type": "array", "maxItems": 1024,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["case_id", "description"],
+            "properties": {
+              "case_id": { "$ref": "#/$defs/PlanIdentifier" },
+              "description": { "type": "string", "maxLength": 4096 },
+              "candidates": { "type": "array", "maxItems": 128, "items": { "$ref": "#/$defs/PlanIdentifier" } },
+              "application_profile_body": {
+                "type": "object", "additionalProperties": false,
+                "required": ["application_id", "profile_id", "revision"],
+                "properties": {
+                  "application_id": { "type": "string", "maxLength": 128 },
+                  "profile_id": { "type": "string", "maxLength": 128 },
+                  "revision": { "type": "string", "maxLength": 128 }
+                }
+              },
+              "authority_evidence_body": {
+                "type": "object", "additionalProperties": false,
+                "required": ["title", "text"],
+                "properties": {
+                  "title": { "type": "string", "maxLength": 1024 },
+                  "text": { "type": "string", "maxLength": 4096 }
+                }
+              },
+              "hashes": {
+                "type": "object", "additionalProperties": false,
+                "required": ["application_profile_sha256", "authority_evidence_sha256"],
+                "properties": {
+                  "application_profile_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+                  "authority_evidence_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

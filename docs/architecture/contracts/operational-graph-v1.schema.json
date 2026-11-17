@@ -1,0 +1,3429 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:operational-graph:v1",
+  "title": "Oryn Living Operational Graph and Knowledge Governance Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for Oryn capabilities, playbooks, business rules, decision tables, conflicts, dependencies, guidance projections, and cross-team handoffs.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/CapabilityVersionV1"
+    },
+    {
+      "$ref": "#/$defs/PlaybookVersionV1"
+    },
+    {
+      "$ref": "#/$defs/KnowledgeStatusV1"
+    },
+    {
+      "$ref": "#/$defs/GraphDiscoveryContextV1"
+    },
+    {
+      "$ref": "#/$defs/GuidanceProjectionDraftV1"
+    },
+    {
+      "$ref": "#/$defs/BusinessRuleVersionV1"
+    },
+    {
+      "$ref": "#/$defs/RuleEvaluationV1"
+    },
+    {
+      "$ref": "#/$defs/KnowledgeConflictV1"
+    },
+    {
+      "$ref": "#/$defs/DependencyManifestV1"
+    },
+    {
+      "$ref": "#/$defs/DependencyRegistrationV1"
+    },
+    {
+      "$ref": "#/$defs/KnowledgeEligibilitySnapshotV1"
+    },
+    {
+      "$ref": "#/$defs/PreviousPolicyContinuationV1"
+    },
+    {
+      "$ref": "#/$defs/KnowledgeQueryV1"
+    },
+    {
+      "$ref": "#/$defs/KnowledgeQueryPageV1"
+    },
+    {
+      "$ref": "#/$defs/KnowledgeEmbeddingV1"
+    },
+    {
+      "$ref": "#/$defs/KnowledgeRerankV1"
+    },
+    {
+      "$ref": "#/$defs/HandoffV1"
+    },
+    {
+      "$ref": "#/$defs/HandoffCommandV1"
+    },
+    {
+      "$ref": "#/$defs/HandoffProposalV1"
+    },
+    {
+      "$ref": "#/$defs/HandoffVerificationBindingV1"
+    },
+    {
+      "$ref": "#/$defs/HandoffAssessmentCommandV1"
+    },
+    {
+      "$ref": "#/$defs/HandoffAssessmentReceiptV1"
+    },
+    {
+      "$ref": "#/$defs/RuleChangeCommandV1"
+    },
+    {
+      "$ref": "#/$defs/SetDefaultScopeCommandV1"
+    },
+    {
+      "$ref": "#/$defs/RetirePlaybookCommandV1"
+    },
+    {
+      "$ref": "#/$defs/ProposeRuleCommandV1"
+    },
+    {
+      "$ref": "#/$defs/ApproveRuleCommandV1"
+    },
+    {
+      "$ref": "#/$defs/GrantContinuationCommandV1"
+    },
+    {
+      "$ref": "#/$defs/ReportConflictCommandV1"
+    },
+    {
+      "$ref": "#/$defs/ConflictDecisionCommandV1"
+    },
+    {
+      "$ref": "#/$defs/RequestRevalidationCommandV1"
+    },
+    {
+      "$ref": "#/$defs/WorkflowReportingFactV1"
+    }
+  ],
+  "$defs": {
+    "WorkflowReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "capability_id",
+        "capability_version_ref",
+        "playbook_ref",
+        "reviewed_exception_type_refs",
+        "handoff_refs",
+        "owning_team_id",
+        "approved_dependency_refs",
+        "approved_variant_ids",
+        "approved_fix_refs",
+        "source_eligibility"
+      ],
+      "properties": {
+        "schema_id": { "const": "graph.workflow-reporting-fact.v1" },
+        "organization_id": { "$ref": "#/$defs/Uuid" },
+        "capability_id": { "$ref": "#/$defs/Identifier" },
+        "capability_version_ref": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+        "playbook_ref": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+        "reviewed_exception_type_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 64
+        },
+        "handoff_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 64
+        },
+        "owning_team_id": { "$ref": "#/$defs/Identifier" },
+        "approved_dependency_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "approved_variant_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 64
+        },
+        "approved_fix_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 64
+        },
+        "source_eligibility": {
+          "type": "string",
+          "enum": ["eligible", "ineligible", "restricted"]
+        }
+      }
+    },
+    "Uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "PlaybookVersionDigest": {
+      "type": "string",
+      "pattern": "^sha256-[0-9a-f]{64}$"
+    },
+    "Revision": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "Identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9_.-]{1,128}$"
+    },
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "DateString": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "DecimalString": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,19})(\\.[0-9]{1,18})?$"
+    },
+    "CurrencyCode": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "EntityKind": {
+      "type": "string",
+      "enum": [
+        "capability",
+        "playbook",
+        "rule",
+        "application_profile",
+        "verification_spec",
+        "agent",
+        "assist_plan",
+        "scenario",
+        "test_suite",
+        "evaluation",
+        "job",
+        "incident",
+        "correction",
+        "repair",
+        "release",
+        "handoff",
+        "evidence"
+      ]
+    },
+    "RelationType": {
+      "type": "string",
+      "enum": [
+        "owned_by",
+        "uses_application",
+        "triggered_by",
+        "governed_by",
+        "supported_by",
+        "branches_to",
+        "resolves_exception",
+        "derived_from",
+        "depends_on",
+        "evaluated_by",
+        "produced_outcome",
+        "caused_incident",
+        "proposes_repair",
+        "follows_workflow",
+        "supersedes"
+      ]
+    },
+    "KnowledgeVersionRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "entity_kind",
+        "entity_id",
+        "version_id",
+        "content_sha256"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "entity_kind": {
+          "$ref": "#/$defs/EntityKind"
+        },
+        "entity_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "version_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256"
+        }
+      }
+    },
+    "VerificationCoverageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eligible_attempts",
+        "observed_complete_attempts",
+        "verified_attempts",
+        "contradicted_attempts",
+        "unknown_attempts",
+        "assessment_refs"
+      ],
+      "properties": {
+        "eligible_attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observed_complete_attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "verified_attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contradicted_attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unknown_attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "assessment_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "maxItems": 128
+        }
+      }
+    },
+    "CapabilityBodyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "procedure",
+        "audience",
+        "rule_refs",
+        "provenance",
+        "source_manifest",
+        "verification_coverage",
+        "owner_actor_id",
+        "responsible_team_id"
+      ],
+      "properties": {
+        "procedure": {
+          "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateProcedureV1"
+        },
+        "audience": {
+          "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/DiscoveryAudienceV1"
+        },
+        "rule_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 128
+        },
+        "provenance": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/ClaimProvenanceV1"
+          },
+          "maxItems": 1024
+        },
+        "source_manifest": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/ContributionRevisionRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 128
+        },
+        "verification_coverage": {
+          "$ref": "#/$defs/VerificationCoverageV1"
+        },
+        "owner_actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        }
+      }
+    },
+    "CapabilityVersionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "capability_id",
+        "workflow_id",
+        "version_id",
+        "revision",
+        "predecessor_version_id",
+        "body",
+        "content_sha256",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.capability-version.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "capability_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "workflow_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "version_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "predecessor_version_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "body": {
+          "$ref": "#/$defs/CapabilityBodyV1"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "created_by": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "PlaybookBodyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "objective",
+        "summary",
+        "procedure",
+        "rule_refs",
+        "audience",
+        "limitations",
+        "provenance"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "procedure": {
+          "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/CandidateProcedureV1"
+        },
+        "rule_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 128
+        },
+        "audience": {
+          "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/DiscoveryAudienceV1"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "maxItems": 32
+        },
+        "provenance": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/ClaimProvenanceV1"
+          },
+          "maxItems": 1024
+        }
+      }
+    },
+    "PlaybookVersionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "playbook_id",
+        "version_id",
+        "revision",
+        "capability_ref",
+        "body",
+        "playbook_version",
+        "approved_by",
+        "approval_record_ref",
+        "published_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.playbook-version.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "playbook_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "version_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "capability_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "body": {
+          "$ref": "#/$defs/PlaybookBodyV1"
+        },
+        "playbook_version": {
+          "$ref": "#/$defs/PlaybookVersionDigest"
+        },
+        "approved_by": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "approval_record_ref": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "published_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "KnowledgeStatusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "subject_ref",
+        "revision",
+        "status",
+        "last_verified_at",
+        "known_changes",
+        "conflict_ids",
+        "evidence_status",
+        "hud_status",
+        "updated_at"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "subject_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "current",
+            "needs_revalidation",
+            "restricted",
+            "superseded",
+            "deprecated",
+            "archived"
+          ]
+        },
+        "last_verified_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "known_changes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "maxItems": 64
+        },
+        "conflict_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "maxItems": 64
+        },
+        "evidence_status": {
+          "type": "string",
+          "enum": [
+            "available",
+            "partially_unavailable",
+            "unavailable"
+          ]
+        },
+        "hud_status": {
+          "type": "string",
+          "enum": [
+            "not_configured",
+            "preparing",
+            "available",
+            "revoked",
+            "blocked"
+          ]
+        },
+        "updated_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "PlaybookSummaryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "playbook_ref",
+        "objective",
+        "scope",
+        "owner",
+        "status",
+        "last_verified_at",
+        "audience"
+      ],
+      "properties": {
+        "playbook_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "objective": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "owner": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "status": {
+          "type": "string"
+        },
+        "last_verified_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "audience": {
+          "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/DiscoveryAudienceV1"
+        }
+      }
+    },
+    "ApprovedRuleProjectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_ref",
+        "prose",
+        "effectivity",
+        "scope",
+        "machine_checkable",
+        "sources_available"
+      ],
+      "properties": {
+        "rule_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "prose": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "effectivity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "effective_from",
+            "effective_until"
+          ],
+          "properties": {
+            "effective_from": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "effective_until": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "scope": {
+          "$ref": "#/$defs/KnowledgeScopeV1"
+        },
+        "machine_checkable": {
+          "type": "boolean"
+        },
+        "sources_available": {
+          "type": "boolean"
+        }
+      }
+    },
+    "GraphDiscoveryContextV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "as_of_generation",
+        "playbook_summaries",
+        "approved_rules",
+        "incomplete"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.discovery-context.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "as_of_generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "playbook_summaries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlaybookSummaryV1"
+          },
+          "maxItems": 50
+        },
+        "approved_rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ApprovedRuleProjectionV1"
+          },
+          "maxItems": 100
+        },
+        "incomplete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AllowedTargetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_profile_id",
+        "target_key"
+      ],
+      "properties": {
+        "application_profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "target_key": {
+          "type": "string",
+          "maxLength": 128
+        }
+      }
+    },
+    "StepMappingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step_id",
+        "application_profile_id",
+        "profile_version",
+        "target_key",
+        "predicate",
+        "allowed_targets",
+        "timeout_ms"
+      ],
+      "properties": {
+        "step_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "application_profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_version": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "target_key": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "predicate": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "allowed_targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AllowedTargetV1"
+          },
+          "maxItems": 16
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 600000
+        }
+      }
+    },
+    "GuidanceProjectionDraftV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "playbook_ref",
+        "revision",
+        "application_profiles",
+        "prerequisites",
+        "task_signature",
+        "step_mappings",
+        "step_edges",
+        "peer_fixes",
+        "assist_plan_refs",
+        "record_independent",
+        "reviewed_by",
+        "review_reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.guidance-projection.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "playbook_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "application_profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "application_profile_id",
+              "min_version",
+              "max_version"
+            ],
+            "properties": {
+              "application_profile_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "min_version": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "max_version": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "prerequisites": {
+          "type": "object"
+        },
+        "task_signature": {
+          "type": "object"
+        },
+        "step_mappings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepMappingV1"
+          },
+          "minItems": 1,
+          "maxItems": 128
+        },
+        "step_edges": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:guidance-sync:v1#/$defs/GuidanceStepEdgeV1"
+          },
+          "maxItems": 256
+        },
+        "peer_fixes": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:guidance-sync:v1#/$defs/PeerFixV1"
+          },
+          "maxItems": 64
+        },
+        "assist_plan_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 16
+        },
+        "record_independent": {
+          "type": "boolean"
+        },
+        "reviewed_by": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "review_reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "SourceRequirementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "methods",
+        "approved_source_refs"
+      ],
+      "properties": {
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "system_evidence",
+              "authorized_reviewer",
+              "approved_source"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "approved_source_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 64
+        }
+      }
+    },
+    "BusinessFactDefinitionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "type",
+        "nullable",
+        "enum_values",
+        "currency",
+        "source_requirement"
+      ],
+      "properties": {
+        "fact_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "boolean",
+            "string",
+            "enum",
+            "decimal",
+            "date",
+            "instant",
+            "money"
+          ]
+        },
+        "nullable": {
+          "type": "boolean"
+        },
+        "enum_values": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "minItems": 1,
+              "maxItems": 128,
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currency": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CurrencyCode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_requirement": {
+          "$ref": "#/$defs/SourceRequirementV1"
+        }
+      }
+    },
+    "TypedValueV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "boolean"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "string",
+                "enum"
+              ]
+            },
+            "value": {
+              "type": "string",
+              "maxLength": 1024
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "decimal"
+            },
+            "value": {
+              "$ref": "#/$defs/DecimalString"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "date"
+            },
+            "value": {
+              "$ref": "#/$defs/DateString"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "instant"
+            },
+            "value": {
+              "$ref": "#/$defs/Timestamp"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "money"
+            },
+            "value": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "amount",
+                "currency"
+              ],
+              "properties": {
+                "amount": {
+                  "$ref": "#/$defs/DecimalString"
+                },
+                "currency": {
+                  "$ref": "#/$defs/CurrencyCode"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BusinessFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "value",
+        "source_ref",
+        "observed_at",
+        "valid_until",
+        "verification"
+      ],
+      "properties": {
+        "fact_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/TypedValueV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "valid_until": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verification": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "unverified"
+          ]
+        }
+      }
+    },
+    "BusinessConditionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op"
+      ],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": [
+            "all",
+            "any",
+            "not",
+            "exists",
+            "eq",
+            "ne",
+            "lt",
+            "lte",
+            "gt",
+            "gte",
+            "in"
+          ]
+        },
+        "terms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BusinessConditionV1"
+          },
+          "maxItems": 64
+        },
+        "term": {
+          "$ref": "#/$defs/BusinessConditionV1"
+        },
+        "fact_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "value": {
+          "$ref": "#/$defs/TypedValueV1"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TypedValueV1"
+          },
+          "maxItems": 128
+        }
+      }
+    },
+    "FactAssignmentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "value"
+      ],
+      "properties": {
+        "fact_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "value": {
+          "$ref": "#/$defs/TypedValueV1"
+        }
+      }
+    },
+    "EscalationRouteV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "escalation_route",
+        "reason"
+      ],
+      "properties": {
+        "kind": {
+          "const": "escalate"
+        },
+        "escalation_route": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 512
+        }
+      }
+    },
+    "DecisionTableRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_id",
+        "condition",
+        "outputs",
+        "source_refs"
+      ],
+      "properties": {
+        "row_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "condition": {
+          "$ref": "#/$defs/BusinessConditionV1"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FactAssignmentV1"
+          },
+          "maxItems": 32
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 16
+        }
+      }
+    },
+    "BusinessDecisionTableV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table_id",
+        "input_definitions",
+        "output_definitions",
+        "hit_policy",
+        "rows",
+        "no_match"
+      ],
+      "properties": {
+        "table_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "input_definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BusinessFactDefinitionV1"
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "output_definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BusinessFactDefinitionV1"
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "hit_policy": {
+          "const": "UNIQUE"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DecisionTableRowV1"
+          },
+          "minItems": 1,
+          "maxItems": 128
+        },
+        "no_match": {
+          "$ref": "#/$defs/EscalationRouteV1"
+        }
+      }
+    },
+    "KnowledgeScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "audience",
+        "workflow_ids",
+        "application_ids",
+        "branch_ids",
+        "record_condition"
+      ],
+      "properties": {
+        "audience": {
+          "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/DiscoveryAudienceV1"
+        },
+        "workflow_ids": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "maxItems": 128,
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "application_ids": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "maxItems": 128,
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "branch_ids": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "maxItems": 128,
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "record_condition": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BusinessConditionV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "RuleFormalizationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "condition",
+            "decision_table"
+          ]
+        },
+        "input_definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BusinessFactDefinitionV1"
+          },
+          "maxItems": 32
+        },
+        "condition": {
+          "$ref": "#/$defs/BusinessConditionV1"
+        },
+        "table": {
+          "$ref": "#/$defs/BusinessDecisionTableV1"
+        }
+      }
+    },
+    "BusinessRuleVersionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "rule_id",
+        "version_id",
+        "revision",
+        "predecessor_version_id",
+        "owner_actor_id",
+        "responsible_team_id",
+        "authority_source_refs",
+        "approval_record_ref",
+        "approved_at",
+        "effective_from",
+        "effective_until",
+        "scope",
+        "prose",
+        "formalization",
+        "content_sha256"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.business-rule-version.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "rule_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "version_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "predecessor_version_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owner_actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "authority_source_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "approval_record_ref": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "approved_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "effective_from": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "effective_until": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "$ref": "#/$defs/KnowledgeScopeV1"
+        },
+        "prose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "formalization": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/RuleFormalizationV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256"
+        }
+      }
+    },
+    "RuleEvaluationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_ref",
+        "result",
+        "disposition",
+        "decision_outputs",
+        "matched_row_ids",
+        "evidence_refs",
+        "reason"
+      ],
+      "properties": {
+        "rule_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "unknown"
+          ]
+        },
+        "disposition": {
+          "type": "string",
+          "enum": [
+            "decision",
+            "escalate",
+            "blocked"
+          ]
+        },
+        "decision_outputs": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FactAssignmentV1"
+              },
+              "maxItems": 32
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matched_row_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 16
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 32
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 1024
+        }
+      }
+    },
+    "KnowledgeConflictV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "conflict_id",
+        "revision",
+        "status",
+        "basis",
+        "subjects",
+        "branch_ids",
+        "materiality",
+        "evidence_refs",
+        "reported_by",
+        "owner_actor_id",
+        "resolution",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.conflict.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "conflict_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "under_review",
+            "resolved",
+            "dismissed"
+          ]
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "typed_contradiction",
+            "authorized_report"
+          ]
+        },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "branch_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 32
+        },
+        "materiality": {
+          "type": "string",
+          "enum": [
+            "outcome_changing",
+            "noncritical",
+            "unknown"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 32
+        },
+        "reported_by": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "owner_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resolution": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "resolution_kind",
+                "resolved_by",
+                "resolved_at",
+                "reason"
+              ],
+              "properties": {
+                "resolution_kind": {
+                  "type": "string",
+                  "enum": [
+                    "superseded",
+                    "rescheduled",
+                    "scoped",
+                    "dismissed"
+                  ]
+                },
+                "resolved_by": {
+                  "$ref": "#/$defs/Identifier"
+                },
+                "resolved_at": {
+                  "$ref": "#/$defs/Timestamp"
+                },
+                "reason": {
+                  "type": "string",
+                  "maxLength": 1024
+                },
+                "superseding_rule_refs": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/KnowledgeVersionRefV1"
+                  },
+                  "maxItems": 16
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "DependencyManifestV1": {
+      "type": "object",
+      "description": "Immutable declaration of transitive knowledge dependencies. manifest_sha256 is the SHA-256 hash of RFC 8785 canonical JSON of {schema_id, organization_id, consumer_ref, dependencies, completeness, owner_component}, explicitly excluding manifest_sha256 and server-assigned registered_at. Dependencies sort lexicographically by (organization_id, entity_kind, entity_id, version_id, content_sha256) with duplicate identities and conflicting digests rejected.",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "consumer_ref",
+        "dependencies",
+        "manifest_sha256",
+        "completeness",
+        "owner_component",
+        "registered_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.dependency-manifest.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "consumer_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 4096,
+          "uniqueItems": true
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "completeness": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "incomplete",
+            "invalidated"
+          ]
+        },
+        "owner_component": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "registered_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "DependencyRegistrationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consumer_ref",
+        "manifest_sha256",
+        "knowledge_generation",
+        "completeness"
+      ],
+      "properties": {
+        "consumer_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "knowledge_generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "completeness": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "incomplete",
+            "invalidated"
+          ]
+        }
+      }
+    },
+    "KnowledgeEligibilitySnapshotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "consumer_ref",
+        "manifest_sha256",
+        "knowledge_generation",
+        "as_of",
+        "applicable_rule_refs",
+        "branch_restrictions",
+        "status",
+        "blockers",
+        "valid_until"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "consumer_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "knowledge_generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "as_of": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "applicable_rule_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 256
+        },
+        "branch_restrictions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 64
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "eligible",
+            "restricted",
+            "unknown"
+          ]
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "maxItems": 64
+        },
+        "valid_until": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "PreviousPolicyContinuationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "continuation_id",
+        "old_rule_ref",
+        "replacing_rule_ref",
+        "consumer_refs",
+        "scope",
+        "effective_from",
+        "not_after",
+        "approved_by",
+        "approval_record_refs",
+        "legal_basis_refs",
+        "reason",
+        "revision"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "continuation_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "old_rule_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "replacing_rule_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "consumer_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "scope": {
+          "$ref": "#/$defs/KnowledgeScopeV1"
+        },
+        "effective_from": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "not_after": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "approved_by": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "approval_record_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "legal_basis_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "maxItems": 16
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        }
+      }
+    },
+    "QueryFiltersV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "team_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 32
+        },
+        "application_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 32
+        },
+        "owner_actor_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 32
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "current",
+            "needs_revalidation",
+            "restricted",
+            "superseded",
+            "deprecated",
+            "archived"
+          ]
+        },
+        "last_verified_after": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "materiality": {
+          "type": "string",
+          "enum": [
+            "outcome_changing",
+            "noncritical",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "KnowledgeQueryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "mode",
+        "query_text",
+        "root_refs",
+        "relation_types",
+        "filters",
+        "cursor",
+        "page_size"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.query.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "search",
+            "neighbors",
+            "dependencies",
+            "impact",
+            "changes"
+          ]
+        },
+        "query_text": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "root_refs": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KnowledgeVersionRefV1"
+              },
+              "minItems": 1,
+              "maxItems": 32
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relation_types": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RelationType"
+              },
+              "maxItems": 16
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filters": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/QueryFiltersV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "QueryItemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_ref",
+        "title",
+        "objective",
+        "summary",
+        "owner",
+        "audience",
+        "status",
+        "last_verified_at",
+        "is_approved",
+        "score"
+      ],
+      "properties": {
+        "node_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "objective": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "owner": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "audience": {
+          "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/DiscoveryAudienceV1"
+        },
+        "status": {
+          "type": "string"
+        },
+        "last_verified_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "is_approved": {
+          "type": "boolean"
+        },
+        "score": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "QueryEdgeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from_ref",
+        "to_ref",
+        "relation_type",
+        "is_definitive"
+      ],
+      "properties": {
+        "from_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "to_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "relation_type": {
+          "$ref": "#/$defs/RelationType"
+        },
+        "is_definitive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "KnowledgeQueryPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "query_fingerprint",
+        "as_of_generation",
+        "items",
+        "edges",
+        "next_cursor",
+        "completeness",
+        "degraded_reasons"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.query-page.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "query_fingerprint": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "as_of_generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QueryItemV1"
+          },
+          "maxItems": 100
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QueryEdgeV1"
+          },
+          "maxItems": 200
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completeness": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial",
+            "stale"
+          ]
+        },
+        "degraded_reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "maxItems": 16
+        }
+      }
+    },
+    "KnowledgeEmbeddingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "input_fingerprint",
+        "embedding_space_id",
+        "dimensions",
+        "vector"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.embedding.v1"
+        },
+        "input_fingerprint": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "embedding_space_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "dimensions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "vector": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1,
+          "maxItems": 4096
+        }
+      }
+    },
+    "ScoredItemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version_id",
+        "score"
+      ],
+      "properties": {
+        "version_id": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "score": {
+          "type": "number"
+        }
+      }
+    },
+    "KnowledgeRerankV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "scored_items"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.rerank.v1"
+        },
+        "scored_items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScoredItemV1"
+          },
+          "maxItems": 20
+        }
+      }
+    },
+    "HandoffV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "handoff_id",
+        "revision",
+        "source_workflow_ref",
+        "destination_workflow_ref",
+        "triggering_state",
+        "expected_downstream_state",
+        "summary",
+        "business_context",
+        "audience",
+        "responsible_team_id",
+        "assignee_actor_id",
+        "status",
+        "due_at",
+        "time_zone",
+        "evidence_refs",
+        "completion_assessment_ref",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.handoff.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "handoff_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "source_workflow_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "destination_workflow_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "triggering_state": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "expected_downstream_state": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "business_context": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "audience": {
+          "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/DiscoveryAudienceV1"
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "assignee_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "proposed",
+            "unassigned",
+            "assigned",
+            "accepted",
+            "in_progress",
+            "blocked",
+            "completed",
+            "canceled",
+            "rejected"
+          ]
+        },
+        "due_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time_zone": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 32
+        },
+        "completion_assessment_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "HandoffAssessmentInputV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "verification_id"
+          ],
+          "properties": {
+            "method": {
+              "const": "system_evidence"
+            },
+            "verification_id": {
+              "$ref": "#/$defs/Identifier"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "verdict",
+            "postcondition_refs",
+            "evidence_refs"
+          ],
+          "properties": {
+            "method": {
+              "const": "authorized_reviewer"
+            },
+            "verdict": {
+              "type": "string",
+              "enum": [
+                "verified",
+                "contradicted",
+                "unknown"
+              ]
+            },
+            "postcondition_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "minItems": 1,
+              "maxItems": 16
+            },
+            "evidence_refs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/KnowledgeVersionRefV1"
+              },
+              "maxItems": 32
+            }
+          }
+        }
+      ]
+    },
+    "HandoffSourceBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connection_id",
+        "expected_connection_revision",
+        "record_key",
+        "argument_canonical_base64url"
+      ],
+      "properties": {
+        "connection_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "expected_connection_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "record_key": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "argument_canonical_base64url": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]*$"
+        }
+      }
+    },
+    "HandoffVerificationRequirementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirement_id",
+        "capability_ref",
+        "postcondition_id",
+        "spec_ref",
+        "source_bindings",
+        "evidence_not_before"
+      ],
+      "properties": {
+        "requirement_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "capability_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "postcondition_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "spec_ref": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/KnowledgeVersionRefV1"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entity_kind": {
+                  "const": "verification_spec"
+                }
+              }
+            }
+          ]
+        },
+        "source_bindings": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/HandoffSourceBindingV1"
+          }
+        },
+        "evidence_not_before": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      }
+    },
+    "HandoffVerificationBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "handoff_ref",
+        "binding_sha256",
+        "requirements"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "handoff_ref": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/KnowledgeVersionRefV1"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entity_kind": {
+                  "const": "handoff"
+                }
+              }
+            }
+          ]
+        },
+        "binding_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "requirements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/HandoffVerificationRequirementV1"
+          }
+        }
+      }
+    },
+    "HandoffAssessmentCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "handoff_id",
+        "expected_revision",
+        "binding_sha256",
+        "reverify_of",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.handoff-assessment-command.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "handoff_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "binding_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "reverify_of": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "HandoffAssessmentReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "handoff_id",
+        "assessment_id",
+        "verification_id",
+        "handoff_ref"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.handoff-assessment-receipt.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "handoff_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "assessment_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "verification_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "handoff_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        }
+      }
+    },
+    "HandoffCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "handoff_id",
+        "expected_revision",
+        "action",
+        "assignee_actor_id",
+        "responsible_team_id",
+        "assessment",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "knowledge.handoff-command.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "handoff_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "assign",
+            "accept",
+            "reject",
+            "reassign",
+            "start",
+            "block",
+            "resume",
+            "complete",
+            "cancel",
+            "link_duplicate"
+          ]
+        },
+        "assignee_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "responsible_team_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assessment": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/HandoffAssessmentInputV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "HandoffProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "source_workflow_ref",
+        "destination_workflow_ref",
+        "triggering_state",
+        "expected_downstream_state",
+        "summary",
+        "business_context",
+        "audience",
+        "responsible_team_id",
+        "assignee_actor_id",
+        "due_at",
+        "time_zone",
+        "evidence_refs"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "source_workflow_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "destination_workflow_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "triggering_state": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "expected_downstream_state": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "business_context": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "audience": {
+          "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/DiscoveryAudienceV1"
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "assignee_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "due_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time_zone": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 32
+        }
+      }
+    },
+    "RuleChangeCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "rule_id",
+        "expected_revision",
+        "proposed_version",
+        "approval_record_refs",
+        "reason"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "rule_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "proposed_version": {
+          "$ref": "#/$defs/BusinessRuleVersionV1"
+        },
+        "approval_record_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "SetDefaultScopeCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "expected_revision",
+        "playbook_ref",
+        "scope",
+        "application_profiles",
+        "effective_from",
+        "effective_until",
+        "reason"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "playbook_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "scope": {
+          "$ref": "#/$defs/KnowledgeScopeV1"
+        },
+        "application_profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "effective_from": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "effective_until": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "RetirePlaybookCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "expected_revision",
+        "reason"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "ProposeRuleCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "rule_id",
+        "owner_actor_id",
+        "responsible_team_id",
+        "authority_source_refs",
+        "scope",
+        "prose",
+        "formalization",
+        "reason"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "rule_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "owner_actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "authority_source_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "scope": {
+          "$ref": "#/$defs/KnowledgeScopeV1"
+        },
+        "prose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "formalization": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/RuleFormalizationV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "ApproveRuleCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "expected_revision",
+        "proposed_version_id",
+        "proposed_content_sha256",
+        "approval_record_refs",
+        "effective_from",
+        "effective_until",
+        "supersedes_version_id",
+        "reason"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "proposed_version_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "proposed_content_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "approval_record_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "effective_from": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "effective_until": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supersedes_version_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "GrantContinuationCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "old_rule_ref",
+        "replacing_rule_ref",
+        "consumer_refs",
+        "scope",
+        "effective_from",
+        "not_after",
+        "approval_record_refs",
+        "legal_basis_refs",
+        "reason"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "old_rule_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "replacing_rule_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "consumer_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "scope": {
+          "$ref": "#/$defs/KnowledgeScopeV1"
+        },
+        "effective_from": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "not_after": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "approval_record_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "legal_basis_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "maxItems": 16
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "ReportConflictCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "subjects",
+        "branch_ids",
+        "materiality",
+        "evidence_refs",
+        "incompatibility_description"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "minItems": 2,
+          "maxItems": 32
+        },
+        "branch_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 32
+        },
+        "materiality": {
+          "type": "string",
+          "enum": [
+            "outcome_changing",
+            "noncritical",
+            "unknown"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 32
+        },
+        "incompatibility_description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      }
+    },
+    "ConflictDecisionCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "expected_revision",
+        "decision",
+        "replacement_rule_refs",
+        "approval_record_refs",
+        "evidence_refs",
+        "reason"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "resolve",
+            "dismiss",
+            "request_evidence"
+          ]
+        },
+        "replacement_rule_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 16
+        },
+        "approval_record_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "maxItems": 16
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 32
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    },
+    "RequestRevalidationCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "subject_ref",
+        "expected_revision",
+        "assessment_ref",
+        "evidence_refs",
+        "reason"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "subject_ref": {
+          "$ref": "#/$defs/KnowledgeVersionRefV1"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "assessment_ref": {
+          "$ref": "#/$defs/Uuid"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 32
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
+    }
+  }
+}

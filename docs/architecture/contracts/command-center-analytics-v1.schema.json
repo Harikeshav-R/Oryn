@@ -1,0 +1,2168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:command-center-analytics:v1",
+  "title": "Oryn Command Center, Notifications, and Analytics Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for Oryn reporting queries, metrics, sealed privacy cells, baselines, pilots, reports, notifications, desktop presentation, exports, global search, home views, and internal owner source facts.",
+  "oneOf": [
+    { "$ref": "#/$defs/ReportingQueryV1" },
+    { "$ref": "#/$defs/ReportingPageV1" },
+    { "$ref": "#/$defs/MetricCellV1" },
+    { "$ref": "#/$defs/ReportingBaselineV1" },
+    { "$ref": "#/$defs/ReportingBaselinePageV1" },
+    { "$ref": "#/$defs/ApproveReportingBaselineV1" },
+    { "$ref": "#/$defs/PilotV1" },
+    { "$ref": "#/$defs/PilotParticipantsV1" },
+    { "$ref": "#/$defs/PilotPageV1" },
+    { "$ref": "#/$defs/CreatePilotV1" },
+    { "$ref": "#/$defs/AmendPilotV1" },
+    { "$ref": "#/$defs/PilotControlV1" },
+    { "$ref": "#/$defs/GenerateReportV1" },
+    { "$ref": "#/$defs/ReportSnapshotV1" },
+    { "$ref": "#/$defs/ReportPageV1" },
+    { "$ref": "#/$defs/NotificationV1" },
+    { "$ref": "#/$defs/NotificationPageV1" },
+    { "$ref": "#/$defs/UpdateNotificationV1" },
+    { "$ref": "#/$defs/NotificationDeliveryReceiptV1" },
+    { "$ref": "#/$defs/NotificationPreferencesV1" },
+    { "$ref": "#/$defs/UpdateNotificationPreferencesV1" },
+    { "$ref": "#/$defs/DesktopNotificationV1" },
+    { "$ref": "#/$defs/CreateExportV1" },
+    { "$ref": "#/$defs/ExportViewV1" },
+    { "$ref": "#/$defs/ExportManifestV1" },
+    { "$ref": "#/$defs/GlobalSearchQueryV1" },
+    { "$ref": "#/$defs/GlobalSearchPageV1" },
+    { "$ref": "#/$defs/AuditQueryV1" },
+    { "$ref": "#/$defs/AuditQueryPageV1" },
+    { "$ref": "#/$defs/HomeViewV1" },
+    { "$ref": "#/$defs/AnalyticsSourceFactV1" },
+    { "$ref": "#/$defs/ReportingSourcePageV1" },
+    { "$ref": "#/$defs/AnalyticsDisclosureCommitmentV1" }
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "OrganizationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "PositiveU64": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,19}$"
+    },
+    "I64": {
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]{0,18})$"
+    },
+    "Revision": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "LocalDate": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+    },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "ISO4217": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "IanaTimezoneV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9_+-]+(/[A-Za-z0-9_+-]+)*$"
+    },
+    "ResourceRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_kind",
+        "entity_id",
+        "version_id",
+        "content_sha256"
+      ],
+      "properties": {
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "entity_kind": { "$ref": "#/$defs/Identifier" },
+        "entity_id": { "$ref": "#/$defs/Identifier" },
+        "version_id": { "$ref": "#/$defs/Identifier" },
+        "content_sha256": { "$ref": "#/$defs/Sha256Hex" }
+      }
+    },
+    "ReportingScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "team_ids",
+        "workflow_ids",
+        "application_ids",
+        "agent_ids",
+        "agent_version_ids",
+        "incident_type_ids",
+        "risk_tiers"
+      ],
+      "properties": {
+        "team_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "workflow_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "application_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "agent_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "agent_version_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "incident_type_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "risk_tiers": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "maxItems": 5,
+          "uniqueItems": true
+        }
+      }
+    },
+    "ReportingQueryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "period_start",
+        "period_end",
+        "timezone",
+        "scope",
+        "metric_ids",
+        "evaluation_comparison_ref",
+        "cursor",
+        "page_size"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.reporting-query.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "period_start": { "$ref": "#/$defs/UtcDateTime" },
+        "period_end": { "$ref": "#/$defs/UtcDateTime" },
+        "timezone": { "$ref": "#/$defs/IanaTimezoneV1" },
+        "scope": { "$ref": "#/$defs/ReportingScopeV1" },
+        "metric_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "evaluation_comparison_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/ResourceRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "SourceWatermarkV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_owner",
+        "sequence",
+        "recorded_through",
+        "projection_generation",
+        "coverage"
+      ],
+      "properties": {
+        "source_owner": {
+          "type": "string",
+          "enum": [
+            "discovery",
+            "graph",
+            "identity",
+            "orchestration",
+            "verification",
+            "simulation",
+            "incident",
+            "release"
+          ]
+        },
+        "sequence": { "$ref": "#/$defs/Revision" },
+        "recorded_through": { "$ref": "#/$defs/UtcDateTime" },
+        "projection_generation": { "$ref": "#/$defs/Revision" },
+        "coverage": {
+          "type": "string",
+          "enum": ["complete", "partial", "unknown"]
+        }
+      }
+    },
+    "MetricPopulationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "population_id",
+        "basis",
+        "period_start",
+        "period_end",
+        "eligible_count",
+        "excluded_count",
+        "unknown_count"
+      ],
+      "properties": {
+        "population_id": { "$ref": "#/$defs/Identifier" },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "case_started",
+            "case_completed",
+            "task_completed",
+            "proposal_opened",
+            "cutoff",
+            "exception_types",
+            "scenario_comparison"
+          ]
+        },
+        "period_start": { "$ref": "#/$defs/UtcDateTime" },
+        "period_end": { "$ref": "#/$defs/UtcDateTime" },
+        "eligible_count": { "$ref": "#/$defs/U64" },
+        "excluded_count": { "$ref": "#/$defs/U64" },
+        "unknown_count": { "$ref": "#/$defs/U64" }
+      }
+    },
+    "MetricValueCountV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "count"],
+      "properties": {
+        "kind": { "const": "count" },
+        "count": { "$ref": "#/$defs/U64" }
+      }
+    },
+    "MetricValueRateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "numerator", "denominator"],
+      "properties": {
+        "kind": { "const": "rate" },
+        "numerator": { "$ref": "#/$defs/U64" },
+        "denominator": { "$ref": "#/$defs/PositiveU64" }
+      }
+    },
+    "MetricValueDurationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "numerator", "denominator"],
+      "properties": {
+        "kind": { "const": "duration_ms" },
+        "numerator": { "$ref": "#/$defs/U64" },
+        "denominator": { "type": "integer", "enum": [1, 2] }
+      }
+    },
+    "MetricValueSignedDurationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "milliseconds"],
+      "properties": {
+        "kind": { "const": "signed_duration_ms" },
+        "milliseconds": { "$ref": "#/$defs/I64" }
+      }
+    },
+    "MetricValueMoneyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "currency", "total_microunits"],
+      "properties": {
+        "kind": { "const": "money" },
+        "currency": { "$ref": "#/$defs/ISO4217" },
+        "total_microunits": { "$ref": "#/$defs/U64" }
+      }
+    },
+    "MetricValueMoneyPerCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "currency", "total_microunits", "case_count"],
+      "properties": {
+        "kind": { "const": "money_per_case" },
+        "currency": { "$ref": "#/$defs/ISO4217" },
+        "total_microunits": { "$ref": "#/$defs/U64" },
+        "case_count": { "$ref": "#/$defs/PositiveU64" }
+      }
+    },
+    "BreakdownItemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "count"],
+      "properties": {
+        "category": { "$ref": "#/$defs/Identifier" },
+        "count": { "$ref": "#/$defs/U64" }
+      }
+    },
+    "MetricValueBreakdownV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "items"],
+      "properties": {
+        "kind": { "const": "breakdown" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/BreakdownItemV1" },
+          "maxItems": 128
+        }
+      }
+    },
+    "MetricValueV1": {
+      "oneOf": [
+        { "$ref": "#/$defs/MetricValueCountV1" },
+        { "$ref": "#/$defs/MetricValueRateV1" },
+        { "$ref": "#/$defs/MetricValueDurationV1" },
+        { "$ref": "#/$defs/MetricValueSignedDurationV1" },
+        { "$ref": "#/$defs/MetricValueMoneyV1" },
+        { "$ref": "#/$defs/MetricValueMoneyPerCaseV1" },
+        { "$ref": "#/$defs/MetricValueBreakdownV1" }
+      ]
+    },
+    "MetricCellAvailableV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric_id",
+        "state",
+        "value",
+        "population",
+        "basis",
+        "privacy_release_refs",
+        "caveats"
+      ],
+      "properties": {
+        "metric_id": { "$ref": "#/$defs/Identifier" },
+        "state": { "const": "available" },
+        "value": { "$ref": "#/$defs/MetricValueV1" },
+        "population": { "$ref": "#/$defs/MetricPopulationV1" },
+        "basis": {
+          "type": "string",
+          "enum": ["measured", "estimated"]
+        },
+        "privacy_release_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "caveats": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 32
+        }
+      }
+    },
+    "MetricCellProtectedV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric_id",
+        "state",
+        "reason"
+      ],
+      "properties": {
+        "metric_id": { "$ref": "#/$defs/Identifier" },
+        "state": {
+          "type": "string",
+          "enum": ["suppressed", "unavailable"]
+        },
+        "reason": { "$ref": "#/$defs/Identifier" }
+      }
+    },
+    "MetricCellV1": {
+      "oneOf": [
+        { "$ref": "#/$defs/MetricCellAvailableV1" },
+        { "$ref": "#/$defs/MetricCellProtectedV1" }
+      ]
+    },
+    "ReportingPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "query_fingerprint",
+        "period_start",
+        "period_end",
+        "timezone",
+        "cutoff_at",
+        "methodology_id",
+        "source_watermarks",
+        "metrics",
+        "completeness",
+        "degraded_reasons",
+        "next_cursor"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.reporting-page.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "query_fingerprint": { "$ref": "#/$defs/Sha256Hex" },
+        "period_start": { "$ref": "#/$defs/UtcDateTime" },
+        "period_end": { "$ref": "#/$defs/UtcDateTime" },
+        "timezone": { "$ref": "#/$defs/IanaTimezoneV1" },
+        "cutoff_at": { "$ref": "#/$defs/UtcDateTime" },
+        "methodology_id": { "$ref": "#/$defs/Identifier" },
+        "source_watermarks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SourceWatermarkV1" },
+          "maxItems": 16
+        },
+        "metrics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/MetricCellV1" },
+          "maxItems": 64
+        },
+        "completeness": {
+          "type": "string",
+          "enum": ["complete", "partial", "stale"]
+        },
+        "degraded_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "ReviewCostAssumptionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review_ms_per_case",
+        "hourly_rate_minor_units",
+        "currency",
+        "basis_description",
+        "source_refs"
+      ],
+      "properties": {
+        "review_ms_per_case": { "$ref": "#/$defs/U64" },
+        "hourly_rate_minor_units": {
+          "oneOf": [
+            { "$ref": "#/$defs/U64" },
+            { "type": "null" }
+          ]
+        },
+        "currency": {
+          "oneOf": [
+            { "$ref": "#/$defs/ISO4217" },
+            { "type": "null" }
+          ]
+        },
+        "basis_description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "source_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "hourly_rate_minor_units": { "type": "null" },
+            "currency": { "type": "null" }
+          }
+        },
+        {
+          "properties": {
+            "hourly_rate_minor_units": { "type": "string" },
+            "currency": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "ApproveReportingBaselineV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "baseline_id",
+        "workflow_id",
+        "capability_version_ref",
+        "expected_revision",
+        "valid_from",
+        "valid_until",
+        "baseline_ms_per_case",
+        "basis",
+        "privacy_release_refs",
+        "review",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.approve-reporting-baseline.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "baseline_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/UUIDv4" },
+            { "type": "null" }
+          ]
+        },
+        "workflow_id": { "$ref": "#/$defs/Identifier" },
+        "capability_version_ref": { "$ref": "#/$defs/ResourceRefV1" },
+        "expected_revision": {
+          "oneOf": [
+            { "$ref": "#/$defs/Revision" },
+            { "type": "null" }
+          ]
+        },
+        "valid_from": { "$ref": "#/$defs/UtcDateTime" },
+        "valid_until": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "baseline_ms_per_case": { "$ref": "#/$defs/U64" },
+        "basis": {
+          "type": "string",
+          "enum": ["measured", "owner_assumption"]
+        },
+        "privacy_release_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "review": { "$ref": "#/$defs/ReviewCostAssumptionV1" },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "ReportingBaselineV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "baseline_id",
+        "revision",
+        "workflow_id",
+        "capability_version_ref",
+        "valid_from",
+        "valid_until",
+        "baseline_ms_per_case",
+        "basis",
+        "privacy_release_refs",
+        "review",
+        "approved_by",
+        "approved_at",
+        "state"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.reporting-baseline.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "baseline_id": { "$ref": "#/$defs/UUIDv4" },
+        "revision": { "$ref": "#/$defs/Revision" },
+        "workflow_id": { "$ref": "#/$defs/Identifier" },
+        "capability_version_ref": { "$ref": "#/$defs/ResourceRefV1" },
+        "valid_from": { "$ref": "#/$defs/UtcDateTime" },
+        "valid_until": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "baseline_ms_per_case": { "$ref": "#/$defs/U64" },
+        "basis": {
+          "type": "string",
+          "enum": ["measured", "owner_assumption"]
+        },
+        "privacy_release_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "review": { "$ref": "#/$defs/ReviewCostAssumptionV1" },
+        "approved_by": { "$ref": "#/$defs/Identifier" },
+        "approved_at": { "$ref": "#/$defs/UtcDateTime" },
+        "state": {
+          "type": "string",
+          "enum": ["active", "superseded", "revoked", "expired"]
+        }
+      }
+    },
+    "ReportingBaselinePageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "items",
+        "next_cursor",
+        "completeness",
+        "degraded_reasons",
+        "as_of"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.reporting-baseline-page.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ReportingBaselineV1" },
+          "maxItems": 100
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "completeness": {
+          "type": "string",
+          "enum": ["complete", "partial", "stale"]
+        },
+        "degraded_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "as_of": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "CreatePilotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "team_id",
+        "owner_actor_id",
+        "application_ids",
+        "workflow_ids",
+        "participant_actor_ids",
+        "notice_refs",
+        "start_local_date",
+        "timezone",
+        "intended_output",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.create-pilot.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "team_id": { "$ref": "#/$defs/Identifier" },
+        "owner_actor_id": { "$ref": "#/$defs/Identifier" },
+        "application_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "workflow_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "participant_actor_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "minItems": 1,
+          "maxItems": 2000,
+          "uniqueItems": true
+        },
+        "notice_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "minItems": 1,
+          "maxItems": 128
+        },
+        "start_local_date": { "$ref": "#/$defs/LocalDate" },
+        "timezone": { "$ref": "#/$defs/IanaTimezoneV1" },
+        "intended_output": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "AmendPilotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "pilot_id",
+        "expected_revision",
+        "team_id",
+        "owner_actor_id",
+        "application_ids",
+        "workflow_ids",
+        "participant_actor_ids",
+        "notice_refs",
+        "start_local_date",
+        "timezone",
+        "intended_output",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.amend-pilot.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "pilot_id": { "$ref": "#/$defs/UUIDv4" },
+        "expected_revision": { "$ref": "#/$defs/Revision" },
+        "team_id": { "$ref": "#/$defs/Identifier" },
+        "owner_actor_id": { "$ref": "#/$defs/Identifier" },
+        "application_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "workflow_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "participant_actor_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "minItems": 1,
+          "maxItems": 2000,
+          "uniqueItems": true
+        },
+        "notice_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "minItems": 1,
+          "maxItems": 128
+        },
+        "start_local_date": { "$ref": "#/$defs/LocalDate" },
+        "timezone": { "$ref": "#/$defs/IanaTimezoneV1" },
+        "intended_output": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "PilotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "pilot_id",
+        "revision",
+        "team_id",
+        "owner_actor_id",
+        "application_ids",
+        "workflow_ids",
+        "start_local_date",
+        "end_local_date",
+        "timezone",
+        "starts_at",
+        "ends_at",
+        "status",
+        "intended_output",
+        "report_refs"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.pilot.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "pilot_id": { "$ref": "#/$defs/UUIDv4" },
+        "revision": { "$ref": "#/$defs/Revision" },
+        "team_id": { "$ref": "#/$defs/Identifier" },
+        "owner_actor_id": { "$ref": "#/$defs/Identifier" },
+        "application_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "workflow_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128
+        },
+        "start_local_date": { "$ref": "#/$defs/LocalDate" },
+        "end_local_date": { "$ref": "#/$defs/LocalDate" },
+        "timezone": { "$ref": "#/$defs/IanaTimezoneV1" },
+        "starts_at": { "$ref": "#/$defs/UtcDateTime" },
+        "ends_at": { "$ref": "#/$defs/UtcDateTime" },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "scheduled",
+            "running",
+            "completed",
+            "paused",
+            "canceled",
+            "stopped_early"
+          ]
+        },
+        "intended_output": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "report_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 64
+        }
+      }
+    },
+    "PilotParticipantsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "pilot_id",
+        "revision",
+        "participant_actor_ids",
+        "notice_refs"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.pilot-participants.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "pilot_id": { "$ref": "#/$defs/UUIDv4" },
+        "revision": { "$ref": "#/$defs/Revision" },
+        "participant_actor_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 2000
+        },
+        "notice_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        }
+      }
+    },
+    "PilotControlV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "pilot_id",
+        "expected_revision",
+        "command",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.pilot-control.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "pilot_id": { "$ref": "#/$defs/UUIDv4" },
+        "expected_revision": { "$ref": "#/$defs/Revision" },
+        "command": {
+          "type": "string",
+          "enum": ["schedule", "pause", "resume", "cancel", "stop_early"]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "PilotPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "items",
+        "next_cursor",
+        "completeness",
+        "degraded_reasons",
+        "as_of"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.pilot-page.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PilotV1" },
+          "maxItems": 100
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "completeness": {
+          "type": "string",
+          "enum": ["complete", "partial", "stale"]
+        },
+        "degraded_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "as_of": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "GenerateReportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "kind",
+        "query",
+        "pilot_id",
+        "evaluation_comparison_ref",
+        "revises_report_id",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.generate-report.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "kind": {
+          "type": "string",
+          "enum": ["operational", "xray", "version_comparison"]
+        },
+        "query": { "$ref": "#/$defs/ReportingQueryV1" },
+        "pilot_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/UUIDv4" },
+            { "type": "null" }
+          ]
+        },
+        "evaluation_comparison_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/ResourceRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "revises_report_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/UUIDv4" },
+            { "type": "null" }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "ReportSectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["section_id", "text", "source_refs"],
+      "properties": {
+        "section_id": { "$ref": "#/$defs/Identifier" },
+        "text": {
+          "type": "string",
+          "maxLength": 16384
+        },
+        "source_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        }
+      }
+    },
+    "ReportSnapshotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "report_id",
+        "revision",
+        "state",
+        "kind",
+        "period_start",
+        "period_end",
+        "timezone",
+        "generated_at",
+        "cutoff_at",
+        "methodology_id",
+        "scope",
+        "audience_refs",
+        "source_watermarks",
+        "source_manifest_sha256",
+        "source_manifest_ref",
+        "privacy_release_refs",
+        "baseline_refs",
+        "metrics",
+        "sections",
+        "completeness",
+        "degraded_reasons",
+        "predecessor_ref",
+        "expires_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.report-snapshot.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "report_id": { "$ref": "#/$defs/UUIDv4" },
+        "revision": { "$ref": "#/$defs/Revision" },
+        "state": {
+          "type": "string",
+          "enum": ["ready", "ready_partial"]
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["operational", "xray", "version_comparison"]
+        },
+        "period_start": { "$ref": "#/$defs/UtcDateTime" },
+        "period_end": { "$ref": "#/$defs/UtcDateTime" },
+        "timezone": { "$ref": "#/$defs/IanaTimezoneV1" },
+        "generated_at": { "$ref": "#/$defs/UtcDateTime" },
+        "cutoff_at": { "$ref": "#/$defs/UtcDateTime" },
+        "methodology_id": { "$ref": "#/$defs/Identifier" },
+        "scope": { "$ref": "#/$defs/ReportingScopeV1" },
+        "audience_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "source_watermarks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SourceWatermarkV1" },
+          "maxItems": 16
+        },
+        "source_manifest_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "source_manifest_ref": { "$ref": "#/$defs/ResourceRefV1" },
+        "privacy_release_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "baseline_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 64
+        },
+        "metrics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/MetricCellV1" },
+          "maxItems": 128
+        },
+        "sections": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ReportSectionV1" },
+          "maxItems": 32
+        },
+        "completeness": {
+          "type": "string",
+          "enum": ["complete", "partial", "stale"]
+        },
+        "degraded_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "predecessor_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/ResourceRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "expires_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "ReportPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "items",
+        "next_cursor",
+        "completeness",
+        "degraded_reasons",
+        "as_of"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.report-page.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ReportSnapshotV1" },
+          "maxItems": 100
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "completeness": {
+          "type": "string",
+          "enum": ["complete", "partial", "stale"]
+        },
+        "degraded_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "as_of": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "NotificationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "notification_id",
+        "revision",
+        "notification_type",
+        "priority",
+        "source_ref",
+        "obligation_generation",
+        "generic_message",
+        "app_path",
+        "created_at",
+        "updated_at",
+        "read_at",
+        "acknowledged_at",
+        "snoozed_until",
+        "dismissed_at",
+        "source_disposition",
+        "expires_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.notification.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "notification_id": { "$ref": "#/$defs/UUIDv4" },
+        "revision": { "$ref": "#/$defs/Revision" },
+        "notification_type": {
+          "type": "string",
+          "enum": [
+            "action_required",
+            "incident",
+            "repair_ready",
+            "release_status",
+            "commitment_reminder",
+            "guide_update",
+            "job_result",
+            "privacy_enrollment"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["critical", "required", "due", "routine"]
+        },
+        "source_ref": { "$ref": "#/$defs/ResourceRefV1" },
+        "obligation_generation": { "$ref": "#/$defs/U64" },
+        "generic_message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "app_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^/[A-Za-z0-9/._-]*$"
+        },
+        "created_at": { "$ref": "#/$defs/UtcDateTime" },
+        "updated_at": { "$ref": "#/$defs/UtcDateTime" },
+        "read_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "acknowledged_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "snoozed_until": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "dismissed_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "source_disposition": {
+          "type": "string",
+          "enum": ["active", "resolved", "unavailable"]
+        },
+        "expires_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "UpdateNotificationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "notification_id",
+        "expected_revision",
+        "command",
+        "snoozed_until"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.update-notification.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "notification_id": { "$ref": "#/$defs/UUIDv4" },
+        "expected_revision": { "$ref": "#/$defs/Revision" },
+        "command": {
+          "type": "string",
+          "enum": ["read", "acknowledge", "snooze", "dismiss"]
+        },
+        "snoozed_until": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "NotificationDeliveryReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "notification_id",
+        "notification_revision",
+        "device_id",
+        "attempt_id",
+        "outcome",
+        "occurred_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.notification-delivery-receipt.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "notification_id": { "$ref": "#/$defs/UUIDv4" },
+        "notification_revision": { "$ref": "#/$defs/Revision" },
+        "device_id": { "$ref": "#/$defs/Identifier" },
+        "attempt_id": { "$ref": "#/$defs/UUIDv4" },
+        "outcome": {
+          "type": "string",
+          "enum": ["presented", "suppressed", "unavailable"]
+        },
+        "occurred_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "QuietHourIntervalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["weekday", "start_minute", "end_minute"],
+      "properties": {
+        "weekday": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7
+        },
+        "start_minute": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1439
+        },
+        "end_minute": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1440
+        }
+      }
+    },
+    "CategoryPreferenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["notification_type", "enabled"],
+      "properties": {
+        "notification_type": {
+          "type": "string",
+          "enum": [
+            "action_required",
+            "incident",
+            "repair_ready",
+            "release_status",
+            "commitment_reminder",
+            "guide_update",
+            "job_result",
+            "privacy_enrollment"
+          ]
+        },
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "NotificationPreferencesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "revision",
+        "timezone",
+        "quiet_hours",
+        "desktop_enabled",
+        "email_enabled",
+        "digest",
+        "category_preferences"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.notification-preferences.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "revision": { "$ref": "#/$defs/Revision" },
+        "timezone": { "$ref": "#/$defs/IanaTimezoneV1" },
+        "quiet_hours": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/QuietHourIntervalV1" },
+          "maxItems": 28
+        },
+        "desktop_enabled": { "type": "boolean" },
+        "email_enabled": { "type": "boolean" },
+        "digest": {
+          "type": "string",
+          "enum": ["off", "hourly", "daily"]
+        },
+        "category_preferences": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CategoryPreferenceV1" },
+          "maxItems": 8
+        }
+      }
+    },
+    "UpdateNotificationPreferencesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "expected_revision",
+        "timezone",
+        "quiet_hours",
+        "desktop_enabled",
+        "email_enabled",
+        "digest",
+        "category_preferences"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.update-notification-preferences.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "expected_revision": { "$ref": "#/$defs/Revision" },
+        "timezone": { "$ref": "#/$defs/IanaTimezoneV1" },
+        "quiet_hours": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/QuietHourIntervalV1" },
+          "maxItems": 28
+        },
+        "desktop_enabled": { "type": "boolean" },
+        "email_enabled": { "type": "boolean" },
+        "digest": {
+          "type": "string",
+          "enum": ["off", "hourly", "daily"]
+        },
+        "category_preferences": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CategoryPreferenceV1" },
+          "maxItems": 8
+        }
+      }
+    },
+    "DesktopNotificationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "notification_id",
+        "notification_revision",
+        "attempt_id",
+        "generic_message",
+        "priority",
+        "app_path",
+        "not_after"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.desktop-notification.v1" },
+        "notification_id": { "$ref": "#/$defs/UUIDv4" },
+        "notification_revision": { "$ref": "#/$defs/Revision" },
+        "attempt_id": { "$ref": "#/$defs/UUIDv4" },
+        "generic_message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["critical", "required", "due", "routine"]
+        },
+        "app_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^/[A-Za-z0-9/._-]*$"
+        },
+        "not_after": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "NotificationPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "items",
+        "next_cursor",
+        "completeness",
+        "degraded_reasons",
+        "as_of"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.notification-page.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/NotificationV1" },
+          "maxItems": 100
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "completeness": {
+          "type": "string",
+          "enum": ["complete", "partial", "stale"]
+        },
+        "degraded_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "as_of": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "AuditQueryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period_start",
+        "period_end",
+        "action_types",
+        "object_refs",
+        "actor_ids",
+        "cursor",
+        "page_size"
+      ],
+      "properties": {
+        "period_start": { "$ref": "#/$defs/UtcDateTime" },
+        "period_end": { "$ref": "#/$defs/UtcDateTime" },
+        "action_types": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "object_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "actor_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "AuditRecordSummaryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_type",
+        "object_ref",
+        "actor_id",
+        "occurred_at",
+        "audit_sequence",
+        "archive_sha256"
+      ],
+      "properties": {
+        "action_type": { "$ref": "#/$defs/Identifier" },
+        "object_ref": { "$ref": "#/$defs/ResourceRefV1" },
+        "actor_id": { "$ref": "#/$defs/Identifier" },
+        "occurred_at": { "$ref": "#/$defs/UtcDateTime" },
+        "audit_sequence": { "$ref": "#/$defs/U64" },
+        "archive_sha256": { "$ref": "#/$defs/Sha256Hex" }
+      }
+    },
+    "AuditQueryPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "records",
+        "archive_sequence_cut",
+        "next_cursor",
+        "completeness",
+        "integrity_status"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.audit-query-page.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "records": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/AuditRecordSummaryV1" },
+          "maxItems": 100
+        },
+        "archive_sequence_cut": { "$ref": "#/$defs/U64" },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "completeness": {
+          "type": "string",
+          "enum": ["complete", "partial", "stale"]
+        },
+        "integrity_status": {
+          "type": "string",
+          "enum": ["verified", "unavailable"]
+        }
+      }
+    },
+    "CreateExportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "export_class",
+        "format",
+        "report_ref",
+        "playbook_refs",
+        "audit_query",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.create-export.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "export_class": {
+          "type": "string",
+          "enum": ["report", "playbooks", "audit"]
+        },
+        "format": {
+          "type": "string",
+          "enum": ["pdf", "csv", "zip"]
+        },
+        "report_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/ResourceRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "playbook_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 1000
+        },
+        "audit_query": {
+          "oneOf": [
+            { "$ref": "#/$defs/AuditQueryV1" },
+            { "type": "null" }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "ExportPartManifestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "part_id",
+        "format",
+        "byte_count",
+        "record_count",
+        "sha256",
+        "expires_at"
+      ],
+      "properties": {
+        "part_id": { "$ref": "#/$defs/Identifier" },
+        "format": {
+          "type": "string",
+          "enum": ["pdf", "csv", "zip"]
+        },
+        "byte_count": { "$ref": "#/$defs/U64" },
+        "record_count": { "$ref": "#/$defs/U64" },
+        "sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "expires_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "ExportManifestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "export_id",
+        "organization_id",
+        "export_class",
+        "period_start",
+        "period_end",
+        "scope",
+        "generated_at",
+        "methodology_id",
+        "source_sha256",
+        "permission_scope_sha256",
+        "privacy_restrictions",
+        "uncertainty_labels",
+        "parts",
+        "total_bytes"
+      ],
+      "properties": {
+        "export_id": { "$ref": "#/$defs/UUIDv4" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "export_class": {
+          "type": "string",
+          "enum": ["report", "playbooks", "audit"]
+        },
+        "period_start": { "$ref": "#/$defs/UtcDateTime" },
+        "period_end": { "$ref": "#/$defs/UtcDateTime" },
+        "scope": { "$ref": "#/$defs/ReportingScopeV1" },
+        "generated_at": { "$ref": "#/$defs/UtcDateTime" },
+        "methodology_id": { "$ref": "#/$defs/Identifier" },
+        "source_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "permission_scope_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "privacy_restrictions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "uncertainty_labels": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "parts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ExportPartManifestV1" },
+          "maxItems": 128
+        },
+        "total_bytes": { "$ref": "#/$defs/U64" }
+      }
+    },
+    "ExportViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "export_id",
+        "revision",
+        "state",
+        "operation_ref",
+        "manifest",
+        "expires_at",
+        "problem"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.export-view.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "export_id": { "$ref": "#/$defs/UUIDv4" },
+        "revision": { "$ref": "#/$defs/Revision" },
+        "state": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "generating",
+            "ready",
+            "failed",
+            "canceled",
+            "revoked",
+            "expired"
+          ]
+        },
+        "operation_ref": { "$ref": "#/$defs/ResourceRefV1" },
+        "manifest": {
+          "oneOf": [
+            { "$ref": "#/$defs/ExportManifestV1" },
+            { "type": "null" }
+          ]
+        },
+        "expires_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "problem": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:control-plane:v1#/$defs/ControlPlaneProblemV1" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "GlobalSearchQueryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "query_text",
+        "types",
+        "scope",
+        "cursor",
+        "page_size"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.global-search-query.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "query_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "playbook",
+              "candidate",
+              "agent",
+              "exception",
+              "incident",
+              "rule",
+              "job"
+            ]
+          },
+          "maxItems": 7,
+          "uniqueItems": true
+        },
+        "scope": { "$ref": "#/$defs/ReportingScopeV1" },
+        "cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "GlobalSearchResultItemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "resource_ref",
+        "title",
+        "owner_label",
+        "state",
+        "updated_at",
+        "last_verified_at",
+        "app_path"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "playbook",
+            "candidate",
+            "agent",
+            "exception",
+            "incident",
+            "rule",
+            "job"
+          ]
+        },
+        "resource_ref": { "$ref": "#/$defs/ResourceRefV1" },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "owner_label": {
+          "oneOf": [
+            { "type": "string", "maxLength": 128 },
+            { "type": "null" }
+          ]
+        },
+        "state": { "$ref": "#/$defs/Identifier" },
+        "updated_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "last_verified_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "app_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^/[A-Za-z0-9/._-]*$"
+        }
+      }
+    },
+    "GlobalSearchPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "items",
+        "query_fingerprint",
+        "next_cursor",
+        "completeness",
+        "degraded_sources"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.global-search-page.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/GlobalSearchResultItemV1" },
+          "maxItems": 100
+        },
+        "query_fingerprint": { "$ref": "#/$defs/Sha256Hex" },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "completeness": {
+          "type": "string",
+          "enum": ["complete", "partial", "stale"]
+        },
+        "degraded_sources": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 8
+        }
+      }
+    },
+    "HomeViewItemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource_ref",
+        "app_path",
+        "priority",
+        "metric"
+      ],
+      "properties": {
+        "resource_ref": { "$ref": "#/$defs/ResourceRefV1" },
+        "app_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^/[A-Za-z0-9/._-]*$"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["critical", "required", "due", "routine"]
+        },
+        "metric": {
+          "oneOf": [
+            { "$ref": "#/$defs/MetricCellV1" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "HomeViewGroupV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group_id",
+        "items"
+      ],
+      "properties": {
+        "group_id": { "$ref": "#/$defs/Identifier" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/HomeViewItemV1" },
+          "maxItems": 25
+        }
+      }
+    },
+    "HomeViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "as_of",
+        "groups"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.home-view.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "as_of": { "$ref": "#/$defs/UtcDateTime" },
+        "groups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/HomeViewGroupV1" },
+          "maxItems": 10
+        }
+      }
+    },
+    "AnalyticsDisclosureCommitmentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "privacy_partition_sha256",
+        "cell_key_sha256",
+        "assignment_manifest_sha256",
+        "source_membership_sha256",
+        "source_watermarks_sha256",
+        "policy_revision",
+        "decision",
+        "released_value_sha256",
+        "disclosure_generation",
+        "recorded_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.analytics-disclosure-commitment.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "privacy_partition_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "cell_key_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "assignment_manifest_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "source_membership_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "source_watermarks_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "policy_revision": { "$ref": "#/$defs/Revision" },
+        "decision": {
+          "type": "string",
+          "enum": ["released", "suppressed", "revoked", "blocked_history"]
+        },
+        "released_value_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/Sha256Hex" },
+            { "type": "null" }
+          ]
+        },
+        "disclosure_generation": { "$ref": "#/$defs/U64" },
+        "recorded_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "AnalyticsSourceFactPayloadV1": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "urn:oryn:schemas:workflow-discovery:v1#/$defs/HumanTaskReportingFactV1" },
+        { "$ref": "urn:oryn:schemas:job-orchestration:v1#/$defs/CaseReportingFactV1" },
+        { "$ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationReportingFactV1" },
+        { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ApprovalReportingFactV1" },
+        { "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/ScenarioReportingFactV1" },
+        { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/ReliabilityReportingFactV1" },
+        { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/WorkflowReportingFactV1" },
+        { "$ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseReportingFactV1" }
+      ]
+    },
+    "AnalyticsSourceFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "source_owner",
+        "source_ref",
+        "source_revision",
+        "owner_sequence",
+        "source_recorded_at",
+        "effective_at",
+        "payload_sha256",
+        "availability",
+        "coverage",
+        "audience_refs",
+        "payload"
+      ],
+      "properties": {
+        "schema_id": { "const": "analytics.source-fact.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "source_owner": {
+          "type": "string",
+          "enum": [
+            "discovery",
+            "graph",
+            "identity",
+            "orchestration",
+            "verification",
+            "simulation",
+            "incident",
+            "release"
+          ]
+        },
+        "source_ref": { "$ref": "#/$defs/ResourceRefV1" },
+        "source_revision": { "$ref": "#/$defs/Revision" },
+        "owner_sequence": { "$ref": "#/$defs/U64" },
+        "source_recorded_at": { "$ref": "#/$defs/UtcDateTime" },
+        "effective_at": { "$ref": "#/$defs/UtcDateTime" },
+        "payload_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "availability": {
+          "type": "string",
+          "enum": [
+            "available",
+            "withdrawn",
+            "expired",
+            "lost_after_restore"
+          ]
+        },
+        "coverage": {
+          "type": "string",
+          "enum": ["complete", "partial", "unknown"]
+        },
+        "audience_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "payload": { "$ref": "#/$defs/AnalyticsSourceFactPayloadV1" }
+      }
+    },
+    "ReportingSourcePageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "source_owner",
+        "through_watermark",
+        "entries",
+        "next_cursor",
+        "coverage",
+        "history_floor_sequence"
+      ],
+      "properties": {
+        "schema_id": { "const": "command-center.reporting-source-page.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "source_owner": {
+          "type": "string",
+          "enum": [
+            "discovery",
+            "graph",
+            "identity",
+            "orchestration",
+            "verification",
+            "simulation",
+            "incident",
+            "release"
+          ]
+        },
+        "through_watermark": { "$ref": "#/$defs/SourceWatermarkV1" },
+        "entries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/AnalyticsSourceFactV1" },
+          "maxItems": 500
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "null" }
+          ]
+        },
+        "coverage": {
+          "type": "string",
+          "enum": ["complete", "partial", "unknown"]
+        },
+        "history_floor_sequence": { "$ref": "#/$defs/U64" }
+      }
+    }
+  }
+}

@@ -1,0 +1,3418 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:workflow-discovery:v1",
+  "title": "Oryn Workflow Discovery and Procedure Synthesis Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for Oryn workflow discovery clustering, candidate review revisions, guidance promotion staging, suppression rules, clarification questions, and opportunity projections.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/WorkflowCandidateV1"
+    },
+    {
+      "$ref": "#/$defs/CandidateRevisionV1"
+    },
+    {
+      "$ref": "#/$defs/CandidateCreateV1"
+    },
+    {
+      "$ref": "#/$defs/CandidateReviewCommandV1"
+    },
+    {
+      "$ref": "#/$defs/CandidateEditV1"
+    },
+    {
+      "$ref": "#/$defs/CandidateApprovalV1"
+    },
+    {
+      "$ref": "#/$defs/CandidateRejectionV1"
+    },
+    {
+      "$ref": "#/$defs/ProposalDecisionV1"
+    },
+    {
+      "$ref": "#/$defs/QuestionAnswerV1"
+    },
+    {
+      "$ref": "#/$defs/ReconsiderationDecisionV1"
+    },
+    {
+      "$ref": "#/$defs/CandidateSplitV1"
+    },
+    {
+      "$ref": "#/$defs/CandidateMergeV1"
+    },
+    {
+      "$ref": "#/$defs/RetentionDecisionV1"
+    },
+    {
+      "$ref": "#/$defs/RegenerationV1"
+    },
+    {
+      "$ref": "#/$defs/SuppressionRetirementV1"
+    },
+    {
+      "$ref": "#/$defs/GraphPublicationCommandV1"
+    },
+    {
+      "$ref": "#/$defs/CandidatePromotionV1"
+    },
+    {
+      "$ref": "#/$defs/GraphCandidateReceiptV1"
+    },
+    {
+      "$ref": "#/$defs/SuppressionRuleV1"
+    },
+    {
+      "$ref": "#/$defs/ReconsiderationV1"
+    },
+    {
+      "$ref": "#/$defs/DemonstrationVerificationV1"
+    },
+    {
+      "$ref": "#/$defs/OpportunityAssumptionsV1"
+    },
+    {
+      "$ref": "#/$defs/OpportunityV1"
+    },
+    {
+      "$ref": "#/$defs/EmbeddingResultV1"
+    },
+    {
+      "$ref": "#/$defs/CompatibilityResultV1"
+    },
+    {
+      "$ref": "#/$defs/WorkflowSynthesisV1"
+    },
+    {
+      "$ref": "#/$defs/DiscoveryConfigurationV1"
+    },
+    {
+      "$ref": "#/$defs/HumanTaskReportingFactV1"
+    }
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "OrganizationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Revision": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^.*Z$"
+    },
+    "Line": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "Text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "SafeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "ContributionRevisionRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "contribution_id",
+        "revision",
+        "content_digest",
+        "eligibility_generation"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "contribution_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "revision": {
+          "$ref": "#/$defs/SafeInteger"
+        },
+        "content_digest": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "eligibility_generation": {
+          "$ref": "#/$defs/SafeInteger"
+        }
+      }
+    },
+    "VariableDescriptorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value_label",
+        "provenance"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "value_label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "provenance": {
+          "type": "string",
+          "enum": [
+            "observed",
+            "inferred",
+            "reviewer_supplied"
+          ]
+        }
+      }
+    },
+    "TaskMeasurementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "elapsed_ms",
+        "wait_ms",
+        "basis",
+        "complete_interval"
+      ],
+      "properties": {
+        "elapsed_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800000
+        },
+        "wait_ms": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 604800000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "observed_task_boundary",
+            "reviewer_estimate"
+          ]
+        },
+        "complete_interval": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DiscoveryAudienceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_audience_bindings",
+        "manual_audience_ids",
+        "restriction_refs",
+        "policy_revision"
+      ],
+      "properties": {
+        "source_audience_bindings": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "purpose",
+              "audience_ids"
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/ContributionRevisionRefV1"
+              },
+              "purpose": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "audience_ids": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 128,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              }
+            }
+          }
+        },
+        "manual_audience_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "restriction_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/Revision"
+        }
+      }
+    },
+    "ProcedureStepV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step_id",
+        "kind",
+        "application_id",
+        "label",
+        "description",
+        "expected_result",
+        "approved_rule_refs",
+        "provenance_claim_ids",
+        "repeat"
+      ],
+      "properties": {
+        "step_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "action",
+            "decision",
+            "repeat",
+            "handoff",
+            "verify"
+          ]
+        },
+        "application_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "$ref": "#/$defs/Line"
+        },
+        "description": {
+          "$ref": "#/$defs/Text"
+        },
+        "expected_result": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "approved_rule_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "provenance_claim_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "repeat": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "collection_description",
+                "item_description",
+                "body_step_ids",
+                "body_entry_step_id",
+                "body_exit_step_ids",
+                "termination_description",
+                "maximum_count",
+                "termination_status"
+              ],
+              "properties": {
+                "collection_description": {
+                  "$ref": "#/$defs/Text"
+                },
+                "item_description": {
+                  "$ref": "#/$defs/Text"
+                },
+                "body_step_ids": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 128,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/Identifier"
+                  }
+                },
+                "body_entry_step_id": {
+                  "$ref": "#/$defs/Identifier"
+                },
+                "body_exit_step_ids": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 32,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/Identifier"
+                  }
+                },
+                "termination_description": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "maximum_count": {
+                  "oneOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 1000000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "termination_status": {
+                  "type": "string",
+                  "enum": [
+                    "observed",
+                    "reviewer_supplied",
+                    "unknown"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CandidateProcedureV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "objective",
+        "summary",
+        "scope",
+        "allowed_roles",
+        "triggers",
+        "boundaries",
+        "prerequisites",
+        "inputs",
+        "variables",
+        "applications",
+        "steps",
+        "step_edges",
+        "entry_step_id",
+        "exit_step_ids",
+        "decisions",
+        "variants",
+        "exceptions",
+        "expected_outputs",
+        "postconditions",
+        "escalation_routes",
+        "proposed_risk_tier",
+        "guidance_eligibility",
+        "agent_eligibility",
+        "execution_qualification_gaps",
+        "missing_evidence",
+        "known_limitations"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Line"
+        },
+        "objective": {
+          "$ref": "#/$defs/Line"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 4096
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "eligible_cases",
+            "excluded_cases",
+            "application_ids",
+            "business_record_types"
+          ],
+          "properties": {
+            "eligible_cases": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "excluded_cases": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/Text"
+              }
+            },
+            "application_ids": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            },
+            "business_record_types": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            }
+          }
+        },
+        "allowed_roles": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "triggers": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "boundaries": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "start",
+            "end"
+          ],
+          "properties": {
+            "start": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "end": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "prerequisites": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/VariableDescriptorV1"
+          }
+        },
+        "variables": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/VariableDescriptorV1"
+          }
+        },
+        "applications": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "application_id",
+              "display_name"
+            ],
+            "properties": {
+              "application_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "display_name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/ProcedureStepV1"
+          }
+        },
+        "step_edges": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from_step_id",
+              "to_step_id",
+              "condition_description"
+            ],
+            "properties": {
+              "from_step_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "to_step_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "condition_description": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/Text"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "entry_step_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_step_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "decision_id",
+              "step_id",
+              "condition_description",
+              "branches"
+            ],
+            "properties": {
+              "decision_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "step_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "condition_description": {
+                "$ref": "#/$defs/Text"
+              },
+              "branches": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "branch_id",
+                    "label",
+                    "first_step_id",
+                    "condition_description",
+                    "status"
+                  ],
+                  "properties": {
+                    "branch_id": {
+                      "$ref": "#/$defs/Identifier"
+                    },
+                    "label": {
+                      "$ref": "#/$defs/Line"
+                    },
+                    "first_step_id": {
+                      "$ref": "#/$defs/Identifier"
+                    },
+                    "condition_description": {
+                      "$ref": "#/$defs/Text"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "suggested",
+                        "reviewed"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "variants": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "variant_id",
+              "label",
+              "conditions",
+              "step_ids",
+              "application_ids",
+              "status",
+              "supporting_sources"
+            ],
+            "properties": {
+              "variant_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "label": {
+                "$ref": "#/$defs/Line"
+              },
+              "conditions": {
+                "$ref": "#/$defs/Text"
+              },
+              "step_ids": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 128,
+                "items": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              },
+              "application_ids": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 32,
+                "items": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "suggested",
+                  "reviewed"
+                ]
+              },
+              "supporting_sources": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 128,
+                "items": {
+                  "$ref": "#/$defs/ContributionRevisionRefV1"
+                }
+              }
+            }
+          }
+        },
+        "exceptions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "exception_id",
+              "description",
+              "resolution",
+              "escalation_route",
+              "supporting_sources"
+            ],
+            "properties": {
+              "exception_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "description": {
+                "$ref": "#/$defs/Text"
+              },
+              "resolution": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/Text"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "escalation_route": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/Text"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "supporting_sources": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 128,
+                "items": {
+                  "$ref": "#/$defs/ContributionRevisionRefV1"
+                }
+              }
+            }
+          }
+        },
+        "expected_outputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "postconditions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "postcondition_id",
+              "description",
+              "verification_method",
+              "approved_rule_refs"
+            ],
+            "properties": {
+              "postcondition_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "description": {
+                "$ref": "#/$defs/Text"
+              },
+              "verification_method": {
+                "type": "string",
+                "enum": [
+                  "not_established",
+                  "system_evidence",
+                  "authorized_reviewer"
+                ]
+              },
+              "approved_rule_refs": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 32,
+                "items": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              }
+            }
+          }
+        },
+        "escalation_routes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "proposed_risk_tier": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "guidance_eligibility": {
+          "type": "string",
+          "enum": [
+            "not_ready",
+            "ready_with_limitations",
+            "ready"
+          ]
+        },
+        "agent_eligibility": {
+          "type": "string",
+          "enum": [
+            "not_assessed",
+            "blocked"
+          ]
+        },
+        "execution_qualification_gaps": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "missing_evidence": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "known_limitations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        }
+      }
+    },
+    "ClaimProvenanceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_id",
+        "field_pointer",
+        "basis",
+        "source_pointers",
+        "approved_rule_refs",
+        "verification_status",
+        "conflict_ids"
+      ],
+      "properties": {
+        "claim_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "field_pointer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "observed",
+            "inferred",
+            "reviewer_supplied",
+            "approved_source"
+          ]
+        },
+        "source_pointers": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "field_pointer"
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/ContributionRevisionRefV1"
+              },
+              "field_pointer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              }
+            }
+          }
+        },
+        "approved_rule_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "verification_status": {
+          "type": "string",
+          "enum": [
+            "unverified",
+            "verified",
+            "contradicted",
+            "unavailable"
+          ]
+        },
+        "conflict_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        }
+      }
+    },
+    "ClarificationQuestionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "question_id",
+        "kind",
+        "prompt",
+        "affected_claim_ids",
+        "source_refs",
+        "answer_kind",
+        "choices",
+        "assigned_reviewer_id",
+        "blocks_guidance",
+        "status",
+        "answer"
+      ],
+      "properties": {
+        "question_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "missing_boundary",
+            "missing_input",
+            "missing_outcome",
+            "contradiction",
+            "variant_condition",
+            "possible_duplicate_or_overlap",
+            "ownership",
+            "repetition",
+            "unsupported_representation"
+          ]
+        },
+        "prompt": {
+          "$ref": "#/$defs/Text"
+        },
+        "affected_claim_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/ContributionRevisionRefV1"
+          }
+        },
+        "answer_kind": {
+          "type": "string",
+          "enum": [
+            "text",
+            "choice",
+            "source"
+          ]
+        },
+        "choices": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "choice_id",
+              "label"
+            ],
+            "properties": {
+              "choice_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "label": {
+                "$ref": "#/$defs/Line"
+              }
+            }
+          }
+        },
+        "assigned_reviewer_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "blocks_guidance": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "answered",
+            "dismissed_with_reason"
+          ]
+        },
+        "answer": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "text"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "text"
+                },
+                "text": {
+                  "$ref": "#/$defs/Text"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "selected_ids"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "choice"
+                },
+                "selected_ids": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 16,
+                  "items": {
+                    "$ref": "#/$defs/Identifier"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "refs"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "source"
+                },
+                "refs": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 128,
+                  "items": {
+                    "$ref": "#/$defs/ContributionRevisionRefV1"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "reason"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "unknown"
+                },
+                "reason": {
+                  "$ref": "#/$defs/Text"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CandidateReviewBodyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "responsible_team_id",
+        "owner_actor_id",
+        "linked_playbook_version",
+        "procedure",
+        "source_manifest",
+        "source_manifest_sha256",
+        "audience",
+        "provenance",
+        "verification_coverage",
+        "questions"
+      ],
+      "properties": {
+        "origin": {
+          "type": "string",
+          "enum": [
+            "automatic",
+            "manual",
+            "playbook_update"
+          ]
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "owner_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "linked_playbook_version": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "procedure": {
+          "$ref": "#/$defs/CandidateProcedureV1"
+        },
+        "source_manifest": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/ContributionRevisionRefV1"
+          }
+        },
+        "source_manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "audience": {
+          "$ref": "#/$defs/DiscoveryAudienceV1"
+        },
+        "provenance": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/ClaimProvenanceV1"
+          }
+        },
+        "verification_coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "eligible_attempts",
+            "observed_complete_attempts",
+            "verified_attempts",
+            "contradicted_attempts",
+            "unknown_attempts",
+            "assessment_refs"
+          ],
+          "properties": {
+            "eligible_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "observed_complete_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "verified_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "contradicted_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "unknown_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "assessment_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 128,
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            }
+          }
+        },
+        "questions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/ClarificationQuestionV1"
+          }
+        }
+      }
+    },
+    "CandidateRevisionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "revision",
+        "predecessor_revision",
+        "body",
+        "content_sha256",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.candidate-revision.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "predecessor_revision": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Revision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "body": {
+          "$ref": "#/$defs/CandidateReviewBodyV1"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "created_by": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "WorkflowCandidateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "product_state",
+        "processing_state",
+        "current_revision",
+        "pending_proposal_ids",
+        "created_at",
+        "expires_at",
+        "content_availability"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.candidate.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "product_state": {
+          "type": "string",
+          "enum": [
+            "suggested",
+            "under_review",
+            "needs_evidence",
+            "approved_for_guidance",
+            "rejected"
+          ]
+        },
+        "processing_state": {
+          "type": "string",
+          "enum": [
+            "gathering",
+            "queued",
+            "embedding",
+            "comparing",
+            "synthesizing",
+            "ready",
+            "blocked_route",
+            "blocked_budget",
+            "needs_recomputation",
+            "quarantined",
+            "expired"
+          ]
+        },
+        "current_revision": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CandidateRevisionV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pending_proposal_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/UUIDv4"
+          }
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "expires_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "content_availability": {
+          "type": "string",
+          "enum": [
+            "available",
+            "invalidated",
+            "expired",
+            "pruned"
+          ]
+        }
+      }
+    },
+    "CandidateCreateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "responsible_team_id",
+        "owner_actor_id",
+        "audience",
+        "procedure",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.candidate-create.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "owner_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "audience": {
+          "$ref": "#/$defs/DiscoveryAudienceV1"
+        },
+        "procedure": {
+          "$ref": "#/$defs/CandidateProcedureV1"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "CandidateReviewCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "expected_revision",
+        "action",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.candidate-review.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "begin_review",
+            "request_evidence"
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "CandidateEditV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "expected_revision",
+        "procedure",
+        "responsible_team_id",
+        "owner_actor_id",
+        "question_answers",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.candidate-edit.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "procedure": {
+          "$ref": "#/$defs/CandidateProcedureV1"
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "owner_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "question_answers": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "question_id",
+              "answer"
+            ],
+            "properties": {
+              "question_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "answer": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "text"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "text"
+                      },
+                      "text": {
+                        "$ref": "#/$defs/Text"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "selected_ids"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "choice"
+                      },
+                      "selected_ids": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 16,
+                        "items": {
+                          "$ref": "#/$defs/Identifier"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "refs"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "source"
+                      },
+                      "refs": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 128,
+                        "items": {
+                          "$ref": "#/$defs/ContributionRevisionRefV1"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "reason"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "unknown"
+                      },
+                      "reason": {
+                        "$ref": "#/$defs/Text"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "CandidateApprovalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "expected_revision",
+        "candidate_content_sha256",
+        "accepted_limitation_claim_ids",
+        "audience",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.candidate-approval.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "candidate_content_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "accepted_limitation_claim_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "audience": {
+          "$ref": "#/$defs/DiscoveryAudienceV1"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "CandidateRejectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "expected_revision",
+        "rejection_category",
+        "duplicate_workflow_ref",
+        "suppression_rule",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.candidate-rejection.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "rejection_category": {
+          "type": "string",
+          "enum": [
+            "not_reusable",
+            "duplicate",
+            "sensitive",
+            "incorrectly_inferred"
+          ]
+        },
+        "duplicate_workflow_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "suppression_rule": {
+          "$ref": "#/$defs/SuppressionRuleV1"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "ProposalDecisionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "proposal_id",
+        "expected_revision",
+        "action",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.proposal-decision.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "proposal_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "accept",
+            "decline"
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "QuestionAnswerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "question_id",
+        "expected_revision",
+        "answer",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.question-answer.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "question_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "answer": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "text"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "text"
+                },
+                "text": {
+                  "$ref": "#/$defs/Text"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "selected_ids"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "choice"
+                },
+                "selected_ids": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 16,
+                  "items": {
+                    "$ref": "#/$defs/Identifier"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "refs"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "source"
+                },
+                "refs": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 128,
+                  "items": {
+                    "$ref": "#/$defs/ContributionRevisionRefV1"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "reason"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "unknown"
+                },
+                "reason": {
+                  "$ref": "#/$defs/Text"
+                }
+              }
+            }
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "ReconsiderationDecisionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "reconsideration_id",
+        "expected_revision",
+        "action",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.reconsideration-decision.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "reconsideration_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "accept",
+            "decline"
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "CandidateSplitV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "expected_revision",
+        "new_drafts",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.candidate-split.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "new_drafts": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "procedure",
+              "source_manifest"
+            ],
+            "properties": {
+              "procedure": {
+                "$ref": "#/$defs/CandidateProcedureV1"
+              },
+              "source_manifest": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 128,
+                "items": {
+                  "$ref": "#/$defs/ContributionRevisionRefV1"
+                }
+              }
+            }
+          }
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "CandidateMergeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidates",
+        "procedure",
+        "source_manifest",
+        "responsible_team_id",
+        "audience",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.candidate-merge.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidates": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "candidate_id",
+              "expected_revision"
+            ],
+            "properties": {
+              "candidate_id": {
+                "$ref": "#/$defs/UUIDv4"
+              },
+              "expected_revision": {
+                "$ref": "#/$defs/Revision"
+              }
+            }
+          }
+        },
+        "procedure": {
+          "$ref": "#/$defs/CandidateProcedureV1"
+        },
+        "source_manifest": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/ContributionRevisionRefV1"
+          }
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "audience": {
+          "$ref": "#/$defs/DiscoveryAudienceV1"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "RetentionDecisionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "expected_revision",
+        "requested_expires_at",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.retention-decision.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "requested_expires_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "RegenerationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "expected_revision",
+        "source_manifest_sha256",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.regeneration.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "source_manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "SuppressionRetirementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "rule_id",
+        "expected_revision",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.suppression-retirement.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "rule_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "GraphPublicationCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "graph_draft_id",
+        "expected_staged_revision",
+        "candidate_content_sha256",
+        "audience",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.graph-publication.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "graph_draft_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "expected_staged_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "candidate_content_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "audience": {
+          "$ref": "#/$defs/DiscoveryAudienceV1"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "CandidatePromotionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "promotion_id",
+        "organization_id",
+        "candidate_id",
+        "candidate_revision",
+        "candidate_content_sha256",
+        "source_manifest_sha256",
+        "source_manifest",
+        "invalidation_generation",
+        "audience",
+        "responsible_team_id",
+        "owner_actor_id",
+        "approval_record_ref",
+        "approved_at",
+        "procedure",
+        "limitations",
+        "verification_coverage",
+        "linked_playbook_version"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.candidate-promotion.v1"
+        },
+        "promotion_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "candidate_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "candidate_content_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "source_manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "source_manifest": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/ContributionRevisionRefV1"
+          }
+        },
+        "invalidation_generation": {
+          "$ref": "#/$defs/SafeInteger"
+        },
+        "audience": {
+          "$ref": "#/$defs/DiscoveryAudienceV1"
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "owner_actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "approval_record_ref": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "approved_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "procedure": {
+          "$ref": "#/$defs/CandidateProcedureV1"
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "verification_coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "eligible_attempts",
+            "observed_complete_attempts",
+            "verified_attempts",
+            "contradicted_attempts",
+            "unknown_attempts",
+            "assessment_refs"
+          ],
+          "properties": {
+            "eligible_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "observed_complete_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "verified_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "contradicted_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "unknown_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "assessment_refs": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 128,
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            }
+          }
+        },
+        "linked_playbook_version": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GraphCandidateReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "promotion_id",
+        "graph_draft_id",
+        "candidate_content_sha256",
+        "source_manifest_sha256",
+        "staged_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.graph-candidate-receipt.v1"
+        },
+        "promotion_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "graph_draft_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "candidate_content_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "source_manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "staged_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "SuppressionRuleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "rule_id",
+        "revision",
+        "organization_id",
+        "objective",
+        "scope",
+        "rejection_category",
+        "reconsideration_conditions",
+        "audience",
+        "state",
+        "approval_record_ref"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.suppression-rule.v1"
+        },
+        "rule_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "objective": {
+          "$ref": "#/$defs/Line"
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "eligible_cases",
+            "excluded_cases",
+            "application_ids",
+            "business_record_types"
+          ],
+          "properties": {
+            "eligible_cases": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "excluded_cases": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/Text"
+              }
+            },
+            "application_ids": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            },
+            "business_record_types": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            }
+          }
+        },
+        "rejection_category": {
+          "type": "string",
+          "enum": [
+            "not_reusable",
+            "duplicate",
+            "sensitive",
+            "incorrectly_inferred"
+          ]
+        },
+        "reconsideration_conditions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "audience": {
+          "$ref": "#/$defs/DiscoveryAudienceV1"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "active",
+            "retired"
+          ]
+        },
+        "approval_record_ref": {
+          "$ref": "#/$defs/Identifier"
+        }
+      }
+    },
+    "ReconsiderationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "reconsideration_id",
+        "organization_id",
+        "rule_id",
+        "rule_revision",
+        "rejected_candidate_id",
+        "source_manifest",
+        "new_evidence",
+        "state",
+        "created_at",
+        "decision_ref"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.reconsideration.v1"
+        },
+        "reconsideration_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "rule_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "rule_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "rejected_candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "source_manifest": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/ContributionRevisionRefV1"
+          }
+        },
+        "new_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "explanation",
+              "source_refs"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "new_boundary_or_objective",
+                  "new_branch",
+                  "approved_rule_change",
+                  "verified_outcome"
+                ]
+              },
+              "explanation": {
+                "$ref": "#/$defs/Text"
+              },
+              "source_refs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 128,
+                "items": {
+                  "$ref": "#/$defs/ContributionRevisionRefV1"
+                }
+              }
+            }
+          }
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "accepted",
+            "declined",
+            "invalidated"
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "decision_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "DemonstrationVerificationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "assessment_id",
+        "assessment_revision",
+        "organization_id",
+        "actor_id",
+        "device_id",
+        "profile_id",
+        "demonstration_id",
+        "verdict",
+        "method",
+        "postconditions",
+        "authorized_source_refs",
+        "assessed_by",
+        "assessed_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.demonstration-verification.v1"
+        },
+        "assessment_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "assessment_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "device_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "demonstration_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "contradicted",
+            "unknown"
+          ]
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "system_evidence",
+            "authorized_reviewer"
+          ]
+        },
+        "postconditions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "authorized_source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/ContributionRevisionRefV1"
+          }
+        },
+        "assessed_by": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "assessed_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "OpportunityAssumptionsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "candidate_id",
+        "expected_revision",
+        "reason",
+        "baseline_ms_per_case",
+        "eligible_case_count",
+        "saved_fraction_basis_points",
+        "period_start",
+        "period_end",
+        "basis_description",
+        "supporting_source_refs"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.opportunity-assumptions.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        },
+        "baseline_ms_per_case": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800000
+        },
+        "eligible_case_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "saved_fraction_basis_points": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "period_start": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "period_end": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "basis_description": {
+          "$ref": "#/$defs/Text"
+        },
+        "supporting_source_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/ContributionRevisionRefV1"
+          }
+        }
+      }
+    },
+    "OpportunityV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_id",
+            "organization_id",
+            "candidate_id",
+            "candidate_revision",
+            "submission_period_start",
+            "submission_period_end",
+            "state",
+            "complete_attempts",
+            "verified_attempts",
+            "contradicted_attempts",
+            "unknown_attempts",
+            "measured_verified_attempts",
+            "exception_fraction",
+            "observed_variant_count",
+            "unresolved_question_count",
+            "rule_conflict_count",
+            "median_elapsed_ms",
+            "median_net_ms",
+            "assumptions",
+            "estimated_saved_ms",
+            "privacy_release_refs",
+            "ranking_keys"
+          ],
+          "properties": {
+            "schema_id": {
+              "const": "workflow.opportunity.v1"
+            },
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "candidate_id": {
+              "$ref": "#/$defs/UUIDv4"
+            },
+            "candidate_revision": {
+              "$ref": "#/$defs/Revision"
+            },
+            "submission_period_start": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "submission_period_end": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "state": {
+              "const": "available"
+            },
+            "complete_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "verified_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "contradicted_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "unknown_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "measured_verified_attempts": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "exception_fraction": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "numerator",
+                    "denominator"
+                  ],
+                  "properties": {
+                    "numerator": {
+                      "$ref": "#/$defs/SafeInteger"
+                    },
+                    "denominator": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "observed_variant_count": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "unresolved_question_count": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "rule_conflict_count": {
+              "$ref": "#/$defs/SafeInteger"
+            },
+            "median_elapsed_ms": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 604800000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "median_net_ms": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 604800000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "assumptions": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/OpportunityAssumptionsV1"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "estimated_saved_ms": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "privacy_release_refs": {
+              "type": "array",
+              "items": {
+                "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1"
+              },
+              "maxItems": 128
+            },
+            "ranking_keys": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "safety_blocked",
+                "verified_attempts",
+                "complete_attempts",
+                "unresolved_questions",
+                "candidate_id"
+              ],
+              "properties": {
+                "safety_blocked": {
+                  "type": "boolean"
+                },
+                "verified_attempts": {
+                  "$ref": "#/$defs/SafeInteger"
+                },
+                "complete_attempts": {
+                  "$ref": "#/$defs/SafeInteger"
+                },
+                "unresolved_questions": {
+                  "$ref": "#/$defs/SafeInteger"
+                },
+                "candidate_id": {
+                  "$ref": "#/$defs/UUIDv4"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_id",
+            "organization_id",
+            "candidate_id",
+            "candidate_revision",
+            "submission_period_start",
+            "submission_period_end",
+            "state",
+            "suppression_reason"
+          ],
+          "properties": {
+            "schema_id": {
+              "const": "workflow.opportunity.v1"
+            },
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "candidate_id": {
+              "$ref": "#/$defs/UUIDv4"
+            },
+            "candidate_revision": {
+              "$ref": "#/$defs/Revision"
+            },
+            "submission_period_start": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "submission_period_end": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "suppressed",
+                "unavailable"
+              ]
+            },
+            "suppression_reason": {
+              "type": "string",
+              "enum": [
+                "policy_missing",
+                "cohort_too_small",
+                "permission_denied",
+                "insufficient_verified_data"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "HumanTaskReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "demonstration_id",
+        "actor_id",
+        "device_id",
+        "profile_id",
+        "reviewed_contribution_ref",
+        "observed_task_completed_at",
+        "completion_basis",
+        "capability_binding_ref",
+        "owning_team_id",
+        "application_ids",
+        "risk_tier",
+        "task_measurement",
+        "verification_basis",
+        "source_eligibility",
+        "contributor_privacy_token"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "discovery.human-task-reporting-fact.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "demonstration_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "device_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "reviewed_contribution_ref": {
+          "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1"
+        },
+        "observed_task_completed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "completion_basis": {
+          "type": "string",
+          "enum": [
+            "observed_complete",
+            "employee_reported_complete",
+            "incomplete",
+            "unknown"
+          ]
+        },
+        "capability_binding_ref": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owning_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "application_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "risk_tier": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "task_measurement": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/TaskMeasurementV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verification_basis": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "unverified",
+            "unknown"
+          ]
+        },
+        "source_eligibility": {
+          "type": "string",
+          "enum": [
+            "eligible",
+            "ineligible",
+            "withdrawn"
+          ]
+        },
+        "contributor_privacy_token": {
+          "$ref": "#/$defs/Sha256Hex"
+        }
+      }
+    },
+    "EmbeddingResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "input_fingerprint",
+        "embedding_space_id",
+        "dimensions",
+        "vector"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.embedding.v1"
+        },
+        "input_fingerprint": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "embedding_space_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "dimensions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "vector": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "CompatibilityResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "pairs"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.compatibility.v1"
+        },
+        "pairs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "left_source",
+              "right_source",
+              "verdict",
+              "supporting_pointers",
+              "contradicting_pointers",
+              "questions"
+            ],
+            "properties": {
+              "left_source": {
+                "$ref": "#/$defs/ContributionRevisionRefV1"
+              },
+              "right_source": {
+                "$ref": "#/$defs/ContributionRevisionRefV1"
+              },
+              "verdict": {
+                "type": "string",
+                "enum": [
+                  "equivalent",
+                  "different",
+                  "uncertain"
+                ]
+              },
+              "supporting_pointers": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 128,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "source",
+                    "field_pointer"
+                  ],
+                  "properties": {
+                    "source": {
+                      "$ref": "#/$defs/ContributionRevisionRefV1"
+                    },
+                    "field_pointer": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 512
+                    }
+                  }
+                }
+              },
+              "contradicting_pointers": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 128,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "source",
+                    "field_pointer"
+                  ],
+                  "properties": {
+                    "source": {
+                      "$ref": "#/$defs/ContributionRevisionRefV1"
+                    },
+                    "field_pointer": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 512
+                    }
+                  }
+                }
+              },
+              "questions": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 32,
+                "items": {
+                  "$ref": "#/$defs/ClarificationQuestionV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "WorkflowSynthesisV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "procedure",
+        "provenance",
+        "questions"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.synthesis.v1"
+        },
+        "procedure": {
+          "$ref": "#/$defs/CandidateProcedureV1"
+        },
+        "provenance": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/ClaimProvenanceV1"
+          }
+        },
+        "questions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/ClarificationQuestionV1"
+          }
+        }
+      }
+    },
+    "DiscoveryConfigurationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "configuration_id",
+        "revision",
+        "organization_id",
+        "enabled",
+        "responsible_team_id",
+        "embedding_space",
+        "reasoning_route",
+        "reasoning_route_revision",
+        "prompt_version",
+        "algorithm_version",
+        "max_cluster_members",
+        "debounce_ms",
+        "retrieval_demonstration_limit",
+        "retrieval_playbook_limit",
+        "synthesis_batch_limit",
+        "pair_batch_limit",
+        "candidate_retention_days",
+        "max_inflight_per_organization"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "workflow.discovery-config.v1"
+        },
+        "configuration_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "embedding_space": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "space_id",
+            "route_id",
+            "route_revision",
+            "dimensions",
+            "projection_version"
+          ],
+          "properties": {
+            "space_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "route_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "route_revision": {
+              "$ref": "#/$defs/Revision"
+            },
+            "dimensions": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            },
+            "projection_version": {
+              "$ref": "#/$defs/Identifier"
+            }
+          }
+        },
+        "reasoning_route": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "reasoning_route_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "prompt_version": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "algorithm_version": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "max_cluster_members": {
+          "type": "integer",
+          "const": 128
+        },
+        "debounce_ms": {
+          "type": "integer",
+          "const": 30000
+        },
+        "retrieval_demonstration_limit": {
+          "type": "integer",
+          "const": 20
+        },
+        "retrieval_playbook_limit": {
+          "type": "integer",
+          "const": 10
+        },
+        "synthesis_batch_limit": {
+          "type": "integer",
+          "const": 32
+        },
+        "pair_batch_limit": {
+          "type": "integer",
+          "const": 16
+        },
+        "candidate_retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365
+        },
+        "max_inflight_per_organization": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1745 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:job-orchestration:v1",
+  "title": "Oryn Job Orchestration and Scheduling Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for Oryn job previews, start commands, limits, executions, dependencies, controls, reconciliations, views, schedules, triggers, occurrences, safety fences, budget reservations, and fixture suites.",
+  "oneOf": [
+    { "$ref": "#/$defs/JobPreviewRequestV1" },
+    { "$ref": "#/$defs/JobPreviewV1" },
+    { "$ref": "#/$defs/StartJobCommandV1" },
+    { "$ref": "#/$defs/JobControlCommandV1" },
+    { "$ref": "#/$defs/CaseReconciliationCommandV1" },
+    { "$ref": "#/$defs/JobLimitChangeV1" },
+    { "$ref": "#/$defs/ScheduleMutationV1" },
+    { "$ref": "#/$defs/ScheduleActivationV1" },
+    { "$ref": "#/$defs/ScheduleControlCommandV1" },
+    { "$ref": "#/$defs/LocalScheduleBindingV1" },
+    { "$ref": "#/$defs/BusinessTriggerEventV1" },
+    { "$ref": "#/$defs/JobViewV1" },
+    { "$ref": "#/$defs/CaseViewV1" },
+    { "$ref": "#/$defs/JobPageV1" },
+    { "$ref": "#/$defs/CasePageV1" },
+    { "$ref": "#/$defs/JobMemberPageV1" },
+    { "$ref": "#/$defs/ScheduleDefinitionV1" },
+    { "$ref": "#/$defs/SchedulePageV1" },
+    { "$ref": "#/$defs/ScheduleOccurrenceV1" },
+    { "$ref": "#/$defs/OccurrencePageV1" },
+    { "$ref": "#/$defs/JobProblemV1" },
+    { "$ref": "#/$defs/JobReleaseEligibilityV1" },
+    { "$ref": "#/$defs/JobBudgetReservationV1" },
+    { "$ref": "#/$defs/OrchestrationSafetyFenceV1" },
+    { "$ref": "#/$defs/JobFixtureSetV1" },
+    { "$ref": "#/$defs/CaseReportingFactV1" }
+  ],
+  "$defs": {
+    "ApprovalWaitIntervalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interval_id", "started_at", "ended_at"],
+      "properties": {
+        "interval_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "started_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "ended_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "CaseReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "job_id",
+        "case_id",
+        "workflow_id",
+        "agent_id",
+        "agent_version_id",
+        "application_ids",
+        "risk_tier",
+        "release_stage",
+        "first_started_at",
+        "verified_completed_at",
+        "already_satisfied",
+        "resolved_outcome",
+        "latest_verification_ref",
+        "exception_count",
+        "escalation_count",
+        "escalation_causes",
+        "approval_wait_intervals",
+        "intervention_coverage",
+        "applied_correction_count",
+        "applied_correction_refs",
+        "business_effect_attribution",
+        "execution_refs",
+        "settled_charge_ids",
+        "total_settled_microusd"
+      ],
+      "properties": {
+        "schema_id": { "const": "orchestration.case-reporting-fact.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "job_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "case_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "workflow_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "application_ids": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+          "maxItems": 32
+        },
+        "risk_tier": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "release_stage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "first_started_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "verified_completed_at": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+            { "type": "null" }
+          ]
+        },
+        "already_satisfied": { "type": "boolean" },
+        "resolved_outcome": {
+          "type": "string",
+          "enum": ["verified_complete", "expected_rejection", "definitive_mismatch", "unresolved"]
+        },
+        "latest_verification_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "exception_count": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "escalation_count": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "escalation_causes": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+          "maxItems": 64
+        },
+        "approval_wait_intervals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ApprovalWaitIntervalV1" },
+          "maxItems": 128
+        },
+        "intervention_coverage": {
+          "type": "string",
+          "enum": ["complete", "incomplete", "unknown"]
+        },
+        "applied_correction_count": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "applied_correction_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "business_effect_attribution": {
+          "type": "string",
+          "enum": ["none", "applied", "partially_applied", "failed"]
+        },
+        "execution_refs": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+          "maxItems": 128
+        },
+        "settled_charge_ids": {
+          "type": "array",
+          "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+          "maxItems": 128
+        },
+        "total_settled_microusd": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DecimalString" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "JobStateV1": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "preflight_check",
+        "queued",
+        "running",
+        "waiting_for_review",
+        "partially_complete",
+        "completed",
+        "completed_with_exceptions",
+        "paused",
+        "failed",
+        "canceled"
+      ]
+    },
+    "CaseStateV1": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "prepared",
+        "awaiting_approval",
+        "verified_complete",
+        "expectedly_rejected",
+        "needs_clarification",
+        "blocked",
+        "failed",
+        "canceled",
+        "outcome_unknown"
+      ]
+    },
+    "CaseResolutionV1": {
+      "type": "string",
+      "enum": [
+        "unresolved",
+        "terminal",
+        "handed_off"
+      ]
+    },
+    "JobErrorCodeV1": {
+      "type": "string",
+      "enum": [
+        "JOB_NOT_AUTHORIZED",
+        "JOB_SCOPE_INVALID",
+        "JOB_VERSION_INELIGIBLE",
+        "JOB_PREFLIGHT_BLOCKED",
+        "JOB_SELECTION_UNSUPPORTED",
+        "JOB_SELECTION_INCOMPLETE",
+        "JOB_SELECTION_STALE",
+        "JOB_SELECTION_LIMIT_EXCEEDED",
+        "JOB_REVISION_CONFLICT",
+        "JOB_RECORD_CONFLICT",
+        "JOB_DEPENDENCY_BLOCKED",
+        "JOB_LIMIT_REACHED",
+        "JOB_COST_UNBOUNDED",
+        "JOB_OUTCOME_UNRESOLVED",
+        "JOB_RECONCILIATION_REQUIRED",
+        "JOB_DEVICE_UNAVAILABLE",
+        "JOB_SCHEDULE_OVERLAP",
+        "JOB_SCHEDULE_MISSED",
+        "JOB_SCHEDULE_AUTHORITY_LOST",
+        "JOB_RECOVERY_REQUIRED"
+      ]
+    },
+    "JobLimitsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_items",
+        "max_active_cases",
+        "max_active_ms",
+        "spend_limit_microusd"
+      ],
+      "properties": {
+        "max_items": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "max_active_cases": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "max_active_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 900000
+        },
+        "spend_limit_microusd": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DecimalString" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "JobSelectionSpecV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "connection_id",
+            "connection_revision",
+            "capability_ref",
+            "selection_operation_id",
+            "record_type",
+            "record_keys"
+          ],
+          "properties": {
+            "kind": { "const": "explicit" },
+            "connection_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "connection_revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "capability_ref": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1" },
+            "selection_operation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "record_type": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "record_keys": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "uniqueItems": true,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "connection_id",
+            "connection_revision",
+            "capability_ref",
+            "selection_operation_id",
+            "record_type",
+            "queue_id",
+            "filter",
+            "ordering_id",
+            "max_items"
+          ],
+          "properties": {
+            "kind": { "const": "queue_prefix" },
+            "connection_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "connection_revision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "capability_ref": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1" },
+            "selection_operation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "record_type": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "queue_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "filter": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessConditionV1" },
+            "ordering_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "max_items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            }
+          }
+        }
+      ]
+    },
+    "PreflightFindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "subject_ref", "next_action"],
+      "properties": {
+        "code": { "$ref": "#/$defs/JobErrorCodeV1" },
+        "subject_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "next_action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "CasePreflightV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["member_ordinal", "findings"],
+      "properties": {
+        "member_ordinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "findings": {
+          "type": "array",
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/PreflightFindingV1" }
+        }
+      }
+    },
+    "CaseDependencyConditionV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "verified_complete" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "handoff_id", "handoff_revision"],
+          "properties": {
+            "kind": { "const": "approved_handoff" },
+            "handoff_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            "handoff_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" }
+          }
+        }
+      ]
+    },
+    "JobDependencySpecV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["predecessor_ordinal", "successor_ordinal", "condition"],
+      "properties": {
+        "predecessor_ordinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "successor_ordinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "condition": { "$ref": "#/$defs/CaseDependencyConditionV1" }
+      }
+    },
+    "JobPreviewRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "agent_id",
+        "agent_version_id",
+        "cohort_id",
+        "selection",
+        "dependencies",
+        "limits",
+        "host"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.preview-request.v1" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "cohort_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "selection": { "$ref": "#/$defs/JobSelectionSpecV1" },
+        "dependencies": {
+          "type": "array",
+          "maxItems": 4000,
+          "items": { "$ref": "#/$defs/JobDependencySpecV1" }
+        },
+        "limits": { "$ref": "#/$defs/JobLimitsV1" },
+        "host": { "$ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHostV1" }
+      }
+    },
+    "JobPreviewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "preview_id",
+        "requester_actor_id",
+        "agent_id",
+        "agent_version_id",
+        "agent_version",
+        "behavior_sha256",
+        "manifest_sha256",
+        "release_id",
+        "release_revision",
+        "cohort_id",
+        "selection",
+        "dependencies",
+        "population_count",
+        "population_sha256",
+        "more_available",
+        "host",
+        "limits",
+        "shared_preflight",
+        "case_preflight",
+        "created_at",
+        "expires_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.preview.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "preview_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "requester_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_version": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "behavior_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "manifest_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "cohort_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "selection": { "$ref": "#/$defs/JobSelectionSpecV1" },
+        "dependencies": {
+          "type": "array",
+          "maxItems": 4000,
+          "items": { "$ref": "#/$defs/JobDependencySpecV1" }
+        },
+        "population_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "population_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "more_available": { "type": "boolean" },
+        "host": { "$ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHostV1" },
+        "limits": { "$ref": "#/$defs/JobLimitsV1" },
+        "shared_preflight": {
+          "type": "array",
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/PreflightFindingV1" }
+        },
+        "case_preflight": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": { "$ref": "#/$defs/CasePreflightV1" }
+        },
+        "created_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "expires_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "StartJobCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "preview_id",
+        "population_sha256",
+        "expected_release_revision",
+        "expected_policy_revision"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.start-command.v1" },
+        "preview_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "population_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "expected_release_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "expected_policy_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" }
+      }
+    },
+    "JobControlCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "expected_revision",
+        "action",
+        "case_ids",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.control-command.v1" },
+        "expected_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "action": {
+          "type": "string",
+          "enum": ["pause", "resume", "cancel"]
+        },
+        "case_ids": {
+          "oneOf": [
+            {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1000,
+              "uniqueItems": true,
+              "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" }
+            },
+            { "type": "null" }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "CaseDependencyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "predecessor_case_id",
+        "successor_case_id",
+        "condition"
+      ],
+      "properties": {
+        "predecessor_case_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "successor_case_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "condition": { "$ref": "#/$defs/CaseDependencyConditionV1" }
+      }
+    },
+    "CaseReconciliationCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "expected_case_revision",
+        "execution_id",
+        "action_id",
+        "disposition",
+        "reconciliation_ref",
+        "proposed_remaining_node_ids",
+        "handoff_id",
+        "reason"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.case-reconciliation-command.v1" },
+        "expected_case_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "execution_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "action_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "disposition": {
+          "type": "string",
+          "enum": ["reverify_only", "continue_remaining", "handoff"]
+        },
+        "reconciliation_ref": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "proposed_remaining_node_ids": {
+          "type": "array",
+          "maxItems": 10000,
+          "uniqueItems": true,
+          "items": { "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/PlanIdentifier" }
+        },
+        "handoff_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "JobCountsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "not_started",
+        "in_progress",
+        "prepared",
+        "awaiting_approval",
+        "verified_complete",
+        "expectedly_rejected",
+        "needs_clarification",
+        "blocked",
+        "failed",
+        "canceled",
+        "outcome_unknown",
+        "already_satisfied",
+        "handed_off"
+      ],
+      "properties": {
+        "not_started": { "type": "integer", "minimum": 0 },
+        "in_progress": { "type": "integer", "minimum": 0 },
+        "prepared": { "type": "integer", "minimum": 0 },
+        "awaiting_approval": { "type": "integer", "minimum": 0 },
+        "verified_complete": { "type": "integer", "minimum": 0 },
+        "expectedly_rejected": { "type": "integer", "minimum": 0 },
+        "needs_clarification": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "canceled": { "type": "integer", "minimum": 0 },
+        "outcome_unknown": { "type": "integer", "minimum": 0 },
+        "already_satisfied": { "type": "integer", "minimum": 0 },
+        "handed_off": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "JobViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "job_id",
+        "revision",
+        "state",
+        "agent_id",
+        "agent_version_id",
+        "agent_version",
+        "behavior_sha256",
+        "manifest_sha256",
+        "release_id",
+        "population_count",
+        "population_sha256",
+        "counts",
+        "control_intent",
+        "control_generation",
+        "pending_boundary_acknowledgments",
+        "has_unresolved_effects",
+        "required_outputs_available",
+        "blockers",
+        "result_ref",
+        "created_at",
+        "updated_at",
+        "terminal_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.view.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "job_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "state": { "$ref": "#/$defs/JobStateV1" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_version": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "behavior_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "manifest_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "population_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "population_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "counts": { "$ref": "#/$defs/JobCountsV1" },
+        "control_intent": {
+          "type": "string",
+          "enum": ["none", "pause", "cancel"]
+        },
+        "control_generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "pending_boundary_acknowledgments": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "has_unresolved_effects": { "type": "boolean" },
+        "required_outputs_available": { "type": "boolean" },
+        "blockers": {
+          "type": "array",
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/PreflightFindingV1" }
+        },
+        "result_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "created_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "updated_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "terminal_at": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "CaseViewV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "job_id",
+        "case_id",
+        "revision",
+        "member_ordinal",
+        "record",
+        "state",
+        "resolution",
+        "current_execution_id",
+        "latest_verification_ref",
+        "submission_state",
+        "assigned_team_id",
+        "assigned_actor_id",
+        "handoff_id",
+        "already_satisfied",
+        "control_intent",
+        "blockers"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.case-view.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "job_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "case_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "member_ordinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "record": { "$ref": "urn:oryn:schemas:application-adapters:v1#/$defs/ApplicationRecordRefV1" },
+        "state": { "$ref": "#/$defs/CaseStateV1" },
+        "resolution": { "$ref": "#/$defs/CaseResolutionV1" },
+        "current_execution_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "latest_verification_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "submission_state": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "not_dispatched",
+                "dispatched",
+                "application_acknowledged",
+                "unknown"
+              ]
+            },
+            { "type": "null" }
+          ]
+        },
+        "assigned_team_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "assigned_actor_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "handoff_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "already_satisfied": { "type": "boolean" },
+        "control_intent": {
+          "type": "string",
+          "enum": ["none", "pause", "cancel"]
+        },
+        "blockers": {
+          "type": "array",
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/PreflightFindingV1" }
+        }
+      }
+    },
+    "JobMemberRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["member_ordinal", "record"],
+      "properties": {
+        "member_ordinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999
+        },
+        "record": { "$ref": "urn:oryn:schemas:application-adapters:v1#/$defs/ApplicationRecordRefV1" }
+      }
+    },
+    "JobPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "items", "next_cursor"],
+      "properties": {
+        "schema_id": { "const": "job.page.v1" },
+        "items": {
+          "type": "array",
+          "maxItems": 100,
+          "items": { "$ref": "#/$defs/JobViewV1" }
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string", "maxLength": 256 },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "CasePageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "items", "next_cursor"],
+      "properties": {
+        "schema_id": { "const": "job.case-page.v1" },
+        "items": {
+          "type": "array",
+          "maxItems": 100,
+          "items": { "$ref": "#/$defs/CaseViewV1" }
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string", "maxLength": 256 },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "JobMemberPageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "items", "next_cursor"],
+      "properties": {
+        "schema_id": { "const": "job.member-page.v1" },
+        "items": {
+          "type": "array",
+          "maxItems": 100,
+          "items": { "$ref": "#/$defs/JobMemberRefV1" }
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string", "maxLength": 256 },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "JobProblemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "code",
+        "message",
+        "next_action",
+        "retry_safety",
+        "request_id",
+        "details",
+        "owner_problem_ref"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.problem.v1" },
+        "code": { "$ref": "#/$defs/JobErrorCodeV1" },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "next_action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "retry_safety": {
+          "type": "string",
+          "enum": ["safe_to_retry", "unsafe_to_retry", "unknown"]
+        },
+        "request_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "details": {
+          "oneOf": [
+            { "type": "object" },
+            { "type": "null" }
+          ]
+        },
+        "owner_problem_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "JobReleaseEligibilityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "release_id",
+        "release_revision",
+        "agent_id",
+        "agent_version_id",
+        "agent_version",
+        "behavior_sha256",
+        "manifest_sha256",
+        "allowed_scope",
+        "autonomy_stage",
+        "canary_bucket_id",
+        "eligibility_generation",
+        "checked_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.release-eligibility.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "release_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "agent_version_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_version": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "behavior_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "manifest_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "allowed_scope": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ScopeV1" },
+        "autonomy_stage": {
+          "type": "integer",
+          "enum": [3, 4, 5]
+        },
+        "canary_bucket_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "eligibility_generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "checked_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "ScheduleTriggerV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "at"],
+          "properties": {
+            "kind": { "const": "once" },
+            "at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "local_time", "time_zone"],
+          "properties": {
+            "kind": { "const": "daily" },
+            "local_time": {
+              "type": "string",
+              "pattern": "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "local_time", "time_zone", "weekdays"],
+          "properties": {
+            "kind": { "const": "weekly" },
+            "local_time": {
+              "type": "string",
+              "pattern": "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "weekdays": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 7,
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 7
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "source_id", "event_type", "predicate"],
+          "properties": {
+            "kind": { "const": "business_event" },
+            "source_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "event_type": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            "predicate": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessConditionV1" }
+          }
+        }
+      ]
+    },
+    "PermittedHoursV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["time_zone", "weekdays", "start_local", "end_local"],
+      "properties": {
+        "time_zone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "weekdays": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 7
+          }
+        },
+        "start_local": {
+          "type": "string",
+          "pattern": "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "end_local": {
+          "type": "string",
+          "pattern": "^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+        }
+      }
+    },
+    "LocalScheduleBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device_id",
+        "profile_id",
+        "employee_actor_id",
+        "consent_revision",
+        "consented_at",
+        "not_after"
+      ],
+      "properties": {
+        "device_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "profile_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "employee_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "consent_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "consented_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "not_after": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "ScheduleDefinitionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "schedule_id",
+        "revision",
+        "workflow_id",
+        "agent_id",
+        "cohort_id",
+        "owner_actor_id",
+        "sponsor_actor_id",
+        "trigger",
+        "selection",
+        "limits",
+        "permitted_hours",
+        "escalation_team_id",
+        "escalation_actor_id",
+        "local_binding",
+        "state",
+        "approved_scope",
+        "approved_autonomy_stage",
+        "approved_at",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.schedule-definition.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "schedule_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "workflow_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "agent_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "cohort_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "owner_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "sponsor_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "trigger": { "$ref": "#/$defs/ScheduleTriggerV1" },
+        "selection": { "$ref": "#/$defs/JobSelectionSpecV1" },
+        "limits": { "$ref": "#/$defs/JobLimitsV1" },
+        "permitted_hours": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 14,
+          "items": { "$ref": "#/$defs/PermittedHoursV1" }
+        },
+        "escalation_team_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "escalation_actor_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "local_binding": {
+          "oneOf": [
+            { "$ref": "#/$defs/LocalScheduleBindingV1" },
+            { "type": "null" }
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": ["draft", "active", "paused", "retired"]
+        },
+        "approved_scope": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ScopeV1" },
+        "approved_autonomy_stage": {
+          "type": "integer",
+          "enum": [4, 5]
+        },
+        "approved_at": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+            { "type": "null" }
+          ]
+        },
+        "created_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "updated_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "ScheduleMutationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "expected_revision", "definition"],
+      "properties": {
+        "schema_id": { "const": "job.schedule-mutation.v1" },
+        "expected_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "definition": { "$ref": "#/$defs/ScheduleDefinitionV1" }
+      }
+    },
+    "ScheduleActivationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "expected_revision", "confirmed_scope_sha256"],
+      "properties": {
+        "schema_id": { "const": "job.schedule-activation.v1" },
+        "expected_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "confirmed_scope_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" }
+      }
+    },
+    "ScheduleControlCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "expected_revision", "action", "reason"],
+      "properties": {
+        "schema_id": { "const": "job.schedule-control.v1" },
+        "expected_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "action": {
+          "type": "string",
+          "enum": ["pause", "retire"]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "ScheduleOccurrenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "occurrence_id",
+        "schedule_id",
+        "schedule_revision",
+        "occurrence_key",
+        "intended_at",
+        "admitted_at",
+        "source_event_id",
+        "state",
+        "job_id",
+        "reason_code"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.schedule-occurrence.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "occurrence_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "schedule_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "schedule_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "occurrence_key": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "intended_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "admitted_at": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+            { "type": "null" }
+          ]
+        },
+        "source_event_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+            { "type": "null" }
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "admitted",
+            "no_work",
+            "missed",
+            "skipped_overlap",
+            "blocked",
+            "canceled"
+          ]
+        },
+        "job_id": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "reason_code": {
+          "oneOf": [
+            { "$ref": "#/$defs/JobErrorCodeV1" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "BusinessTriggerEventV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "source_id",
+        "event_type",
+        "event_id",
+        "occurred_at",
+        "source_revision",
+        "subject_record",
+        "evidence_ref"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.business-trigger-event.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "source_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "event_type": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "event_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "occurred_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" },
+        "source_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "subject_record": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:application-adapters:v1#/$defs/ApplicationRecordRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "evidence_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "SchedulePageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "items", "next_cursor"],
+      "properties": {
+        "schema_id": { "const": "job.schedule-page.v1" },
+        "items": {
+          "type": "array",
+          "maxItems": 100,
+          "items": { "$ref": "#/$defs/ScheduleDefinitionV1" }
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string", "maxLength": 256 },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "OccurrencePageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "items", "next_cursor"],
+      "properties": {
+        "schema_id": { "const": "job.occurrence-page.v1" },
+        "items": {
+          "type": "array",
+          "maxItems": 100,
+          "items": { "$ref": "#/$defs/ScheduleOccurrenceV1" }
+        },
+        "next_cursor": {
+          "oneOf": [
+            { "type": "string", "maxLength": 256 },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "JobLimitChangeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "expected_revision", "limits", "reason"],
+      "properties": {
+        "schema_id": { "const": "job.limit-change.v1" },
+        "expected_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "limits": { "$ref": "#/$defs/JobLimitsV1" },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "JobBudgetReservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "job_id",
+        "reservation_id",
+        "execution_id",
+        "owner",
+        "owner_request_id",
+        "pricing_revision",
+        "reserved_microusd",
+        "settled_microusd",
+        "state",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.budget-reservation.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "job_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "reservation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "execution_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "owner": {
+          "type": "string",
+          "enum": ["inference", "runtime", "adapter"]
+        },
+        "owner_request_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "pricing_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "reserved_microusd": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DecimalString" },
+        "settled_microusd": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DecimalString" },
+        "state": {
+          "type": "string",
+          "enum": ["reserved", "dispatched", "settled", "released", "usage_unknown"]
+        },
+        "created_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+      }
+    },
+    "OrchestrationSafetyFenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "fence_id",
+        "generation",
+        "subject_kind",
+        "subject_id",
+        "state_ref_sha256",
+        "after_state"
+      ],
+      "properties": {
+        "schema_id": { "const": "job.safety-fence.v1" },
+        "organization_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "fence_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+        "generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+        "subject_kind": {
+          "type": "string",
+          "enum": ["job", "schedule", "case", "action_intent", "budget", "occurrence", "incident_restriction", "release_cohort"]
+        },
+        "subject_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+        "state_ref_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+        "after_state": {
+          "type": "object",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "job_id",
+                "control_generation",
+                "control_intent",
+                "state",
+                "has_unresolved_effects"
+              ],
+              "properties": {
+                "kind": { "const": "job" },
+                "job_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+                "control_generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+                "control_intent": {
+                  "type": "string",
+                  "enum": ["none", "pause", "cancel"]
+                },
+                "state": { "$ref": "#/$defs/JobStateV1" },
+                "has_unresolved_effects": { "type": "boolean" }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "schedule_id",
+                "revision",
+                "state",
+                "control_generation",
+                "owner_actor_id",
+                "sponsor_actor_id",
+                "confirmed_definition_sha256",
+                "current_unresolved_job_id",
+                "last_recorded_occurrence_key"
+              ],
+              "properties": {
+                "kind": { "const": "schedule" },
+                "schedule_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                "revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+                "state": {
+                  "type": "string",
+                  "enum": ["draft", "active", "paused", "retired"]
+                },
+                "control_generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+                "owner_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                "sponsor_actor_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                "confirmed_definition_sha256": {
+                  "oneOf": [
+                    { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+                    { "type": "null" }
+                  ]
+                },
+                "current_unresolved_job_id": {
+                  "oneOf": [
+                    { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+                    { "type": "null" }
+                  ]
+                },
+                "last_recorded_occurrence_key": {
+                  "oneOf": [
+                    { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+                    { "type": "null" }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "job_id",
+                "case_id",
+                "current_execution_id",
+                "control_generation",
+                "reservation_state",
+                "record_identity_sha256s",
+                "has_unresolved_effects"
+              ],
+              "properties": {
+                "kind": { "const": "case" },
+                "job_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+                "case_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+                "current_execution_id": {
+                  "oneOf": [
+                    { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                    { "type": "null" }
+                  ]
+                },
+                "control_generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+                "reservation_state": {
+                  "type": "string",
+                  "enum": ["active", "quiescing", "uncertain", "released"]
+                },
+                "record_identity_sha256s": {
+                  "type": "array",
+                  "maxItems": 256,
+                  "uniqueItems": true,
+                  "items": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" }
+                },
+                "has_unresolved_effects": { "type": "boolean" }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "execution_context_sha256",
+                "node_id",
+                "iteration_path_sha256",
+                "highest_allocated_generation",
+                "highest_admitted_generation",
+                "action_id",
+                "retry_of_action_id",
+                "reconciliation_ref"
+              ],
+              "properties": {
+                "kind": { "const": "action_intent" },
+                "execution_context_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+                "node_id": { "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/PlanIdentifier" },
+                "iteration_path_sha256": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+                "highest_allocated_generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+                "highest_admitted_generation": {
+                  "oneOf": [
+                    { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+                    { "type": "null" }
+                  ]
+                },
+                "action_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+                "retry_of_action_id": {
+                  "oneOf": [
+                    { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+                    { "type": "null" }
+                  ]
+                },
+                "reconciliation_ref": {
+                  "oneOf": [
+                    { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+                    { "type": "null" }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "job_id",
+                "reservation_id",
+                "owner",
+                "owner_request_id",
+                "pricing_revision",
+                "reserved_microusd",
+                "settled_microusd",
+                "state"
+              ],
+              "properties": {
+                "kind": { "const": "budget" },
+                "job_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+                "reservation_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                "owner": {
+                  "type": "string",
+                  "enum": ["inference", "runtime", "adapter"]
+                },
+                "owner_request_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                "pricing_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+                "reserved_microusd": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DecimalString" },
+                "settled_microusd": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DecimalString" },
+                "state": {
+                  "type": "string",
+                  "enum": ["reserved", "dispatched", "settled", "released", "usage_unknown"]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "schedule_id",
+                "occurrence_key",
+                "occurrence_id",
+                "schedule_revision",
+                "state",
+                "job_id",
+                "intended_at"
+              ],
+              "properties": {
+                "kind": { "const": "occurrence" },
+                "schedule_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                "occurrence_key": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Sha256" },
+                "occurrence_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                "schedule_revision": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+                "state": { "type": "string" },
+                "job_id": {
+                  "oneOf": [
+                    { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier" },
+                    { "type": "null" }
+                  ]
+                },
+                "intended_at": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Timestamp" }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "restriction_id",
+                "incident_ref",
+                "target",
+                "effect",
+                "state",
+                "generation",
+                "approval_refs",
+                "has_unresolved_effects"
+              ],
+              "properties": {
+                "kind": { "const": "incident_restriction" },
+                "restriction_id": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Uuid" },
+                "incident_ref": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentRefV1" },
+                "target": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/IncidentContainmentTargetV1" },
+                "effect": {
+                  "type": "string",
+                  "enum": ["pause_execution", "pause_writes", "stop_new_jobs"]
+                },
+                "state": {
+                  "type": "string",
+                  "enum": ["active", "cleared"]
+                },
+                "generation": { "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Revision" },
+                "approval_refs": {
+                  "type": "array",
+                  "items": { "$ref": "urn:oryn:schemas:incident-correction-repair:v1#/$defs/OwnerRecordRefV1" },
+                  "maxItems": 16
+                },
+                "has_unresolved_effects": { "type": "boolean" }
+              }
+            },
+            {
+              "$ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseCohortFenceV1"
+            }
+          ]
+        }
+      }
+    },
+    "ValidationCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "schema_ref", "instance", "expected_valid"],
+      "properties": {
+        "case_id": { "type": "string" },
+        "schema_ref": { "type": "string" },
+        "instance": {},
+        "expected_valid": { "type": "boolean" }
+      }
+    },
+    "SemanticCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "kind",
+        "inputs",
+        "expected",
+        "implementation_conformance_pending"
+      ],
+      "properties": {
+        "case_id": { "type": "string" },
+        "kind": { "type": "string" },
+        "inputs": { "type": "object" },
+        "expected": { "type": "object" },
+        "implementation_conformance_pending": { "type": "boolean" }
+      }
+    },
+    "JobFixtureSetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "validation_cases", "semantic_cases"],
+      "properties": {
+        "schema_id": { "const": "job.fixture-set.v1" },
+        "validation_cases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ValidationCaseV1" }
+        },
+        "semantic_cases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SemanticCaseV1" }
+        }
+      }
+    }
+  }
+}

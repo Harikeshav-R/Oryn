@@ -1,0 +1,1179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:agent-runtime:v1",
+  "title": "Oryn Production Agent Runtime Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for agent runtime assignments, execution checkpoints, commits, heartbeats, progress, and control commands.",
+  "oneOf": [
+    { "$ref": "#/$defs/RuntimeAssignmentV1" },
+    { "$ref": "#/$defs/ExecutionCheckpointV1" },
+    { "$ref": "#/$defs/RuntimeHeartbeatV1" },
+    { "$ref": "#/$defs/RuntimeCheckpointCommitV1" },
+    { "$ref": "#/$defs/RuntimeControlV1" },
+    { "$ref": "#/$defs/RuntimeProgressV1" },
+    { "$ref": "#/$defs/RuntimeHumanQuestionV1" },
+    { "$ref": "#/$defs/RuntimeHumanResponseV1" },
+    { "$ref": "#/$defs/RuntimeClaimV1" },
+    { "$ref": "#/$defs/RuntimeYieldV1" },
+    { "$ref": "#/$defs/RuntimeControlAckV1" },
+    { "$ref": "#/$defs/RuntimeCommandV1" },
+    { "$ref": "#/$defs/RuntimeSnapshotV1" },
+    { "$ref": "#/$defs/RuntimeCommandResultV1" },
+    { "$ref": "#/$defs/RuntimeProblemV1" },
+    { "$ref": "#/$defs/RuntimeMaterializedValueV1" },
+    { "$ref": "#/$defs/RuntimeValueUploadV1" },
+    { "$ref": "#/$defs/RuntimeValueQueryV1" },
+    { "$ref": "#/$defs/RuntimeRetentionFenceV1" },
+    { "$ref": "#/$defs/RuntimeFixtureSetV1" },
+    { "$ref": "#/$defs/RuntimeInterventionFactV1" },
+    { "$ref": "#/$defs/RuntimeReportingEventV1" }
+  ],
+  "$defs": {
+    "PlanIdentifier": {
+      "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/PlanIdentifier"
+    },
+    "Identifier": {
+      "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/Identifier"
+    },
+    "UUID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$"
+    },
+    "RuntimeErrorCodeV1": {
+      "type": "string",
+      "enum": [
+        "RUNTIME_ASSIGNMENT_STALE",
+        "RUNTIME_LEASE_EXPIRED",
+        "RUNTIME_CONTEXT_MISMATCH",
+        "RUNTIME_VERSION_INVALID",
+        "RUNTIME_DEPENDENCY_UNAVAILABLE",
+        "RUNTIME_CHECKPOINT_CONFLICT",
+        "RUNTIME_CHECKPOINT_UNAVAILABLE",
+        "RUNTIME_VALUE_UNAVAILABLE",
+        "RUNTIME_VALUE_STALE",
+        "RUNTIME_INPUT_INVALID",
+        "RUNTIME_LIMIT_EXCEEDED",
+        "RUNTIME_WORKER_UNHEALTHY",
+        "RUNTIME_AUTHORITY_UNAVAILABLE",
+        "RUNTIME_SUBMISSION_UNKNOWN",
+        "RUNTIME_INFERENCE_UNKNOWN",
+        "RUNTIME_HUMAN_RESPONSE_STALE",
+        "RUNTIME_STOPPED",
+        "RUNTIME_SANDBOX_UNAVAILABLE"
+      ]
+    },
+    "RuntimeExecutionContextV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "job_id",
+            "case_id",
+            "agent_version"
+          ],
+          "properties": {
+            "kind": {
+              "const": "job"
+            },
+            "job_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "case_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "agent_version": {
+              "$ref": "#/$defs/Identifier"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "evaluation_id",
+            "scenario_version_id",
+            "attempt_id",
+            "evaluation_target"
+          ],
+          "properties": {
+            "kind": {
+              "const": "evaluation"
+            },
+            "evaluation_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "scenario_version_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "attempt_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "evaluation_target": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "agent_version"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "agent"
+                },
+                "agent_version": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RuntimeHostV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "cloud" },
+            "device_id": { "type": "null" },
+            "profile_id": { "type": "null" }
+          },
+          "required": ["kind", "device_id", "profile_id"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "local" },
+            "device_id": { "$ref": "#/$defs/Identifier" },
+            "profile_id": { "$ref": "#/$defs/Identifier" }
+          },
+          "required": ["kind", "device_id", "profile_id"]
+        }
+      ]
+    },
+    "RuntimeLimitsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_node_executions": { "type": "integer", "minimum": 1 },
+        "max_active_ms": { "type": "integer", "minimum": 1 },
+        "max_checkpoint_bytes": { "type": "integer", "minimum": 1 },
+        "max_value_bytes": { "type": "integer", "minimum": 1 },
+        "max_program_bytes": { "type": "integer", "minimum": 1 }
+      },
+      "required": [
+        "max_node_executions",
+        "max_active_ms",
+        "max_checkpoint_bytes",
+        "max_value_bytes",
+        "max_program_bytes"
+      ]
+    },
+    "RuntimeAssignmentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.assignment.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "execution_id": { "$ref": "#/$defs/UUID" },
+        "assignment_id": { "$ref": "#/$defs/UUID" },
+        "assignment_epoch": { "$ref": "#/$defs/U64" },
+        "worker_id": { "$ref": "#/$defs/Identifier" },
+        "execution_context": { "$ref": "#/$defs/RuntimeExecutionContextV1" },
+        "environment": { "type": "string", "enum": ["production", "simulation"] },
+        "agent_version_id": { "$ref": "#/$defs/UUID" },
+        "behavior_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "manifest_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "host": { "$ref": "#/$defs/RuntimeHostV1" },
+        "checkpoint_revision": { "$ref": "#/$defs/U64" },
+        "control_generation": { "$ref": "#/$defs/U64" },
+        "limits": { "$ref": "#/$defs/RuntimeLimitsV1" },
+        "issued_at": { "$ref": "#/$defs/UtcDateTime" },
+        "lease_not_after": { "$ref": "#/$defs/UtcDateTime" }
+      },
+      "required": [
+        "schema_id",
+        "organization_id",
+        "execution_id",
+        "assignment_id",
+        "assignment_epoch",
+        "worker_id",
+        "execution_context",
+        "environment",
+        "agent_version_id",
+        "behavior_sha256",
+        "manifest_sha256",
+        "host",
+        "checkpoint_revision",
+        "control_generation",
+        "limits",
+        "issued_at",
+        "lease_not_after"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "execution_context": {
+                "properties": { "kind": { "const": "job" } }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "environment": { "const": "production" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "execution_context": {
+                "properties": { "kind": { "const": "evaluation" } }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "environment": { "const": "simulation" }
+            }
+          }
+        }
+      ]
+    },
+    "RuntimeIterationFrameV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "foreach_node_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "index": { "type": "integer", "minimum": 0, "maximum": 1000 }
+      },
+      "required": ["foreach_node_id", "index"]
+    },
+    "RuntimeLoopFrameV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "foreach_node_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "body_region_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "collection_binding_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "collection_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "item_count": { "type": "integer", "minimum": 0, "maximum": 1000 },
+        "next_index": { "type": "integer", "minimum": 0, "maximum": 1000 },
+        "completed_output_binding_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PlanIdentifier" },
+          "maxItems": 1000
+        }
+      },
+      "required": [
+        "foreach_node_id",
+        "body_region_id",
+        "collection_binding_id",
+        "collection_sha256",
+        "item_count",
+        "next_index",
+        "completed_output_binding_ids"
+      ]
+    },
+    "RuntimeValueSlotV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "input" },
+            "name": { "$ref": "#/$defs/PlanIdentifier" }
+          },
+          "required": ["kind", "name"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "node_output" },
+            "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+            "iteration_path": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/RuntimeIterationFrameV1" },
+              "maxItems": 2
+            }
+          },
+          "required": ["kind", "node_id", "iteration_path"]
+        }
+      ]
+    },
+    "RuntimeBindingRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value_execution_id": { "$ref": "#/$defs/UUID" },
+        "binding_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "slot": { "$ref": "#/$defs/RuntimeValueSlotV1" },
+        "type_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "value_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "evidence": { "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/ValueEvidenceV1" },
+        "value_revision": { "$ref": "#/$defs/U64" },
+        "expires_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": [
+        "value_execution_id",
+        "binding_id",
+        "slot",
+        "type_sha256",
+        "value_sha256",
+        "evidence",
+        "value_revision",
+        "expires_at"
+      ]
+    },
+    "RuntimeOwnerResultRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "enum": ["adapter", "identity", "inference", "verification", "human_input"]
+        },
+        "id": { "$ref": "#/$defs/Identifier" },
+        "sha256": { "$ref": "#/$defs/Sha256Hex" }
+      },
+      "required": ["owner", "id", "sha256"]
+    },
+    "RuntimePendingEffectV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "effect_id": { "$ref": "#/$defs/Identifier" },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "adapter_prepare",
+            "action_authorize",
+            "action_consume",
+            "adapter_dispatch",
+            "adapter_value",
+            "inference",
+            "verification",
+            "human_question",
+            "escalation"
+          ]
+        },
+        "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "iteration_path": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeIterationFrameV1" },
+          "maxItems": 2
+        },
+        "action_generation": { "$ref": "#/$defs/U64" },
+        "state": {
+          "type": "string",
+          "enum": ["prepared", "requested", "owner_acknowledged", "unknown"]
+        },
+        "action_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "retry_of_action_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "reconciliation_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "attempt_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/UUIDv4" },
+            { "type": "null" }
+          ]
+        },
+        "owner_result_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/RuntimeOwnerResultRefV1" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": [
+        "effect_id",
+        "kind",
+        "node_id",
+        "iteration_path",
+        "action_generation",
+        "state",
+        "action_id",
+        "retry_of_action_id",
+        "reconciliation_ref",
+        "attempt_id",
+        "owner_result_ref"
+      ]
+    },
+    "RuntimeWaitV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "approval",
+            "human_input",
+            "verification",
+            "clarification",
+            "restriction",
+            "authority_unknown",
+            "submission_unknown",
+            "inference_unknown",
+            "resource_limit"
+          ]
+        },
+        "reference_id": { "$ref": "#/$defs/Identifier" },
+        "expires_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "resume_required": { "type": "boolean" }
+      },
+      "required": ["kind", "reference_id", "expires_at", "resume_required"]
+    },
+    "ExecutionCheckpointV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.checkpoint.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "execution_id": { "$ref": "#/$defs/UUID" },
+        "execution_context": { "$ref": "#/$defs/RuntimeExecutionContextV1" },
+        "agent_version_id": { "$ref": "#/$defs/UUID" },
+        "behavior_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "revision": { "$ref": "#/$defs/U64" },
+        "control_generation": { "$ref": "#/$defs/U64" },
+        "region_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "effect_pending",
+            "waiting",
+            "held",
+            "completion_requested",
+            "stopped"
+          ]
+        },
+        "loop_frames": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeLoopFrameV1" },
+          "maxItems": 2
+        },
+        "binding_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeBindingRefV1" },
+          "maxItems": 10000
+        },
+        "pending_effect": {
+          "oneOf": [
+            { "$ref": "#/$defs/RuntimePendingEffectV1" },
+            { "type": "null" }
+          ]
+        },
+        "node_executions": { "$ref": "#/$defs/U64" },
+        "active_elapsed_ms": { "$ref": "#/$defs/U64" },
+        "wait": {
+          "oneOf": [
+            { "$ref": "#/$defs/RuntimeWaitV1" },
+            { "type": "null" }
+          ]
+        },
+        "last_progress_at": { "$ref": "#/$defs/UtcDateTime" }
+      },
+      "required": [
+        "schema_id",
+        "organization_id",
+        "execution_id",
+        "execution_context",
+        "agent_version_id",
+        "behavior_sha256",
+        "revision",
+        "control_generation",
+        "region_id",
+        "node_id",
+        "phase",
+        "loop_frames",
+        "binding_refs",
+        "pending_effect",
+        "node_executions",
+        "active_elapsed_ms",
+        "wait",
+        "last_progress_at"
+      ]
+    },
+    "RuntimeHeartbeatV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.heartbeat.v1" },
+        "command_id": { "$ref": "#/$defs/UUIDv4" },
+        "assignment_id": { "$ref": "#/$defs/UUID" },
+        "assignment_epoch": { "$ref": "#/$defs/U64" },
+        "checkpoint_revision": { "$ref": "#/$defs/U64" },
+        "control_generation": { "$ref": "#/$defs/U64" },
+        "active_elapsed_ms": { "$ref": "#/$defs/U64" }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "assignment_id",
+        "assignment_epoch",
+        "checkpoint_revision",
+        "control_generation",
+        "active_elapsed_ms"
+      ]
+    },
+    "RuntimeCheckpointProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "checkpoint": { "$ref": "#/$defs/ExecutionCheckpointV1" },
+        "requested_effect_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "disposition": {
+          "type": "string",
+          "enum": ["continue", "yield", "completion_requested", "stopped"]
+        }
+      },
+      "required": ["checkpoint", "requested_effect_id", "disposition"]
+    },
+    "RuntimeValueBlobRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value_execution_id": { "$ref": "#/$defs/UUID" },
+        "binding_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "value_revision": { "$ref": "#/$defs/U64" },
+        "bytes": { "type": "integer", "minimum": 0, "maximum": 262144 },
+        "sha256": { "$ref": "#/$defs/Sha256Hex" }
+      },
+      "required": ["value_execution_id", "binding_id", "value_revision", "bytes", "sha256"]
+    },
+    "RuntimeInterventionFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "execution_id",
+        "execution_context",
+        "intervention_sequence",
+        "kind",
+        "occurred_at",
+        "source_command_ref"
+      ],
+      "properties": {
+        "execution_id": { "$ref": "#/$defs/UUID" },
+        "execution_context": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1" },
+        "intervention_sequence": { "$ref": "#/$defs/U64" },
+        "kind": {
+          "type": "string",
+          "enum": ["approval", "clarification", "applied_correction", "manual_continuation"]
+        },
+        "occurred_at": { "$ref": "#/$defs/UtcDateTime" },
+        "source_command_ref": { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" }
+      }
+    },
+    "RuntimeReportingEventPayloadV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "execution_started" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "interval_id", "wait"],
+          "properties": {
+            "kind": { "const": "wait_started" },
+            "interval_id": { "$ref": "#/$defs/Identifier" },
+            "wait": { "$ref": "#/$defs/RuntimeWaitV1" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "interval_id"],
+          "properties": {
+            "kind": { "const": "wait_ended" },
+            "interval_id": { "$ref": "#/$defs/Identifier" }
+          }
+        }
+      ]
+    },
+    "RuntimeReportingEventV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "timestamp_utc", "event"],
+      "properties": {
+        "sequence": { "$ref": "#/$defs/U64" },
+        "timestamp_utc": { "$ref": "#/$defs/UtcDateTime" },
+        "event": { "$ref": "#/$defs/RuntimeReportingEventPayloadV1" }
+      }
+    },
+    "RuntimeCheckpointCommitV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.checkpoint-commit.v1" },
+        "command_id": { "$ref": "#/$defs/UUIDv4" },
+        "assignment_id": { "$ref": "#/$defs/UUID" },
+        "assignment_epoch": { "$ref": "#/$defs/U64" },
+        "expected_revision": { "$ref": "#/$defs/U64" },
+        "expected_control_generation": { "$ref": "#/$defs/U64" },
+        "transition": { "$ref": "#/$defs/RuntimeCheckpointProposalV1" },
+        "value_blob_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeValueBlobRefV1" },
+          "maxItems": 256
+        },
+        "owner_result_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeOwnerResultRefV1" },
+          "maxItems": 256
+        },
+        "intervention_facts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeInterventionFactV1" },
+          "maxItems": 128
+        },
+        "intervention_through_sequence": { "$ref": "#/$defs/U64" },
+        "reporting_events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeReportingEventV1" },
+          "maxItems": 128
+        },
+        "reporting_through_sequence": { "$ref": "#/$defs/U64" }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "assignment_id",
+        "assignment_epoch",
+        "expected_revision",
+        "expected_control_generation",
+        "transition",
+        "value_blob_refs",
+        "owner_result_refs",
+        "intervention_facts",
+        "intervention_through_sequence",
+        "reporting_events",
+        "reporting_through_sequence"
+      ]
+    },
+    "RuntimeControlV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.control.v1" },
+        "command_id": { "$ref": "#/$defs/UUIDv4" },
+        "execution_id": { "$ref": "#/$defs/UUID" },
+        "expected_control_generation": { "$ref": "#/$defs/U64" },
+        "command": { "type": "string", "enum": ["pause", "cancel", "resume"] },
+        "reason_code": { "$ref": "#/$defs/Identifier" }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "execution_id",
+        "expected_control_generation",
+        "command",
+        "reason_code"
+      ]
+    },
+    "RuntimeProgressV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.progress.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "execution_id": { "$ref": "#/$defs/UUID" },
+        "assignment_id": { "$ref": "#/$defs/UUID" },
+        "checkpoint_revision": { "$ref": "#/$defs/U64" },
+        "control_generation": { "$ref": "#/$defs/U64" },
+        "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "iteration_path": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeIterationFrameV1" },
+          "maxItems": 2
+        },
+        "disposition": {
+          "type": "string",
+          "enum": ["continue", "yield", "completion_requested", "stopped"]
+        },
+        "reason_code": { "$ref": "#/$defs/Identifier" },
+        "action_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Identifier" },
+          "maxItems": 256
+        },
+        "verification_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeOwnerResultRefV1" },
+          "maxItems": 256
+        },
+        "reporting_event": {
+          "oneOf": [
+            { "$ref": "#/$defs/RuntimeReportingEventPayloadV1" },
+            { "type": "null" }
+          ]
+        },
+        "timestamp_utc": { "$ref": "#/$defs/UtcDateTime" }
+      },
+      "required": [
+        "schema_id",
+        "organization_id",
+        "execution_id",
+        "assignment_id",
+        "checkpoint_revision",
+        "control_generation",
+        "node_id",
+        "iteration_path",
+        "disposition",
+        "reason_code",
+        "action_ids",
+        "verification_refs",
+        "reporting_event",
+        "timestamp_utc"
+      ]
+    },
+    "RuntimeHumanQuestionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.human-question.v1" },
+        "question_id": { "$ref": "#/$defs/Identifier" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "execution_id": { "$ref": "#/$defs/UUID" },
+        "execution_context": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1" },
+        "agent_version_id": { "$ref": "#/$defs/UUID" },
+        "behavior_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "node_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "iteration_path": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeIterationFrameV1" },
+          "maxItems": 2
+        },
+        "checkpoint_revision": { "$ref": "#/$defs/U64" },
+        "question_template": { "type": "string", "maxLength": 4096 },
+        "response_type": { "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/DataTypeV1" },
+        "responder_role": { "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/RoleId" },
+        "issued_at": { "$ref": "#/$defs/UtcDateTime" },
+        "not_after": { "$ref": "#/$defs/UtcDateTime" }
+      },
+      "required": [
+        "schema_id",
+        "question_id",
+        "organization_id",
+        "execution_id",
+        "execution_context",
+        "agent_version_id",
+        "behavior_sha256",
+        "node_id",
+        "iteration_path",
+        "checkpoint_revision",
+        "question_template",
+        "response_type",
+        "responder_role",
+        "issued_at",
+        "not_after"
+      ]
+    },
+    "RuntimeHumanResponseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.human-response.v1" },
+        "command_id": { "$ref": "#/$defs/UUIDv4" },
+        "question_id": { "$ref": "#/$defs/Identifier" },
+        "expected_checkpoint_revision": { "$ref": "#/$defs/U64" },
+        "decision": { "type": "string", "enum": ["answer", "reject"] },
+        "value": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/PortableJsonValueV1" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "question_id",
+        "expected_checkpoint_revision",
+        "decision",
+        "value"
+      ],
+      "if": { "properties": { "decision": { "const": "reject" } } },
+      "then": { "properties": { "value": { "type": "null" } } }
+    },
+    "RuntimeClaimV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.claim.v1" },
+        "command_id": { "$ref": "#/$defs/UUIDv4" },
+        "assignment_id": { "$ref": "#/$defs/UUID" },
+        "expected_epoch": { "$ref": "#/$defs/U64" }
+      },
+      "required": ["schema_id", "command_id", "assignment_id", "expected_epoch"]
+    },
+    "RuntimeYieldV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.yield.v1" },
+        "command_id": { "$ref": "#/$defs/UUIDv4" },
+        "assignment_id": { "$ref": "#/$defs/UUID" },
+        "assignment_epoch": { "$ref": "#/$defs/U64" },
+        "expected_checkpoint_revision": { "$ref": "#/$defs/U64" },
+        "expected_control_generation": { "$ref": "#/$defs/U64" },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "approval",
+            "human_input",
+            "verification",
+            "pause",
+            "cancel",
+            "restriction",
+            "resource_limit",
+            "authority_unknown",
+            "submission_unknown",
+            "inference_unknown",
+            "complete"
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "assignment_id",
+        "assignment_epoch",
+        "expected_checkpoint_revision",
+        "expected_control_generation",
+        "reason"
+      ]
+    },
+    "RuntimeControlAckV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.control-ack.v1" },
+        "command_id": { "$ref": "#/$defs/UUIDv4" },
+        "assignment_id": { "$ref": "#/$defs/UUID" },
+        "assignment_epoch": { "$ref": "#/$defs/U64" },
+        "control_generation": { "$ref": "#/$defs/U64" },
+        "pending_action_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "assignment_id",
+        "assignment_epoch",
+        "control_generation",
+        "pending_action_id"
+      ]
+    },
+    "RuntimeCommandV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_id": { "const": "runtime.command.v1" },
+            "kind": { "const": "claim" },
+            "payload": { "$ref": "#/$defs/RuntimeClaimV1" }
+          },
+          "required": ["schema_id", "kind", "payload"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_id": { "const": "runtime.command.v1" },
+            "kind": { "const": "heartbeat" },
+            "payload": { "$ref": "#/$defs/RuntimeHeartbeatV1" }
+          },
+          "required": ["schema_id", "kind", "payload"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_id": { "const": "runtime.command.v1" },
+            "kind": { "const": "commit" },
+            "payload": { "$ref": "#/$defs/RuntimeCheckpointCommitV1" }
+          },
+          "required": ["schema_id", "kind", "payload"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_id": { "const": "runtime.command.v1" },
+            "kind": { "const": "yield" },
+            "payload": { "$ref": "#/$defs/RuntimeYieldV1" }
+          },
+          "required": ["schema_id", "kind", "payload"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_id": { "const": "runtime.command.v1" },
+            "kind": { "const": "control_ack" },
+            "payload": { "$ref": "#/$defs/RuntimeControlAckV1" }
+          },
+          "required": ["schema_id", "kind", "payload"]
+        }
+      ]
+    },
+    "RuntimeSnapshotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.snapshot.v1" },
+        "assignment": { "$ref": "#/$defs/RuntimeAssignmentV1" },
+        "checkpoint": { "$ref": "#/$defs/ExecutionCheckpointV1" },
+        "value_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeBindingRefV1" },
+          "maxItems": 10000
+        }
+      },
+      "required": ["schema_id", "assignment", "checkpoint", "value_refs"]
+    },
+    "RuntimeCommandResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.command-result.v1" },
+        "command_id": { "$ref": "#/$defs/UUIDv4" },
+        "snapshot": { "$ref": "#/$defs/RuntimeSnapshotV1" }
+      },
+      "required": ["schema_id", "command_id", "snapshot"]
+    },
+    "RuntimeProblemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.problem.v1" },
+        "code": { "$ref": "#/$defs/RuntimeErrorCodeV1" },
+        "execution_id": { "$ref": "#/$defs/UUID" },
+        "checkpoint_revision": { "$ref": "#/$defs/U64" },
+        "control_generation": { "$ref": "#/$defs/U64" }
+      },
+      "required": [
+        "schema_id",
+        "code",
+        "execution_id",
+        "checkpoint_revision",
+        "control_generation"
+      ]
+    },
+    "RuntimeMaterializedValueV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.materialized-value.v1" },
+        "binding": { "$ref": "#/$defs/RuntimeBindingRefV1" },
+        "value": { "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/PortableJsonValueV1" }
+      },
+      "required": ["schema_id", "binding", "value"]
+    },
+    "RuntimeValueUploadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.value-upload.v1" },
+        "command_id": { "$ref": "#/$defs/UUIDv4" },
+        "assignment_id": { "$ref": "#/$defs/UUID" },
+        "assignment_epoch": { "$ref": "#/$defs/U64" },
+        "expected_checkpoint_revision": { "$ref": "#/$defs/U64" },
+        "expected_control_generation": { "$ref": "#/$defs/U64" },
+        "binding_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "value_revision": { "$ref": "#/$defs/U64" },
+        "type_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "value_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "evidence": { "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/ValueEvidenceV1" },
+        "owner_result_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/RuntimeOwnerResultRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "source_expires_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "value": { "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/PortableJsonValueV1" }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "assignment_id",
+        "assignment_epoch",
+        "expected_checkpoint_revision",
+        "expected_control_generation",
+        "binding_id",
+        "value_revision",
+        "type_sha256",
+        "value_sha256",
+        "evidence",
+        "owner_result_ref",
+        "source_expires_at",
+        "value"
+      ]
+    },
+    "RuntimeValueQueryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.value-query.v1" },
+        "assignment_id": { "$ref": "#/$defs/UUID" },
+        "assignment_epoch": { "$ref": "#/$defs/U64" },
+        "checkpoint_revision": { "$ref": "#/$defs/U64" },
+        "value_execution_id": { "$ref": "#/$defs/UUID" },
+        "binding_id": { "$ref": "#/$defs/PlanIdentifier" },
+        "value_revision": { "$ref": "#/$defs/U64" }
+      },
+      "required": [
+        "schema_id",
+        "assignment_id",
+        "assignment_epoch",
+        "checkpoint_revision",
+        "value_execution_id",
+        "binding_id",
+        "value_revision"
+      ]
+    },
+    "RuntimeRetentionFenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "execution_id": { "$ref": "#/$defs/UUID" },
+        "retention_generation": { "$ref": "#/$defs/U64" },
+        "terminal_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "last_progress_high_watermark": { "$ref": "#/$defs/UtcDateTime" },
+        "source_deadline": { "$ref": "#/$defs/UtcDateTime" },
+        "retention_deadline": { "$ref": "#/$defs/UtcDateTime" },
+        "invalidated_binding_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PlanIdentifier" },
+          "maxItems": 256
+        },
+        "event_at": { "$ref": "#/$defs/UtcDateTime" }
+      },
+      "required": [
+        "organization_id",
+        "execution_id",
+        "retention_generation",
+        "terminal_at",
+        "last_progress_high_watermark",
+        "source_deadline",
+        "retention_deadline",
+        "invalidated_binding_ids",
+        "event_at"
+      ]
+    },
+    "ValidationCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "case_id": { "type": "string" },
+        "schema_ref": { "type": "string" },
+        "instance": {},
+        "expected_valid": { "type": "boolean" }
+      },
+      "required": ["case_id", "schema_ref", "instance", "expected_valid"]
+    },
+    "RuntimeBindingVectorV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "case_id": { "type": "string" },
+        "kind": { "type": "string" },
+        "inputs": { "type": "object" },
+        "expected": { "type": "object" }
+      },
+      "required": ["case_id", "kind", "inputs", "expected"]
+    },
+    "RuntimeFixtureSetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": { "const": "runtime.fixture-set.v1" },
+        "validation_cases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ValidationCaseV1" }
+        },
+        "binding_vectors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RuntimeBindingVectorV1" }
+        }
+      },
+      "required": ["schema_id", "validation_cases", "binding_vectors"]
+    }
+  }
+}

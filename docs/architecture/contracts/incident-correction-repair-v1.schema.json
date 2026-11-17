@@ -1,0 +1,2649 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:incident-correction-repair:v1",
+  "title": "Oryn Incident Detection, Correction, and Repair Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for incidents, signals, groups, corrections, micro-interviews, diagnoses, repair proposals, containment restrictions, and prevention specifications.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/IncidentSignalV1"
+    },
+    {
+      "$ref": "#/$defs/IncidentV1"
+    },
+    {
+      "$ref": "#/$defs/IncidentGroupV1"
+    },
+    {
+      "$ref": "#/$defs/IncidentHistoryEntryV1"
+    },
+    {
+      "$ref": "#/$defs/CorrectionV1"
+    },
+    {
+      "$ref": "#/$defs/CorrectionQuestionV1"
+    },
+    {
+      "$ref": "#/$defs/ReviewedCorrectionV1"
+    },
+    {
+      "$ref": "#/$defs/CorrectionTranscriptV1"
+    },
+    {
+      "$ref": "#/$defs/DiagnosisV1"
+    },
+    {
+      "$ref": "#/$defs/RepairProposalV1"
+    },
+    {
+      "$ref": "#/$defs/PreventionSpecificationV1"
+    },
+    {
+      "$ref": "#/$defs/RepairReleaseObservationV1"
+    },
+    {
+      "$ref": "#/$defs/SubmitIncidentSignalCommandV1"
+    },
+    {
+      "$ref": "#/$defs/TransitionIncidentCommandV1"
+    },
+    {
+      "$ref": "#/$defs/SetIncidentRestrictionCommandV1"
+    },
+    {
+      "$ref": "#/$defs/ClearIncidentRestrictionCommandV1"
+    },
+    {
+      "$ref": "#/$defs/SubmitCorrectionCommandV1"
+    },
+    {
+      "$ref": "#/$defs/ReviewCorrectionCommandV1"
+    },
+    {
+      "$ref": "#/$defs/AnswerCorrectionQuestionCommandV1"
+    },
+    {
+      "$ref": "#/$defs/RequestDiagnosisCommandV1"
+    },
+    {
+      "$ref": "#/$defs/ProposeRepairCommandV1"
+    },
+    {
+      "$ref": "#/$defs/ReviewRepairCommandV1"
+    },
+    {
+      "$ref": "#/$defs/ResolveIncidentCommandV1"
+    },
+    {
+      "$ref": "#/$defs/DismissIncidentCommandV1"
+    },
+    {
+      "$ref": "#/$defs/DecideGroupMembershipCommandV1"
+    },
+    {
+      "$ref": "#/$defs/IncidentFixtureSetV1"
+    },
+    {
+      "$ref": "#/$defs/ReliabilityReportingFactV1"
+    }
+  ],
+  "$defs": {
+    "ReliabilityReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "incident_id",
+        "agent_id",
+        "agent_version_id",
+        "workflow_id",
+        "reviewed_exception_type_ref",
+        "occurred_at",
+        "detected_at",
+        "contained_at",
+        "safe_boundary_at",
+        "unresolved_effects_count",
+        "correction_review_state",
+        "correction_turnaround_ms",
+        "repair_proposal_kind",
+        "repair_lineage_ref",
+        "recovery_evidence_status"
+      ],
+      "properties": {
+        "schema_id": { "const": "incident.reliability-reporting-fact.v1" },
+        "organization_id": { "$ref": "#/$defs/UUID" },
+        "incident_id": { "$ref": "#/$defs/UUID" },
+        "agent_id": { "$ref": "#/$defs/Identifier" },
+        "agent_version_id": { "$ref": "#/$defs/Identifier" },
+        "workflow_id": { "$ref": "#/$defs/Identifier" },
+        "reviewed_exception_type_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "occurred_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "detected_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "contained_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "safe_boundary_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/UtcDateTime" },
+            { "type": "null" }
+          ]
+        },
+        "unresolved_effects_count": { "$ref": "#/$defs/U64" },
+        "correction_review_state": {
+          "type": "string",
+          "enum": ["not_requested", "requested", "submitted", "accepted", "rejected"]
+        },
+        "correction_turnaround_ms": {
+          "oneOf": [
+            { "$ref": "#/$defs/U64" },
+            { "type": "null" }
+          ]
+        },
+        "repair_proposal_kind": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": ["interaction_binding", "string_format", "procedural_branch", "rule_adjustment"]
+            },
+            { "type": "null" }
+          ]
+        },
+        "repair_lineage_ref": {
+          "oneOf": [
+            { "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "recovery_evidence_status": {
+          "type": "string",
+          "enum": ["verified", "unverified", "none"]
+        }
+      }
+    },
+    "UUID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "Revision": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "NonNegativeDecimalString": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$"
+    },
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "SeverityV1": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "StatusV1": {
+      "type": "string",
+      "enum": [
+        "open",
+        "triaged",
+        "contained",
+        "investigating",
+        "repair_proposed",
+        "testing",
+        "awaiting_approval",
+        "limited_release",
+        "monitoring",
+        "resolved",
+        "dismissed_non_issue",
+        "reopened"
+      ]
+    },
+    "FailureCategoryV1": {
+      "type": "string",
+      "enum": [
+        "interface_drift",
+        "data_document_format_drift",
+        "missing_business_rule",
+        "changed_business_policy",
+        "reasoning_decision_failure",
+        "external_service_failure",
+        "permission_authorization_failure",
+        "inconsistent_source_data",
+        "duplicate_or_partial_submission",
+        "verification_failure",
+        "unknown"
+      ]
+    },
+    "ProducerV1": {
+      "type": "string",
+      "enum": [
+        "verifier",
+        "runtime",
+        "orchestrator",
+        "identity",
+        "adapter",
+        "simulator",
+        "operator"
+      ]
+    },
+    "SubmissionStateV1": {
+      "type": "string",
+      "enum": [
+        "not_submitted",
+        "acknowledged",
+        "unknown",
+        "not_applicable"
+      ]
+    },
+    "EvidenceAvailabilityV1": {
+      "type": "string",
+      "enum": [
+        "available",
+        "partially_unavailable",
+        "unavailable",
+        "withdrawn"
+      ]
+    },
+    "ContainmentEffectV1": {
+      "type": "string",
+      "enum": [
+        "pause_execution",
+        "pause_writes",
+        "stop_new_jobs"
+      ]
+    },
+    "ContainmentStateV1": {
+      "type": "string",
+      "enum": [
+        "active",
+        "cleared"
+      ]
+    },
+    "LearningTypeV1": {
+      "type": "string",
+      "enum": [
+        "mistake_correction",
+        "legitimate_exception",
+        "discretionary_one_off",
+        "interface_workaround",
+        "policy_clarification",
+        "actual_policy_change"
+      ]
+    },
+    "GeneralityV1": {
+      "type": "string",
+      "enum": [
+        "case_only",
+        "proposed_reusable"
+      ]
+    },
+    "CorrectionReviewStateV1": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "needs_evidence",
+        "accepted",
+        "rejected",
+        "withdrawn",
+        "conflicted"
+      ]
+    },
+    "QuestionStatusV1": {
+      "type": "string",
+      "enum": [
+        "open",
+        "answered",
+        "dismissed"
+      ]
+    },
+    "QuestionAnswerVariantV1": {
+      "type": "string",
+      "enum": [
+        "answer",
+        "dont_know",
+        "not_general_rule",
+        "ask_another_expert",
+        "dismiss"
+      ]
+    },
+    "TranscriptQualityV1": {
+      "type": "string",
+      "enum": [
+        "reliable",
+        "unreliable",
+        "inaudible"
+      ]
+    },
+    "HypothesisReviewStateV1": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "supported",
+        "rejected"
+      ]
+    },
+    "RepairStatusV1": {
+      "type": "string",
+      "enum": [
+        "proposed",
+        "needs_input",
+        "review_requested",
+        "changes_requested",
+        "rejected",
+        "accepted_for_draft",
+        "evaluating",
+        "blocked",
+        "validated",
+        "released",
+        "monitoring",
+        "superseded",
+        "withdrawn"
+      ]
+    },
+    "IncidentErrorCodeV1": {
+      "type": "string",
+      "enum": [
+        "INCIDENT_NOT_AUTHORIZED",
+        "INCIDENT_NOT_FOUND",
+        "INCIDENT_REVISION_CONFLICT",
+        "INCIDENT_SOURCE_CONFLICT",
+        "INCIDENT_TRANSITION_INVALID",
+        "INCIDENT_CONTAINMENT_PENDING",
+        "INCIDENT_APPROVAL_REQUIRED",
+        "INCIDENT_EVIDENCE_CONFLICT",
+        "INCIDENT_KNOWLEDGE_APPROVAL_REQUIRED",
+        "INCIDENT_REPAIR_SCOPE_INVALID",
+        "INCIDENT_REPAIR_STALE",
+        "INCIDENT_RECOVERY_CRITERIA_UNMET",
+        "INCIDENT_EVIDENCE_UNAVAILABLE",
+        "INCIDENT_INPUT_RESTRICTED",
+        "INCIDENT_LIMIT_EXCEEDED",
+        "INCIDENT_DEPENDENCY_UNAVAILABLE"
+      ]
+    },
+    "OwnerRecordRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner_component",
+        "resource_kind",
+        "resource_id",
+        "version_id",
+        "content_sha256"
+      ],
+      "properties": {
+        "owner_component": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "resource_kind": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "resource_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "version_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        }
+      }
+    },
+    "IncidentEvidenceRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner_ref",
+        "sensitivity",
+        "availability",
+        "source_expires_at"
+      ],
+      "properties": {
+        "owner_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "sensitivity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "availability": {
+          "$ref": "#/$defs/EvidenceAvailabilityV1"
+        },
+        "source_expires_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "IncidentRefV1": {
+      "allOf": [
+        {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "entity_kind": {
+              "const": "incident"
+            }
+          }
+        }
+      ]
+    },
+    "CorrectionRefV1": {
+      "allOf": [
+        {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "entity_kind": {
+              "const": "correction"
+            }
+          }
+        }
+      ]
+    },
+    "RepairRefV1": {
+      "allOf": [
+        {
+          "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "entity_kind": {
+              "const": "repair"
+            }
+          }
+        }
+      ]
+    },
+    "PreventionSpecRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "prevention_spec_id",
+        "version_id",
+        "content_sha256"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "prevention_spec_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        }
+      }
+    },
+    "IncidentContainmentTargetV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "execution_context",
+            "case_id",
+            "session_id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "case"
+            },
+            "execution_context": {
+              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+            },
+            "case_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "session_id": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Identifier"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "job_id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "job"
+            },
+            "job_id": {
+              "$ref": "#/$defs/Identifier"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "schedule_id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "schedule"
+            },
+            "schedule_id": {
+              "$ref": "#/$defs/UUID"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "agent_id",
+            "agent_version_id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "agent_version"
+            },
+            "agent_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "agent_version_id": {
+              "$ref": "#/$defs/UUID"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "connection_id",
+            "environment"
+          ],
+          "properties": {
+            "kind": {
+              "const": "connection"
+            },
+            "connection_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "environment": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "application_id",
+            "operation_id",
+            "connection_id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "operation"
+            },
+            "application_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "operation_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "connection_id": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Identifier"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "capability_ref"
+          ],
+          "properties": {
+            "kind": {
+              "const": "capability"
+            },
+            "capability_ref": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rule_ref"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rule"
+            },
+            "rule_ref": {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "worker_instance_id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "worker"
+            },
+            "worker_instance_id": {
+              "$ref": "#/$defs/UUID"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "organization_id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "organization"
+            },
+            "organization_id": {
+              "$ref": "#/$defs/UUID"
+            }
+          }
+        }
+      ]
+    },
+    "IncidentSignalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "signal_id",
+        "producer",
+        "source_event_id",
+        "source_ref",
+        "execution_context",
+        "agent_ref",
+        "capability_ref",
+        "branch_id",
+        "node_id",
+        "responsible_team_id",
+        "category_codes",
+        "observed_fact_refs",
+        "expected_state_refs",
+        "evidence_refs",
+        "error_code",
+        "submission_state",
+        "occurred_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.signal.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "signal_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "producer": {
+          "$ref": "#/$defs/ProducerV1"
+        },
+        "source_event_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "source_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "execution_context": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "agent_ref": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capability_ref": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "branch_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "node_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "category_codes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FailureCategoryV1"
+          },
+          "minItems": 1,
+          "maxItems": 11,
+          "uniqueItems": true
+        },
+        "observed_fact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 128
+        },
+        "expected_state_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 128
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentEvidenceRefV1"
+          },
+          "maxItems": 128
+        },
+        "error_code": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "submission_state": {
+          "$ref": "#/$defs/SubmissionStateV1"
+        },
+        "occurred_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "IncidentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "incident_id",
+        "version_id",
+        "revision",
+        "responsible_team_id",
+        "owner_actor_id",
+        "severity",
+        "status",
+        "source_signal_refs",
+        "affected_context_refs",
+        "agent_refs",
+        "symptom_ref",
+        "expectation_ref",
+        "impact_ref",
+        "evidence_availability",
+        "containment_refs",
+        "correction_refs",
+        "repair_refs",
+        "created_at",
+        "updated_at",
+        "content_sha256"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.record.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "incident_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "responsible_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "owner_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "severity": {
+          "$ref": "#/$defs/SeverityV1"
+        },
+        "status": {
+          "$ref": "#/$defs/StatusV1"
+        },
+        "source_signal_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 128
+        },
+        "affected_context_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 128
+        },
+        "agent_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+          },
+          "maxItems": 128
+        },
+        "symptom_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "expectation_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "impact_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "evidence_availability": {
+          "$ref": "#/$defs/EvidenceAvailabilityV1"
+        },
+        "containment_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 128
+        },
+        "correction_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CorrectionRefV1"
+          },
+          "maxItems": 128
+        },
+        "repair_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RepairRefV1"
+          },
+          "maxItems": 32
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        }
+      }
+    },
+    "IncidentGroupV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "group_id",
+        "revision",
+        "signature_revision",
+        "signature_sha256",
+        "member_incident_refs",
+        "workaround_ref",
+        "first_occurred_at",
+        "last_occurred_at",
+        "distinct_case_count",
+        "impact_availability"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.group.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "group_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "signature_revision": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "signature_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "member_incident_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 128
+        },
+        "workaround_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OwnerRecordRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "first_occurred_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "last_occurred_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "distinct_case_count": {
+          "$ref": "#/$defs/NonNegativeDecimalString"
+        },
+        "impact_availability": {
+          "$ref": "#/$defs/EvidenceAvailabilityV1"
+        }
+      }
+    },
+    "IncidentHistoryEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "incident_id",
+        "event_id",
+        "revision",
+        "actor_ref",
+        "causation_ref",
+        "before_status",
+        "before_severity",
+        "after_status",
+        "after_severity",
+        "reason_ref",
+        "occurred_at"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "incident_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "event_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "actor_ref": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "causation_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "before_status": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/StatusV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "before_severity": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/SeverityV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "after_status": {
+          "$ref": "#/$defs/StatusV1"
+        },
+        "after_severity": {
+          "$ref": "#/$defs/SeverityV1"
+        },
+        "reason_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "occurred_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "CorrectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "correction_id",
+        "version_id",
+        "revision",
+        "incident_ref",
+        "execution_context",
+        "contributor",
+        "learning_type",
+        "content_ref",
+        "source_refs",
+        "generality",
+        "review_state",
+        "reviewer_ref",
+        "decision_ref",
+        "generated_artifact_refs",
+        "source_expires_at",
+        "created_at",
+        "updated_at",
+        "content_sha256"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.correction.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "correction_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "incident_ref": {
+          "$ref": "#/$defs/IncidentRefV1"
+        },
+        "execution_context": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contributor": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "learning_type": {
+          "$ref": "#/$defs/LearningTypeV1"
+        },
+        "content_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 128
+        },
+        "generality": {
+          "$ref": "#/$defs/GeneralityV1"
+        },
+        "review_state": {
+          "$ref": "#/$defs/CorrectionReviewStateV1"
+        },
+        "reviewer_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decision_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OwnerRecordRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "generated_artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 128
+        },
+        "source_expires_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        }
+      }
+    },
+    "CorrectionQuestionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "question_id",
+        "revision",
+        "incident_ref",
+        "branch_id",
+        "prompt_ref",
+        "assigned_team_id",
+        "assigned_actor_id",
+        "status",
+        "deadline",
+        "answer_linkage",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.correction-question.v1"
+        },
+        "question_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "incident_ref": {
+          "$ref": "#/$defs/IncidentRefV1"
+        },
+        "branch_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "prompt_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "assigned_team_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "assigned_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/QuestionStatusV1"
+        },
+        "deadline": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "answer_linkage": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "variant",
+                "answer_ref",
+                "answered_by",
+                "answered_at"
+              ],
+              "properties": {
+                "variant": {
+                  "$ref": "#/$defs/QuestionAnswerVariantV1"
+                },
+                "answer_ref": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/OwnerRecordRefV1"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "answered_by": {
+                  "$ref": "#/$defs/Identifier"
+                },
+                "answered_at": {
+                  "$ref": "#/$defs/UtcDateTime"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "ReviewedCorrectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "correction_id",
+        "incident_ref",
+        "execution_context",
+        "learning_type",
+        "generality",
+        "sanitized_text",
+        "evidence_refs",
+        "source_expires_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.reviewed-correction.v1"
+        },
+        "correction_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "incident_ref": {
+          "$ref": "#/$defs/IncidentRefV1"
+        },
+        "execution_context": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "learning_type": {
+          "$ref": "#/$defs/LearningTypeV1"
+        },
+        "generality": {
+          "$ref": "#/$defs/GeneralityV1"
+        },
+        "sanitized_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentEvidenceRefV1"
+          },
+          "maxItems": 128
+        },
+        "source_expires_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CorrectionTranscriptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "capture_id",
+        "text",
+        "quality_status",
+        "language",
+        "sample_count"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.correction-transcript.v1"
+        },
+        "capture_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "quality_status": {
+          "$ref": "#/$defs/TranscriptQualityV1"
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 35
+        },
+        "sample_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 960000
+        }
+      }
+    },
+    "HypothesisV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hypothesis_id",
+        "statement_ref",
+        "supporting_evidence_refs",
+        "contradicting_evidence_refs",
+        "review_state"
+      ],
+      "properties": {
+        "hypothesis_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "statement_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "supporting_evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentEvidenceRefV1"
+          },
+          "maxItems": 128
+        },
+        "contradicting_evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentEvidenceRefV1"
+          },
+          "maxItems": 128
+        },
+        "review_state": {
+          "$ref": "#/$defs/HypothesisReviewStateV1"
+        }
+      }
+    },
+    "DiagnosisV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "diagnosis_id",
+        "version_id",
+        "revision",
+        "incident_ref",
+        "input_digest",
+        "observed_fact_refs",
+        "hypotheses",
+        "category_claims",
+        "first_divergence_ref",
+        "missing_evidence",
+        "suggested_expert_question_ref",
+        "source_citations",
+        "provenance",
+        "created_at",
+        "content_sha256"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.diagnosis.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "diagnosis_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "incident_ref": {
+          "$ref": "#/$defs/IncidentRefV1"
+        },
+        "input_digest": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "observed_fact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 128
+        },
+        "hypotheses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HypothesisV1"
+          },
+          "maxItems": 32
+        },
+        "category_claims": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FailureCategoryV1"
+          },
+          "maxItems": 11
+        },
+        "first_divergence_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OwnerRecordRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "missing_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "maxItems": 64
+        },
+        "suggested_expert_question_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OwnerRecordRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 128
+        },
+        "provenance": {
+          "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/SynthesisProvenanceV1"
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        }
+      }
+    },
+    "RepairScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "permitted_node_ids",
+        "permitted_json_pointers",
+        "approved_source_refs",
+        "unchanged_safety_contract_sha256"
+      ],
+      "properties": {
+        "permitted_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128
+        },
+        "permitted_json_pointers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "maxItems": 256
+        },
+        "approved_source_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 128
+        },
+        "unchanged_safety_contract_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        }
+      }
+    },
+    "AdapterChangeProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pack_id",
+        "profile_id",
+        "operation_id",
+        "affected_targets",
+        "observed_drift",
+        "required_change_summary",
+        "test_requirements"
+      ],
+      "properties": {
+        "pack_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "affected_targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 64
+        },
+        "observed_drift": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "required_change_summary": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "test_requirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "maxItems": 32
+        }
+      }
+    },
+    "AssistChangeProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assist_plan_id",
+        "base_version_id",
+        "change_summary",
+        "affected_node_ids"
+      ],
+      "properties": {
+        "assist_plan_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "base_version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "change_summary": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "affected_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 64
+        }
+      }
+    },
+    "RepairAssociationsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regression_requirement_refs",
+        "candidate_identity",
+        "evaluation_refs",
+        "release_refs"
+      ],
+      "properties": {
+        "regression_requirement_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/SimulationRegressionRequirementRefV1"
+          },
+          "maxItems": 128
+        },
+        "candidate_identity": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evaluation_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 32
+        },
+        "release_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 32
+        }
+      }
+    },
+    "RepairProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "repair_id",
+        "version_id",
+        "revision",
+        "incident_refs",
+        "correction_refs",
+        "diagnosis_refs",
+        "target",
+        "base_version_id",
+        "scope",
+        "replacement",
+        "changed_pointers",
+        "source_citations",
+        "rationale_ref",
+        "benefit_ref",
+        "risk_ref",
+        "required_approvals",
+        "status",
+        "associations",
+        "content_sha256",
+        "provenance",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "repair.proposal.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "repair_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "incident_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "correction_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CorrectionRefV1"
+          },
+          "maxItems": 32
+        },
+        "diagnosis_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 32
+        },
+        "target": {
+          "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetV1"
+        },
+        "base_version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "scope": {
+          "$ref": "#/$defs/RepairScopeV1"
+        },
+        "replacement": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/EditableAgentPlanV1"
+            },
+            {
+              "$ref": "#/$defs/AdapterChangeProposalV1"
+            },
+            {
+              "$ref": "#/$defs/AssistChangeProposalV1"
+            }
+          ]
+        },
+        "changed_pointers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 256
+        },
+        "source_citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 128
+        },
+        "rationale_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "benefit_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "risk_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "required_approvals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 16
+        },
+        "status": {
+          "$ref": "#/$defs/RepairStatusV1"
+        },
+        "associations": {
+          "$ref": "#/$defs/RepairAssociationsV1"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "provenance": {
+          "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/SynthesisProvenanceV1"
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "PreventionSpecificationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "prevention_spec_id",
+        "version_id",
+        "incident_refs",
+        "scenario_refs",
+        "rationale_ref",
+        "content_sha256",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.prevention-spec.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "prevention_spec_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "incident_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "scenario_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/SimulationVersionRefV1"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "rationale_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "created_by": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "RepairReleaseObservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "incident_ref",
+        "repair_ref",
+        "base_target",
+        "candidate_identity",
+        "release_ref",
+        "observation_ref",
+        "evaluation_ref",
+        "rollout_policy_sha256",
+        "observation_window_start",
+        "observation_window_end",
+        "verified_case_count",
+        "mismatch_case_count",
+        "unknown_case_count",
+        "new_incident_count",
+        "new_incident_refs",
+        "incident_refs_complete",
+        "incident_manifest_sha256",
+        "recovery_criteria_met"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.release-observation.v1"
+        },
+        "incident_ref": {
+          "$ref": "#/$defs/IncidentRefV1"
+        },
+        "repair_ref": {
+          "$ref": "#/$defs/RepairRefV1"
+        },
+        "base_target": {
+          "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetV1"
+        },
+        "candidate_identity": {
+          "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1"
+        },
+        "release_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "observation_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "evaluation_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "rollout_policy_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "observation_window_start": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "observation_window_end": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "verified_case_count": {
+          "$ref": "#/$defs/NonNegativeDecimalString"
+        },
+        "mismatch_case_count": {
+          "$ref": "#/$defs/NonNegativeDecimalString"
+        },
+        "unknown_case_count": {
+          "$ref": "#/$defs/NonNegativeDecimalString"
+        },
+        "new_incident_count": {
+          "$ref": "#/$defs/NonNegativeDecimalString"
+        },
+        "new_incident_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentRefV1"
+          },
+          "maxItems": 32
+        },
+        "incident_refs_complete": {
+          "type": "boolean"
+        },
+        "incident_manifest_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "recovery_criteria_met": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SubmitIncidentSignalCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "signal"
+      ],
+      "properties": {
+        "signal": {
+          "$ref": "#/$defs/IncidentSignalV1"
+        }
+      }
+    },
+    "TransitionIncidentCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "incident_id",
+        "expected_revision",
+        "target_status",
+        "reason_ref"
+      ],
+      "properties": {
+        "incident_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "target_status": {
+          "$ref": "#/$defs/StatusV1"
+        },
+        "target_severity": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/SeverityV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assigned_owner_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        }
+      }
+    },
+    "SetIncidentRestrictionCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "restriction_id",
+        "expected_generation",
+        "incident_ref",
+        "target",
+        "effect",
+        "state",
+        "reason_ref",
+        "approval_refs"
+      ],
+      "properties": {
+        "restriction_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_generation": {
+          "$ref": "#/$defs/Revision"
+        },
+        "incident_ref": {
+          "$ref": "#/$defs/IncidentRefV1"
+        },
+        "target": {
+          "$ref": "#/$defs/IncidentContainmentTargetV1"
+        },
+        "effect": {
+          "$ref": "#/$defs/ContainmentEffectV1"
+        },
+        "state": {
+          "$ref": "#/$defs/ContainmentStateV1"
+        },
+        "reason_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "approval_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 16
+        }
+      }
+    },
+    "ClearIncidentRestrictionCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "restriction_id",
+        "expected_generation",
+        "incident_ref",
+        "reason_ref",
+        "approval_refs"
+      ],
+      "properties": {
+        "restriction_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_generation": {
+          "$ref": "#/$defs/Revision"
+        },
+        "incident_ref": {
+          "$ref": "#/$defs/IncidentRefV1"
+        },
+        "reason_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "approval_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 16
+        }
+      }
+    },
+    "SubmitCorrectionCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "incident_ref",
+        "expected_incident_revision",
+        "learning_type",
+        "generality",
+        "sanitized_text",
+        "evidence_refs"
+      ],
+      "properties": {
+        "incident_ref": {
+          "$ref": "#/$defs/IncidentRefV1"
+        },
+        "expected_incident_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "execution_context": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/ExecutionContextV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "learning_type": {
+          "$ref": "#/$defs/LearningTypeV1"
+        },
+        "generality": {
+          "$ref": "#/$defs/GeneralityV1"
+        },
+        "sanitized_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentEvidenceRefV1"
+          },
+          "maxItems": 128
+        },
+        "review_attestation": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:contribution-sync:v1#/$defs/SignedReviewAttestationV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ReviewCorrectionCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "correction_id",
+        "expected_correction_revision",
+        "decision",
+        "reason_ref"
+      ],
+      "properties": {
+        "correction_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_correction_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "accept",
+            "request_evidence",
+            "reject"
+          ]
+        },
+        "reason_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        },
+        "assigned_reviewer_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "AnswerCorrectionQuestionCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "question_id",
+        "expected_question_revision",
+        "variant"
+      ],
+      "properties": {
+        "question_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_question_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "variant": {
+          "$ref": "#/$defs/QuestionAnswerVariantV1"
+        },
+        "explanation": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 8192
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "alternate_expert_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "RequestDiagnosisCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "incident_id",
+        "expected_incident_revision"
+      ],
+      "properties": {
+        "incident_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_incident_revision": {
+          "$ref": "#/$defs/Revision"
+        }
+      }
+    },
+    "ProposeRepairCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "incident_id",
+        "expected_incident_revision",
+        "base_version_id",
+        "scope",
+        "replacement",
+        "rationale_ref"
+      ],
+      "properties": {
+        "incident_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_incident_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "base_version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "scope": {
+          "$ref": "#/$defs/RepairScopeV1"
+        },
+        "replacement": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:agent-factory:v1#/$defs/EditableAgentPlanV1"
+            },
+            {
+              "$ref": "#/$defs/AdapterChangeProposalV1"
+            },
+            {
+              "$ref": "#/$defs/AssistChangeProposalV1"
+            }
+          ]
+        },
+        "rationale_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        }
+      }
+    },
+    "ReviewRepairCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repair_id",
+        "expected_repair_revision",
+        "decision",
+        "reason_ref"
+      ],
+      "properties": {
+        "repair_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_repair_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "accept_for_draft",
+            "request_changes",
+            "reject",
+            "withdraw"
+          ]
+        },
+        "reason_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        }
+      }
+    },
+    "ResolveIncidentCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "incident_id",
+        "expected_revision",
+        "disposition",
+        "reason_ref"
+      ],
+      "properties": {
+        "incident_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "disposition": {
+          "type": "string",
+          "enum": [
+            "recovery_confirmed",
+            "accepted_containment"
+          ]
+        },
+        "recovery_evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 32
+        },
+        "retained_restriction_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OwnerRecordRefV1"
+          },
+          "maxItems": 32
+        },
+        "accountable_owner_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review_deadline": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "security_signoff_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OwnerRecordRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        }
+      }
+    },
+    "DismissIncidentCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "incident_id",
+        "expected_revision",
+        "justification_ref"
+      ],
+      "properties": {
+        "incident_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "justification_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        }
+      }
+    },
+    "DecideGroupMembershipCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group_id",
+        "incident_ref",
+        "action",
+        "reason_ref"
+      ],
+      "properties": {
+        "group_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "incident_ref": {
+          "$ref": "#/$defs/IncidentRefV1"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "add",
+            "remove"
+          ]
+        },
+        "reason_ref": {
+          "$ref": "#/$defs/OwnerRecordRefV1"
+        }
+      }
+    },
+    "IncidentFixtureSetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "validation_cases",
+        "digest_vectors",
+        "signature_vectors"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "incident.fixture-set.v1"
+        },
+        "validation_cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "schema_ref",
+              "instance",
+              "expected_valid"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string"
+              },
+              "schema_ref": {
+                "type": "string"
+              },
+              "instance": {},
+              "expected_valid": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "digest_vectors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "preimage",
+              "expected_sha256"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string"
+              },
+              "preimage": {},
+              "expected_sha256": {
+                "$ref": "#/$defs/Sha256Hex"
+              }
+            }
+          }
+        },
+        "signature_vectors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "envelope",
+              "public_key",
+              "expected_valid"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string"
+              },
+              "envelope": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_id",
+                  "signature",
+                  "payload"
+                ],
+                "properties": {
+                  "schema_id": {
+                    "type": "string"
+                  },
+                  "signature": {
+                    "type": "string"
+                  },
+                  "payload": {}
+                }
+              },
+              "public_key": {
+                "type": "string"
+              },
+              "expected_valid": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

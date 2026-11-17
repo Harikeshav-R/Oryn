@@ -1,0 +1,1166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:infrastructure-security:v1",
+  "title": "Oryn Infrastructure and Security Engineering Contract Schemas (v1)",
+  "description": "Normative Draft 2020-12 platform schemas for journal coordination, immutable audit, key custody, storage certification, replica sets, and recovery activations.",
+  "oneOf": [
+    { "$ref": "#/$defs/JournalHeadV1" },
+    { "$ref": "#/$defs/AuditJournalHeadV1" },
+    { "$ref": "#/$defs/MutationManifestV1" },
+    { "$ref": "#/$defs/MutationCompletionV1" },
+    { "$ref": "#/$defs/AuditMutationCompletionV1" },
+    { "$ref": "#/$defs/TransportDedupV1" },
+    { "$ref": "#/$defs/ReplicaSetActivationV1" },
+    { "$ref": "#/$defs/RecoveryActivationV1" },
+    { "$ref": "#/$defs/RecoveryBaselineV1" },
+    { "$ref": "#/$defs/SignedRecoveryBaselineV1" },
+    { "$ref": "#/$defs/AuditArchiveEntryV1" },
+    { "$ref": "#/$defs/AuditEventV1" },
+    { "$ref": "#/$defs/AuditArchiveSealV1" },
+    { "$ref": "#/$defs/SignedAuditArchiveSealV1" },
+    { "$ref": "#/$defs/PayloadKeyFenceV1" },
+    { "$ref": "#/$defs/PayloadCustodyGenerationV1" },
+    { "$ref": "#/$defs/StorageCertificationV1" },
+    { "$ref": "#/$defs/SignedStorageCertificationV1" },
+    { "$ref": "#/$defs/SocDestinationV1" },
+    { "$ref": "#/$defs/JournalAppendRequestV1" },
+    { "$ref": "#/$defs/VerifiedJournalWriterV1" },
+    { "$ref": "#/$defs/InfrastructureProblemV1" },
+    { "$ref": "#/$defs/JournalRangePageV1" },
+    { "$ref": "#/$defs/InfrastructureFixtureSetV1" }
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "OrganizationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "UUIDv7": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "Sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Base64Url32": {
+      "type": "string",
+      "minLength": 43,
+      "maxLength": 43,
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "Base64Url64": {
+      "type": "string",
+      "minLength": 86,
+      "maxLength": 86,
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    },
+    "Region": {
+      "type": "string",
+      "enum": ["us-east-1", "us-east-2", "us-west-2"]
+    },
+    "CoveredStorageClass": {
+      "type": "string",
+      "enum": ["primary", "wal", "read_replica", "backup", "object", "key_custody"]
+    },
+    "ObjectRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "sha256"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "sha256": {
+          "$ref": "#/$defs/Sha256"
+        }
+      }
+    },
+    "TransportDedupV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "scope_sha256",
+        "idempotency_key",
+        "request_sha256",
+        "outcome_sha256",
+        "response_expires_at",
+        "tombstone_expires_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.transport-dedup.v1"
+        },
+        "scope_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "idempotency_key": {
+          "$ref": "#/$defs/UUIDv7"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "outcome_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "response_expires_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "tombstone_expires_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "JournalHeadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "head_version",
+        "writer_generation",
+        "writer_identity",
+        "recovery_epoch",
+        "replica_set_epoch",
+        "mode",
+        "committed",
+        "pending",
+        "baseline_ref",
+        "recovery_activation_ref"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.journal-head.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "head_version": {
+          "$ref": "#/$defs/U64"
+        },
+        "writer_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "writer_identity": {
+          "oneOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "replica_set_epoch": {
+          "$ref": "#/$defs/U64"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["open", "recovering"]
+        },
+        "committed": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["completion_ref", "checkpoint"],
+              "properties": {
+                "completion_ref": {
+                  "$ref": "#/$defs/ObjectRefV1"
+                },
+                "checkpoint": {
+                  "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/SignedAuthorityCheckpointV1"
+                }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "pending": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["manifest_ref", "persisted_at", "receipt_key_id"],
+              "properties": {
+                "manifest_ref": {
+                  "$ref": "#/$defs/ObjectRefV1"
+                },
+                "persisted_at": {
+                  "$ref": "#/$defs/UtcDateTime"
+                },
+                "receipt_key_id": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "baseline_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/ObjectRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "recovery_activation_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/ObjectRefV1" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "AuditJournalHeadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "head_version",
+        "writer_generation",
+        "writer_identity",
+        "recovery_epoch",
+        "replica_set_epoch",
+        "mode",
+        "committed",
+        "pending",
+        "baseline_ref",
+        "recovery_activation_ref"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.audit-journal-head.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "head_version": {
+          "$ref": "#/$defs/U64"
+        },
+        "writer_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "writer_identity": {
+          "oneOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "replica_set_epoch": {
+          "$ref": "#/$defs/U64"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["open", "recovering"]
+        },
+        "committed": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["completion_ref", "checkpoint"],
+              "properties": {
+                "completion_ref": {
+                  "$ref": "#/$defs/ObjectRefV1"
+                },
+                "checkpoint": {
+                  "$ref": "#/$defs/SignedAuditArchiveSealV1"
+                }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "pending": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["manifest_ref", "persisted_at", "receipt_key_id"],
+              "properties": {
+                "manifest_ref": {
+                  "$ref": "#/$defs/ObjectRefV1"
+                },
+                "persisted_at": {
+                  "$ref": "#/$defs/UtcDateTime"
+                },
+                "receipt_key_id": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "baseline_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/ObjectRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "recovery_activation_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/ObjectRefV1" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "MutationManifestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "recovery_epoch",
+        "writer_generation",
+        "mutation_id",
+        "previous_completion_ref",
+        "entry_sha256s",
+        "request_nonce",
+        "transport_dedup",
+        "journal_kind"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.mutation-manifest.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "writer_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "mutation_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "previous_completion_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/ObjectRefV1" },
+            { "type": "null" }
+          ]
+        },
+        "entry_sha256s": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/Sha256"
+          }
+        },
+        "request_nonce": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "transport_dedup": {
+          "oneOf": [
+            { "$ref": "#/$defs/TransportDedupV1" },
+            { "type": "null" }
+          ]
+        },
+        "journal_kind": {
+          "type": "string",
+          "enum": ["authority", "audit"]
+        }
+      }
+    },
+    "MutationCompletionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "mutation_id",
+        "manifest_ref",
+        "checkpoint"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.mutation-completion.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "mutation_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "manifest_ref": {
+          "$ref": "#/$defs/ObjectRefV1"
+        },
+        "checkpoint": {
+          "$ref": "urn:oryn:schemas:identity-policy:v1#/$defs/SignedAuthorityCheckpointV1"
+        }
+      }
+    },
+    "AuditMutationCompletionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "mutation_id",
+        "manifest_ref",
+        "checkpoint"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.audit-mutation-completion.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "mutation_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "manifest_ref": {
+          "$ref": "#/$defs/ObjectRefV1"
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/SignedAuditArchiveSealV1"
+        }
+      }
+    },
+    "ReplicaSetActivationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "transition_id",
+        "incident_id",
+        "old_replica_set_epoch",
+        "new_replica_set_epoch",
+        "old_regions",
+        "new_regions",
+        "scope_registry_sha256",
+        "frozen_heads_sha256",
+        "copied_inventory_sha256",
+        "approval_refs",
+        "activated_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.replica-set-activation.v1"
+        },
+        "transition_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "incident_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "old_replica_set_epoch": {
+          "$ref": "#/$defs/U64"
+        },
+        "new_replica_set_epoch": {
+          "$ref": "#/$defs/U64"
+        },
+        "old_regions": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Region"
+          }
+        },
+        "new_regions": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Region"
+          }
+        },
+        "scope_registry_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "frozen_heads_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "copied_inventory_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "approval_refs": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "activated_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "RecoveryActivationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "recovery_epoch",
+        "database_incarnation",
+        "reopening_at",
+        "recovery_admission_floor",
+        "writer_generation",
+        "replica_set_epoch"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.recovery-activation.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "database_incarnation": {
+          "$ref": "#/$defs/U64"
+        },
+        "reopening_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "recovery_admission_floor": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "writer_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "replica_set_epoch": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "RecoveryBaselineV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "recovery_epoch",
+        "through_sequence",
+        "entry_sha256",
+        "previous_baseline_sha256",
+        "projection_parts",
+        "created_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.recovery-baseline.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "through_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "entry_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "previous_baseline_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/Sha256" },
+            { "type": "null" }
+          ]
+        },
+        "projection_parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ObjectRefV1"
+          }
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "SignedRecoveryBaselineV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "key_id", "payload", "signature"],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.signed-recovery-baseline.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/RecoveryBaselineV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      }
+    },
+    "AuditArchiveEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "sequence",
+        "previous_entry_sha256",
+        "event"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.audit-archive-entry.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "previous_entry_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/Sha256" },
+            { "type": "null" }
+          ]
+        },
+        "event": {
+          "$ref": "#/$defs/AuditEventV1"
+        }
+      }
+    },
+    "AuditEventV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "event_id",
+        "organization_id",
+        "occurred_at",
+        "source_workload",
+        "actor",
+        "action_type",
+        "object_ref",
+        "outcome",
+        "reason_code",
+        "correlation_id",
+        "artifact_sha256s"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.audit-event.v1"
+        },
+        "event_id": {
+          "$ref": "#/$defs/UUIDv7"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "occurred_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "source_workload": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "actor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "actor_id"],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": ["user", "workload"]
+            },
+            "actor_id": {
+              "$ref": "#/$defs/Identifier"
+            }
+          }
+        },
+        "action_type": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "object_ref": {
+          "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["allowed", "denied", "pending", "succeeded", "failed", "unknown"]
+        },
+        "reason_code": {
+          "oneOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "correlation_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "artifact_sha256s": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/Sha256"
+          }
+        }
+      }
+    },
+    "AuditArchiveSealV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "through_sequence",
+        "entry_sha256",
+        "persisted_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.audit-archive-seal.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "through_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "entry_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "persisted_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "SignedAuditArchiveSealV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "key_id", "payload", "signature"],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.signed-audit-archive-seal.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/AuditArchiveSealV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      }
+    },
+    "PayloadKeyFenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "subject_ref",
+        "key_ref",
+        "custody_generation",
+        "deletion_generation",
+        "retention_deadline",
+        "state"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.payload-key-fence.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "subject_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "key_ref": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "custody_generation": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "deletion_generation": {
+          "oneOf": [
+            { "$ref": "#/$defs/U64" },
+            { "type": "null" }
+          ]
+        },
+        "retention_deadline": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "state": {
+          "type": "string",
+          "enum": ["active", "destroy_pending", "destroyed"]
+        }
+      }
+    },
+    "PayloadCustodyGenerationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "custody_generation",
+        "state"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.payload-custody-generation.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "custody_generation": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "state": {
+          "type": "string",
+          "enum": ["active", "lost"]
+        }
+      }
+    },
+    "StorageCertificationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "certificate_id",
+        "configuration_sha256",
+        "inventory_sha256",
+        "regions",
+        "key_custody_generation",
+        "covered_storage_classes",
+        "verified_at",
+        "not_after",
+        "status"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.storage-certification.v1"
+        },
+        "certificate_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "configuration_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "inventory_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "regions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Region"
+          }
+        },
+        "key_custody_generation": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "covered_storage_classes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/CoveredStorageClass"
+          }
+        },
+        "verified_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "revoked"]
+        }
+      }
+    },
+    "SignedStorageCertificationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "key_id", "payload", "signature"],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.signed-storage-certification.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/StorageCertificationV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      }
+    },
+    "SocDestinationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "destination_id",
+        "revision",
+        "url",
+        "credential_ref",
+        "status"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.soc-destination.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "destination_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://[a-zA-Z0-9.-]+(:443)?/v1/logs$"
+        },
+        "credential_ref": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "suspended", "revoked"]
+        }
+      }
+    },
+    "JournalAppendRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "entries",
+        "writer_generation",
+        "recovery_epoch",
+        "replica_set_epoch"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.journal-append-request.v1"
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "items": {
+            "type": "object"
+          }
+        },
+        "writer_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "replica_set_epoch": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "VerifiedJournalWriterV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "workload_identity",
+        "writer_generation",
+        "recovery_epoch",
+        "replica_set_epoch"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.verified-journal-writer.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "workload_identity": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "writer_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "replica_set_epoch": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "InfrastructureProblemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "code",
+        "correlation_id",
+        "retryable"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.infrastructure-problem.v1"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "INFRA_ARCHIVE_INTEGRITY_FAILED",
+            "INFRA_REPLICA_SET_FENCED",
+            "INFRA_STORAGE_UNCERTIFIED",
+            "INFRA_CUSTODY_UNAVAILABLE",
+            "INFRA_SOC_DESTINATION_REJECTED",
+            "IDENTITY_RECOVERY_INCOMPLETE",
+            "IDENTITY_IDEMPOTENCY_CONFLICT",
+            "CP_RECOVERY_REQUIRED"
+          ]
+        },
+        "correlation_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "JournalRangePageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "entries",
+        "next_after_sequence",
+        "through_sequence"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.journal-range-page.v1"
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object"
+          }
+        },
+        "next_after_sequence": {
+          "oneOf": [
+            { "$ref": "#/$defs/U64" },
+            { "type": "null" }
+          ]
+        },
+        "through_sequence": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "InfrastructureFixtureSetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "public_keys", "validation_cases", "semantic_cases"],
+      "properties": {
+        "schema_id": {
+          "const": "infrastructure.fixture-set.v1"
+        },
+        "public_keys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key_id", "purpose", "public_key"],
+            "additionalProperties": false,
+            "properties": {
+              "key_id": { "$ref": "#/$defs/Identifier" },
+              "purpose": {
+                "type": "string",
+                "enum": ["root", "policy", "publisher", "receipt", "evaluation"]
+              },
+              "public_key": { "$ref": "#/$defs/Base64Url32" }
+            }
+          }
+        },
+        "signed_envelope_examples": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "digest_vectors": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "validation_cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["case_id", "schema_ref", "instance", "expected_valid"],
+            "properties": {
+              "case_id": { "type": "string" },
+              "schema_ref": { "type": "string" },
+              "instance": {},
+              "expected_valid": { "type": "boolean" },
+              "note": { "type": "string" }
+            }
+          }
+        },
+        "semantic_cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["case_id", "initial_state", "operations", "expected_observations"],
+            "properties": {
+              "case_id": { "type": "string" },
+              "initial_state": { "type": "object" },
+              "operations": { "type": "array" },
+              "expected_observations": { "type": "object" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1699 @@
+{
+  "schema_id": "knowledge.fixtures.v1",
+  "positive_cases": [
+    {
+      "case_id": "pos_CapabilityVersionV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/CapabilityVersionV1",
+      "instance": {
+        "schema_id": "knowledge.capability-version.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "capability_id": "11111111-1111-4000-8000-000000000001",
+        "workflow_id": "wf_invoice_reconciliation",
+        "version_id": "22222222-2222-4000-8000-000000000001",
+        "revision": "1",
+        "predecessor_version_id": null,
+        "body": {
+          "procedure": {
+            "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+            "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+            "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+            "scope": {
+              "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+              "excluded_cases": [
+                "Credit notes",
+                "Inter-company transfers"
+              ],
+              "application_ids": [
+                "app_erp_core"
+              ],
+              "business_record_types": [
+                "rec_invoice",
+                "rec_purchase_order"
+              ]
+            },
+            "allowed_roles": [
+              "role_ap_specialist"
+            ],
+            "triggers": [
+              "Daily AP batch import completion notification"
+            ],
+            "boundaries": {
+              "start": "Opening reconciliation work queue in ERP Core Client",
+              "end": "Posting invoice adjustment batch or escalating variance"
+            },
+            "prerequisites": [
+              "Active ERP session",
+              "Open reconciliation batch"
+            ],
+            "inputs": [
+              {
+                "name": "batch_file",
+                "value_label": "REDACTED.CSV",
+                "provenance": "observed"
+              }
+            ],
+            "variables": [
+              {
+                "name": "batch_id",
+                "value_label": "B-1",
+                "provenance": "reviewer_supplied"
+              }
+            ],
+            "applications": [
+              {
+                "application_id": "app_erp_core",
+                "display_name": "ERP Core Client"
+              }
+            ],
+            "steps": [
+              {
+                "step_id": "step_open_batch",
+                "kind": "action",
+                "application_id": "app_erp_core",
+                "label": "Open Queue",
+                "description": "Navigate to AP queue",
+                "expected_result": "Batch items display",
+                "approved_rule_refs": [
+                  "rule_1"
+                ],
+                "provenance_claim_ids": [
+                  "claim_1"
+                ],
+                "repeat": null
+              }
+            ],
+            "step_edges": [],
+            "entry_step_id": "step_open_batch",
+            "exit_step_ids": [
+              "step_open_batch"
+            ],
+            "decisions": [],
+            "variants": [],
+            "exceptions": [],
+            "expected_outputs": [
+              "Daily report"
+            ],
+            "postconditions": [
+              {
+                "postcondition_id": "post_1",
+                "description": "Batch posted",
+                "verification_method": "system_evidence",
+                "approved_rule_refs": [
+                  "rule_1"
+                ]
+              }
+            ],
+            "escalation_routes": [
+              "Supervisor Queue"
+            ],
+            "proposed_risk_tier": 2,
+            "guidance_eligibility": "ready",
+            "agent_eligibility": "not_assessed",
+            "execution_qualification_gaps": [],
+            "missing_evidence": [],
+            "known_limitations": []
+          },
+          "audience": {
+            "source_audience_bindings": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "00000000-0000-4000-8000-000000000010",
+                  "revision": 1,
+                  "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                  "eligibility_generation": 1
+                },
+                "purpose": "guidance_presentation",
+                "audience_ids": [
+                  "aud_finance_ap"
+                ]
+              }
+            ],
+            "manual_audience_ids": [
+              "aud_finance_ap"
+            ],
+            "restriction_refs": [],
+            "policy_revision": "1"
+          },
+          "rule_refs": [
+            {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "rule",
+              "entity_id": "rule_po_matching_threshold",
+              "version_id": "33333333-3333-4000-8000-000000000001",
+              "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          ],
+          "provenance": [
+            {
+              "claim_id": "claim_1",
+              "field_pointer": "/steps/0",
+              "basis": "observed",
+              "source_pointers": [
+                {
+                  "source": {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "00000000-0000-4000-8000-000000000010",
+                    "revision": 1,
+                    "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                    "eligibility_generation": 1
+                  },
+                  "field_pointer": "/steps/0"
+                }
+              ],
+              "approved_rule_refs": [],
+              "verification_status": "unverified",
+              "conflict_ids": []
+            }
+          ],
+          "source_manifest": [
+            {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "contribution_id": "00000000-0000-4000-8000-000000000010",
+              "revision": 1,
+              "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+              "eligibility_generation": 1
+            }
+          ],
+          "verification_coverage": {
+            "eligible_attempts": 2,
+            "observed_complete_attempts": 2,
+            "verified_attempts": 2,
+            "contradicted_attempts": 0,
+            "unknown_attempts": 0,
+            "assessment_refs": [
+              "00000000-0000-4000-8000-000000000099"
+            ]
+          },
+          "owner_actor_id": "usr_owner_jane",
+          "responsible_team_id": "team_accounts_payable"
+        },
+        "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "created_by": "usr_owner_jane",
+        "created_at": "2026-11-10T12:00:00Z"
+      }
+    },
+    {
+      "case_id": "pos_PlaybookVersionV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/PlaybookVersionV1",
+      "instance": {
+        "schema_id": "knowledge.playbook-version.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "playbook_id": "77777777-7777-4000-8000-000000000001",
+        "version_id": "88888888-8888-4000-8000-000000000001",
+        "revision": "1",
+        "capability_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "capability",
+          "entity_id": "11111111-1111-4000-8000-000000000001",
+          "version_id": "22222222-2222-4000-8000-000000000001",
+          "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "body": {
+          "name": "Invoice Line Reconciliation with Purchase Orders",
+          "objective": "Reconcile daily invoice line items with ERP purchase orders and flag discrepancies.",
+          "summary": "Match invoice lines to purchase order lines in ERP, verify amounts, and route unit mismatches.",
+          "procedure": {
+            "name": "Invoice Batch Reconciliation with ERP Purchase Orders",
+            "objective": "Reconcile daily invoice batches with ERP purchase orders and flag unit variances",
+            "summary": "Match received invoice line items to open ERP purchase orders, identify price/quantity variance, and route discrepancies.",
+            "scope": {
+              "eligible_cases": "Daily standard supplier invoices submitted via CSV",
+              "excluded_cases": [
+                "Credit notes",
+                "Inter-company transfers"
+              ],
+              "application_ids": [
+                "app_erp_core"
+              ],
+              "business_record_types": [
+                "rec_invoice",
+                "rec_purchase_order"
+              ]
+            },
+            "allowed_roles": [
+              "role_ap_specialist"
+            ],
+            "triggers": [
+              "Daily AP batch import completion notification"
+            ],
+            "boundaries": {
+              "start": "Opening reconciliation work queue in ERP Core Client",
+              "end": "Posting invoice adjustment batch or escalating variance"
+            },
+            "prerequisites": [
+              "Active ERP session",
+              "Open reconciliation batch"
+            ],
+            "inputs": [
+              {
+                "name": "batch_file",
+                "value_label": "REDACTED.CSV",
+                "provenance": "observed"
+              }
+            ],
+            "variables": [
+              {
+                "name": "batch_id",
+                "value_label": "B-1",
+                "provenance": "reviewer_supplied"
+              }
+            ],
+            "applications": [
+              {
+                "application_id": "app_erp_core",
+                "display_name": "ERP Core Client"
+              }
+            ],
+            "steps": [
+              {
+                "step_id": "step_open_batch",
+                "kind": "action",
+                "application_id": "app_erp_core",
+                "label": "Open Queue",
+                "description": "Navigate to AP queue",
+                "expected_result": "Batch items display",
+                "approved_rule_refs": [
+                  "rule_1"
+                ],
+                "provenance_claim_ids": [
+                  "claim_1"
+                ],
+                "repeat": null
+              }
+            ],
+            "step_edges": [],
+            "entry_step_id": "step_open_batch",
+            "exit_step_ids": [
+              "step_open_batch"
+            ],
+            "decisions": [],
+            "variants": [],
+            "exceptions": [],
+            "expected_outputs": [
+              "Daily report"
+            ],
+            "postconditions": [
+              {
+                "postcondition_id": "post_1",
+                "description": "Batch posted",
+                "verification_method": "system_evidence",
+                "approved_rule_refs": [
+                  "rule_1"
+                ]
+              }
+            ],
+            "escalation_routes": [
+              "Supervisor Queue"
+            ],
+            "proposed_risk_tier": 2,
+            "guidance_eligibility": "ready",
+            "agent_eligibility": "not_assessed",
+            "execution_qualification_gaps": [],
+            "missing_evidence": [],
+            "known_limitations": []
+          },
+          "rule_refs": [
+            {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "rule",
+              "entity_id": "rule_po_matching_threshold",
+              "version_id": "33333333-3333-4000-8000-000000000001",
+              "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          ],
+          "audience": {
+            "source_audience_bindings": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "00000000-0000-4000-8000-000000000010",
+                  "revision": 1,
+                  "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                  "eligibility_generation": 1
+                },
+                "purpose": "guidance_presentation",
+                "audience_ids": [
+                  "aud_finance_ap"
+                ]
+              }
+            ],
+            "manual_audience_ids": [
+              "aud_finance_ap"
+            ],
+            "restriction_refs": [],
+            "policy_revision": "1"
+          },
+          "limitations": [
+            "Manual review required if variance exceeds threshold"
+          ],
+          "provenance": [
+            {
+              "claim_id": "claim_1",
+              "field_pointer": "/steps/0",
+              "basis": "observed",
+              "source_pointers": [
+                {
+                  "source": {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "00000000-0000-4000-8000-000000000010",
+                    "revision": 1,
+                    "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                    "eligibility_generation": 1
+                  },
+                  "field_pointer": "/steps/0"
+                }
+              ],
+              "approved_rule_refs": [],
+              "verification_status": "unverified",
+              "conflict_ids": []
+            }
+          ]
+        },
+        "playbook_version": "sha256-9999999999999999999999999999999999999999999999999999999999999999",
+        "approved_by": "usr_owner_jane",
+        "approval_record_ref": "rec_appr_20261110_01",
+        "published_at": "2026-11-10T12:00:00Z"
+      }
+    },
+    {
+      "case_id": "pos_KnowledgeStatusV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeStatusV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "subject_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "capability",
+          "entity_id": "11111111-1111-4000-8000-000000000001",
+          "version_id": "22222222-2222-4000-8000-000000000001",
+          "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "revision": "1",
+        "status": "current",
+        "last_verified_at": "2026-11-10T12:00:00Z",
+        "known_changes": [],
+        "conflict_ids": [],
+        "evidence_status": "available",
+        "hud_status": "available",
+        "updated_at": "2026-11-10T12:00:00Z"
+      }
+    },
+    {
+      "case_id": "pos_GraphDiscoveryContextV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/GraphDiscoveryContextV1",
+      "instance": {
+        "schema_id": "knowledge.discovery-context.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "as_of_generation": 1,
+        "playbook_summaries": [
+          {
+            "playbook_ref": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "playbook",
+              "entity_id": "77777777-7777-4000-8000-000000000001",
+              "version_id": "88888888-8888-4000-8000-000000000001",
+              "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+            },
+            "objective": "Reconcile invoices",
+            "scope": "AP invoices",
+            "owner": "usr_owner_jane",
+            "status": "active",
+            "last_verified_at": "2026-11-10T12:00:00Z",
+            "audience": {
+              "source_audience_bindings": [
+                {
+                  "source": {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "00000000-0000-4000-8000-000000000010",
+                    "revision": 1,
+                    "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                    "eligibility_generation": 1
+                  },
+                  "purpose": "guidance_presentation",
+                  "audience_ids": [
+                    "aud_finance_ap"
+                  ]
+                }
+              ],
+              "manual_audience_ids": [
+                "aud_finance_ap"
+              ],
+              "restriction_refs": [],
+              "policy_revision": "1"
+            }
+          }
+        ],
+        "approved_rules": [],
+        "incomplete": false
+      }
+    },
+    {
+      "case_id": "pos_GuidanceProjectionDraftV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/GuidanceProjectionDraftV1",
+      "instance": {
+        "schema_id": "knowledge.guidance-projection.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "playbook_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "playbook",
+          "entity_id": "77777777-7777-4000-8000-000000000001",
+          "version_id": "88888888-8888-4000-8000-000000000001",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "revision": "1",
+        "application_profiles": [
+          {
+            "application_profile_id": "prof_erp_web",
+            "min_version": "2.4.0",
+            "max_version": null
+          }
+        ],
+        "prerequisites": {},
+        "task_signature": {},
+        "step_mappings": [
+          {
+            "step_id": "step_open_batch",
+            "application_profile_id": "prof_erp_web",
+            "profile_version": "2.4.0",
+            "target_key": "target_btn_queue",
+            "predicate": null,
+            "allowed_targets": [
+              {
+                "application_profile_id": "prof_erp_web",
+                "target_key": "target_btn_queue"
+              }
+            ],
+            "timeout_ms": 45000
+          }
+        ],
+        "step_edges": [],
+        "peer_fixes": [],
+        "assist_plan_refs": [],
+        "record_independent": true,
+        "reviewed_by": "usr_reviewer_alex",
+        "review_reason": "Verified locators against certified ERP web profile 2.4.0"
+      }
+    },
+    {
+      "case_id": "pos_BusinessRuleVersionV1_UniqueDecisionTable",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessRuleVersionV1",
+      "instance": {
+        "schema_id": "knowledge.business-rule-version.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "rule_id": "aaaaaaaa-aaaa-4000-8000-000000000001",
+        "version_id": "bbbbbbbb-bbbb-4000-8000-000000000001",
+        "revision": "1",
+        "predecessor_version_id": null,
+        "owner_actor_id": "usr_compliance_mark",
+        "responsible_team_id": "team_compliance",
+        "authority_source_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "evidence",
+            "entity_id": "doc_fin_policy_2026",
+            "version_id": "v1",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "approval_record_ref": "rec_rule_appr_01",
+        "approved_at": "2026-11-10T09:00:00Z",
+        "effective_from": "2026-11-10T09:00:00Z",
+        "effective_until": null,
+        "scope": {
+          "audience": {
+            "source_audience_bindings": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "00000000-0000-4000-8000-000000000010",
+                  "revision": 1,
+                  "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                  "eligibility_generation": 1
+                },
+                "purpose": "guidance_presentation",
+                "audience_ids": [
+                  "aud_finance_ap"
+                ]
+              }
+            ],
+            "manual_audience_ids": [
+              "aud_finance_ap"
+            ],
+            "restriction_refs": [],
+            "policy_revision": "1"
+          },
+          "workflow_ids": [
+            "wf_invoice_reconciliation"
+          ],
+          "application_ids": [
+            "app_erp_core"
+          ],
+          "branch_ids": null,
+          "record_condition": null
+        },
+        "prose": "Invoice approval threshold table: amounts up to 10,000 USD require standard clerk review; amounts strictly greater than 10,000 USD require senior manager approval.",
+        "formalization": {
+          "kind": "decision_table",
+          "table": {
+            "table_id": "dt_po_threshold_usd",
+            "input_definitions": [
+              {
+                "fact_id": "invoice_amount",
+                "type": "money",
+                "nullable": false,
+                "enum_values": null,
+                "currency": "USD",
+                "source_requirement": {
+                  "methods": [
+                    "system_evidence"
+                  ],
+                  "approved_source_refs": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "entity_kind": "application_profile",
+                      "entity_id": "prof_erp_web",
+                      "version_id": "2.4.0",
+                      "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                    }
+                  ]
+                }
+              }
+            ],
+            "output_definitions": [
+              {
+                "fact_id": "required_approval_tier",
+                "type": "string",
+                "nullable": false,
+                "enum_values": null,
+                "currency": null,
+                "source_requirement": {
+                  "methods": [
+                    "authorized_reviewer"
+                  ],
+                  "approved_source_refs": []
+                }
+              }
+            ],
+            "hit_policy": "UNIQUE",
+            "rows": [
+              {
+                "row_id": "row_standard_tier",
+                "condition": {
+                  "op": "lte",
+                  "fact_id": "invoice_amount",
+                  "value": {
+                    "type": "money",
+                    "value": {
+                      "amount": "10000.00",
+                      "currency": "USD"
+                    }
+                  }
+                },
+                "outputs": [
+                  {
+                    "fact_id": "required_approval_tier",
+                    "value": {
+                      "type": "string",
+                      "value": "tier_standard"
+                    }
+                  }
+                ],
+                "source_refs": []
+              },
+              {
+                "row_id": "row_senior_tier",
+                "condition": {
+                  "op": "gt",
+                  "fact_id": "invoice_amount",
+                  "value": {
+                    "type": "money",
+                    "value": {
+                      "amount": "10000.00",
+                      "currency": "USD"
+                    }
+                  }
+                },
+                "outputs": [
+                  {
+                    "fact_id": "required_approval_tier",
+                    "value": {
+                      "type": "string",
+                      "value": "tier_senior"
+                    }
+                  }
+                ],
+                "source_refs": []
+              }
+            ],
+            "no_match": {
+              "kind": "escalate",
+              "escalation_route": "queue_compliance_manual_review",
+              "reason": "Amount did not match standard financial bands"
+            }
+          }
+        },
+        "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    },
+    {
+      "case_id": "pos_RuleEvaluationV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/RuleEvaluationV1",
+      "instance": {
+        "rule_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "rule",
+          "entity_id": "aaaaaaaa-aaaa-4000-8000-000000000001",
+          "version_id": "bbbbbbbb-bbbb-4000-8000-000000000001",
+          "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+        },
+        "result": "pass",
+        "disposition": "decision",
+        "decision_outputs": [
+          {
+            "fact_id": "required_approval_tier",
+            "value": {
+              "type": "string",
+              "value": "tier_standard"
+            }
+          }
+        ],
+        "matched_row_ids": [
+          "row_standard_tier"
+        ],
+        "evidence_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "evidence",
+            "entity_id": "ev_erp_invoice_90210",
+            "version_id": "1",
+            "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        ],
+        "reason": "Evaluated amount 4500.00 USD matched row_standard_tier uniquely."
+      }
+    },
+    {
+      "case_id": "pos_KnowledgeConflictV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeConflictV1",
+      "instance": {
+        "schema_id": "knowledge.conflict.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "conflict_id": "cccccccc-cccc-4000-8000-000000000001",
+        "revision": "1",
+        "status": "open",
+        "basis": "typed_contradiction",
+        "subjects": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "rule",
+            "entity_id": "rule_po_match_01",
+            "version_id": "v1",
+            "content_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "rule",
+            "entity_id": "rule_po_match_02",
+            "version_id": "v1",
+            "content_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          }
+        ],
+        "branch_ids": [
+          "branch_auto_approve"
+        ],
+        "materiality": "outcome_changing",
+        "evidence_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "evidence",
+            "entity_id": "ev_overlap_proof",
+            "version_id": "1",
+            "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          }
+        ],
+        "reported_by": "sys_rule_validator",
+        "owner_actor_id": "usr_compliance_mark",
+        "resolution": null,
+        "created_at": "2026-11-10T12:00:00Z"
+      }
+    },
+    {
+      "case_id": "pos_DependencyManifestV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DependencyManifestV1",
+      "instance": {
+        "schema_id": "knowledge.dependency-manifest.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "consumer_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "agent",
+          "entity_id": "agent_ap_reconciler",
+          "version_id": "v1.2.0",
+          "content_sha256": "1212121212121212121212121212121212121212121212121212121212121212"
+        },
+        "dependencies": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "capability",
+            "entity_id": "11111111-1111-4000-8000-000000000001",
+            "version_id": "22222222-2222-4000-8000-000000000001",
+            "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "rule",
+            "entity_id": "aaaaaaaa-aaaa-4000-8000-000000000001",
+            "version_id": "bbbbbbbb-bbbb-4000-8000-000000000001",
+            "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        ],
+        "manifest_sha256": "3434343434343434343434343434343434343434343434343434343434343434",
+        "completeness": "complete",
+        "owner_component": "agent-factory-ir",
+        "registered_at": "2026-11-10T12:00:00Z"
+      }
+    },
+    {
+      "case_id": "pos_DependencyRegistrationV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DependencyRegistrationV1",
+      "instance": {
+        "consumer_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "agent",
+          "entity_id": "agent_ap_reconciler",
+          "version_id": "v1.2.0",
+          "content_sha256": "1212121212121212121212121212121212121212121212121212121212121212"
+        },
+        "manifest_sha256": "3434343434343434343434343434343434343434343434343434343434343434",
+        "knowledge_generation": 1,
+        "completeness": "complete"
+      }
+    },
+    {
+      "case_id": "pos_KnowledgeEligibilitySnapshotV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeEligibilitySnapshotV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "consumer_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "agent",
+          "entity_id": "agent_ap_reconciler",
+          "version_id": "v1.2.0",
+          "content_sha256": "1212121212121212121212121212121212121212121212121212121212121212"
+        },
+        "manifest_sha256": "3434343434343434343434343434343434343434343434343434343434343434",
+        "knowledge_generation": 1,
+        "as_of": "2026-11-10T12:00:00Z",
+        "applicable_rule_refs": [],
+        "branch_restrictions": [],
+        "status": "eligible",
+        "blockers": [],
+        "valid_until": "2026-11-10T13:00:00Z"
+      }
+    },
+    {
+      "case_id": "pos_PreviousPolicyContinuationV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/PreviousPolicyContinuationV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "continuation_id": "eeeeeeee-eeee-4000-8000-000000000001",
+        "old_rule_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "rule",
+          "entity_id": "rule_po_match",
+          "version_id": "v1",
+          "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+        },
+        "replacing_rule_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "rule",
+          "entity_id": "rule_po_match",
+          "version_id": "v2",
+          "content_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "consumer_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "agent",
+            "entity_id": "agent_ap_reconciler",
+            "version_id": "v1.2.0",
+            "content_sha256": "1212121212121212121212121212121212121212121212121212121212121212"
+          }
+        ],
+        "scope": {
+          "audience": {
+            "source_audience_bindings": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "00000000-0000-4000-8000-000000000010",
+                  "revision": 1,
+                  "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                  "eligibility_generation": 1
+                },
+                "purpose": "guidance_presentation",
+                "audience_ids": [
+                  "aud_finance_ap"
+                ]
+              }
+            ],
+            "manual_audience_ids": [
+              "aud_finance_ap"
+            ],
+            "restriction_refs": [],
+            "policy_revision": "1"
+          },
+          "workflow_ids": [
+            "wf_invoice_reconciliation"
+          ],
+          "application_ids": null,
+          "branch_ids": null,
+          "record_condition": null
+        },
+        "effective_from": "2026-11-10T12:00:00Z",
+        "not_after": "2026-11-15T12:00:00Z",
+        "approved_by": "usr_compliance_mark",
+        "approval_record_refs": [
+          "rec_cont_01"
+        ],
+        "legal_basis_refs": [
+          "basis_contract_amendment_2026"
+        ],
+        "reason": "Customer contract grace period for PO line reconciliation",
+        "revision": "1"
+      }
+    },
+    {
+      "case_id": "pos_KnowledgeQueryV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeQueryV1",
+      "instance": {
+        "schema_id": "knowledge.query.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "mode": "search",
+        "query_text": "invoice reconciliation",
+        "root_refs": null,
+        "relation_types": null,
+        "filters": null,
+        "cursor": null,
+        "page_size": 25
+      }
+    },
+    {
+      "case_id": "pos_KnowledgeQueryPageV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeQueryPageV1",
+      "instance": {
+        "schema_id": "knowledge.query-page.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "query_fingerprint": "5555555555555555555555555555555555555555555555555555555555555555",
+        "as_of_generation": 1,
+        "items": [
+          {
+            "node_ref": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "playbook",
+              "entity_id": "77777777-7777-4000-8000-000000000001",
+              "version_id": "88888888-8888-4000-8000-000000000001",
+              "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+            },
+            "title": "Invoice Reconciliation",
+            "objective": "Reconcile invoices",
+            "summary": "AP matching",
+            "owner": "usr_owner_jane",
+            "audience": {
+              "source_audience_bindings": [
+                {
+                  "source": {
+                    "organization_id": "00000000-0000-4000-8000-000000000001",
+                    "contribution_id": "00000000-0000-4000-8000-000000000010",
+                    "revision": 1,
+                    "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                    "eligibility_generation": 1
+                  },
+                  "purpose": "guidance_presentation",
+                  "audience_ids": [
+                    "aud_finance_ap"
+                  ]
+                }
+              ],
+              "manual_audience_ids": [
+                "aud_finance_ap"
+              ],
+              "restriction_refs": [],
+              "policy_revision": "1"
+            },
+            "status": "active",
+            "last_verified_at": "2026-11-10T12:00:00Z",
+            "is_approved": true,
+            "score": 0.95
+          }
+        ],
+        "edges": [],
+        "next_cursor": null,
+        "completeness": "complete",
+        "degraded_reasons": []
+      }
+    },
+    {
+      "case_id": "pos_KnowledgeEmbeddingV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeEmbeddingV1",
+      "instance": {
+        "schema_id": "knowledge.embedding.v1",
+        "input_fingerprint": "6666666666666666666666666666666666666666666666666666666666666666",
+        "embedding_space_id": "space_text_3_large",
+        "dimensions": 3,
+        "vector": [
+          0.123,
+          -0.456,
+          0.789
+        ]
+      }
+    },
+    {
+      "case_id": "pos_KnowledgeRerankV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeRerankV1",
+      "instance": {
+        "schema_id": "knowledge.rerank.v1",
+        "scored_items": [
+          {
+            "version_id": "88888888-8888-4000-8000-000000000001",
+            "score": 0.985
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "pos_HandoffV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/HandoffV1",
+      "instance": {
+        "schema_id": "knowledge.handoff.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "handoff_id": "dddddddd-dddd-4000-8000-000000000001",
+        "revision": "1",
+        "source_workflow_ref": "wf_sales_order_entry",
+        "destination_workflow_ref": "wf_credit_check",
+        "triggering_state": "order_submitted_pending_credit",
+        "expected_downstream_state": "credit_verified_or_rejected",
+        "summary": "Review enterprise customer credit line for order SO-10492.",
+        "business_context": "Quarter-end high priority order for Acme Corp.",
+        "audience": {
+          "source_audience_bindings": [
+            {
+              "source": {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "00000000-0000-4000-8000-000000000010",
+                "revision": 1,
+                "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                "eligibility_generation": 1
+              },
+              "purpose": "guidance_presentation",
+              "audience_ids": [
+                "aud_finance_ap"
+              ]
+            }
+          ],
+          "manual_audience_ids": [
+            "aud_finance_ap"
+          ],
+          "restriction_refs": [],
+          "policy_revision": "1"
+        },
+        "responsible_team_id": "team_finance_credit",
+        "assignee_actor_id": "usr_credit_analyst_sam",
+        "status": "assigned",
+        "due_at": "2026-11-12T17:00:00Z",
+        "time_zone": "America/New_York",
+        "evidence_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "evidence",
+            "entity_id": "doc_so_10492",
+            "version_id": "1",
+            "content_sha256": "5656565656565656565656565656565656565656565656565656565656565656"
+          }
+        ],
+        "completion_assessment_ref": null,
+        "created_at": "2026-11-10T12:00:00Z",
+        "updated_at": "2026-11-10T12:00:00Z"
+      }
+    },
+    {
+      "case_id": "pos_HandoffCommandV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/HandoffCommandV1",
+      "instance": {
+        "schema_id": "knowledge.handoff-command.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "handoff_id": "dddddddd-dddd-4000-8000-000000000001",
+        "expected_revision": "1",
+        "action": "accept",
+        "assignee_actor_id": null,
+        "responsible_team_id": null,
+        "assessment": null,
+        "reason": "Accepted credit review obligation"
+      }
+    },
+    {
+      "case_id": "pos_HandoffProposalV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/HandoffProposalV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "source_workflow_ref": "wf_sales_order_entry",
+        "destination_workflow_ref": "wf_credit_check",
+        "triggering_state": "order_submitted_pending_credit",
+        "expected_downstream_state": "credit_verified_or_rejected",
+        "summary": "Review customer credit line",
+        "business_context": "Order SO-10492",
+        "audience": {
+          "source_audience_bindings": [
+            {
+              "source": {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "contribution_id": "00000000-0000-4000-8000-000000000010",
+                "revision": 1,
+                "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                "eligibility_generation": 1
+              },
+              "purpose": "guidance_presentation",
+              "audience_ids": [
+                "aud_finance_ap"
+              ]
+            }
+          ],
+          "manual_audience_ids": [
+            "aud_finance_ap"
+          ],
+          "restriction_refs": [],
+          "policy_revision": "1"
+        },
+        "responsible_team_id": "team_finance_credit",
+        "assignee_actor_id": "usr_credit_analyst_sam",
+        "due_at": "2026-11-12T17:00:00Z",
+        "time_zone": "America/New_York",
+        "evidence_refs": []
+      }
+    },
+    {
+      "case_id": "pos_SetDefaultScopeCommandV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/SetDefaultScopeCommandV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "expected_revision": "1",
+        "playbook_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "playbook",
+          "entity_id": "77777777-7777-4000-8000-000000000001",
+          "version_id": "88888888-8888-4000-8000-000000000001",
+          "content_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+        },
+        "scope": {
+          "audience": {
+            "source_audience_bindings": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "00000000-0000-4000-8000-000000000010",
+                  "revision": 1,
+                  "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                  "eligibility_generation": 1
+                },
+                "purpose": "guidance_presentation",
+                "audience_ids": [
+                  "aud_finance_ap"
+                ]
+              }
+            ],
+            "manual_audience_ids": [
+              "aud_finance_ap"
+            ],
+            "restriction_refs": [],
+            "policy_revision": "1"
+          },
+          "workflow_ids": [
+            "wf_invoice_reconciliation"
+          ],
+          "application_ids": [
+            "app_erp_core"
+          ],
+          "branch_ids": null,
+          "record_condition": null
+        },
+        "application_profiles": [
+          "prof_erp_web"
+        ],
+        "effective_from": "2026-11-10T12:00:00Z",
+        "effective_until": null,
+        "reason": "Default guidance for accounts payable team"
+      }
+    },
+    {
+      "case_id": "pos_RetirePlaybookCommandV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/RetirePlaybookCommandV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "expected_revision": "1",
+        "reason": "Superseded by quarterly compliance update"
+      }
+    },
+    {
+      "case_id": "pos_ProposeRuleCommandV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/ProposeRuleCommandV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "rule_id": "aaaaaaaa-aaaa-4000-8000-000000000001",
+        "owner_actor_id": "usr_compliance_mark",
+        "responsible_team_id": "team_compliance",
+        "authority_source_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "evidence",
+            "entity_id": "doc_fin_policy_2026",
+            "version_id": "v1",
+            "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "scope": {
+          "audience": {
+            "source_audience_bindings": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "00000000-0000-4000-8000-000000000010",
+                  "revision": 1,
+                  "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                  "eligibility_generation": 1
+                },
+                "purpose": "guidance_presentation",
+                "audience_ids": [
+                  "aud_finance_ap"
+                ]
+              }
+            ],
+            "manual_audience_ids": [
+              "aud_finance_ap"
+            ],
+            "restriction_refs": [],
+            "policy_revision": "1"
+          },
+          "workflow_ids": [
+            "wf_invoice_reconciliation"
+          ],
+          "application_ids": [
+            "app_erp_core"
+          ],
+          "branch_ids": null,
+          "record_condition": null
+        },
+        "prose": "Invoice matching threshold policy proposal",
+        "formalization": null,
+        "reason": "Annual threshold adjustment"
+      }
+    },
+    {
+      "case_id": "pos_ApproveRuleCommandV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/ApproveRuleCommandV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "expected_revision": "1",
+        "proposed_version_id": "bbbbbbbb-bbbb-4000-8000-000000000001",
+        "proposed_content_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "approval_record_refs": [
+          "rec_rule_appr_01"
+        ],
+        "effective_from": "2026-11-10T09:00:00Z",
+        "effective_until": null,
+        "supersedes_version_id": null,
+        "reason": "Approved by compliance officer"
+      }
+    },
+    {
+      "case_id": "pos_GrantContinuationCommandV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/GrantContinuationCommandV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "old_rule_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "rule",
+          "entity_id": "rule_po_match",
+          "version_id": "v1",
+          "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+        },
+        "replacing_rule_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "rule",
+          "entity_id": "rule_po_match",
+          "version_id": "v2",
+          "content_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
+        "consumer_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "agent",
+            "entity_id": "agent_ap_reconciler",
+            "version_id": "v1.2.0",
+            "content_sha256": "1212121212121212121212121212121212121212121212121212121212121212"
+          }
+        ],
+        "scope": {
+          "audience": {
+            "source_audience_bindings": [
+              {
+                "source": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "contribution_id": "00000000-0000-4000-8000-000000000010",
+                  "revision": 1,
+                  "content_digest": "4444444444444444444444444444444444444444444444444444444444444444",
+                  "eligibility_generation": 1
+                },
+                "purpose": "guidance_presentation",
+                "audience_ids": [
+                  "aud_finance_ap"
+                ]
+              }
+            ],
+            "manual_audience_ids": [
+              "aud_finance_ap"
+            ],
+            "restriction_refs": [],
+            "policy_revision": "1"
+          },
+          "workflow_ids": [
+            "wf_invoice_reconciliation"
+          ],
+          "application_ids": null,
+          "branch_ids": null,
+          "record_condition": null
+        },
+        "effective_from": "2026-11-10T12:00:00Z",
+        "not_after": "2026-11-15T12:00:00Z",
+        "approval_record_refs": [
+          "rec_cont_01"
+        ],
+        "legal_basis_refs": [
+          "basis_contract_amendment_2026"
+        ],
+        "reason": "Customer contract grace period for PO line reconciliation"
+      }
+    },
+    {
+      "case_id": "pos_ReportConflictCommandV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/ReportConflictCommandV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "subjects": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "rule",
+            "entity_id": "rule_po_match_01",
+            "version_id": "v1",
+            "content_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "rule",
+            "entity_id": "rule_po_match_02",
+            "version_id": "v1",
+            "content_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          }
+        ],
+        "branch_ids": [
+          "branch_auto_approve"
+        ],
+        "materiality": "outcome_changing",
+        "evidence_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "evidence",
+            "entity_id": "ev_overlap_proof",
+            "version_id": "1",
+            "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          }
+        ],
+        "incompatibility_description": "Contradictory threshold rules for invoice matching"
+      }
+    },
+    {
+      "case_id": "pos_ConflictDecisionCommandV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/ConflictDecisionCommandV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "expected_revision": "1",
+        "decision": "resolve",
+        "replacement_rule_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "rule",
+            "entity_id": "rule_po_match_01",
+            "version_id": "v2",
+            "content_sha256": "1111111122222222333333334444444455555555666666667777777788888888"
+          }
+        ],
+        "approval_record_refs": [
+          "rec_conflict_res_01"
+        ],
+        "evidence_refs": [],
+        "reason": "Resolved by superseding conflicting rule version"
+      }
+    },
+    {
+      "case_id": "pos_RequestRevalidationCommandV1",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/RequestRevalidationCommandV1",
+      "instance": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "subject_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "capability",
+          "entity_id": "11111111-1111-4000-8000-000000000001",
+          "version_id": "22222222-2222-4000-8000-000000000001",
+          "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "expected_revision": "1",
+        "assessment_ref": "00000000-0000-4000-8000-000000000099",
+        "evidence_refs": [],
+        "reason": "Revalidated by senior domain reviewer"
+      }
+    }
+  ],
+  "structural_negative_cases": [
+    {
+      "case_id": "neg_DecisionTable_HitPolicyFirst",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessDecisionTableV1",
+      "expected_error": "hit_policy must be const UNIQUE",
+      "instance": {
+        "table_id": "dt_invalid_policy",
+        "input_definitions": [
+          {
+            "fact_id": "amount",
+            "type": "money",
+            "nullable": false,
+            "enum_values": null,
+            "currency": "USD",
+            "source_requirement": {
+              "methods": [
+                "system_evidence"
+              ],
+              "approved_source_refs": []
+            }
+          }
+        ],
+        "output_definitions": [
+          {
+            "fact_id": "tier",
+            "type": "string",
+            "nullable": false,
+            "enum_values": null,
+            "currency": null,
+            "source_requirement": {
+              "methods": [
+                "authorized_reviewer"
+              ],
+              "approved_source_refs": []
+            }
+          }
+        ],
+        "hit_policy": "FIRST",
+        "rows": [
+          {
+            "row_id": "r1",
+            "condition": {
+              "op": "exists",
+              "fact_id": "amount"
+            },
+            "outputs": [
+              {
+                "fact_id": "tier",
+                "value": {
+                  "type": "string",
+                  "value": "t1"
+                }
+              }
+            ],
+            "source_refs": []
+          }
+        ],
+        "no_match": {
+          "kind": "escalate",
+          "escalation_route": "escalate_queue",
+          "reason": "no match"
+        }
+      }
+    },
+    {
+      "case_id": "neg_DecisionTable_MissingNoMatch",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessDecisionTableV1",
+      "expected_error": "required property no_match missing",
+      "instance": {
+        "table_id": "dt_missing_no_match",
+        "input_definitions": [
+          {
+            "fact_id": "amount",
+            "type": "decimal",
+            "nullable": false,
+            "enum_values": null,
+            "currency": null,
+            "source_requirement": {
+              "methods": [
+                "system_evidence"
+              ],
+              "approved_source_refs": []
+            }
+          }
+        ],
+        "output_definitions": [
+          {
+            "fact_id": "tier",
+            "type": "string",
+            "nullable": false,
+            "enum_values": null,
+            "currency": null,
+            "source_requirement": {
+              "methods": [
+                "authorized_reviewer"
+              ],
+              "approved_source_refs": []
+            }
+          }
+        ],
+        "hit_policy": "UNIQUE",
+        "rows": [
+          {
+            "row_id": "r1",
+            "condition": {
+              "op": "exists",
+              "fact_id": "amount"
+            },
+            "outputs": [
+              {
+                "fact_id": "tier",
+                "value": {
+                  "type": "string",
+                  "value": "t1"
+                }
+              }
+            ],
+            "source_refs": []
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "neg_DecisionTableRow_ExtraAuthorizationFields",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DecisionTableRowV1",
+      "expected_error": "additionalProperties false rejects execution authorization fields in decision table rows",
+      "instance": {
+        "row_id": "r_malicious",
+        "condition": {
+          "op": "exists",
+          "fact_id": "amount"
+        },
+        "outputs": [
+          {
+            "fact_id": "tier",
+            "value": {
+              "type": "string",
+              "value": "t1"
+            }
+          }
+        ],
+        "grant_execution_authority": true,
+        "source_refs": []
+      }
+    },
+    {
+      "case_id": "neg_BusinessCondition_FieldToFieldArithmetic",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/BusinessConditionV1",
+      "expected_error": "additionalProperties false rejects arbitrary arithmetic and field-to-field comparisons",
+      "instance": {
+        "op": "eq",
+        "left_field": "invoice_total",
+        "right_field": "po_total"
+      }
+    },
+    {
+      "case_id": "neg_TypedValue_MalformedCurrency",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/TypedValueV1",
+      "expected_error": "currency must match 3-letter uppercase pattern ^[A-Z]{3}$",
+      "instance": {
+        "type": "money",
+        "value": {
+          "amount": "100.00",
+          "currency": "us_dollars"
+        }
+      }
+    },
+    {
+      "case_id": "neg_TypedValue_NoncanonicalDecimal_PlusSign",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/TypedValueV1",
+      "expected_error": "decimal string rejects plus sign",
+      "instance": {
+        "type": "decimal",
+        "value": "+100.50"
+      }
+    },
+    {
+      "case_id": "neg_TypedValue_NoncanonicalDecimal_LeadingZero",
+      "schema_ref": "urn:oryn:schemas:operational-graph:v1#/$defs/TypedValueV1",
+      "expected_error": "decimal string rejects redundant leading zero",
+      "instance": {
+        "type": "decimal",
+        "value": "0100.50"
+      }
+    }
+  ],
+  "semantic_cases": [
+    {
+      "case_id": "sem_TwoExamplesGuidanceVsZeroExample",
+      "title": "Stage 2 Guidance Gate: Two Distinct Examples Required",
+      "description": "Manual candidate draft created with 0 examples attempts publication; fails with KNOWLEDGE_INSUFFICIENT_EXAMPLES. Candidate with 2 distinct verified examples publishes successfully with hud_status = not_configured.",
+      "preconditions": [
+        "Candidate A has 0 task demonstrations.",
+        "Candidate B has 2 distinct observed-complete demonstrations."
+      ],
+      "actions": [
+        "Call POST /candidate-stages/{draft_a}/publications -> Expect 409 KNOWLEDGE_INSUFFICIENT_EXAMPLES.",
+        "Call POST /candidate-stages/{draft_b}/publications -> Expect 201 Created."
+      ],
+      "expected_observable_result": "Candidate A rejected; Candidate B published with hud_status = not_configured and valid PlaybookVersionV1.",
+      "runtime_verification_pending": true
+    },
+    {
+      "case_id": "sem_DecisionTableExactBoundaryVsOverlap",
+      "title": "Decision Table Exact Boundary vs. Overlap Detection",
+      "description": "Table with Row 1 amount <= 10000 USD and Row 2 amount > 10000 USD passes UNIQUE validation. Changing Row 2 to amount >= 10000 USD fails with KNOWLEDGE_RULE_OVERLAP due to overlap at exactly 10000 USD.",
+      "preconditions": [
+        "Table formalization has input invoice_amount of type money USD."
+      ],
+      "actions": [
+        "Validate table with <= 10000 and > 10000 -> verdict pass.",
+        "Validate table with <= 10000 and >= 10000 -> verdict overlap at counterexample 10000.00 USD."
+      ],
+      "expected_observable_result": "Disjoint table approved; overlapping table rejected with KNOWLEDGE_RULE_OVERLAP.",
+      "runtime_verification_pending": true
+    },
+    {
+      "case_id": "sem_ThreeValuedUnknownCurrencyMismatch",
+      "title": "Three-Valued Fact Evaluation Halts on Currency Mismatch",
+      "description": "Rule requires USD currency fact. Evaluation receives EUR currency fact. Evaluator yields Unknown, resulting in disposition blocked rather than arbitrary decision.",
+      "preconditions": [
+        "Active rule specifies invoice_amount with currency USD."
+      ],
+      "actions": [
+        "Evaluate rule with input fact amount 500.00 EUR."
+      ],
+      "expected_observable_result": "RuleEvaluationV1 returns result unknown and disposition blocked.",
+      "runtime_verification_pending": true
+    },
+    {
+      "case_id": "sem_TransactionalDependencyRegistrationRace",
+      "title": "Transactional Guard Serialization During Rule Change Race",
+      "description": "Agent manifest registration races concurrent rule activation. Monotonic generation guard ensures registration either precedes activation and is recorded, or sees new restriction.",
+      "preconditions": [
+        "Agent registers manifest M1.",
+        "Compliance admin approves new rule version R2 activating generation G2."
+      ],
+      "actions": [
+        "Register M1 concurrently with R2 approval."
+      ],
+      "expected_observable_result": "No race allows M1 to operate under obsolete rule without eligibility restriction or revalidation queue entry.",
+      "runtime_verification_pending": true
+    },
+    {
+      "case_id": "sem_SourceWithdrawalVsPublicationRace",
+      "title": "Source Withdrawal Linearization vs. Publication",
+      "description": "If source contribution withdrawal commits before publication, publication fails with KNOWLEDGE_SOURCE_INELIGIBLE. If publication commits first, published playbook transitions to needs_revalidation with partially_unavailable evidence.",
+      "preconditions": [
+        "Staged candidate depends on contribution C1."
+      ],
+      "actions": [
+        "Withdraw C1 while publishing staged candidate."
+      ],
+      "expected_observable_result": "Withdrawal first blocks publication; publication first preserves playbook with revalidation warning.",
+      "runtime_verification_pending": true
+    },
+    {
+      "case_id": "sem_OverlappingDefaultScopes",
+      "title": "Rejection of Overlapping Guidance Default Scopes",
+      "description": "Attempting to register two default playbooks with overlapping audience and application profile scopes fails with KNOWLEDGE_SCOPE_OVERLAP.",
+      "preconditions": [
+        "Playbook 1 is default for team_finance and app_erp_core."
+      ],
+      "actions": [
+        "Set Playbook 2 as default for team_finance and app_erp_core during overlapping interval."
+      ],
+      "expected_observable_result": "Registration rejected with KNOWLEDGE_SCOPE_OVERLAP; system never falls back to newest timestamp heuristic.",
+      "runtime_verification_pending": true
+    },
+    {
+      "case_id": "sem_HandoffDuplicateReplayAndAmendment",
+      "title": "Handoff Idempotency, Amendment, and Summary Privacy",
+      "description": "Replaying exact handoff intake proposal returns original handoff. Higher revision creates linked amendment without mutating accepted work. Recipient team sees authorized summary with redacted source workflow details.",
+      "preconditions": [
+        "Proposal P1 ingested as handoff H1."
+      ],
+      "actions": [
+        "Replay P1 revision 1 -> 200 OK idempotent H1.",
+        "Submit P1 revision 2 -> 201 Created linked amendment.",
+        "Recipient team queries H1 -> Source workflow redacted."
+      ],
+      "expected_observable_result": "Idempotent replay verified, accepted work protected from silent mutation, recipient summary isolated.",
+      "runtime_verification_pending": true
+    },
+    {
+      "case_id": "sem_RecursiveQueryTimeoutBudget",
+      "title": "Recursive CTE Traversal Budget Enforcement",
+      "description": "Interactive graph query traversing deep dependency graph exceeding depth 8 or 2-second timeout returns partial page with degraded_reasons.",
+      "preconditions": [
+        "Graph has deep dependency chain of depth 15."
+      ],
+      "actions": [
+        "Execute interactive query with max depth 8."
+      ],
+      "expected_observable_result": "Query returns 200 OK with completeness = partial and degraded_reasons = ['depth_limit_exceeded'].",
+      "runtime_verification_pending": true
+    },
+    {
+      "case_id": "sem_SearchDegradedMode",
+      "title": "Search Fallback to Lexical When Embedding Model Offline",
+      "description": "When LiteLLM embedding gateway is unconfigured or budget-blocked, search query succeeds using full-text tsvector GIN index with degraded indicator.",
+      "preconditions": [
+        "Inference gateway returns 503 CP_DEPENDENCY_UNAVAILABLE."
+      ],
+      "actions": [
+        "Issue search query for 'invoice reconciliation'."
+      ],
+      "expected_observable_result": "Returns lexical matches with degraded_reasons = ['semantic_search_unavailable']; never fabricates semantic ranking.",
+      "runtime_verification_pending": true
+    },
+    {
+      "case_id": "sem_PreviousPolicyContinuationExpiry",
+      "title": "Previous-Policy Continuation Exact Interval and Revocation",
+      "description": "Continuation grant permits named agent to operate under superseded rule until not_after. Upon reaching not_after, eligibility status immediately transitions to restricted.",
+      "preconditions": [
+        "Continuation granted for Agent A under old rule until 2026-11-15T00:00:00Z."
+      ],
+      "actions": [
+        "Query eligibility at 2026-11-14T23:59:00Z -> eligible.",
+        "Query eligibility at 2026-11-15T00:00:01Z -> restricted."
+      ],
+      "expected_observable_result": "Agent restricted immediately upon expiration without requiring worker intervention.",
+      "runtime_verification_pending": true
+    }
+  ]
+}

@@ -1,0 +1,2276 @@
+{
+  "schema_id": "command-center.fixture-set.v1",
+  "validation_cases": [
+    {
+      "case_id": "val_reporting_query_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ReportingQueryV1",
+      "instance": {
+        "schema_id": "command-center.reporting-query.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "period_start": "2026-03-01T00:00:00Z",
+        "period_end": "2026-03-15T00:00:00Z",
+        "timezone": "America/New_York",
+        "scope": {
+          "team_ids": [
+            "team_finance_ops"
+          ],
+          "workflow_ids": [
+            "wf_invoice_matching"
+          ],
+          "application_ids": [
+            "app_erp_v1"
+          ],
+          "agent_ids": [
+            "ag_invoice_matcher"
+          ],
+          "agent_version_ids": [
+            "agv_001"
+          ],
+          "incident_type_ids": [
+            "inc_ocr_failure"
+          ],
+          "risk_tiers": [
+            1
+          ]
+        },
+        "metric_ids": [
+          "case_volume",
+          "case_success_rate",
+          "time_avoidance_ms"
+        ],
+        "evaluation_comparison_ref": null,
+        "cursor": null,
+        "page_size": 50
+      },
+      "expected_valid": true,
+      "note": "Valid reporting query with workflow scope"
+    },
+    {
+      "case_id": "val_reporting_page_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ReportingPageV1",
+      "instance": {
+        "schema_id": "command-center.reporting-page.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "query_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+        "period_start": "2026-03-01T00:00:00Z",
+        "period_end": "2026-03-15T00:00:00Z",
+        "timezone": "America/New_York",
+        "cutoff_at": "2026-03-15T01:00:00Z",
+        "methodology_id": "std_analytics_v1",
+        "source_watermarks": [
+          {
+            "source_owner": "orchestration",
+            "sequence": "1050",
+            "recorded_through": "2026-03-15T00:55:00Z",
+            "projection_generation": "1",
+            "coverage": "complete"
+          }
+        ],
+        "metrics": [
+          {
+            "metric_id": "case_volume",
+            "state": "available",
+            "value": {
+              "kind": "count",
+              "count": "12"
+            },
+            "population": {
+              "population_id": "pop_001",
+              "basis": "case_started",
+              "period_start": "2026-03-01T00:00:00Z",
+              "period_end": "2026-03-02T00:00:00Z",
+              "eligible_count": "12",
+              "excluded_count": "0",
+              "unknown_count": "0"
+            },
+            "basis": "measured",
+            "privacy_release_refs": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "entity_kind": "workflow",
+                "entity_id": "wf_invoice_matching",
+                "version_id": "v1",
+                "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "caveats": []
+          },
+          {
+            "metric_id": "case_volume",
+            "state": "suppressed",
+            "reason": "cohort_size_insufficient"
+          }
+        ],
+        "completeness": "complete",
+        "degraded_reasons": [],
+        "next_cursor": null
+      },
+      "expected_valid": true,
+      "note": "Valid reporting page with available and protected cells"
+    },
+    {
+      "case_id": "val_metric_cell_available_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/MetricCellV1",
+      "instance": {
+        "metric_id": "case_volume",
+        "state": "available",
+        "value": {
+          "kind": "count",
+          "count": "12"
+        },
+        "population": {
+          "population_id": "pop_001",
+          "basis": "case_started",
+          "period_start": "2026-03-01T00:00:00Z",
+          "period_end": "2026-03-02T00:00:00Z",
+          "eligible_count": "12",
+          "excluded_count": "0",
+          "unknown_count": "0"
+        },
+        "basis": "measured",
+        "privacy_release_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "caveats": []
+      },
+      "expected_valid": true,
+      "note": "Valid available metric cell"
+    },
+    {
+      "case_id": "val_metric_cell_protected_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/MetricCellV1",
+      "instance": {
+        "metric_id": "case_volume",
+        "state": "suppressed",
+        "reason": "cohort_size_insufficient"
+      },
+      "expected_valid": true,
+      "note": "Valid suppressed metric cell with insufficient cohort"
+    },
+    {
+      "case_id": "val_reporting_baseline_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ReportingBaselineV1",
+      "instance": {
+        "schema_id": "command-center.reporting-baseline.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "baseline_id": "00000000-0000-4000-8000-000000000006",
+        "revision": "1",
+        "workflow_id": "wf_invoice_matching",
+        "capability_version_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "valid_from": "2026-01-01T00:00:00Z",
+        "valid_until": "2026-12-31T23:59:59Z",
+        "baseline_ms_per_case": "300000",
+        "basis": "measured",
+        "privacy_release_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "review": {
+          "review_ms_per_case": "25000",
+          "hourly_rate_minor_units": "5000",
+          "currency": "USD",
+          "basis_description": "Median human review observation",
+          "source_refs": [
+            {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "workflow",
+              "entity_id": "wf_invoice_matching",
+              "version_id": "v1",
+              "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          ]
+        },
+        "approved_by": "usr_analyst_01",
+        "approved_at": "2026-01-02T10:00:00Z",
+        "state": "active"
+      },
+      "expected_valid": true,
+      "note": "Valid approved reporting baseline"
+    },
+    {
+      "case_id": "val_approve_reporting_baseline_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ApproveReportingBaselineV1",
+      "instance": {
+        "schema_id": "command-center.approve-reporting-baseline.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "baseline_id": "00000000-0000-4000-8000-000000000006",
+        "workflow_id": "wf_invoice_matching",
+        "capability_version_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "expected_revision": null,
+        "valid_from": "2026-01-01T00:00:00Z",
+        "valid_until": "2026-12-31T23:59:59Z",
+        "baseline_ms_per_case": "300000",
+        "basis": "measured",
+        "privacy_release_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "review": {
+          "review_ms_per_case": "25000",
+          "hourly_rate_minor_units": "5000",
+          "currency": "USD",
+          "basis_description": "Median human review observation",
+          "source_refs": [
+            {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "workflow",
+              "entity_id": "wf_invoice_matching",
+              "version_id": "v1",
+              "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          ]
+        },
+        "reason": "Initial finance ops baseline approval"
+      },
+      "expected_valid": true,
+      "note": "Valid baseline approval submission command"
+    },
+    {
+      "case_id": "val_pilot_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/PilotV1",
+      "instance": {
+        "schema_id": "command-center.pilot.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "pilot_id": "00000000-0000-4000-8000-000000000002",
+        "revision": "1",
+        "team_id": "team_finance_ops",
+        "owner_actor_id": "usr_analyst_01",
+        "application_ids": [
+          "app_erp_v1"
+        ],
+        "workflow_ids": [
+          "wf_invoice_matching"
+        ],
+        "start_local_date": "2026-03-01",
+        "end_local_date": "2026-03-14",
+        "timezone": "America/New_York",
+        "starts_at": "2026-03-01T05:00:00Z",
+        "ends_at": "2026-03-15T04:00:00Z",
+        "status": "scheduled",
+        "intended_output": "Validate invoice matching agent accuracy and time avoidance over 14 calendar days",
+        "report_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ]
+      },
+      "expected_valid": true,
+      "note": "Valid scheduled evaluation pilot"
+    },
+    {
+      "case_id": "val_create_pilot_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/CreatePilotV1",
+      "instance": {
+        "schema_id": "command-center.create-pilot.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "team_id": "team_finance_ops",
+        "owner_actor_id": "usr_analyst_01",
+        "application_ids": [
+          "app_erp_v1"
+        ],
+        "workflow_ids": [
+          "wf_invoice_matching"
+        ],
+        "participant_actor_ids": [
+          "usr_analyst_01",
+          "usr_analyst_02",
+          "usr_analyst_03",
+          "usr_analyst_04",
+          "usr_analyst_05"
+        ],
+        "notice_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "start_local_date": "2026-03-01",
+        "timezone": "America/New_York",
+        "intended_output": "14-day evaluation pilot for invoice workflow",
+        "reason": "Pilot kickoff for team finance ops"
+      },
+      "expected_valid": true,
+      "note": "Valid create pilot command with 5 participants"
+    },
+    {
+      "case_id": "val_amend_pilot_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/AmendPilotV1",
+      "instance": {
+        "schema_id": "command-center.amend-pilot.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "pilot_id": "00000000-0000-4000-8000-000000000002",
+        "expected_revision": "1",
+        "team_id": "team_finance_ops",
+        "owner_actor_id": "usr_analyst_01",
+        "application_ids": [
+          "app_erp_v1"
+        ],
+        "workflow_ids": [
+          "wf_invoice_matching"
+        ],
+        "participant_actor_ids": [
+          "usr_analyst_01",
+          "usr_analyst_02",
+          "usr_analyst_03",
+          "usr_analyst_04",
+          "usr_analyst_05"
+        ],
+        "notice_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "start_local_date": "2026-03-01",
+        "timezone": "America/New_York",
+        "intended_output": "14-day evaluation pilot for invoice workflow with updated roster",
+        "reason": "Added 2 participants"
+      },
+      "expected_valid": true,
+      "note": "Valid amend pilot command"
+    },
+    {
+      "case_id": "val_pilot_control_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/PilotControlV1",
+      "instance": {
+        "schema_id": "command-center.pilot-control.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "pilot_id": "00000000-0000-4000-8000-000000000002",
+        "expected_revision": "1",
+        "command": "pause",
+        "reason": "Temporary ERP freeze"
+      },
+      "expected_valid": true,
+      "note": "Valid pilot pause control command"
+    },
+    {
+      "case_id": "val_pilot_participants_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/PilotParticipantsV1",
+      "instance": {
+        "schema_id": "command-center.pilot-participants.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "pilot_id": "00000000-0000-4000-8000-000000000002",
+        "revision": "1",
+        "participant_actor_ids": [
+          "usr_analyst_01",
+          "usr_analyst_02"
+        ],
+        "notice_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ]
+      },
+      "expected_valid": true,
+      "note": "Valid pilot participant roster"
+    },
+    {
+      "case_id": "val_generate_report_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/GenerateReportV1",
+      "instance": {
+        "schema_id": "command-center.generate-report.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "kind": "operational",
+        "query": {
+          "schema_id": "command-center.reporting-query.v1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "period_start": "2026-03-01T00:00:00Z",
+          "period_end": "2026-03-15T00:00:00Z",
+          "timezone": "America/New_York",
+          "scope": {
+            "team_ids": [
+              "team_finance_ops"
+            ],
+            "workflow_ids": [
+              "wf_invoice_matching"
+            ],
+            "application_ids": [
+              "app_erp_v1"
+            ],
+            "agent_ids": [
+              "ag_invoice_matcher"
+            ],
+            "agent_version_ids": [
+              "agv_001"
+            ],
+            "incident_type_ids": [
+              "inc_ocr_failure"
+            ],
+            "risk_tiers": [
+              1
+            ]
+          },
+          "metric_ids": [
+            "case_volume",
+            "case_success_rate",
+            "time_avoidance_ms"
+          ],
+          "evaluation_comparison_ref": null,
+          "cursor": null,
+          "page_size": 50
+        },
+        "pilot_id": null,
+        "evaluation_comparison_ref": null,
+        "revises_report_id": null,
+        "reason": "Executive weekly analytics briefing"
+      },
+      "expected_valid": true,
+      "note": "Valid asynchronous report generation request"
+    },
+    {
+      "case_id": "val_report_snapshot_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ReportSnapshotV1",
+      "instance": {
+        "schema_id": "command-center.report-snapshot.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "report_id": "00000000-0000-4000-8000-000000000003",
+        "revision": "1",
+        "state": "ready",
+        "kind": "operational",
+        "period_start": "2026-03-01T00:00:00Z",
+        "period_end": "2026-03-07T23:59:59Z",
+        "timezone": "America/New_York",
+        "generated_at": "2026-03-08T02:00:00Z",
+        "cutoff_at": "2026-03-08T00:00:00Z",
+        "methodology_id": "std_analytics_v1",
+        "scope": {
+          "team_ids": [
+            "team_finance_ops"
+          ],
+          "workflow_ids": [
+            "wf_invoice_matching"
+          ],
+          "application_ids": [
+            "app_erp_v1"
+          ],
+          "agent_ids": [
+            "ag_invoice_matcher"
+          ],
+          "agent_version_ids": [
+            "agv_001"
+          ],
+          "incident_type_ids": [
+            "inc_ocr_failure"
+          ],
+          "risk_tiers": [
+            1
+          ]
+        },
+        "audience_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "source_watermarks": [
+          {
+            "source_owner": "orchestration",
+            "sequence": "1050",
+            "recorded_through": "2026-03-15T00:55:00Z",
+            "projection_generation": "1",
+            "coverage": "complete"
+          }
+        ],
+        "source_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "source_manifest_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "privacy_release_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "baseline_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "metrics": [
+          {
+            "metric_id": "case_volume",
+            "state": "available",
+            "value": {
+              "kind": "count",
+              "count": "12"
+            },
+            "population": {
+              "population_id": "pop_001",
+              "basis": "case_started",
+              "period_start": "2026-03-01T00:00:00Z",
+              "period_end": "2026-03-02T00:00:00Z",
+              "eligible_count": "12",
+              "excluded_count": "0",
+              "unknown_count": "0"
+            },
+            "basis": "measured",
+            "privacy_release_refs": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "entity_kind": "workflow",
+                "entity_id": "wf_invoice_matching",
+                "version_id": "v1",
+                "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "caveats": []
+          }
+        ],
+        "sections": [
+          {
+            "section_id": "executive_summary",
+            "text": "Weekly executive analytics summary.",
+            "source_refs": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "entity_kind": "workflow",
+                "entity_id": "wf_invoice_matching",
+                "version_id": "v1",
+                "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ]
+          }
+        ],
+        "completeness": "complete",
+        "degraded_reasons": [],
+        "predecessor_ref": null,
+        "expires_at": "2026-06-08T02:00:00Z"
+      },
+      "expected_valid": true,
+      "note": "Valid published immutable report snapshot"
+    },
+    {
+      "case_id": "val_notification_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/NotificationV1",
+      "instance": {
+        "schema_id": "command-center.notification.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "notification_id": "00000000-0000-4000-8000-000000000005",
+        "revision": "1",
+        "notification_type": "incident",
+        "priority": "critical",
+        "source_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "obligation_generation": "1",
+        "generic_message": "Incident detected on invoice matching workflow",
+        "app_path": "/incidents/inc_2026_01",
+        "created_at": "2026-03-05T14:22:00Z",
+        "updated_at": "2026-03-05T14:22:00Z",
+        "read_at": null,
+        "acknowledged_at": null,
+        "snoozed_until": null,
+        "dismissed_at": null,
+        "source_disposition": "active",
+        "expires_at": "2026-06-05T14:22:00Z"
+      },
+      "expected_valid": true,
+      "note": "Valid incident notification"
+    },
+    {
+      "case_id": "val_update_notification_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/UpdateNotificationV1",
+      "instance": {
+        "schema_id": "command-center.update-notification.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "notification_id": "00000000-0000-4000-8000-000000000005",
+        "expected_revision": "1",
+        "command": "snooze",
+        "snoozed_until": "2026-03-05T18:00:00Z"
+      },
+      "expected_valid": true,
+      "note": "Valid notification snooze command"
+    },
+    {
+      "case_id": "val_notification_delivery_receipt_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/NotificationDeliveryReceiptV1",
+      "instance": {
+        "schema_id": "command-center.notification-delivery-receipt.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "notification_id": "00000000-0000-4000-8000-000000000005",
+        "notification_revision": "1",
+        "device_id": "dev_mac_book_pro_01",
+        "attempt_id": "00000000-0000-4000-8000-000000000008",
+        "outcome": "presented",
+        "occurred_at": "2026-03-05T14:22:05Z"
+      },
+      "expected_valid": true,
+      "note": "Valid notification delivery receipt from desktop device"
+    },
+    {
+      "case_id": "val_notification_preferences_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/NotificationPreferencesV1",
+      "instance": {
+        "schema_id": "command-center.notification-preferences.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "revision": "1",
+        "timezone": "America/New_York",
+        "quiet_hours": [
+          {
+            "weekday": 1,
+            "start_minute": 1320,
+            "end_minute": 480
+          }
+        ],
+        "desktop_enabled": true,
+        "email_enabled": true,
+        "digest": "daily",
+        "category_preferences": [
+          {
+            "notification_type": "incident",
+            "enabled": true
+          }
+        ]
+      },
+      "expected_valid": true,
+      "note": "Valid user notification preferences with quiet hours"
+    },
+    {
+      "case_id": "val_update_notification_preferences_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/UpdateNotificationPreferencesV1",
+      "instance": {
+        "schema_id": "command-center.update-notification-preferences.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "expected_revision": "1",
+        "timezone": "America/New_York",
+        "quiet_hours": [
+          {
+            "weekday": 1,
+            "start_minute": 1320,
+            "end_minute": 480
+          }
+        ],
+        "desktop_enabled": true,
+        "email_enabled": false,
+        "digest": "daily",
+        "category_preferences": [
+          {
+            "notification_type": "incident",
+            "enabled": true
+          }
+        ]
+      },
+      "expected_valid": true,
+      "note": "Valid notification preferences update"
+    },
+    {
+      "case_id": "val_desktop_notification_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/DesktopNotificationV1",
+      "instance": {
+        "schema_id": "command-center.desktop-notification.v1",
+        "notification_id": "00000000-0000-4000-8000-000000000005",
+        "notification_revision": "1",
+        "attempt_id": "00000000-0000-4000-8000-000000000008",
+        "generic_message": "Incident detected on invoice matching workflow",
+        "priority": "critical",
+        "app_path": "/incidents/inc_2026_01",
+        "not_after": "2026-03-05T15:22:00Z"
+      },
+      "expected_valid": true,
+      "note": "Valid sanitized desktop notification payload"
+    },
+    {
+      "case_id": "val_create_export_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/CreateExportV1",
+      "instance": {
+        "schema_id": "command-center.create-export.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "export_class": "report",
+        "format": "zip",
+        "report_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "playbook_refs": [],
+        "audit_query": null,
+        "reason": "Compliance quarterly export"
+      },
+      "expected_valid": true,
+      "note": "Valid export generation request"
+    },
+    {
+      "case_id": "val_export_manifest_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ExportManifestV1",
+      "instance": {
+        "export_id": "00000000-0000-4000-8000-000000000004",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "export_class": "report",
+        "period_start": "2026-03-01T00:00:00Z",
+        "period_end": "2026-03-07T23:59:59Z",
+        "scope": {
+          "team_ids": [
+            "team_finance_ops"
+          ],
+          "workflow_ids": [
+            "wf_invoice_matching"
+          ],
+          "application_ids": [
+            "app_erp_v1"
+          ],
+          "agent_ids": [
+            "ag_invoice_matcher"
+          ],
+          "agent_version_ids": [
+            "agv_001"
+          ],
+          "incident_type_ids": [
+            "inc_ocr_failure"
+          ],
+          "risk_tiers": [
+            1
+          ]
+        },
+        "generated_at": "2026-03-08T02:30:00Z",
+        "methodology_id": "std_analytics_v1",
+        "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "permission_scope_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "privacy_restrictions": [
+          "cohort_floor_five_applied"
+        ],
+        "uncertainty_labels": [],
+        "parts": [
+          {
+            "part_id": "part_001",
+            "format": "zip",
+            "byte_count": "1048576",
+            "record_count": "100",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "expires_at": "2026-03-09T02:30:00Z"
+          }
+        ],
+        "total_bytes": "1048576"
+      },
+      "expected_valid": true,
+      "note": "Valid export manifest with SHA-256 chunk parts"
+    },
+    {
+      "case_id": "val_export_view_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ExportViewV1",
+      "instance": {
+        "schema_id": "command-center.export-view.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "export_id": "00000000-0000-4000-8000-000000000004",
+        "revision": "1",
+        "state": "ready",
+        "operation_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "manifest": {
+          "export_id": "00000000-0000-4000-8000-000000000004",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "export_class": "report",
+          "period_start": "2026-03-01T00:00:00Z",
+          "period_end": "2026-03-07T23:59:59Z",
+          "scope": {
+            "team_ids": [
+              "team_finance_ops"
+            ],
+            "workflow_ids": [
+              "wf_invoice_matching"
+            ],
+            "application_ids": [
+              "app_erp_v1"
+            ],
+            "agent_ids": [
+              "ag_invoice_matcher"
+            ],
+            "agent_version_ids": [
+              "agv_001"
+            ],
+            "incident_type_ids": [
+              "inc_ocr_failure"
+            ],
+            "risk_tiers": [
+              1
+            ]
+          },
+          "generated_at": "2026-03-08T02:30:00Z",
+          "methodology_id": "std_analytics_v1",
+          "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "permission_scope_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "privacy_restrictions": [
+            "cohort_floor_five_applied"
+          ],
+          "uncertainty_labels": [],
+          "parts": [
+            {
+              "part_id": "part_001",
+              "format": "zip",
+              "byte_count": "1048576",
+              "record_count": "100",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "expires_at": "2026-03-09T02:30:00Z"
+            }
+          ],
+          "total_bytes": "1048576"
+        },
+        "expires_at": "2026-03-09T02:30:00Z",
+        "problem": null
+      },
+      "expected_valid": true,
+      "note": "Valid available export view"
+    },
+    {
+      "case_id": "val_global_search_query_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/GlobalSearchQueryV1",
+      "instance": {
+        "schema_id": "command-center.global-search-query.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "query_text": "invoice matching",
+        "types": [
+          "job",
+          "incident"
+        ],
+        "scope": {
+          "team_ids": [
+            "team_finance_ops"
+          ],
+          "workflow_ids": [
+            "wf_invoice_matching"
+          ],
+          "application_ids": [
+            "app_erp_v1"
+          ],
+          "agent_ids": [
+            "ag_invoice_matcher"
+          ],
+          "agent_version_ids": [
+            "agv_001"
+          ],
+          "incident_type_ids": [
+            "inc_ocr_failure"
+          ],
+          "risk_tiers": [
+            1
+          ]
+        },
+        "cursor": null,
+        "page_size": 20
+      },
+      "expected_valid": true,
+      "note": "Valid global search query"
+    },
+    {
+      "case_id": "val_global_search_page_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/GlobalSearchPageV1",
+      "instance": {
+        "schema_id": "command-center.global-search-page.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "items": [
+          {
+            "type": "job",
+            "resource_ref": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "workflow",
+              "entity_id": "wf_invoice_matching",
+              "version_id": "v1",
+              "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "title": "Invoice Matching Job",
+            "owner_label": "Finance Ops",
+            "state": "active",
+            "updated_at": "2026-03-15T10:00:00Z",
+            "last_verified_at": "2026-03-15T11:00:00Z",
+            "app_path": "/jobs/wf_invoice_matching"
+          }
+        ],
+        "query_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+        "next_cursor": null,
+        "completeness": "complete",
+        "degraded_sources": []
+      },
+      "expected_valid": true,
+      "note": "Valid global search page"
+    },
+    {
+      "case_id": "val_audit_query_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/AuditQueryV1",
+      "instance": {
+        "period_start": "2026-03-01T00:00:00Z",
+        "period_end": "2026-03-15T00:00:00Z",
+        "action_types": [
+          "baseline_approve",
+          "export_create"
+        ],
+        "object_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "actor_ids": [
+          "usr_analyst_01"
+        ],
+        "cursor": null,
+        "page_size": 100
+      },
+      "expected_valid": true,
+      "note": "Valid audit journal query"
+    },
+    {
+      "case_id": "val_audit_query_page_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/AuditQueryPageV1",
+      "instance": {
+        "schema_id": "command-center.audit-query-page.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "records": [
+          {
+            "action_type": "baseline_approve",
+            "object_ref": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "workflow",
+              "entity_id": "wf_invoice_matching",
+              "version_id": "v1",
+              "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "actor_id": "usr_analyst_01",
+            "occurred_at": "2026-03-01T10:00:00Z",
+            "audit_sequence": "1",
+            "archive_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "archive_sequence_cut": "0",
+        "next_cursor": null,
+        "completeness": "complete",
+        "integrity_status": "verified"
+      },
+      "expected_valid": true,
+      "note": "Valid audit query page with verified integrity status"
+    },
+    {
+      "case_id": "val_home_view_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/HomeViewV1",
+      "instance": {
+        "schema_id": "command-center.home-view.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "as_of": "2026-03-15T12:00:00Z",
+        "groups": [
+          {
+            "group_id": "operational_kpis",
+            "items": [
+              {
+                "resource_ref": {
+                  "organization_id": "00000000-0000-4000-8000-000000000001",
+                  "entity_kind": "workflow",
+                  "entity_id": "wf_invoice_matching",
+                  "version_id": "v1",
+                  "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                "app_path": "/analytics",
+                "priority": "critical",
+                "metric": {
+                  "metric_id": "case_volume",
+                  "state": "available",
+                  "value": {
+                    "kind": "count",
+                    "count": "12"
+                  },
+                  "population": {
+                    "population_id": "pop_001",
+                    "basis": "case_started",
+                    "period_start": "2026-03-01T00:00:00Z",
+                    "period_end": "2026-03-02T00:00:00Z",
+                    "eligible_count": "12",
+                    "excluded_count": "0",
+                    "unknown_count": "0"
+                  },
+                  "basis": "measured",
+                  "privacy_release_refs": [
+                    {
+                      "organization_id": "00000000-0000-4000-8000-000000000001",
+                      "entity_kind": "workflow",
+                      "entity_id": "wf_invoice_matching",
+                      "version_id": "v1",
+                      "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+                    }
+                  ],
+                  "caveats": []
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "expected_valid": true,
+      "note": "Valid command center home view"
+    },
+    {
+      "case_id": "val_analytics_source_fact_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/AnalyticsSourceFactV1",
+      "instance": {
+        "schema_id": "analytics.source-fact.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "source_owner": "orchestration",
+        "source_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "source_revision": "1",
+        "owner_sequence": "100",
+        "source_recorded_at": "2026-03-01T10:00:00Z",
+        "effective_at": "2026-03-01T10:00:00Z",
+        "payload_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "availability": "available",
+        "coverage": "complete",
+        "audience_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "payload": null
+      },
+      "expected_valid": true,
+      "note": "Valid analytics source fact envelope"
+    },
+    {
+      "case_id": "val_reporting_source_page_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ReportingSourcePageV1",
+      "instance": {
+        "schema_id": "command-center.reporting-source-page.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "source_owner": "orchestration",
+        "through_watermark": {
+          "source_owner": "orchestration",
+          "sequence": "1050",
+          "recorded_through": "2026-03-15T00:55:00Z",
+          "projection_generation": "1",
+          "coverage": "complete"
+        },
+        "entries": [
+          {
+            "schema_id": "analytics.source-fact.v1",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "source_owner": "orchestration",
+            "source_ref": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "workflow",
+              "entity_id": "wf_invoice_matching",
+              "version_id": "v1",
+              "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "source_revision": "1",
+            "owner_sequence": "100",
+            "source_recorded_at": "2026-03-01T10:00:00Z",
+            "effective_at": "2026-03-01T10:00:00Z",
+            "payload_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "availability": "available",
+            "coverage": "complete",
+            "audience_refs": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "entity_kind": "workflow",
+                "entity_id": "wf_invoice_matching",
+                "version_id": "v1",
+                "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "payload": null
+          }
+        ],
+        "next_cursor": null,
+        "coverage": "complete",
+        "history_floor_sequence": "1"
+      },
+      "expected_valid": true,
+      "note": "Valid reporting source page with watermark"
+    },
+    {
+      "case_id": "val_analytics_disclosure_commitment_positive",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/AnalyticsDisclosureCommitmentV1",
+      "instance": {
+        "schema_id": "command-center.analytics-disclosure-commitment.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "privacy_partition_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "cell_key_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "assignment_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "source_membership_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "source_watermarks_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "policy_revision": "1",
+        "decision": "released",
+        "released_value_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "disclosure_generation": "1",
+        "recorded_at": "2026-03-08T02:00:00Z"
+      },
+      "expected_valid": true,
+      "note": "Valid analytics disclosure commitment record"
+    },
+    {
+      "case_id": "neg_reporting_query_missing_org",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ReportingQueryV1",
+      "instance": {
+        "schema_id": "command-center.reporting-query.v1",
+        "period_start": "2026-03-01T00:00:00Z",
+        "period_end": "2026-03-15T00:00:00Z",
+        "timezone": "America/New_York",
+        "scope": {
+          "team_ids": [
+            "team_finance_ops"
+          ],
+          "workflow_ids": [
+            "wf_invoice_matching"
+          ],
+          "application_ids": [
+            "app_erp_v1"
+          ],
+          "agent_ids": [
+            "ag_invoice_matcher"
+          ],
+          "agent_version_ids": [
+            "agv_001"
+          ],
+          "incident_type_ids": [
+            "inc_ocr_failure"
+          ],
+          "risk_tiers": [
+            1
+          ]
+        },
+        "metric_ids": [
+          "case_volume"
+        ],
+        "evaluation_comparison_ref": null,
+        "cursor": null,
+        "page_size": 50
+      },
+      "expected_valid": false,
+      "note": "Missing required organization_id"
+    },
+    {
+      "case_id": "neg_reporting_query_invalid_timezone",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ReportingQueryV1",
+      "instance": {
+        "schema_id": "command-center.reporting-query.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "period_start": "2026-03-01T00:00:00Z",
+        "period_end": "2026-03-15T00:00:00Z",
+        "timezone": "America/New York",
+        "scope": {
+          "team_ids": [
+            "team_finance_ops"
+          ],
+          "workflow_ids": [
+            "wf_invoice_matching"
+          ],
+          "application_ids": [
+            "app_erp_v1"
+          ],
+          "agent_ids": [
+            "ag_invoice_matcher"
+          ],
+          "agent_version_ids": [
+            "agv_001"
+          ],
+          "incident_type_ids": [
+            "inc_ocr_failure"
+          ],
+          "risk_tiers": [
+            1
+          ]
+        },
+        "metric_ids": [
+          "case_volume"
+        ],
+        "evaluation_comparison_ref": null,
+        "cursor": null,
+        "page_size": 50
+      },
+      "expected_valid": false,
+      "note": "Invalid timezone with spaces"
+    },
+    {
+      "case_id": "neg_metric_cell_negative_count",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/MetricCellV1",
+      "instance": {
+        "metric_id": "case_volume",
+        "state": "available",
+        "value": {
+          "kind": "count",
+          "count": "-5"
+        },
+        "population": {
+          "population_id": "pop_001",
+          "basis": "case_started",
+          "period_start": "2026-03-01T00:00:00Z",
+          "period_end": "2026-03-02T00:00:00Z",
+          "eligible_count": "12",
+          "excluded_count": "0",
+          "unknown_count": "0"
+        },
+        "basis": "measured",
+        "privacy_release_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "caveats": []
+      },
+      "expected_valid": false,
+      "note": "Negative count prohibited"
+    },
+    {
+      "case_id": "neg_pilot_invalid_uuid",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/PilotV1",
+      "instance": {
+        "schema_id": "command-center.pilot.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "pilot_id": "not-a-valid-uuid",
+        "revision": "1",
+        "team_id": "team_finance_ops",
+        "owner_actor_id": "usr_analyst_01",
+        "application_ids": [
+          "app_erp_v1"
+        ],
+        "workflow_ids": [
+          "wf_invoice_matching"
+        ],
+        "start_local_date": "2026-03-01",
+        "end_local_date": "2026-03-14",
+        "timezone": "America/New_York",
+        "starts_at": "2026-03-01T05:00:00Z",
+        "ends_at": "2026-03-15T04:00:00Z",
+        "status": "scheduled",
+        "intended_output": "test",
+        "report_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ]
+      },
+      "expected_valid": false,
+      "note": "Invalid pilot UUID format"
+    },
+    {
+      "case_id": "neg_pilot_control_illegal_command",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/PilotControlV1",
+      "instance": {
+        "schema_id": "command-center.pilot-control.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "pilot_id": "00000000-0000-4000-8000-000000000002",
+        "expected_revision": "1",
+        "command": "restart",
+        "reason": "Invalid restart command"
+      },
+      "expected_valid": false,
+      "note": "Illegal pilot control command enum"
+    },
+    {
+      "case_id": "neg_create_export_illegal_format",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/CreateExportV1",
+      "instance": {
+        "schema_id": "command-center.create-export.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "export_class": "report",
+        "format": "docx",
+        "report_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "playbook_refs": [],
+        "audit_query": null,
+        "reason": "Invalid docx format"
+      },
+      "expected_valid": false,
+      "note": "Illegal export format docx"
+    },
+    {
+      "case_id": "neg_notification_negative_revision",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/NotificationV1",
+      "instance": {
+        "schema_id": "command-center.notification.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "notification_id": "00000000-0000-4000-8000-000000000005",
+        "revision": "-1",
+        "notification_type": "incident",
+        "priority": "critical",
+        "source_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "obligation_generation": "1",
+        "generic_message": "Incident detected",
+        "app_path": "/incidents/inc_2026_01",
+        "created_at": "2026-03-05T14:22:00Z",
+        "updated_at": "2026-03-05T14:22:00Z",
+        "read_at": null,
+        "acknowledged_at": null,
+        "snoozed_until": null,
+        "dismissed_at": null,
+        "source_disposition": "active",
+        "expires_at": "2026-06-05T14:22:00Z"
+      },
+      "expected_valid": false,
+      "note": "Revision must be non-negative integer string"
+    },
+    {
+      "case_id": "neg_quiet_hours_out_of_range",
+      "schema_ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/QuietHourIntervalV1",
+      "instance": {
+        "weekday": 1,
+        "start_minute": 1500,
+        "end_minute": 480
+      },
+      "expected_valid": false,
+      "note": "start_minute exceeds maximum 1439"
+    }
+  ],
+  "digest_vectors": [
+    {
+      "vector_id": "vec_reporting_baseline_digest",
+      "target": "reporting_baseline",
+      "preimage": {
+        "schema_id": "command-center.reporting-baseline.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "baseline_id": "00000000-0000-4000-8000-000000000006",
+        "revision": "1",
+        "workflow_id": "wf_invoice_matching",
+        "capability_version_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "valid_from": "2026-01-01T00:00:00Z",
+        "valid_until": "2026-12-31T23:59:59Z",
+        "baseline_ms_per_case": "300000",
+        "basis": "measured",
+        "privacy_release_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "review": {
+          "review_ms_per_case": "25000",
+          "hourly_rate_minor_units": "5000",
+          "currency": "USD",
+          "basis_description": "Median human review observation",
+          "source_refs": [
+            {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "entity_kind": "workflow",
+              "entity_id": "wf_invoice_matching",
+              "version_id": "v1",
+              "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          ]
+        },
+        "approved_by": "usr_analyst_01",
+        "approved_at": "2026-01-02T10:00:00Z",
+        "state": "active"
+      },
+      "expected_sha256": "ab1c697aea04a9fcfd87b881645cb7f33da0682214cbbea7346d9421eabb13ff"
+    },
+    {
+      "vector_id": "vec_report_snapshot_digest",
+      "target": "report_snapshot",
+      "preimage": {
+        "schema_id": "command-center.report-snapshot.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "report_id": "00000000-0000-4000-8000-000000000003",
+        "revision": "1",
+        "state": "ready",
+        "kind": "operational",
+        "period_start": "2026-03-01T00:00:00Z",
+        "period_end": "2026-03-07T23:59:59Z",
+        "timezone": "America/New_York",
+        "generated_at": "2026-03-08T02:00:00Z",
+        "cutoff_at": "2026-03-08T00:00:00Z",
+        "methodology_id": "std_analytics_v1",
+        "scope": {
+          "team_ids": [
+            "team_finance_ops"
+          ],
+          "workflow_ids": [
+            "wf_invoice_matching"
+          ],
+          "application_ids": [
+            "app_erp_v1"
+          ],
+          "agent_ids": [
+            "ag_invoice_matcher"
+          ],
+          "agent_version_ids": [
+            "agv_001"
+          ],
+          "incident_type_ids": [
+            "inc_ocr_failure"
+          ],
+          "risk_tiers": [
+            1
+          ]
+        },
+        "audience_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "source_watermarks": [
+          {
+            "source_owner": "orchestration",
+            "sequence": "1050",
+            "recorded_through": "2026-03-15T00:55:00Z",
+            "projection_generation": "1",
+            "coverage": "complete"
+          }
+        ],
+        "source_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "source_manifest_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "privacy_release_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "baseline_refs": [
+          {
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "entity_kind": "workflow",
+            "entity_id": "wf_invoice_matching",
+            "version_id": "v1",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "metrics": [
+          {
+            "metric_id": "case_volume",
+            "state": "available",
+            "value": {
+              "kind": "count",
+              "count": "12"
+            },
+            "population": {
+              "population_id": "pop_001",
+              "basis": "case_started",
+              "period_start": "2026-03-01T00:00:00Z",
+              "period_end": "2026-03-02T00:00:00Z",
+              "eligible_count": "12",
+              "excluded_count": "0",
+              "unknown_count": "0"
+            },
+            "basis": "measured",
+            "privacy_release_refs": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "entity_kind": "workflow",
+                "entity_id": "wf_invoice_matching",
+                "version_id": "v1",
+                "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ],
+            "caveats": []
+          }
+        ],
+        "sections": [
+          {
+            "section_id": "executive_summary",
+            "text": "Weekly executive analytics summary.",
+            "source_refs": [
+              {
+                "organization_id": "00000000-0000-4000-8000-000000000001",
+                "entity_kind": "workflow",
+                "entity_id": "wf_invoice_matching",
+                "version_id": "v1",
+                "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            ]
+          }
+        ],
+        "completeness": "complete",
+        "degraded_reasons": [],
+        "predecessor_ref": null,
+        "expires_at": "2026-06-08T02:00:00Z"
+      },
+      "expected_sha256": "2ecc552af2110788ce3266d9af98912e8e35431a6a343fa8e3a979faf9568c7b"
+    },
+    {
+      "vector_id": "vec_analytics_disclosure_commitment_digest",
+      "target": "analytics_disclosure_commitment",
+      "preimage": {
+        "schema_id": "command-center.analytics-disclosure-commitment.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "privacy_partition_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "cell_key_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "assignment_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "source_membership_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "source_watermarks_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "policy_revision": "1",
+        "decision": "released",
+        "released_value_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "disclosure_generation": "1",
+        "recorded_at": "2026-03-08T02:00:00Z"
+      },
+      "expected_sha256": "43c68636acb9dc46cb192b96c726b81d3577a0aaf2d5b9cd9f2e57d3922928a8"
+    },
+    {
+      "vector_id": "vec_export_manifest_digest",
+      "target": "export_manifest",
+      "preimage": {
+        "export_id": "00000000-0000-4000-8000-000000000004",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "export_class": "report",
+        "period_start": "2026-03-01T00:00:00Z",
+        "period_end": "2026-03-07T23:59:59Z",
+        "scope": {
+          "team_ids": [
+            "team_finance_ops"
+          ],
+          "workflow_ids": [
+            "wf_invoice_matching"
+          ],
+          "application_ids": [
+            "app_erp_v1"
+          ],
+          "agent_ids": [
+            "ag_invoice_matcher"
+          ],
+          "agent_version_ids": [
+            "agv_001"
+          ],
+          "incident_type_ids": [
+            "inc_ocr_failure"
+          ],
+          "risk_tiers": [
+            1
+          ]
+        },
+        "generated_at": "2026-03-08T02:30:00Z",
+        "methodology_id": "std_analytics_v1",
+        "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "permission_scope_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "privacy_restrictions": [
+          "cohort_floor_five_applied"
+        ],
+        "uncertainty_labels": [],
+        "parts": [
+          {
+            "part_id": "part_001",
+            "format": "zip",
+            "byte_count": "1048576",
+            "record_count": "100",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "expires_at": "2026-03-09T02:30:00Z"
+          }
+        ],
+        "total_bytes": "1048576"
+      },
+      "expected_sha256": "51378b9c5cc79c2f772e74bb7c62accf9256dce2ab4f854d7442dd1221eca235"
+    },
+    {
+      "vector_id": "vec_notification_digest",
+      "target": "notification",
+      "preimage": {
+        "schema_id": "command-center.notification.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "notification_id": "00000000-0000-4000-8000-000000000005",
+        "revision": "1",
+        "notification_type": "incident",
+        "priority": "critical",
+        "source_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "entity_kind": "workflow",
+          "entity_id": "wf_invoice_matching",
+          "version_id": "v1",
+          "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "obligation_generation": "1",
+        "generic_message": "Incident detected on invoice matching workflow",
+        "app_path": "/incidents/inc_2026_01",
+        "created_at": "2026-03-05T14:22:00Z",
+        "updated_at": "2026-03-05T14:22:00Z",
+        "read_at": null,
+        "acknowledged_at": null,
+        "snoozed_until": null,
+        "dismissed_at": null,
+        "source_disposition": "active",
+        "expires_at": "2026-06-05T14:22:00Z"
+      },
+      "expected_sha256": "3c5156440f648186681c64ed494b45fc8df3291a1e88880d410c1dfb456da796"
+    }
+  ],
+  "semantic_cases": [
+    {
+      "case_id": "sem_01_case_rate_denominator_started_cases_only",
+      "kind": "metric_calculation",
+      "description": "10 total cases, 1 skipped/cancelled before start, 9 started, 6 verified success, 3 terminal failed -> Case Rate = 6/9 = 66.7%, Unknown Outcome Rate = 3/9 = 33.3%",
+      "inputs": {
+        "total_cases_observed": 10,
+        "cases": [
+          {
+            "case_id": "c1",
+            "status": "verified_success",
+            "started_at": "2026-03-01T10:00:00Z"
+          },
+          {
+            "case_id": "c2",
+            "status": "verified_success",
+            "started_at": "2026-03-01T10:01:00Z"
+          },
+          {
+            "case_id": "c3",
+            "status": "verified_success",
+            "started_at": "2026-03-01T10:02:00Z"
+          },
+          {
+            "case_id": "c4",
+            "status": "verified_success",
+            "started_at": "2026-03-01T10:03:00Z"
+          },
+          {
+            "case_id": "c5",
+            "status": "verified_success",
+            "started_at": "2026-03-01T10:04:00Z"
+          },
+          {
+            "case_id": "c6",
+            "status": "verified_success",
+            "started_at": "2026-03-01T10:05:00Z"
+          },
+          {
+            "case_id": "c7",
+            "status": "failed_terminal",
+            "started_at": "2026-03-01T10:06:00Z"
+          },
+          {
+            "case_id": "c8",
+            "status": "failed_terminal",
+            "started_at": "2026-03-01T10:07:00Z"
+          },
+          {
+            "case_id": "c9",
+            "status": "failed_terminal",
+            "started_at": "2026-03-01T10:08:00Z"
+          },
+          {
+            "case_id": "c10",
+            "status": "cancelled",
+            "started_at": null
+          }
+        ]
+      },
+      "expected": {
+        "denominator_started_cases": 9,
+        "verified_success_count": 6,
+        "unknown_failed_count": 3,
+        "case_success_rate": 0.6666666666666666,
+        "unknown_outcome_rate": 0.3333333333333333
+      }
+    },
+    {
+      "case_id": "sem_02_case_history_record_order_independent",
+      "kind": "projection_consistency",
+      "description": "2 events for same case arriving out of order produce identical final projection row",
+      "inputs": {
+        "arrival_sequence_a": [
+          {
+            "event_type": "case_started",
+            "sequence": 1,
+            "occurred_at": "2026-03-01T10:00:00Z"
+          },
+          {
+            "event_type": "case_verified",
+            "sequence": 2,
+            "occurred_at": "2026-03-01T10:05:00Z",
+            "outcome": "verified_success"
+          }
+        ],
+        "arrival_sequence_b": [
+          {
+            "event_type": "case_verified",
+            "sequence": 2,
+            "occurred_at": "2026-03-01T10:05:00Z",
+            "outcome": "verified_success"
+          },
+          {
+            "event_type": "case_started",
+            "sequence": 1,
+            "occurred_at": "2026-03-01T10:00:00Z"
+          }
+        ]
+      },
+      "expected": {
+        "final_status": "verified_success",
+        "active_duration_ms": 300000,
+        "projection_digests_match": true
+      }
+    },
+    {
+      "case_id": "sem_03_deduplication_and_quarantine_on_source_fact_conflict",
+      "kind": "deduplication",
+      "description": "Duplicate fact with identical source_fact_id ignored; identical source_fact_id with different digest rejected and quarantined",
+      "inputs": {
+        "initial_fact": {
+          "source_fact_id": "f_100",
+          "payload_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "status": "processed"
+        },
+        "duplicate_fact": {
+          "source_fact_id": "f_100",
+          "payload_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "conflicting_fact": {
+          "source_fact_id": "f_100",
+          "payload_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      },
+      "expected": {
+        "duplicate_action": "ignored_idempotent",
+        "conflict_action": "quarantine",
+        "quarantine_reason": "source_fact_digest_mismatch"
+      }
+    },
+    {
+      "case_id": "sem_04_approval_wait_not_counted_as_active_duration_or_avoidance",
+      "kind": "time_avoidance",
+      "description": "Case active run time 10s, human approval wait 4 hours. Baseline human duration 300s. Time Avoidance = 300 - 10 = 290s (not negative). Active duration = 10s.",
+      "inputs": {
+        "baseline_human_ms": 300000,
+        "agent_execution_ms": 10000,
+        "human_approval_wait_ms": 14400000
+      },
+      "expected": {
+        "total_elapsed_ms": 14410000,
+        "active_duration_ms": 10000,
+        "net_time_avoidance_ms": 290000
+      }
+    },
+    {
+      "case_id": "sem_05_contributor_privacy_floor_five_rule",
+      "kind": "privacy_guardrail",
+      "description": "Group with 4 contributors -> suppressed with 'cohort_size_insufficient', group with 5 contributors -> metric released with cell counts",
+      "inputs": {
+        "cohort_a_contributors": 4,
+        "cohort_b_contributors": 5
+      },
+      "expected": {
+        "cohort_a_is_suppressed": true,
+        "cohort_a_reason": "cohort_size_insufficient",
+        "cohort_b_is_suppressed": false,
+        "cohort_b_privacy_status": "released"
+      }
+    },
+    {
+      "case_id": "sem_06_suppressed_cell_query_does_not_fail_page",
+      "kind": "page_rendering",
+      "description": "Page returns 200 with cell is_suppressed=true and suppression_reason='cohort_size_insufficient', other unsuppressed cells populated normally",
+      "inputs": {
+        "requested_metrics": [
+          "case_volume"
+        ],
+        "cells": [
+          {
+            "cohort_size": 4,
+            "raw_volume": 8
+          },
+          {
+            "cohort_size": 6,
+            "raw_volume": 42
+          }
+        ]
+      },
+      "expected": {
+        "page_status": 200,
+        "cell_0_suppressed": true,
+        "cell_0_value_omitted": true,
+        "cell_1_suppressed": false,
+        "cell_1_value": 42
+      }
+    },
+    {
+      "case_id": "sem_07_revoked_disclosure_cascades_to_unreleased_cells",
+      "kind": "consent_revocation",
+      "description": "Revoking consent for 1 contributor in a 5-contributor cohort moves cohort size to 4, immediately suppressing subsequently generated cells for that cohort",
+      "inputs": {
+        "initial_cohort_size": 5,
+        "revoked_actor_ids": [
+          "usr_05"
+        ],
+        "prior_sealed_week_status": "released",
+        "new_generation_cohort_size": 4
+      },
+      "expected": {
+        "prior_sealed_week_mutated": false,
+        "new_generation_is_suppressed": true,
+        "new_generation_suppression_reason": "cohort_size_insufficient"
+      }
+    },
+    {
+      "case_id": "sem_08_time_avoidance_manual_override_with_human_correction",
+      "kind": "time_avoidance",
+      "description": "Verified case with manual correction applied. Baseline = 120s, runtime = 15s, correction time = 45s. Time Avoidance = 120 - 15 - 45 = 60s.",
+      "inputs": {
+        "baseline_ms": 120000,
+        "agent_runtime_ms": 15000,
+        "human_correction_ms": 45000
+      },
+      "expected": {
+        "net_time_avoidance_ms": 60000
+      }
+    },
+    {
+      "case_id": "sem_09_time_avoidance_no_op_verified_case",
+      "kind": "time_avoidance",
+      "description": "Case executed with outcome verified_no_op. Time Avoidance = 0s.",
+      "inputs": {
+        "baseline_ms": 300000,
+        "agent_runtime_ms": 12000,
+        "outcome": "verified_no_op"
+      },
+      "expected": {
+        "net_time_avoidance_ms": 0
+      }
+    },
+    {
+      "case_id": "sem_10_spend_attribution_preserves_multiple_currencies",
+      "kind": "spend_attribution",
+      "description": "Workflows spending USD and EUR across runs aggregate into separate currency buckets without silent arbitrary conversion",
+      "inputs": {
+        "charges": [
+          {
+            "amount_cents": 1500,
+            "currency": "USD"
+          },
+          {
+            "amount_cents": 2500,
+            "currency": "USD"
+          },
+          {
+            "amount_cents": 1200,
+            "currency": "EUR"
+          }
+        ]
+      },
+      "expected": {
+        "USD_total_cents": 4000,
+        "EUR_total_cents": 1200,
+        "currencies_merged": false
+      }
+    },
+    {
+      "case_id": "sem_11_median_wait_duration_disjoint_intervals",
+      "kind": "interval_union",
+      "description": "Approval wait interval union: [10:00, 10:15] and [10:10, 10:30] merged to [10:00, 10:30] (20 minutes, not 35 minutes).",
+      "inputs": {
+        "intervals": [
+          {
+            "start": "2026-03-01T10:00:00Z",
+            "end": "2026-03-01T10:15:00Z"
+          },
+          {
+            "start": "2026-03-01T10:10:00Z",
+            "end": "2026-03-01T10:30:00Z"
+          }
+        ]
+      },
+      "expected": {
+        "merged_intervals": [
+          {
+            "start": "2026-03-01T10:00:00Z",
+            "end": "2026-03-01T10:30:00Z"
+          }
+        ],
+        "total_wait_seconds": 1800
+      }
+    },
+    {
+      "case_id": "sem_12_regression_rate_comparison_direction",
+      "kind": "comparative_direction",
+      "description": "Pre-release regression = 10%, Post-release regression = 4% -> improvement of 6% (regression change = -6 percentage points). Pre = 2%, Post = 8% -> degradation of +6 percentage points.",
+      "inputs": {
+        "pair_1": {
+          "pre_release": 0.1,
+          "post_release": 0.04
+        },
+        "pair_2": {
+          "pre_release": 0.02,
+          "post_release": 0.08
+        }
+      },
+      "expected": {
+        "pair_1_change_percentage_points": -6.0,
+        "pair_1_disposition": "improved",
+        "pair_2_change_percentage_points": 6.0,
+        "pair_2_disposition": "degraded"
+      }
+    },
+    {
+      "case_id": "sem_13_incident_grouping_and_mttr_calculation",
+      "kind": "reliability_metric",
+      "description": "3 incidents for same workflow grouped, MTTR calculated as median elapsed time from opened_at to recovered_at.",
+      "inputs": {
+        "incidents": [
+          {
+            "opened_at": "2026-03-01T10:00:00Z",
+            "recovered_at": "2026-03-01T10:10:00Z"
+          },
+          {
+            "opened_at": "2026-03-02T10:00:00Z",
+            "recovered_at": "2026-03-02T10:30:00Z"
+          },
+          {
+            "opened_at": "2026-03-03T10:00:00Z",
+            "recovered_at": "2026-03-03T10:20:00Z"
+          }
+        ]
+      },
+      "expected": {
+        "durations_seconds": [
+          600,
+          1800,
+          1200
+        ],
+        "mttr_seconds": 1200
+      }
+    },
+    {
+      "case_id": "sem_14_fourteen_calendar_days_pilot_duration",
+      "kind": "pilot_schedule",
+      "description": "Pilot start 2026-03-01T00:00:00 in America/New_York ends after 14 calendar days (335 wall-clock hours due to spring-forward DST transition).",
+      "inputs": {
+        "start_local_date": "2026-03-01",
+        "end_local_date": "2026-03-14",
+        "timezone": "America/New_York"
+      },
+      "expected": {
+        "starts_at_utc": "2026-03-01T05:00:00Z",
+        "ends_at_utc": "2026-03-15T04:00:00Z",
+        "calendar_days": 14,
+        "wall_clock_hours": 335
+      }
+    },
+    {
+      "case_id": "sem_15_notification_snooze_active_restriction",
+      "kind": "lifecycle_transition",
+      "description": "Only notifications in delivered or pending state can be snoozed; snoozing a resolved notification rejected with 409 conflict.",
+      "inputs": {
+        "notification_state": "resolved",
+        "command": "snooze"
+      },
+      "expected": {
+        "transition_allowed": false,
+        "error_code": "CC_CONFLICT",
+        "http_status": 409
+      }
+    },
+    {
+      "case_id": "sem_16_notification_quiet_hours_revocation_override",
+      "kind": "delivery_override",
+      "description": "Critical severity notification (e.g. security policy revoked) bypasses quiet hours; warning/info notifications suppressed until quiet hours window ends.",
+      "inputs": {
+        "current_time_minute": 1380,
+        "quiet_hours": {
+          "start_minute": 1320,
+          "end_minute": 480
+        },
+        "notification_critical": {
+          "priority": "critical",
+          "type": "policy_revocation"
+        },
+        "notification_info": {
+          "priority": "info",
+          "type": "report_ready"
+        }
+      },
+      "expected": {
+        "notification_critical_delivered_immediately": true,
+        "notification_info_delivered_immediately": false,
+        "notification_info_delayed_until_minute": 480
+      }
+    },
+    {
+      "case_id": "sem_17_csv_formula_injection_neutralization",
+      "kind": "csv_security",
+      "description": "Cell containing =cmd|' /C calc'!A0 or @SUM(1+1) prefixed with single quote ' in CSV export.",
+      "inputs": {
+        "raw_cells": [
+          "=cmd|' /C calc'!A0",
+          "@SUM(1+1)",
+          "+12345",
+          "-500",
+          "Normal Text"
+        ]
+      },
+      "expected": {
+        "sanitized_cells": [
+          "'=cmd|' /C calc'!A0",
+          "'@SUM(1+1)",
+          "'+12345",
+          "'-500",
+          "Normal Text"
+        ]
+      }
+    },
+    {
+      "case_id": "sem_18_export_part_splitting_at_one_hundred_mb",
+      "kind": "export_partitioning",
+      "description": "Export exceeding 100MB chunk threshold split into part_001, part_002 with separate SHA-256 digests in manifest.",
+      "inputs": {
+        "total_bytes": 157286400,
+        "max_part_bytes": 104857600
+      },
+      "expected": {
+        "part_count": 2,
+        "part_001_bytes": 104857600,
+        "part_002_bytes": 52428800
+      }
+    },
+    {
+      "case_id": "sem_19_export_failure_transitions_to_failed_state",
+      "kind": "export_lifecycle",
+      "description": "Worker failure or timeout marks export state as failed with error code and partial artifacts cleaned up.",
+      "inputs": {
+        "export_id": "00000000-0000-4000-8000-000000000004",
+        "worker_outcome": "timeout",
+        "timeout_seconds": 900
+      },
+      "expected": {
+        "final_export_state": "failed",
+        "problem_code": "CC_EXPORT_FAILED",
+        "temporary_files_purged": true
+      }
+    },
+    {
+      "case_id": "sem_20_cross_tenant_isolation_boundary",
+      "kind": "tenant_isolation",
+      "description": "Querying with Tenant A's session token for Tenant B's report snapshot returns 404 Not Found (not 403, preventing existence leakage).",
+      "inputs": {
+        "request_tenant": "tenant_a",
+        "target_report_tenant": "tenant_b",
+        "target_report_id": "00000000-0000-4000-8000-000000000003"
+      },
+      "expected": {
+        "http_status": 404,
+        "error_code": "CC_NOT_FOUND"
+      }
+    },
+    {
+      "case_id": "sem_21_workflow_map_node_edge_filtering_respects_permissions",
+      "kind": "permission_filtering",
+      "description": "User lacking operator.case.view sees aggregated workflow topology nodes but individual case drill-down references are omitted.",
+      "inputs": {
+        "user_capabilities": [
+          "operator.workflow.view"
+        ],
+        "lacks_capabilities": [
+          "operator.case.view"
+        ]
+      },
+      "expected": {
+        "topology_visible": true,
+        "case_references_included": false
+      }
+    },
+    {
+      "case_id": "sem_22_journaled_restore_requires_exact_commitment",
+      "kind": "restore_verification",
+      "description": "Disaster recovery replay verifies every journaled snapshot against expected_digest before committing.",
+      "inputs": {
+        "journal_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+        "reconstructed_digest": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "expected": {
+        "commitment_verified": true,
+        "restore_action": "commit"
+      }
+    },
+    {
+      "case_id": "sem_23_sync_channel_vs_notification_feed_long_poll",
+      "kind": "channel_partitioning",
+      "description": "Desktop shell uses shell-sync.v1 for sync operations and separate notification channel for notifications; tokens partitioned by audience.",
+      "inputs": {
+        "sync_route": "/v1/sync/changes",
+        "notification_route": "/v1/notifications",
+        "sync_token_audience": "sync",
+        "notification_token_audience": "notifications"
+      },
+      "expected": {
+        "audiences_distinct": true,
+        "token_cross_use_permitted": false
+      }
+    },
+    {
+      "case_id": "sem_24_runtime_checkpoint_sequence_deduplication",
+      "kind": "sequence_dedup",
+      "description": "Checkpoints with duplicate sequence numbers within an attempt are deduplicated; missing sequence numbers flag gap detection.",
+      "inputs": {
+        "checkpoint_sequences": [
+          1,
+          2,
+          2,
+          3,
+          5
+        ]
+      },
+      "expected": {
+        "processed_sequences": [
+          1,
+          2,
+          3
+        ],
+        "duplicate_detected": true,
+        "gap_detected_at_sequence": 4
+      }
+    },
+    {
+      "case_id": "sem_25_projection_watermark_monotonically_advances",
+      "kind": "watermark_invariance",
+      "description": "Facts with event timestamps older than watermark can update history dimensions but do not rewind the high-water mark.",
+      "inputs": {
+        "current_watermark_sequence": 1500,
+        "incoming_backfill_sequence": 1200
+      },
+      "expected": {
+        "backfill_processed": true,
+        "new_watermark_sequence": 1500,
+        "watermark_rewound": false
+      }
+    },
+    {
+      "case_id": "sem_26_risk_tier_zero_workflows_excluded_from_pilot_metrics",
+      "kind": "pilot_filtering",
+      "description": "Unmonitored risk-tier 0 workflows filtered out of pilot evaluation cohorts.",
+      "inputs": {
+        "workflows": [
+          {
+            "workflow_id": "wf_risk_0",
+            "risk_tier": 0
+          },
+          {
+            "workflow_id": "wf_risk_1",
+            "risk_tier": 1
+          }
+        ]
+      },
+      "expected": {
+        "pilot_eligible_workflow_ids": [
+          "wf_risk_1"
+        ],
+        "excluded_workflow_ids": [
+          "wf_risk_0"
+        ]
+      }
+    },
+    {
+      "case_id": "sem_27_iana_slash_timezone_roundtrip",
+      "kind": "timezone_partitioning",
+      "description": "Timezone America/New_York and Asia/Tokyo correctly partition daily buckets across DST boundaries.",
+      "inputs": {
+        "timezones": [
+          "America/New_York",
+          "Asia/Tokyo",
+          "UTC"
+        ]
+      },
+      "expected": {
+        "all_valid_slash_or_utc": true
+      }
+    }
+  ]
+}

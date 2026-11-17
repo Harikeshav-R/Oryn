@@ -1,0 +1,7198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:identity-policy:v1",
+  "title": "Oryn Identity, Organization, Access, and Approval Governance Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for Oryn identity admission, session isolation, role evaluation, action authorization, formal approval proposals, consumption fences, authority journals, and policy leases.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/AuthorizationRequestV1"
+    },
+    {
+      "$ref": "#/$defs/AuthorizationDecisionV1"
+    },
+    {
+      "$ref": "#/$defs/SignedActionAuthorizationV1"
+    },
+    {
+      "$ref": "#/$defs/SignedApprovalProposalV1"
+    },
+    {
+      "$ref": "#/$defs/SubmitApprovalV1"
+    },
+    {
+      "$ref": "#/$defs/ApprovalResultV1"
+    },
+    {
+      "$ref": "#/$defs/ConsumeActionV1"
+    },
+    {
+      "$ref": "#/$defs/ActionConsumptionV1"
+    },
+    {
+      "$ref": "#/$defs/IdentityProblemV1"
+    },
+    {
+      "$ref": "#/$defs/ApprovalStatusV1"
+    },
+    {
+      "$ref": "#/$defs/AuthorizationStatusV1"
+    },
+    {
+      "$ref": "#/$defs/SignedActionApprovalV1"
+    },
+    {
+      "$ref": "#/$defs/SignedActionAdmissionV1"
+    },
+    {
+      "$ref": "#/$defs/SignedGovernanceProposalV1"
+    },
+    {
+      "$ref": "#/$defs/SubmitGovernanceDecisionV1"
+    },
+    {
+      "$ref": "#/$defs/BulkApprovalRequestV1"
+    },
+    {
+      "$ref": "#/$defs/BulkApprovalResultV1"
+    },
+    {
+      "$ref": "#/$defs/LoginStartV1"
+    },
+    {
+      "$ref": "#/$defs/LoginTransactionV1"
+    },
+    {
+      "$ref": "#/$defs/SessionExchangeV1"
+    },
+    {
+      "$ref": "#/$defs/SessionCredentialsV1"
+    },
+    {
+      "$ref": "#/$defs/StepUpResultV1"
+    },
+    {
+      "$ref": "#/$defs/SubjectLinkResultV1"
+    },
+    {
+      "$ref": "#/$defs/MembershipListV1"
+    },
+    {
+      "$ref": "#/$defs/OrganizationSelectionV1"
+    },
+    {
+      "$ref": "#/$defs/SessionRefreshV1"
+    },
+    {
+      "$ref": "#/$defs/ChildTokenRequestV1"
+    },
+    {
+      "$ref": "#/$defs/ChildTokenV1"
+    },
+    {
+      "$ref": "#/$defs/LogoutV1"
+    },
+    {
+      "$ref": "#/$defs/LogoutResultV1"
+    },
+    {
+      "$ref": "#/$defs/IdentityAdminCommandV1"
+    },
+    {
+      "$ref": "#/$defs/IdentityCommandResultV1"
+    },
+    {
+      "$ref": "#/$defs/SignedPrivacyAuthorizationContextV1"
+    },
+    {
+      "$ref": "#/$defs/LocalEnforcementRequestV1"
+    },
+    {
+      "$ref": "#/$defs/AuthorityJournalEntryV1"
+    },
+    {
+      "$ref": "#/$defs/SignedAuthorityCheckpointV1"
+    },
+    {
+      "$ref": "#/$defs/SignedCapturePolicyLease"
+    },
+    {
+      "$ref": "#/$defs/SignedRetentionVerdict"
+    },
+    {
+      "$ref": "#/$defs/SignedInferenceAuthorizationV1"
+    },
+    {
+      "$ref": "#/$defs/SignedGuidanceAccessLeaseV1"
+    },
+    {
+      "$ref": "#/$defs/SignedArtifactPolicy"
+    },
+    {
+      "$ref": "#/$defs/SignedTrustKeysetV1"
+    },
+    {
+      "$ref": "#/$defs/ExecutionPrincipalRegistrationV1"
+    },
+    {
+      "$ref": "#/$defs/ScheduledExecutionAuthorityV1"
+    },
+    {
+      "$ref": "#/$defs/ExecutionLimitsPolicyV1"
+    },
+    {
+      "$ref": "#/$defs/SignedSimulationAdmissionV1"
+    },
+    {
+      "$ref": "#/$defs/SignedVerificationReadAuthorizationV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationReadAuthorizationRequestV1"
+    },
+    {
+      "$ref": "#/$defs/VerificationReadLeaseRequestV1"
+    },
+    {
+      "$ref": "#/$defs/SignedVerificationReadLeaseV1"
+    },
+    {
+      "$ref": "#/$defs/GovernanceConsumptionV1"
+    },
+    {
+      "$ref": "#/$defs/ReleaseAutomationPolicyV1"
+    },
+    {
+      "$ref": "#/$defs/ApprovalReportingFactV1"
+    }
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "OrganizationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "UUID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "UtcDateTime": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?Z$"
+    },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "ActionDigest": {
+      "type": "string",
+      "pattern": "^sha256_[0-9a-f]{64}$"
+    },
+    "ProposalDigest": {
+      "type": "string",
+      "pattern": "^sha256-[0-9a-f]{64}$"
+    },
+    "Secret": {
+      "type": "string",
+      "minLength": 43,
+      "maxLength": 43,
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "Base64Url32": {
+      "type": "string",
+      "minLength": 43,
+      "maxLength": 43,
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "Base64Url64": {
+      "type": "string",
+      "minLength": 86,
+      "maxLength": 86,
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    },
+    "MinorUnitString": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,18})$"
+    },
+    "CurrencyString": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "Text": {
+      "type": "string",
+      "maxLength": 4096
+    },
+    "ReasonText": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "IdentityReason": {
+      "type": "string",
+      "enum": [
+        "IDENTITY_OK",
+        "IDENTITY_AUTH_REQUIRED",
+        "IDENTITY_SESSION_EXPIRED",
+        "IDENTITY_STEP_UP_REQUIRED",
+        "IDENTITY_ACCESS_DENIED",
+        "IDENTITY_ORGANIZATION_INACTIVE",
+        "IDENTITY_DEVICE_REVOKED",
+        "IDENTITY_POLICY_STALE",
+        "IDENTITY_CONTEXT_STALE",
+        "IDENTITY_TIER4_PROHIBITED",
+        "IDENTITY_APPROVAL_REQUIRED",
+        "IDENTITY_APPROVAL_EXPIRED",
+        "IDENTITY_DELEGATION_INVALID",
+        "IDENTITY_SEPARATION_REQUIRED",
+        "IDENTITY_ACTION_CONSUMED",
+        "IDENTITY_SIGNER_UNAVAILABLE",
+        "IDENTITY_STORE_UNAVAILABLE",
+        "IDENTITY_IDEMPOTENCY_CONFLICT",
+        "IDENTITY_LAST_ADMIN_REQUIRED",
+        "IDENTITY_TRUST_ROLLBACK",
+        "IDENTITY_SCHEMA_INVALID",
+        "IDENTITY_RECOVERY_INCOMPLETE"
+      ]
+    },
+    "RiskTier": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4
+    },
+    "CaptureCategory": {
+      "type": "string",
+      "enum": [
+        "screen",
+        "audio",
+        "keystroke_metadata",
+        "window_metadata",
+        "accessibility_tree",
+        "browser_dom"
+      ]
+    },
+    "InferenceOperation": {
+      "type": "string",
+      "enum": [
+        "meeting.transcribe.live",
+        "meeting.transcribe.chunk",
+        "meeting.transcribe.final",
+        "meeting.extract_commitments",
+        "vision.extract",
+        "text.reason",
+        "text.embed",
+        "text.rerank",
+        "incident.transcribe_correction"
+      ]
+    },
+    "RoleId": {
+      "type": "string",
+      "enum": [
+        "employee",
+        "sme",
+        "agent_operator",
+        "workflow_owner",
+        "automation_builder",
+        "operations_manager",
+        "security_admin",
+        "organization_admin",
+        "read_only_stakeholder"
+      ]
+    },
+    "CapabilityId": {
+      "type": "string",
+      "enum": [
+        "playbook.read",
+        "workflow.review",
+        "rule.approve",
+        "agent.edit",
+        "job.run",
+        "action.approve",
+        "incident.review",
+        "repair.approve",
+        "release.approve",
+        "analytics.read",
+        "analytics.pilot.manage",
+        "analytics.assumptions.manage",
+        "report.export",
+        "privacy_policy.manage",
+        "membership.manage",
+        "schedule.manage",
+        "audit.read",
+        "security_policy.manage",
+        "hold.manage",
+        "identity.recover",
+        "application.read",
+        "integration.manage",
+        "application.qualify",
+        "execution_limits.manage",
+        "simulation.read",
+        "simulation.edit",
+        "simulation.evaluate",
+        "simulation.review",
+        "simulation.manage_policy"
+      ]
+    },
+    "RemitId": {
+      "type": "string",
+      "enum": [
+        "workflow_owner",
+        "security_admin",
+        "organization_admin"
+      ]
+    },
+    "ExecutionContextV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "job"
+            },
+            "job_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "case_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "agent_version": {
+              "$ref": "#/$defs/Identifier"
+            }
+          },
+          "required": [
+            "kind",
+            "job_id",
+            "case_id",
+            "agent_version"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "assist"
+            },
+            "assist_session_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "assist_plan_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "assist_plan_version": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "playbook_version": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "release_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "release_cohort_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "release_eligibility_generation": {
+              "$ref": "#/$defs/U64"
+            },
+            "plan_sha256": {
+              "$ref": "#/$defs/Sha256Hex"
+            }
+          },
+          "required": [
+            "kind",
+            "assist_session_id",
+            "assist_plan_id",
+            "assist_plan_version",
+            "playbook_version",
+            "release_id",
+            "release_cohort_id",
+            "release_eligibility_generation",
+            "plan_sha256"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "evaluation"
+            },
+            "evaluation_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "scenario_version_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "attempt_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "evaluation_target": {
+              "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetV1"
+            }
+          },
+          "required": [
+            "kind",
+            "evaluation_id",
+            "scenario_version_id",
+            "attempt_id",
+            "evaluation_target"
+          ]
+        }
+      ]
+    },
+    "BrowserDocumentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "browser_instance_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "window_id": {
+          "type": "integer"
+        },
+        "tab_id": {
+          "type": "integer"
+        },
+        "frame_id": {
+          "type": "integer"
+        },
+        "document_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "document_generation": {
+          "$ref": "#/$defs/U64"
+        }
+      },
+      "required": [
+        "profile_id",
+        "browser_instance_id",
+        "window_id",
+        "tab_id",
+        "frame_id",
+        "document_id",
+        "document_generation"
+      ]
+    },
+    "BrowserExpectedFieldV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "field_key": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "field_key",
+        "value"
+      ]
+    },
+    "BrowserExpectedStateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "record_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrowserExpectedFieldV1"
+          },
+          "maxItems": 128
+        }
+      },
+      "required": [
+        "record_revision",
+        "fields"
+      ]
+    },
+    "AdapterGuardV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "read_only" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "content_sha256"],
+          "properties": {
+            "kind": { "const": "immutable_input" },
+            "content_sha256": { "$ref": "#/$defs/Sha256Hex" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "validator"],
+          "properties": {
+            "kind": { "const": "strong_precondition" },
+            "validator": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "scope_id", "epoch"],
+          "properties": {
+            "kind": { "const": "exclusive_scope" },
+            "scope_id": { "$ref": "#/$defs/Identifier" },
+            "epoch": { "$ref": "#/$defs/U64" }
+          }
+        }
+      ]
+    },
+    "AdapterExpectedFieldV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field_name", "value"],
+      "properties": {
+        "field_name": { "$ref": "#/$defs/Identifier" },
+        "value": {
+          "type": ["string", "number", "boolean", "null", "array", "object"]
+        }
+      }
+    },
+    "AdapterExpectedStateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "vendor_revision",
+            "before_fields",
+            "guard"
+          ],
+          "properties": {
+            "kind": { "const": "api" },
+            "vendor_revision": { "type": ["string", "null"] },
+            "before_fields": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": { "$ref": "#/$defs/AdapterExpectedFieldV1" },
+                  "maxItems": 128
+                },
+                {
+                  "type": "object"
+                }
+              ]
+            },
+            "guard": { "$ref": "#/$defs/AdapterGuardV1" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "application_id",
+            "process_identity",
+            "window_identity",
+            "surface_generation",
+            "target_key",
+            "before_state",
+            "guard"
+          ],
+          "properties": {
+            "kind": { "const": "native" },
+            "application_id": { "$ref": "#/$defs/Identifier" },
+            "process_identity": { "type": "string" },
+            "window_identity": { "type": "string" },
+            "surface_generation": { "$ref": "#/$defs/U64" },
+            "target_key": { "$ref": "#/$defs/Identifier" },
+            "before_state": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": { "$ref": "#/$defs/AdapterExpectedFieldV1" },
+                  "maxItems": 128
+                },
+                {
+                  "type": "object"
+                }
+              ]
+            },
+            "guard": { "$ref": "#/$defs/AdapterGuardV1" }
+          }
+        }
+      ]
+    },
+    "BrowserOperationV1": {
+      "type": "string",
+      "enum": [
+        "read",
+        "click",
+        "fill",
+        "select",
+        "check",
+        "navigate"
+      ]
+    },
+    "BrowserArgumentV1": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "maxLength": 4096
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "url": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          },
+          "required": [
+            "url"
+          ]
+        }
+      ]
+    },
+    "BrowserTargetProjectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "browser"
+        },
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "application_profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "application_profile_version": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "document": {
+          "$ref": "#/$defs/BrowserDocumentV1"
+        },
+        "surface_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "target_key": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "record_key": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "expected_state": {
+          "$ref": "#/$defs/BrowserExpectedStateV1"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "production",
+            "simulation"
+          ]
+        },
+        "operation": {
+          "$ref": "#/$defs/BrowserOperationV1"
+        },
+        "argument": {
+          "$ref": "#/$defs/BrowserArgumentV1"
+        }
+      },
+      "required": [
+        "kind",
+        "action_id",
+        "execution_context",
+        "application_profile_id",
+        "application_profile_version",
+        "document",
+        "surface_generation",
+        "target_key",
+        "record_key",
+        "expected_state",
+        "environment",
+        "operation",
+        "argument"
+      ]
+    },
+    "AdapterTargetProjectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "adapter"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "connection_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "connection_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "vendor_account_id": {
+          "type": "string"
+        },
+        "application_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "capability_ref": {
+          "$ref": "urn:oryn:schemas:application-capability:v1#/$defs/ApplicationCapabilityRefV1"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "record_key": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "expected_state": {
+          "$ref": "#/$defs/AdapterExpectedStateV1"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "production",
+            "simulation"
+          ]
+        },
+        "argument_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        }
+      },
+      "required": [
+        "kind",
+        "organization_id",
+        "action_id",
+        "execution_context",
+        "connection_id",
+        "connection_revision",
+        "vendor_account_id",
+        "application_id",
+        "capability_ref",
+        "operation_id",
+        "record_key",
+        "expected_state",
+        "environment",
+        "argument_sha256"
+      ]
+    },
+    "TargetProjectionV1": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/BrowserTargetProjectionV1"
+        },
+        {
+          "$ref": "#/$defs/AdapterTargetProjectionV1"
+        }
+      ]
+    },
+    "ParameterDiffV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "before": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "after": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "before",
+        "after"
+      ]
+    },
+    "RuleCheckV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rule_version": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "unknown"
+          ]
+        },
+        "evidence_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "rule_version",
+        "result",
+        "evidence_ref"
+      ]
+    },
+    "AuthorityCheckV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "permission",
+            "scope",
+            "delegation",
+            "separation",
+            "release",
+            "risk",
+            "human_approval"
+          ]
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "unknown",
+            "pending"
+          ]
+        },
+        "source_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "result",
+        "source_ref"
+      ]
+    },
+    "ScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "team_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workflow_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "application_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "record_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 1000,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "team_id",
+        "workflow_id",
+        "application_id",
+        "record_ids"
+      ]
+    },
+    "AmountLimitV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_minor_units": {
+          "$ref": "#/$defs/MinorUnitString"
+        },
+        "currency": {
+          "$ref": "#/$defs/CurrencyString"
+        }
+      },
+      "required": [
+        "max_minor_units",
+        "currency"
+      ]
+    },
+    "RoleAssignmentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "assignment_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "role_id": {
+          "$ref": "#/$defs/RoleId"
+        },
+        "scope": {
+          "$ref": "#/$defs/ScopeV1"
+        },
+        "valid_from": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "granted_by": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        },
+        "revision": {
+          "$ref": "#/$defs/U64"
+        }
+      },
+      "required": [
+        "assignment_id",
+        "actor_id",
+        "role_id",
+        "scope",
+        "valid_from",
+        "not_after",
+        "granted_by",
+        "reason",
+        "revision"
+      ]
+    },
+    "CapabilityRestrictionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "restriction_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capability": {
+          "$ref": "#/$defs/CapabilityId"
+        },
+        "scope": {
+          "$ref": "#/$defs/ScopeV1"
+        },
+        "valid_from": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        },
+        "revision": {
+          "$ref": "#/$defs/U64"
+        }
+      },
+      "required": [
+        "restriction_id",
+        "actor_id",
+        "capability",
+        "scope",
+        "valid_from",
+        "not_after",
+        "reason",
+        "revision"
+      ]
+    },
+    "ApprovalDelegationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "delegation_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "approver_actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "action_types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "record_types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "scope": {
+          "$ref": "#/$defs/ScopeV1"
+        },
+        "amount_limit": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/AmountLimitV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "valid_from": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "distinct_initiator_required": {
+          "type": "boolean"
+        },
+        "granted_by": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "owner_approval_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "security_approval_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/U64"
+        }
+      },
+      "required": [
+        "delegation_id",
+        "approver_actor_id",
+        "action_types",
+        "record_types",
+        "scope",
+        "amount_limit",
+        "valid_from",
+        "not_after",
+        "distinct_initiator_required",
+        "granted_by",
+        "owner_approval_id",
+        "security_approval_id",
+        "revision"
+      ]
+    },
+    "ActionPolicyFactsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "facts_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "staged_action_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "staged_action_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "producer_workload_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "action_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "argument_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Sha256Hex"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "application_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "capability_version": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "eligibility_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "record_type": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "record_key": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "destination_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "action_category": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "mandatory_risk_floor": {
+          "$ref": "#/$defs/RiskTier"
+        },
+        "amount_minor_units": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/MinorUnitString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currency": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CurrencyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_state_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "valid_from": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "facts_id",
+        "staged_action_id",
+        "staged_action_revision",
+        "organization_id",
+        "producer_workload_id",
+        "execution_context",
+        "action_id",
+        "action_sha256",
+        "argument_sha256",
+        "application_id",
+        "capability_version",
+        "eligibility_revision",
+        "record_type",
+        "record_key",
+        "destination_id",
+        "action_category",
+        "mandatory_risk_floor",
+        "amount_minor_units",
+        "currency",
+        "expected_state_sha256",
+        "valid_from",
+        "not_after"
+      ]
+    },
+    "AdapterStagedActionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "staged_action_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "effect": {
+          "type": "string",
+          "enum": [
+            "read",
+            "draft",
+            "write"
+          ]
+        },
+        "argument_schema_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "argument_canonical_base64url": {
+          "type": "string"
+        },
+        "argument_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "expected_state_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "parameter_diffs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ParameterDiffV1"
+          },
+          "minItems": 0,
+          "maxItems": 128
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "staged_action_id",
+        "revision",
+        "organization_id",
+        "execution_context",
+        "action_id",
+        "effect",
+        "argument_schema_id",
+        "argument_canonical_base64url",
+        "argument_sha256",
+        "expected_state_sha256",
+        "parameter_diffs",
+        "created_at",
+        "not_after"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "effect": { "const": "read" }
+            }
+          },
+          "then": {
+            "properties": {
+              "parameter_diffs": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "parameter_diffs": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CapturePolicyConfigV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "permitted_categories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaptureCategory"
+          },
+          "maxItems": 6,
+          "uniqueItems": true
+        },
+        "excluded_application_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "excluded_url_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 1024
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "mandatory_exclusion_catalog_revision": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "max_raw_retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 14
+        },
+        "research_extension_permitted": {
+          "type": "boolean"
+        },
+        "max_offline_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "notice_revision": {
+          "$ref": "#/$defs/U64"
+        }
+      },
+      "required": [
+        "permitted_categories",
+        "excluded_application_ids",
+        "excluded_url_patterns",
+        "mandatory_exclusion_catalog_revision",
+        "max_raw_retention_days",
+        "research_extension_permitted",
+        "max_offline_seconds",
+        "notice_revision"
+      ]
+    },
+    "SessionPolicyConfigV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "web_absolute_seconds": {
+          "type": "integer",
+          "minimum": 300,
+          "maximum": 43200
+        },
+        "web_idle_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 1800
+        },
+        "desktop_absolute_seconds": {
+          "type": "integer",
+          "minimum": 300,
+          "maximum": 604800
+        },
+        "mfa_max_age_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300
+        }
+      },
+      "required": [
+        "web_absolute_seconds",
+        "web_idle_seconds",
+        "desktop_absolute_seconds",
+        "mfa_max_age_seconds"
+      ]
+    },
+    "BulkClassV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workflow_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "application_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "risk_tier": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "currency": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CurrencyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "amount_limit": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/AmountLimitV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maximum_items": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "owner_approval_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "security_approval_id": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "workflow_id",
+        "application_id",
+        "operation_id",
+        "risk_tier",
+        "currency",
+        "amount_limit",
+        "maximum_items",
+        "owner_approval_id",
+        "security_approval_id"
+      ]
+    },
+    "DelegationCeilingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workflow_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "application_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "action_type": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "record_type": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "scope": {
+          "$ref": "#/$defs/ScopeV1"
+        },
+        "amount_limit": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/AmountLimitV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "not_after": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "workflow_id",
+        "application_id",
+        "action_type",
+        "record_type",
+        "scope",
+        "amount_limit",
+        "not_after"
+      ]
+    },
+    "ExecutionPolicyConfigV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed_application_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "allowed_operation_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "allowed_risk_tiers": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "pending_approval_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 86400
+        },
+        "approved_validity_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 900
+        },
+        "distinct_initiator_action_types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "delegation_ceilings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DelegationCeilingV1"
+          },
+          "maxItems": 128
+        },
+        "bulk_classes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BulkClassV1"
+          },
+          "maxItems": 128
+        }
+      },
+      "required": [
+        "allowed_application_ids",
+        "allowed_operation_ids",
+        "allowed_risk_tiers",
+        "pending_approval_seconds",
+        "approved_validity_seconds",
+        "distinct_initiator_action_types",
+        "delegation_ceilings",
+        "bulk_classes"
+      ]
+    },
+    "InferencePurposePolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "purpose": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "operation": {
+          "$ref": "#/$defs/InferenceOperation"
+        },
+        "route_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "route_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "max_input_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        },
+        "max_output_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128000
+        },
+        "concurrency": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "budget_limit_microusd": {
+          "$ref": "#/$defs/MinorUnitString"
+        },
+        "budget_window": {
+          "const": "calendar_month_utc"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "purpose",
+        "operation",
+        "route_id",
+        "route_revision",
+        "max_input_bytes",
+        "max_output_bytes",
+        "max_output_tokens",
+        "concurrency",
+        "budget_limit_microusd",
+        "budget_window",
+        "enabled"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "meeting.transcribe.final"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "max_input_bytes": {
+                "maximum": 134217728
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "max_input_bytes": {
+                "maximum": 10485760
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SeparationRequirementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "type": "string",
+          "enum": [
+            "privileged_role_grant",
+            "sso_change",
+            "emergency_account_change",
+            "hold_release",
+            "policy_relaxation"
+          ]
+        },
+        "required_approver_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "distinct_from_proposer": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "operation",
+        "required_approver_count",
+        "distinct_from_proposer"
+      ]
+    },
+    "ArtifactSharingConfigV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "allowed_purposes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "allowed_audiences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "max_lifetime_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365
+        },
+        "max_width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1920
+        },
+        "max_height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1080
+        },
+        "max_byte_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "max_image_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        }
+      },
+      "required": [
+        "enabled",
+        "allowed_purposes",
+        "allowed_audiences",
+        "max_lifetime_days",
+        "max_width",
+        "max_height",
+        "max_byte_length",
+        "max_image_count"
+      ]
+    },
+    "FederationPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "optional",
+            "enforced"
+          ]
+        },
+        "allowed_connection_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "bootstrap_email_allowed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "mode",
+        "allowed_connection_ids",
+        "bootstrap_email_allowed"
+      ]
+    },
+    "OrganizationPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "effective_from": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "session": {
+          "$ref": "#/$defs/SessionPolicyConfigV1"
+        },
+        "capture": {
+          "$ref": "#/$defs/CapturePolicyConfigV1"
+        },
+        "execution": {
+          "$ref": "#/$defs/ExecutionPolicyConfigV1"
+        },
+        "inference_purposes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InferencePurposePolicyV1"
+          },
+          "maxItems": 128
+        },
+        "sharing_audience_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "meeting_team_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "export_actor_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "separation_requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SeparationRequirementV1"
+          },
+          "maxItems": 128
+        },
+        "artifact": {
+          "$ref": "#/$defs/ArtifactSharingConfigV1"
+        },
+        "federation": {
+          "$ref": "#/$defs/FederationPolicyV1"
+        },
+        "inference_budget_limit_microusd": {
+          "$ref": "#/$defs/U64"
+        },
+        "inference_budget_window": {
+          "const": "calendar_month_utc"
+        },
+        "execution_limits": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ExecutionLimitsPolicyV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verification_policy": {
+          "$ref": "#/$defs/VerificationPolicyConfigV1"
+        },
+        "incident_response_policy": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/IncidentResponsePolicyV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "release_automation_policy": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ReleaseAutomationPolicyV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reporting_policy": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ReportingPolicyV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "organization_id",
+        "revision",
+        "effective_from",
+        "session",
+        "capture",
+        "execution",
+        "inference_purposes",
+        "sharing_audience_ids",
+        "meeting_team_ids",
+        "export_actor_ids",
+        "separation_requirements",
+        "artifact",
+        "federation",
+        "inference_budget_limit_microusd",
+        "inference_budget_window",
+        "execution_limits",
+        "verification_policy",
+        "release_automation_policy",
+        "reporting_policy"
+      ]
+    },
+    "ReportingPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimum_contributors",
+        "human_release_grace_hours",
+        "facts_retention_months",
+        "reports_retention_days",
+        "notifications_retention_days",
+        "exports_retention_seconds",
+        "email_enabled",
+        "critical_quiet_hours_override"
+      ],
+      "properties": {
+        "minimum_contributors": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 1000
+        },
+        "human_release_grace_hours": {
+          "type": "integer",
+          "const": 72
+        },
+        "facts_retention_months": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 24
+        },
+        "reports_retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90
+        },
+        "notifications_retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90
+        },
+        "exports_retention_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 86400
+        },
+        "email_enabled": {
+          "type": "boolean"
+        },
+        "critical_quiet_hours_override": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ApprovalReportingFactV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "proposal_id",
+        "workflow_id",
+        "decision_type",
+        "review_opened_at",
+        "decided_at",
+        "decision_outcome",
+        "source_revision",
+        "supersession_ref"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.approval-reporting-fact.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "proposal_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "workflow_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "decision_type": {
+          "type": "string",
+          "enum": [
+            "action_approval",
+            "candidate_approval",
+            "rule_approval",
+            "repair_approval",
+            "release_approval",
+            "baseline_approval"
+          ]
+        },
+        "review_opened_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "decided_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decision_outcome": {
+          "type": "string",
+          "enum": [
+            "approved",
+            "rejected",
+            "superseded",
+            "pending"
+          ]
+        },
+        "source_revision": {
+          "$ref": "#/$defs/Revision"
+        },
+        "supersession_ref": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/ResourceRefV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ExecutionLimitsPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_active_cases",
+        "max_active_cases_per_job",
+        "max_active_cases_per_connection",
+        "default_max_active_ms",
+        "job_spend_limit_microusd"
+      ],
+      "properties": {
+        "max_active_cases": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "max_active_cases_per_job": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "max_active_cases_per_connection": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1
+        },
+        "default_max_active_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 900000
+        },
+        "job_spend_limit_microusd": {
+          "oneOf": [
+            {
+              "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/DecimalString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ScheduledExecutionAuthorityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "schedule_id",
+        "schedule_revision",
+        "owner_actor_id",
+        "sponsor_actor_id",
+        "approved_scope",
+        "policy_revision",
+        "owner_role_revision",
+        "sponsor_role_revision",
+        "checked_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "const": "identity.scheduled-execution-authority.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "schedule_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "schedule_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "owner_actor_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "sponsor_actor_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "approved_scope": {
+          "$ref": "#/$defs/ScopeV1"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "owner_role_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "sponsor_role_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "checked_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "PublicKeyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "key_type": {
+          "const": "ed25519"
+        },
+        "public_key": {
+          "$ref": "#/$defs/Base64Url32"
+        }
+      },
+      "required": [
+        "key_id",
+        "key_type",
+        "public_key"
+      ]
+    },
+    "ActiveHoldV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hold_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "description": {
+          "$ref": "#/$defs/Text"
+        },
+        "from_utc": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "to_utc": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "affected_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "native_os",
+              "browser",
+              "meeting"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "hold_id",
+        "description",
+        "from_utc",
+        "to_utc",
+        "affected_sources"
+      ]
+    },
+    "RecordAfterImageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "table_name": {
+          "type": "string",
+          "enum": [
+            "identity_organization",
+            "identity_membership",
+            "identity_team",
+            "identity_team_member",
+            "identity_invitation",
+            "identity_role_assignment",
+            "identity_restriction",
+            "identity_approval_delegation",
+            "identity_policy_version",
+            "identity_authority_guard",
+            "identity_device",
+            "identity_review_key",
+            "identity_execution_principal",
+            "identity_action_fence",
+            "identity_approval_proposal",
+            "identity_approval",
+            "identity_action_authorization",
+            "identity_action_consumption",
+            "identity_legal_hold",
+            "identity_emergency_account",
+            "sync_submission_identity",
+            "identity_recovery_overlay",
+            "identity_recovery_epoch_state",
+            "orchestration_retention_fence",
+            "orchestration_safety_fence",
+            "release_head",
+            "release_cohort_binding",
+            "release_cohort_fence",
+            "release_preauthorization",
+            "release_approval_consumption",
+            "analytics_disclosure_commitment",
+            "infrastructure_payload_key_fence",
+            "infrastructure_payload_custody_generation"
+          ]
+        },
+        "record_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "state_after": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "table_name",
+        "record_id",
+        "present",
+        "state_after"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "orchestration_retention_fence" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeRetentionFenceV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "orchestration_safety_fence" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:job-orchestration:v1#/$defs/OrchestrationSafetyFenceV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "release_cohort_fence" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleaseCohortFenceV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "release_preauthorization" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:release-governance:v1#/$defs/ReleasePreauthorizationV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "release_approval_consumption" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "#/$defs/GovernanceConsumptionV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "release_head" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "#/$defs/ReleaseHeadAfterStateV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "release_cohort_binding" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "#/$defs/ReleaseCohortBindingAfterStateV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "analytics_disclosure_commitment" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:command-center-analytics:v1#/$defs/AnalyticsDisclosureCommitmentV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "sync_submission_identity" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:contribution-sync:v1#/$defs/SyncSubmissionIdentityV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "identity_recovery_epoch_state" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "#/$defs/IdentityRecoveryEpochStateV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "infrastructure_payload_key_fence" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/PayloadKeyFenceV1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "table_name": { "const": "infrastructure_payload_custody_generation" },
+              "present": { "const": true }
+            }
+          },
+          "then": {
+            "properties": {
+              "state_after": {
+                "$ref": "urn:oryn:schemas:infrastructure-security:v1#/$defs/PayloadCustodyGenerationV1"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AdminCommandVariantV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "create_organization"
+            },
+            "name": {
+              "$ref": "#/$defs/Text"
+            },
+            "business_region": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "time_zone": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_+-]+(/[A-Za-z0-9_+-]+)*$"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "business_region",
+            "time_zone"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "invite_member"
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "maxLength": 320
+            },
+            "role_assignments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "role_id": {
+                    "$ref": "#/$defs/RoleId"
+                  },
+                  "scope": {
+                    "$ref": "#/$defs/ScopeV1"
+                  }
+                },
+                "required": [
+                  "role_id",
+                  "scope"
+                ]
+              },
+              "maxItems": 9
+            },
+            "invitation_not_after": {
+              "$ref": "#/$defs/UtcDateTime"
+            }
+          },
+          "required": [
+            "kind",
+            "email",
+            "role_assignments",
+            "invitation_not_after"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "accept_invitation"
+            },
+            "invitation_token": {
+              "$ref": "#/$defs/Secret"
+            }
+          },
+          "required": [
+            "kind",
+            "invitation_token"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_member_status"
+            },
+            "actor_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "active",
+                "suspended",
+                "removed"
+              ]
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "actor_id",
+            "status",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_team_membership"
+            },
+            "team_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "actor_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "present": {
+              "type": "boolean"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "team_id",
+            "actor_id",
+            "present",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "grant_role"
+            },
+            "actor_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "role_id": {
+              "$ref": "#/$defs/RoleId"
+            },
+            "scope": {
+              "$ref": "#/$defs/ScopeV1"
+            },
+            "valid_from": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "not_after": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/UtcDateTime"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "actor_id",
+            "role_id",
+            "scope",
+            "valid_from",
+            "not_after",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "revoke_role"
+            },
+            "assignment_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "assignment_id",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_restriction"
+            },
+            "restriction": {
+              "$ref": "#/$defs/CapabilityRestrictionV1"
+            }
+          },
+          "required": [
+            "kind",
+            "restriction"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "remove_restriction"
+            },
+            "restriction_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "restriction_id",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_delegation"
+            },
+            "delegation": {
+              "$ref": "#/$defs/ApprovalDelegationV1"
+            }
+          },
+          "required": [
+            "kind",
+            "delegation"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "revoke_delegation"
+            },
+            "delegation_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "delegation_id",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "replace_policy"
+            },
+            "policy": {
+              "$ref": "#/$defs/OrganizationPolicyV1"
+            },
+            "owner_approval_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/UUID"
+              },
+              "maxItems": 128
+            },
+            "security_approval_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "policy",
+            "owner_approval_ids",
+            "security_approval_id",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_federation"
+            },
+            "federation": {
+              "$ref": "#/$defs/FederationPolicyV1"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "federation",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_hold"
+            },
+            "hold_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "description": {
+              "$ref": "#/$defs/Text"
+            },
+            "from_utc": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "to_utc": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/UtcDateTime"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "affected_sources": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "native_os",
+                  "browser",
+                  "meeting"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 3,
+              "uniqueItems": true
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "hold_id",
+            "description",
+            "from_utc",
+            "to_utc",
+            "affected_sources",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "release_hold"
+            },
+            "hold_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "hold_id",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_device_status"
+            },
+            "device_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "suspended",
+                "revoked",
+                "active"
+              ]
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "device_id",
+            "status",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "enroll_device"
+            },
+            "profile_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "platform": {
+              "type": "string",
+              "enum": [
+                "macos",
+                "windows"
+              ]
+            },
+            "device_public_key": {
+              "$ref": "#/$defs/PublicKeyV1"
+            },
+            "display_name": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "profile_id",
+            "platform",
+            "device_public_key",
+            "display_name"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "register_emergency_account"
+            },
+            "actor_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "actor_id",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "recover_identity"
+            },
+            "recovery_kind": {
+              "type": "string",
+              "enum": [
+                "restore_connection",
+                "replace_last_admin"
+              ]
+            },
+            "connection_id": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Identifier"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "replacement_actor_id": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Identifier"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "recovery_kind",
+            "connection_id",
+            "replacement_actor_id",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "deactivate_organization"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "suspend_organization"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "restore_organization"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "request_organization_deletion"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set_release_automation_policy"
+            },
+            "release_automation_policy": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ReleaseAutomationPolicyV1"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "security_approval_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "reason": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "required": [
+            "kind",
+            "release_automation_policy",
+            "security_approval_id",
+            "reason"
+          ]
+        }
+      ]
+    },
+    "AuthorizationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.authorization-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "action_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "target": {
+          "$ref": "#/$defs/TargetProjectionV1"
+        },
+        "policy_facts_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "approval_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "action_id",
+        "execution_context",
+        "action_sha256",
+        "target",
+        "policy_facts_id",
+        "approval_id"
+      ]
+    },
+    "AuthorizationDecisionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.authorization-decision.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "Allow",
+            "Deny",
+            "RequireHumanApproval"
+          ]
+        },
+        "reason_code": {
+          "$ref": "#/$defs/IdentityReason"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "risk_tier": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/RiskTier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "authorization": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/SignedActionAuthorizationV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposal": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/SignedApprovalProposalV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "decision",
+        "reason_code",
+        "policy_revision",
+        "access_revision",
+        "risk_tier",
+        "authorization",
+        "proposal"
+      ]
+    },
+    "ActionAuthorizationPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "authorization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "worker_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "device_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "audience": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "action_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "production",
+            "simulation"
+          ]
+        },
+        "risk_tier": {
+          "$ref": "#/$defs/RiskTier"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "revocation_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "approval_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nonce": {
+          "$ref": "#/$defs/Secret"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "authorization_id",
+        "organization_id",
+        "actor_id",
+        "worker_id",
+        "device_id",
+        "profile_id",
+        "audience",
+        "execution_context",
+        "action_id",
+        "action_sha256",
+        "environment",
+        "risk_tier",
+        "policy_revision",
+        "access_revision",
+        "revocation_generation",
+        "approval_id",
+        "nonce",
+        "issued_at",
+        "not_after"
+      ]
+    },
+    "SignedActionAuthorizationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.action-authorization.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/ActionAuthorizationPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "ApprovalProposalPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "proposal_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "action_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "action_category": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "application_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "record_key": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "parameter_diffs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ParameterDiffV1"
+          },
+          "minItems": 1,
+          "maxItems": 128
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128
+        },
+        "rule_checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuleCheckV1"
+          },
+          "maxItems": 128
+        },
+        "authority_checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AuthorityCheckV1"
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "consequence_summary": {
+          "$ref": "#/$defs/Text"
+        },
+        "reversible": {
+          "type": "boolean"
+        },
+        "risk_tier": {
+          "$ref": "#/$defs/RiskTier"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "proposal_digest": {
+          "$ref": "#/$defs/ProposalDigest"
+        }
+      },
+      "required": [
+        "proposal_id",
+        "proposal_revision",
+        "organization_id",
+        "execution_context",
+        "action_id",
+        "action_sha256",
+        "action_category",
+        "application_id",
+        "record_key",
+        "parameter_diffs",
+        "evidence_refs",
+        "rule_checks",
+        "authority_checks",
+        "consequence_summary",
+        "reversible",
+        "risk_tier",
+        "policy_revision",
+        "access_revision",
+        "issued_at",
+        "not_after",
+        "proposal_digest"
+      ]
+    },
+    "SignedApprovalProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.approval-proposal.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/ApprovalProposalPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "SubmitApprovalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.submit-approval.v1"
+        },
+        "command_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "proposal_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "proposal_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "proposal_digest": {
+          "$ref": "#/$defs/ProposalDigest"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "approve",
+            "reject",
+            "request_changes"
+          ]
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "proposal_id",
+        "proposal_revision",
+        "proposal_digest",
+        "decision",
+        "reason"
+      ]
+    },
+    "ApprovalResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.approval-result.v1"
+        },
+        "command_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "proposal_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "rejected",
+            "expired",
+            "stale",
+            "forbidden",
+            "unknown_delivery"
+          ]
+        },
+        "approval_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decided_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "not_after": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_code": {
+          "$ref": "#/$defs/IdentityReason"
+        },
+        "approval_receipt": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/SignedActionApprovalV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "proposal_id",
+        "status",
+        "approval_id",
+        "decided_at",
+        "not_after",
+        "reason_code",
+        "approval_receipt"
+      ]
+    },
+    "ConsumeActionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.consume-action.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "authorization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "action_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "reservation_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "authorization_id",
+        "attempt_id",
+        "action_sha256",
+        "execution_context",
+        "reservation_id"
+      ]
+    },
+    "ActionConsumptionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.action-consumption.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "authorization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "consumed",
+            "already_consumed",
+            "denied",
+            "unknown_delivery"
+          ]
+        },
+        "reason_code": {
+          "$ref": "#/$defs/IdentityReason"
+        },
+        "consumed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "admission": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/SignedActionAdmissionV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "authorization_id",
+        "attempt_id",
+        "state",
+        "reason_code",
+        "consumed_at",
+        "admission"
+      ]
+    },
+    "IdentityProblemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.problem.v1"
+        },
+        "type": {
+          "const": "about:blank"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "status": {
+          "type": "integer",
+          "minimum": 400,
+          "maximum": 599
+        },
+        "detail": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "code": {
+          "$ref": "#/$defs/IdentityReason"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "retry_after_seconds": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 86400
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "type",
+        "title",
+        "status",
+        "detail",
+        "code",
+        "request_id",
+        "retry_after_seconds"
+      ]
+    },
+    "ApprovalStatusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.approval-status.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "proposal_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "proposal_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "proposal_digest": {
+          "$ref": "#/$defs/ProposalDigest"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved",
+            "rejected",
+            "changes_requested",
+            "expired",
+            "invalidated",
+            "consumed"
+          ]
+        },
+        "decision": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "approve",
+                "reject",
+                "request_changes"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decider_actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "approval_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requested_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "decided_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "consumed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_code": {
+          "$ref": "#/$defs/IdentityReason"
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "organization_id",
+        "proposal_id",
+        "proposal_revision",
+        "proposal_digest",
+        "state",
+        "decision",
+        "decider_actor_id",
+        "approval_id",
+        "requested_at",
+        "decided_at",
+        "not_after",
+        "consumed_at",
+        "reason_code"
+      ]
+    },
+    "AuthorizationStatusV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.authorization-status.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "authorization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "action_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "issued",
+            "consumed",
+            "expired",
+            "revoked"
+          ]
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "attempt_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUIDv4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "consumed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_code": {
+          "$ref": "#/$defs/IdentityReason"
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "organization_id",
+        "authorization_id",
+        "execution_context",
+        "action_id",
+        "action_sha256",
+        "state",
+        "issued_at",
+        "not_after",
+        "attempt_id",
+        "consumed_at",
+        "reason_code"
+      ]
+    },
+    "ActionApprovalPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "approval_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "proposal_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "proposal_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "proposal_digest": {
+          "$ref": "#/$defs/ProposalDigest"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "action_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "approver_actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "decision": {
+          "const": "approve"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "decided_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "approval_id",
+        "organization_id",
+        "proposal_id",
+        "proposal_revision",
+        "proposal_digest",
+        "execution_context",
+        "action_id",
+        "action_sha256",
+        "approver_actor_id",
+        "decision",
+        "policy_revision",
+        "access_revision",
+        "decided_at",
+        "not_after"
+      ]
+    },
+    "SignedActionApprovalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.action-approval.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/ActionApprovalPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "ActionAdmissionPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "authorization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "worker_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "action_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "approval_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nonce": {
+          "$ref": "#/$defs/Secret"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "consumed_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "authorization_id",
+        "organization_id",
+        "attempt_id",
+        "worker_id",
+        "execution_context",
+        "action_id",
+        "action_sha256",
+        "approval_id",
+        "nonce",
+        "policy_revision",
+        "access_revision",
+        "consumed_at",
+        "not_after"
+      ]
+    },
+    "SignedActionAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.action-admission.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/ActionAdmissionPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "GovernanceProposalPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "proposal_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "owning_component": {
+          "type": "string",
+          "enum": [
+            "operational_graph",
+            "release_governance",
+            "identity_policy"
+          ]
+        },
+        "subject_kind": {
+          "type": "string",
+          "enum": [
+            "playbook_publication",
+            "business_rule",
+            "agent_release",
+            "assist_release",
+            "release_rollout_policy",
+            "release_preauthorization",
+            "permission_expansion",
+            "security_policy",
+            "legal_hold_release",
+            "identity_configuration"
+          ]
+        },
+        "object_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "object_version": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "workflow_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "object_digest": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "proposer_actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "risk_tier": {
+          "$ref": "#/$defs/RiskTier"
+        },
+        "required_remits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RemitId"
+          },
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "rule_checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuleCheckV1"
+          },
+          "maxItems": 128
+        },
+        "authority_checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AuthorityCheckV1"
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "change_summary": {
+          "$ref": "#/$defs/Text"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "proposal_digest": {
+          "$ref": "#/$defs/ProposalDigest"
+        }
+      },
+      "required": [
+        "proposal_id",
+        "proposal_revision",
+        "organization_id",
+        "owning_component",
+        "subject_kind",
+        "object_id",
+        "object_version",
+        "workflow_id",
+        "object_digest",
+        "proposer_actor_id",
+        "risk_tier",
+        "required_remits",
+        "rule_checks",
+        "authority_checks",
+        "change_summary",
+        "issued_at",
+        "not_after",
+        "proposal_digest"
+      ]
+    },
+    "SignedGovernanceProposalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.governance-proposal.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/GovernanceProposalPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "SubmitGovernanceDecisionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.governance-decision.v1"
+        },
+        "command_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "proposal_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "proposal_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "proposal_digest": {
+          "$ref": "#/$defs/ProposalDigest"
+        },
+        "remit": {
+          "$ref": "#/$defs/RemitId"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "approve",
+            "reject",
+            "request_changes"
+          ]
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "proposal_id",
+        "proposal_revision",
+        "proposal_digest",
+        "remit",
+        "decision",
+        "reason"
+      ]
+    },
+    "BulkApprovalRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.bulk-approval-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SubmitApprovalV1"
+          },
+          "minItems": 1,
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "items"
+      ]
+    },
+    "BulkApprovalResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.bulk-approval-result.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "applied",
+            "rejected"
+          ]
+        },
+        "reason_code": {
+          "$ref": "#/$defs/IdentityReason"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ApprovalResultV1"
+          },
+          "minItems": 1,
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "status",
+        "reason_code",
+        "results"
+      ]
+    },
+    "LoginStartV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.login-start.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "client_kind": {
+          "type": "string",
+          "enum": [
+            "desktop",
+            "web"
+          ]
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "login",
+            "step_up",
+            "link_subject"
+          ]
+        },
+        "organization_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "callback_uri": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "state": {
+          "$ref": "#/$defs/Secret"
+        },
+        "nonce": {
+          "$ref": "#/$defs/Secret"
+        },
+        "code_challenge": {
+          "type": "string",
+          "minLength": 43,
+          "maxLength": 43,
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        },
+        "invitation_token": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Secret"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "client_kind",
+        "purpose",
+        "organization_id",
+        "callback_uri",
+        "state",
+        "nonce",
+        "code_challenge",
+        "invitation_token"
+      ]
+    },
+    "LoginTransactionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.login-transaction.v1"
+        },
+        "transaction_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "authorization_url": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "schema_id",
+        "transaction_id",
+        "authorization_url",
+        "not_after"
+      ]
+    },
+    "SessionExchangeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.session-exchange.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "transaction_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "state": {
+          "$ref": "#/$defs/Secret"
+        },
+        "broker_id_token": {
+          "type": "string",
+          "maxLength": 16384
+        },
+        "broker_access_token": {
+          "type": "string",
+          "maxLength": 16384
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "transaction_id",
+        "state",
+        "broker_id_token",
+        "broker_access_token"
+      ]
+    },
+    "SessionCredentialsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.session-credentials.v1"
+        },
+        "session_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "person_session_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "access_token": {
+          "$ref": "#/$defs/Secret"
+        },
+        "access_not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "refresh_token": {
+          "$ref": "#/$defs/Secret"
+        },
+        "absolute_not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "mfa_completed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "session_id",
+        "person_session_id",
+        "organization_id",
+        "actor_id",
+        "access_token",
+        "access_not_after",
+        "refresh_token",
+        "absolute_not_after",
+        "mfa_completed_at"
+      ],
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "organization_id": {
+                  "$ref": "#/$defs/OrganizationId"
+                },
+                "actor_id": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              }
+            },
+            {
+              "properties": {
+                "organization_id": {
+                  "type": "null"
+                },
+                "actor_id": {
+                  "type": "null"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "StepUpResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.step-up-result.v1"
+        },
+        "session_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "mfa_completed_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "assurance_not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "schema_id",
+        "session_id",
+        "mfa_completed_at",
+        "assurance_not_after"
+      ]
+    },
+    "SubjectLinkResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.subject-link-result.v1"
+        },
+        "person_session_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "linked_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "schema_id",
+        "person_session_id",
+        "linked_at"
+      ]
+    },
+    "MembershipItemV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "organization_display_name": {
+          "$ref": "#/$defs/Text"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "suspended",
+            "removed"
+          ]
+        }
+      },
+      "required": [
+        "organization_id",
+        "actor_id",
+        "organization_display_name",
+        "status"
+      ]
+    },
+    "MembershipListV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.membership-list.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "memberships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MembershipItemV1"
+          },
+          "maxItems": 128
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "memberships"
+      ]
+    },
+    "OrganizationSelectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.organization-selection.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "device_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "organization_id",
+        "device_id",
+        "profile_id"
+      ]
+    },
+    "SessionRefreshV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.session-refresh.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "refresh_token": {
+          "$ref": "#/$defs/Secret"
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "refresh_token"
+      ]
+    },
+    "ChildTokenRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.child-token-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "audience": {
+          "type": "string",
+          "enum": [
+            "identity",
+            "sync",
+            "guidance",
+            "execution",
+            "inference",
+            "notifications"
+          ]
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "device_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_context": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ExecutionContextV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "audience",
+        "scopes",
+        "device_id",
+        "profile_id",
+        "execution_context"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "audience": {
+                "const": "inference"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "execution_context": {
+                "type": "null"
+              },
+              "scopes": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "inference:authorize",
+                    "inference:submit",
+                    "inference:cancel",
+                    "inference:read_route"
+                  ]
+                },
+                "minItems": 1,
+                "maxItems": 4,
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "audience": {
+                "const": "execution"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "scopes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ExecutionTokenScopeV1"
+                },
+                "minItems": 1,
+                "maxItems": 32,
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "audience": {
+                "const": "notifications"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "execution_context": {
+                "type": "null"
+              },
+              "scopes": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "notifications:read_own",
+                    "notifications:update_own",
+                    "notifications:record_delivery"
+                  ]
+                },
+                "minItems": 1,
+                "maxItems": 3,
+                "uniqueItems": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ChildTokenV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.child-token.v1"
+        },
+        "access_token": {
+          "$ref": "#/$defs/Secret"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "schema_id",
+        "access_token",
+        "not_after"
+      ]
+    },
+    "LogoutV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.logout.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "all_devices": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_id",
+        "request_id",
+        "all_devices"
+      ]
+    },
+    "LogoutResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.logout-result.v1"
+        },
+        "session_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "revoked_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "schema_id",
+        "session_id",
+        "revoked_at"
+      ]
+    },
+    "IdentityAdminCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.admin-command.v1"
+        },
+        "command_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_revision": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/U64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command": {
+          "$ref": "#/$defs/AdminCommandVariantV1"
+        }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "organization_id",
+        "expected_revision",
+        "command"
+      ]
+    },
+    "IdentityCommandResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.command-result.v1"
+        },
+        "command_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "affected_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "applied",
+            "restricted",
+            "pending_external_configuration"
+          ]
+        },
+        "reason_code": {
+          "$ref": "#/$defs/IdentityReason"
+        }
+      },
+      "required": [
+        "schema_id",
+        "command_id",
+        "organization_id",
+        "revision",
+        "affected_ids",
+        "status",
+        "reason_code"
+      ]
+    },
+    "PrivacyAuthorizationContextPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "device_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "purpose": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "operation": {
+          "$ref": "#/$defs/InferenceOperation"
+        },
+        "consent_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "notice_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "input_scope_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "input_manifest_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "input_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "deletion_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "request_id",
+        "organization_id",
+        "actor_id",
+        "device_id",
+        "profile_id",
+        "purpose",
+        "operation",
+        "consent_revision",
+        "notice_revision",
+        "input_scope_sha256",
+        "input_manifest_sha256",
+        "input_revision",
+        "deletion_generation",
+        "issued_at",
+        "not_after"
+      ]
+    },
+    "SignedPrivacyAuthorizationContextV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "privacy.authorization-context.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/PrivacyAuthorizationContextPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "LocalEnforcementPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "method": {
+          "const": "POST"
+        },
+        "path": {
+          "const": "/v1/identity/actions/consume"
+        },
+        "body_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "session_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "request_id",
+        "method",
+        "path",
+        "body_sha256",
+        "session_id",
+        "issued_at",
+        "not_after"
+      ]
+    },
+    "LocalEnforcementRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.local-enforcement-request.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/LocalEnforcementPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "AuthorityJournalEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.authority-journal-entry.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "previous_entry_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Sha256Hex"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mutation_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "authority_changed",
+            "action_admitted",
+            "governance_consumed",
+            "organization_deleted",
+            "sync_custody_changed",
+            "runtime_retention_fenced",
+            "orchestration_safety_fenced",
+            "release_changed",
+            "release_preauthorization_changed",
+            "analytics_disclosure_changed",
+            "payload_key_custody_changed"
+          ]
+        },
+        "record_after_images": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RecordAfterImageV1"
+          },
+          "maxItems": 128
+        },
+        "committed_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "schema_id",
+        "organization_id",
+        "recovery_epoch",
+        "sequence",
+        "previous_entry_sha256",
+        "mutation_id",
+        "kind",
+        "record_after_images",
+        "committed_at"
+      ]
+    },
+    "AuthorityCheckpointPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "through_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "entry_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "persisted_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "request_nonce": {
+          "$ref": "#/$defs/Secret"
+        }
+      },
+      "required": [
+        "organization_id",
+        "recovery_epoch",
+        "through_sequence",
+        "entry_sha256",
+        "persisted_at",
+        "request_nonce"
+      ]
+    },
+    "SignedAuthorityCheckpointV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.authority-checkpoint.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/AuthorityCheckpointPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "CapturePolicyLeasePayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "device_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "enrollment_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "notice_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "permitted_categories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaptureCategory"
+          },
+          "maxItems": 6,
+          "uniqueItems": true
+        },
+        "mandatory_exclusion_catalog_revision": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "excluded_application_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "excluded_url_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 1024
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "max_raw_retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 14
+        },
+        "research_extension_permitted": {
+          "type": "boolean"
+        },
+        "incident_correction_audio_permitted": {
+          "type": "boolean"
+        },
+        "max_offline_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "revocation_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "organization_id",
+        "actor_id",
+        "device_id",
+        "profile_id",
+        "enrollment_id",
+        "policy_revision",
+        "notice_revision",
+        "permitted_categories",
+        "mandatory_exclusion_catalog_revision",
+        "excluded_application_ids",
+        "excluded_url_patterns",
+        "max_raw_retention_days",
+        "research_extension_permitted",
+        "incident_correction_audio_permitted",
+        "max_offline_seconds",
+        "revocation_generation",
+        "issued_at",
+        "not_after"
+      ]
+    },
+    "SignedCapturePolicyLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "privacy.capture-policy.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/CapturePolicyLeasePayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "RetentionVerdictPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "device_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "enrollment_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "verdict_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "scope_coverage": {
+          "const": "complete"
+        },
+        "active_holds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ActiveHoldV1"
+          },
+          "maxItems": 128
+        },
+        "preservation_conflict": {
+          "type": "boolean"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "organization_id",
+        "actor_id",
+        "device_id",
+        "profile_id",
+        "enrollment_id",
+        "verdict_revision",
+        "scope_coverage",
+        "active_holds",
+        "preservation_conflict",
+        "issued_at",
+        "not_after"
+      ]
+    },
+    "SignedRetentionVerdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "privacy.retention-verdict.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/RetentionVerdictPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "InferenceAuthorizationPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "authorization_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "principal_kind": {
+          "type": "string",
+          "enum": [
+            "employee",
+            "workload"
+          ]
+        },
+        "device_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workload_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "purpose": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "operation": {
+          "$ref": "#/$defs/InferenceOperation"
+        },
+        "route_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "route_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "budget_reservation_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "deletion_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "input_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "privacy_context_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Sha256Hex"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_binding": {
+          "$ref": "urn:oryn:schemas:cloud-inference:v1#/$defs/InputBindingV1"
+        },
+        "audience": {
+          "const": "inference-admission"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      },
+      "required": [
+        "authorization_id",
+        "organization_id",
+        "actor_id",
+        "principal_kind",
+        "device_id",
+        "profile_id",
+        "workload_id",
+        "request_id",
+        "purpose",
+        "operation",
+        "route_id",
+        "route_revision",
+        "policy_revision",
+        "access_revision",
+        "budget_reservation_id",
+        "deletion_generation",
+        "input_revision",
+        "privacy_context_sha256",
+        "input_binding",
+        "audience",
+        "issued_at",
+        "not_after"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "principal_kind": {
+                "const": "employee"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "device_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "profile_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "workload_id": {
+                "type": "null"
+              },
+              "privacy_context_sha256": {
+                "$ref": "#/$defs/Sha256Hex"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "device_id": {
+                "type": "null"
+              },
+              "profile_id": {
+                "type": "null"
+              },
+              "workload_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "privacy_context_sha256": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SignedInferenceAuthorizationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "inference.authorization.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/InferenceAuthorizationPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "SignedGuidanceAccessLeaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "hud.guidance-access-lease.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "actor_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "device_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "profile_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "allowed_bundle_hashes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Sha256Hex"
+              },
+              "maxItems": 256
+            },
+            "policy_revision": {
+              "$ref": "#/$defs/U64"
+            },
+            "access_revision": {
+              "$ref": "#/$defs/U64"
+            },
+            "issued_at": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "not_after": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "read_only": {
+              "const": true
+            }
+          },
+          "required": [
+            "organization_id",
+            "actor_id",
+            "device_id",
+            "profile_id",
+            "allowed_bundle_hashes",
+            "policy_revision",
+            "access_revision",
+            "issued_at",
+            "not_after",
+            "read_only"
+          ]
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "SignedArtifactPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "privacy.artifact-policy.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "policy_version": {
+              "$ref": "#/$defs/U64"
+            },
+            "allowed_purposes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "maxItems": 128
+            },
+            "allowed_audiences": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "maxItems": 128
+            },
+            "max_lifetime_days": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365
+            },
+            "max_dimensions": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "width": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1920
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1080
+                }
+              },
+              "required": [
+                "width",
+                "height"
+              ]
+            },
+            "max_byte_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "max_image_count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4
+            },
+            "issued_at": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "not_after": {
+              "$ref": "#/$defs/UtcDateTime"
+            }
+          },
+          "required": [
+            "organization_id",
+            "policy_version",
+            "allowed_purposes",
+            "allowed_audiences",
+            "max_lifetime_days",
+            "max_dimensions",
+            "max_byte_length",
+            "max_image_count",
+            "issued_at",
+            "not_after"
+          ]
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "SignedTrustKeysetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "sync.trust-keyset.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "keyset_generation": {
+              "$ref": "#/$defs/U64"
+            },
+            "keys": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "key_id": {
+                    "$ref": "#/$defs/Identifier"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "enum": [
+                      "device",
+                      "root",
+                      "policy",
+                      "publisher",
+                      "receipt",
+                      "evaluation"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "verify_only",
+                      "revoked"
+                    ]
+                  },
+                  "key_type": {
+                    "const": "ed25519"
+                  },
+                  "public_key": {
+                    "$ref": "#/$defs/Base64Url32"
+                  },
+                  "valid_from": {
+                    "$ref": "#/$defs/UtcDateTime"
+                  },
+                  "not_after": {
+                    "$ref": "#/$defs/UtcDateTime"
+                  }
+                },
+                "required": [
+                  "key_id",
+                  "purpose",
+                  "status",
+                  "key_type",
+                  "public_key",
+                  "valid_from",
+                  "not_after"
+                ]
+              },
+              "maxItems": 64
+            },
+            "issued_at": {
+              "$ref": "#/$defs/UtcDateTime"
+            },
+            "not_after": {
+              "$ref": "#/$defs/UtcDateTime"
+            }
+          },
+          "required": [
+            "organization_id",
+            "keyset_generation",
+            "keys",
+            "issued_at",
+            "not_after"
+          ]
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      },
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ]
+    },
+    "IdentityFixtureCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "case_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "description": {
+          "type": "string"
+        },
+        "input": {
+          "type": "object"
+        },
+        "expected_decision": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "Allow",
+            "Deny",
+            "RequireHumanApproval",
+            null
+          ]
+        },
+        "expected_reason_code": {
+          "$ref": "#/$defs/IdentityReason"
+        },
+        "expected_state": {
+          "type": "string"
+        },
+        "expected_effects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "criterion_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "case_id",
+        "description",
+        "input",
+        "expected_decision",
+        "expected_reason_code",
+        "expected_state",
+        "expected_effects",
+        "criterion_refs"
+      ]
+    },
+    "IdentityFixtureSetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "identity.fixture-set.v1"
+        },
+        "public_keys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "purpose": {
+                "type": "string"
+              },
+              "public_key": {
+                "$ref": "#/$defs/Base64Url32"
+              }
+            },
+            "required": [
+              "key_id",
+              "purpose",
+              "public_key"
+            ]
+          }
+        },
+        "signed_envelope_examples": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "digest_vectors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "vector_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "action",
+                  "proposal"
+                ]
+              },
+              "source_object": {
+                "type": "object"
+              },
+              "expected_digest": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "vector_id",
+              "kind",
+              "source_object",
+              "expected_digest"
+            ]
+          }
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IdentityFixtureCaseV1"
+          }
+        }
+      },
+      "required": [
+        "schema_id",
+        "public_keys",
+        "signed_envelope_examples",
+        "digest_vectors",
+        "cases"
+      ]
+    },
+    "IdentityRecoveryOverlayV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "table_name": {
+          "type": "string"
+        },
+        "record_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "reason_code": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "source_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "resolution_state": {
+          "type": "string",
+          "enum": [
+            "blocked",
+            "resolved"
+          ]
+        }
+      },
+      "required": [
+        "organization_id",
+        "table_name",
+        "record_id",
+        "recovery_epoch",
+        "reason_code",
+        "source_sequence",
+        "resolution_state"
+      ]
+    },
+    "IdentityRecoveryEpochStateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "keyset_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "control_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "revocation_generation": {
+          "$ref": "#/$defs/U64"
+        }
+      },
+      "required": [
+        "organization_id",
+        "recovery_epoch",
+        "keyset_revision",
+        "control_sequence",
+        "revocation_generation"
+      ]
+    },
+    "ExecutionTokenScopeV1": {
+      "type": "string",
+      "enum": [
+        "execution:authorize",
+        "execution:consume",
+        "execution:read",
+        "runtime:claim",
+        "runtime:read",
+        "runtime:advance",
+        "runtime:heartbeat",
+        "runtime:yield"
+      ]
+    },
+    "ExecutionPrincipalRegistrationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "worker_id",
+        "execution_context",
+        "environment",
+        "simulation_admission_ref",
+        "host",
+        "assignment_id",
+        "assignment_epoch",
+        "recovery_epoch",
+        "allowed_scopes",
+        "registered_at",
+        "expires_at"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.execution-principal-registration.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "worker_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "execution_context": {
+          "$ref": "#/$defs/ExecutionContextV1"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["production", "simulation"]
+        },
+        "simulation_admission_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "host": {
+          "$ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHostV1"
+        },
+        "assignment_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "assignment_epoch": {
+          "$ref": "#/$defs/U64"
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "allowed_scopes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExecutionTokenScopeV1"
+          },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "registered_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "expires_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "SimulationAdmissionPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admission_id",
+        "organization_id",
+        "evaluation_id",
+        "suite_version_id",
+        "suite_sha256",
+        "scenario_version_id",
+        "attempt_id",
+        "target_identity",
+        "mode",
+        "environment",
+        "environment_bindings_sha256",
+        "principal_profiles_sha256",
+        "assignment_id",
+        "assignment_epoch",
+        "control_generation",
+        "host",
+        "device_id",
+        "profile_id",
+        "recovery_epoch",
+        "issued_at",
+        "not_after"
+      ],
+      "properties": {
+        "admission_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "evaluation_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "suite_version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "suite_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "scenario_version_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "target_identity": {
+          "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetIdentityV1"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["live", "recorded_diagnostic"]
+        },
+        "environment": {
+          "const": "simulation"
+        },
+        "environment_bindings_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "principal_profiles_sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "assignment_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "assignment_epoch": {
+          "$ref": "#/$defs/U64"
+        },
+        "control_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "host": {
+          "$ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHostV1"
+        },
+        "device_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recovery_epoch": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "SignedSimulationAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.simulation-admission.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/SimulationAdmissionPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      }
+    },
+    "VerificationPolicyConfigV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "distinct_spec_author_required",
+        "distinct_assessment_executor_required",
+        "maximum_confirmation_window_ms",
+        "maximum_assessment_deadline_ms"
+      ],
+      "properties": {
+        "distinct_spec_author_required": {
+          "type": "boolean",
+          "default": false
+        },
+        "distinct_assessment_executor_required": {
+          "type": "boolean",
+          "default": false
+        },
+        "maximum_confirmation_window_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000,
+          "default": 300000
+        },
+        "maximum_assessment_deadline_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 86400000,
+          "default": 86400000
+        }
+      }
+    },
+    "IncidentResponsePolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "revision",
+        "background_diagnosis_enabled",
+        "escalation_rules",
+        "interview_response_deadline_seconds",
+        "timed_escalation_policy"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.incident-response-policy.v1"
+        },
+        "revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "background_diagnosis_enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "escalation_rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IncidentEscalationRuleV1"
+          },
+          "maxItems": 64
+        },
+        "interview_response_deadline_seconds": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 604800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timed_escalation_policy": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "unassigned_escalate_seconds",
+                "escalation_team_id"
+              ],
+              "properties": {
+                "unassigned_escalate_seconds": {
+                  "type": "integer",
+                  "minimum": 60
+                },
+                "escalation_team_id": {
+                  "$ref": "#/$defs/Identifier"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "IncidentEscalationRuleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id",
+        "signature_selector",
+        "observation_window_seconds",
+        "min_distinct_cases",
+        "severity_floor",
+        "target_effect",
+        "governance_approval_ref"
+      ],
+      "properties": {
+        "rule_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "signature_selector": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "observation_window_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2592000
+        },
+        "min_distinct_cases": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "severity_floor": {
+          "type": "string",
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "target_effect": {
+          "type": "string",
+          "enum": [
+            "pause_execution",
+            "pause_writes",
+            "stop_new_jobs"
+          ]
+        },
+        "governance_approval_ref": {
+          "$ref": "#/$defs/Identifier"
+        }
+      }
+    },
+    "VerificationReadContextV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": [
+            "organization_id",
+            "verification_request_id",
+            "requirement_id",
+            "source_id",
+            "poll_sequence",
+            "kind",
+            "execution_context",
+            "request_binding_sha256"
+          ],
+          "properties": {
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "verification_request_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "requirement_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "source_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "poll_sequence": {
+              "$ref": "#/$defs/U64"
+            },
+            "kind": {
+              "const": "execution_verification"
+            },
+            "execution_context": {
+              "$ref": "#/$defs/ExecutionContextV1"
+            },
+            "request_binding_sha256": {
+              "$ref": "#/$defs/ActionDigest"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": [
+            "organization_id",
+            "verification_request_id",
+            "requirement_id",
+            "source_id",
+            "poll_sequence",
+            "kind",
+            "handoff_ref",
+            "binding_sha256"
+          ],
+          "properties": {
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "verification_request_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "requirement_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "source_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "poll_sequence": {
+              "$ref": "#/$defs/U64"
+            },
+            "kind": {
+              "const": "handoff_assessment"
+            },
+            "handoff_ref": {
+              "allOf": [
+                {
+                  "$ref": "urn:oryn:schemas:operational-graph:v1#/$defs/KnowledgeVersionRefV1"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "entity_kind": {
+                      "const": "handoff"
+                    }
+                  }
+                }
+              ]
+            },
+            "binding_sha256": {
+              "$ref": "#/$defs/ActionDigest"
+            }
+          }
+        }
+      ]
+    },
+    "SignedVerificationReadAuthorizationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.verification-read-authorization.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/VerificationReadAuthorizationPayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      }
+    },
+    "VerificationReadAuthorizationPayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorization_id",
+        "organization_id",
+        "actor_id",
+        "workload_id",
+        "context",
+        "prepared_read_id",
+        "prepared_read_revision",
+        "target_sha256",
+        "attempt_id",
+        "policy_revision",
+        "revocation_generation",
+        "audience",
+        "issued_at",
+        "not_after"
+      ],
+      "properties": {
+        "authorization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "workload_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "context": {
+          "$ref": "#/$defs/VerificationReadContextV1"
+        },
+        "prepared_read_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "prepared_read_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "target_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "revocation_generation": {
+          "$ref": "#/$defs/U64"
+        },
+        "audience": {
+          "const": "adapter-readback"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "VerificationReadAuthorizationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "prepared_read_id",
+        "prepared_read_revision",
+        "attempt_id",
+        "workload_id"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.verification-read-authorization-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "prepared_read_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "prepared_read_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "workload_id": {
+          "$ref": "#/$defs/Identifier"
+        }
+      }
+    },
+    "VerificationReadLeaseRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "request_id",
+        "authorization",
+        "worker_id",
+        "worker_incarnation"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.verification-read-lease-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "authorization": {
+          "$ref": "#/$defs/SignedVerificationReadAuthorizationV1"
+        },
+        "worker_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "worker_incarnation": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "SignedVerificationReadLeaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "identity.verification-read-lease.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "$ref": "#/$defs/VerificationReadLeasePayloadV1"
+        },
+        "signature": {
+          "$ref": "#/$defs/Base64Url64"
+        }
+      }
+    },
+    "VerificationReadLeasePayloadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lease_id",
+        "organization_id",
+        "authorization_id",
+        "context",
+        "prepared_read_id",
+        "prepared_read_revision",
+        "target_sha256",
+        "attempt_id",
+        "workload_id",
+        "worker_id",
+        "worker_incarnation",
+        "connection_id",
+        "connection_revision",
+        "vendor_account_id",
+        "environment",
+        "credential_role",
+        "operation_id",
+        "max_bytes",
+        "issued_at",
+        "not_after"
+      ],
+      "properties": {
+        "lease_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "authorization_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "context": {
+          "$ref": "#/$defs/VerificationReadContextV1"
+        },
+        "prepared_read_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "prepared_read_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "target_sha256": {
+          "$ref": "#/$defs/ActionDigest"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "workload_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "worker_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "worker_incarnation": {
+          "$ref": "#/$defs/U64"
+        },
+        "connection_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "connection_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "vendor_account_id": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "production",
+            "simulation"
+          ]
+        },
+        "credential_role": {
+          "const": "readback"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcDateTime"
+        },
+        "not_after": {
+          "$ref": "#/$defs/UtcDateTime"
+        }
+      }
+    },
+    "ReleaseAutomationPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "revision",
+        "allowed_actions",
+        "allowed_patch_categories",
+        "valid_from",
+        "not_after",
+        "security_approval_ref",
+        "state"
+      ],
+      "properties": {
+        "schema_id": { "const": "identity.release-automation-policy.v1" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "revision": { "$ref": "#/$defs/U64" },
+        "allowed_actions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["repair_release", "expand", "restore"]
+          }
+        },
+        "allowed_patch_categories": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["interaction_binding", "string_format"]
+          }
+        },
+        "valid_from": { "$ref": "#/$defs/UtcDateTime" },
+        "not_after": { "$ref": "#/$defs/UtcDateTime" },
+        "security_approval_ref": { "$ref": "#/$defs/Identifier" },
+        "state": {
+          "type": "string",
+          "enum": ["enabled", "revoked"]
+        }
+      }
+    },
+    "GovernanceConsumptionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "consumption_id",
+        "organization_id",
+        "proposal_id",
+        "proposal_revision",
+        "object_digest",
+        "approval_refs",
+        "consumed_at"
+      ],
+      "properties": {
+        "schema_id": { "const": "identity.governance-consumption.v1" },
+        "consumption_id": { "$ref": "#/$defs/UUID" },
+        "organization_id": { "$ref": "#/$defs/OrganizationId" },
+        "proposal_id": { "$ref": "#/$defs/UUID" },
+        "proposal_revision": { "$ref": "#/$defs/U64" },
+        "object_digest": { "$ref": "#/$defs/Sha256Hex" },
+        "approval_refs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": { "$ref": "#/$defs/Identifier" }
+        },
+        "consumed_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "ReleaseHeadAfterStateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_id",
+        "revision",
+        "definition_sha256",
+        "state",
+        "active_phase_id",
+        "durability_pending",
+        "updated_at"
+      ],
+      "properties": {
+        "release_id": { "$ref": "#/$defs/UUID" },
+        "revision": { "$ref": "#/$defs/U64" },
+        "definition_sha256": { "$ref": "#/$defs/Sha256Hex" },
+        "state": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review_requested",
+            "changes_requested",
+            "rejected",
+            "approved",
+            "limited_release",
+            "active",
+            "paused",
+            "restricted",
+            "needs_revalidation",
+            "superseded",
+            "retired",
+            "withdrawn",
+            "reverted",
+            "archived"
+          ]
+        },
+        "active_phase_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/Identifier" },
+            { "type": "null" }
+          ]
+        },
+        "durability_pending": { "type": "boolean" },
+        "updated_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    },
+    "ReleaseCohortBindingAfterStateV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cohort_id",
+        "release_id",
+        "agent_version_id",
+        "generation",
+        "state",
+        "updated_at"
+      ],
+      "properties": {
+        "cohort_id": { "$ref": "#/$defs/Identifier" },
+        "release_id": { "$ref": "#/$defs/UUID" },
+        "agent_version_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/UUID" },
+            { "type": "null" }
+          ]
+        },
+        "generation": { "$ref": "#/$defs/U64" },
+        "state": {
+          "type": "string",
+          "enum": ["active", "superseded", "paused"]
+        },
+        "updated_at": { "$ref": "#/$defs/UtcDateTime" }
+      }
+    }
+  }
+}

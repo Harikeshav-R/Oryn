@@ -1,0 +1,1908 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:oryn:schemas:guidance-sync:v1",
+  "title": "Oryn Guidance Synchronization and Cache Wire Schemas (v1)",
+  "description": "Normative Draft 2020-12 wire schemas for Oryn guidance manifests, immutable bundles, access leases, and atomic HUD generation IPC.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/GuidanceLeaseRequestV1"
+    },
+    {
+      "$ref": "#/$defs/SignedGuidanceAccessLeaseV1"
+    },
+    {
+      "$ref": "#/$defs/SignedTrustKeysetV1"
+    },
+    {
+      "$ref": "#/$defs/SignedPublisherSignatureV1"
+    },
+    {
+      "$ref": "#/$defs/SignedGuidanceBundleV1"
+    },
+    {
+      "$ref": "#/$defs/GuidanceManifestPageV1"
+    },
+    {
+      "$ref": "#/$defs/AssistEvaluationBundleV1"
+    },
+    {
+      "$ref": "urn:oryn:schemas:contribution-sync:v1#/$defs/SyncProblemV1"
+    }
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "OrganizationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "UUIDv4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "UUID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "U64": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "Sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "PlaybookVersion": {
+      "type": "string",
+      "pattern": "^sha256-[0-9a-f]{64}$"
+    },
+    "Utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^.*Z$"
+    },
+    "Signature": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    },
+    "PublicKey": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "Cursor": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,1024}$"
+    },
+    "SafeInteger": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "NonNegativeSafeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "Scalar": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/SafeInteger"
+        },
+        {
+          "type": "string",
+          "maxLength": 512
+        }
+      ]
+    },
+    "Predicate": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "all"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "all": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/Predicate"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "any"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "any": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/Predicate"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "not"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "$ref": "#/$defs/Predicate"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "exists"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "exists": {
+              "type": "object",
+              "required": [
+                "field"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "eq"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "eq": {
+              "type": "object",
+              "required": [
+                "field",
+                "value"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "value": {
+                  "$ref": "#/$defs/Scalar"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "enum_in"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "enum_in": {
+              "type": "object",
+              "required": [
+                "field",
+                "values"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "values": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 64,
+                  "items": {
+                    "$ref": "#/$defs/Scalar"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "GuidanceStepEdgeV1": {
+      "type": "object",
+      "required": [
+        "from_step_id",
+        "to_step_id",
+        "condition"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "from_step_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "to_step_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "condition": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Predicate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GuidanceStepV1": {
+      "type": "object",
+      "required": [
+        "step_id",
+        "order",
+        "label",
+        "description",
+        "target_key",
+        "application_profile_id",
+        "predicate",
+        "timeout_ms",
+        "assist_plan_ref",
+        "rule_refs",
+        "source_refs",
+        "allowed_targets"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "step_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "target_key": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "application_profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "predicate": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Predicate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 30000,
+          "maximum": 300000
+        },
+        "assist_plan_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rule_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "allowed_targets": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "required": [
+              "application_profile_id",
+              "target_key"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "application_profile_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "target_key": {
+                "$ref": "#/$defs/Identifier"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PeerFixV1": {
+      "type": "object",
+      "required": [
+        "peer_fix_id",
+        "application_profile_id",
+        "profile_version",
+        "normalized_error_code",
+        "state_predicate",
+        "fix_playbook_version",
+        "provenance",
+        "permitted_actions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "peer_fix_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "application_profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "normalized_error_code": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state_predicate": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Predicate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fix_playbook_version": {
+          "$ref": "#/$defs/PlaybookVersion"
+        },
+        "provenance": {
+          "const": "peer_verified"
+        },
+        "permitted_actions": {
+          "enum": [
+            "guidance",
+            "guidance_and_assist"
+          ]
+        }
+      }
+    },
+    "AssistPlanActionBindingV1": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "const": "literal" },
+            "value": { "$ref": "#/$defs/Scalar" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "variable_name"],
+          "properties": {
+            "kind": { "const": "variable" },
+            "variable_name": { "$ref": "#/$defs/Identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "source_action_id", "json_pointer"],
+          "properties": {
+            "kind": { "const": "read_result" },
+            "source_action_id": { "$ref": "#/$defs/Identifier" },
+            "json_pointer": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "AssistPlanActionV1": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "step_id",
+        "action_order",
+        "operation",
+        "target_key",
+        "risk_tier",
+        "declared_effects",
+        "stopping_point",
+        "timeout_ms",
+        "expected_state",
+        "argument_bindings",
+        "result_bindings",
+        "capability_ref",
+        "adapter_operation_id",
+        "verification_requirement_ids"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "step_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "action_order": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128
+        },
+        "operation": {
+          "enum": [
+            "read",
+            "click",
+            "fill",
+            "select",
+            "check",
+            "navigate"
+          ]
+        },
+        "target_key": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "risk_tier": {
+          "enum": [
+            "tier_1",
+            "tier_2",
+            "tier_3"
+          ]
+        },
+        "declared_effects": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "stopping_point": {
+          "enum": [
+            "stop_before_commit",
+            "review_and_submit",
+            "none"
+          ]
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30000
+        },
+        "argument_bindings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/AssistPlanActionBindingV1"
+          }
+        },
+        "result_bindings": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capability_ref": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "adapter_operation_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "verification_requirement_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 64
+        },
+        "expected_state": {
+          "type": "object",
+          "required": [
+            "record_revision",
+            "fields"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "record_revision": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Identifier"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fields": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 64,
+              "items": {
+                "type": "object",
+                "required": [
+                  "field_key",
+                  "value"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "field_key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "value": {
+                    "$ref": "#/$defs/Scalar"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "AssistPlanEligibilityV1": {
+      "type": "object",
+      "required": [
+        "eligibility_id",
+        "organization_id",
+        "assist_plan_id",
+        "assist_plan_version",
+        "plan_sha256",
+        "playbook_version",
+        "rule_versions",
+        "application_profile_versions",
+        "evaluation_id",
+        "suite_version",
+        "verified_example_count",
+        "passed_scenario_count",
+        "edge_negative_count",
+        "mandatory_checks_passed",
+        "all_branches_covered",
+        "owner_approval_ref",
+        "separation_of_duties_satisfied",
+        "allowed_scope",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "eligibility_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "assist_plan_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "assist_plan_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "plan_sha256": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "playbook_version": {
+          "$ref": "#/$defs/PlaybookVersion"
+        },
+        "rule_versions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "application_profile_versions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "evaluation_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "suite_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "verified_example_count": {
+          "$ref": "#/$defs/NonNegativeSafeInteger"
+        },
+        "passed_scenario_count": {
+          "$ref": "#/$defs/NonNegativeSafeInteger"
+        },
+        "edge_negative_count": {
+          "$ref": "#/$defs/NonNegativeSafeInteger"
+        },
+        "mandatory_checks_passed": {
+          "type": "boolean"
+        },
+        "all_branches_covered": {
+          "type": "boolean"
+        },
+        "owner_approval_ref": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "separation_of_duties_satisfied": {
+          "type": "boolean"
+        },
+        "allowed_scope": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "status": {
+          "const": "approved"
+        }
+      }
+    },
+    "AssistExecutableBodyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "assist_plan_id",
+        "assist_plan_version",
+        "playbook_version",
+        "allowed_applications",
+        "allowed_transitions",
+        "allowed_record_types",
+        "variables",
+        "actions",
+        "guidance_semantics",
+        "verification_requirements",
+        "dependencies"
+      ],
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "assist_plan_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "assist_plan_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "playbook_version": {
+          "$ref": "#/$defs/PlaybookVersion"
+        },
+        "allowed_applications": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "allowed_transitions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "allowed_record_types": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "variables": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "type",
+              "required"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "type": {
+                "enum": [
+                  "string",
+                  "decimal",
+                  "integer",
+                  "boolean"
+                ]
+              },
+              "required": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/AssistPlanActionV1"
+          }
+        },
+        "guidance_semantics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "step_edges",
+            "application_profiles",
+            "rule_versions"
+          ],
+          "properties": {
+            "step_edges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "from_step_id",
+                  "to_step_id"
+                ],
+                "properties": {
+                  "from_step_id": {
+                    "$ref": "#/$defs/Identifier"
+                  },
+                  "to_step_id": {
+                    "$ref": "#/$defs/Identifier"
+                  }
+                }
+              }
+            },
+            "application_profiles": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            },
+            "rule_versions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            }
+          }
+        },
+        "verification_requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "maxItems": 128
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "dependency_id",
+              "kind",
+              "version_id",
+              "content_sha256"
+            ],
+            "properties": {
+              "dependency_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "version_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "content_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "maxItems": 256
+        }
+      }
+    },
+    "AssistPlanV1": {
+      "type": "object",
+      "required": [
+        "body",
+        "plan_sha256",
+        "owner_approval_ref",
+        "eligibility"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "$ref": "#/$defs/AssistExecutableBodyV1"
+        },
+        "plan_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "owner_approval_ref": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "eligibility": {
+          "$ref": "urn:oryn:schemas:release-governance:v1#/$defs/SignedAssistReleaseEligibilityV1"
+        }
+      }
+    },
+    "AssistEvaluationBundleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "organization_id",
+        "body",
+        "plan_sha256",
+        "dependency_manifest",
+        "attestation",
+        "evaluation_target"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "hud.assist-evaluation-bundle.v1"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "body": {
+          "$ref": "#/$defs/AssistExecutableBodyV1"
+        },
+        "plan_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "dependency_manifest": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entity_kind",
+              "entity_id",
+              "version_id",
+              "content_sha256"
+            ],
+            "properties": {
+              "entity_kind": {
+                "type": "string"
+              },
+              "entity_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "version_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "content_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        "attestation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key_id",
+            "signature",
+            "signed_at"
+          ],
+          "properties": {
+            "key_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "signature": {
+              "$ref": "#/$defs/Signature"
+            },
+            "signed_at": {
+              "$ref": "#/$defs/Utc"
+            }
+          }
+        },
+        "evaluation_target": {
+          "$ref": "urn:oryn:schemas:flight-simulator:v1#/$defs/EvaluationTargetV1"
+        }
+      }
+    },
+    "GuidanceBundleV1": {
+      "type": "object",
+      "required": [
+        "bundle_id",
+        "bundle_revision",
+        "content_sha256",
+        "playbook_id",
+        "workflow_id",
+        "capability_id",
+        "playbook_version",
+        "objective",
+        "prerequisites",
+        "expected_result",
+        "task_signature",
+        "steps",
+        "step_edges",
+        "peer_fixes",
+        "assist_plans",
+        "record_independent",
+        "applicable_profiles",
+        "effective_rule_versions",
+        "audience",
+        "published_at",
+        "publisher_signature_ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "bundle_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "bundle_revision": {
+          "$ref": "#/$defs/NonNegativeSafeInteger"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "playbook_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "workflow_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "capability_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "playbook_version": {
+          "$ref": "#/$defs/PlaybookVersion"
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "prerequisites": {
+          "type": "object",
+          "required": [
+            "predicate"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "predicate": {
+              "$ref": "#/$defs/Predicate"
+            }
+          }
+        },
+        "expected_result": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "task_signature": {
+          "type": "object",
+          "required": [
+            "entry_application_id",
+            "entry_predicate"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "entry_application_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "entry_predicate": {
+              "$ref": "#/$defs/Predicate"
+            }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/GuidanceStepV1"
+          }
+        },
+        "step_edges": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/GuidanceStepEdgeV1"
+          }
+        },
+        "peer_fixes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/PeerFixV1"
+          }
+        },
+        "assist_plans": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/AssistPlanV1"
+          }
+        },
+        "record_independent": {
+          "type": "boolean"
+        },
+        "applicable_profiles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "required": [
+              "application_profile_id",
+              "min_version",
+              "max_version"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "application_profile_id": {
+                "$ref": "#/$defs/Identifier"
+              },
+              "min_version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "max_version": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "effective_rule_versions": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "audience": {
+          "type": "object",
+          "required": [
+            "team_ids",
+            "role_tiers"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "team_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            },
+            "role_tiers": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/Identifier"
+              }
+            }
+          }
+        },
+        "published_at": {
+          "$ref": "#/$defs/Utc"
+        },
+        "publisher_signature_ref": {
+          "$ref": "#/$defs/UUID"
+        }
+      }
+    },
+    "SignedPublisherSignatureV1": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "sync.publisher-signature.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "type": "object",
+          "required": [
+            "organization_id",
+            "bundle_id",
+            "bundle_revision",
+            "content_sha256",
+            "playbook_version",
+            "publisher_signature_ref",
+            "signed_at"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "bundle_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "bundle_revision": {
+              "$ref": "#/$defs/NonNegativeSafeInteger"
+            },
+            "content_sha256": {
+              "$ref": "#/$defs/Sha256"
+            },
+            "playbook_version": {
+              "$ref": "#/$defs/PlaybookVersion"
+            },
+            "publisher_signature_ref": {
+              "$ref": "#/$defs/UUID"
+            },
+            "signed_at": {
+              "$ref": "#/$defs/Utc"
+            }
+          }
+        },
+        "signature": {
+          "$ref": "#/$defs/Signature"
+        }
+      }
+    },
+    "SignedGuidanceBundleV1": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "bundle",
+        "publisher_signature"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "sync.signed-guidance-bundle.v1"
+        },
+        "bundle": {
+          "$ref": "#/$defs/GuidanceBundleV1"
+        },
+        "publisher_signature": {
+          "$ref": "#/$defs/SignedPublisherSignatureV1"
+        }
+      }
+    },
+    "GuidanceLeaseRequestV1": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "request_id",
+        "organization_id",
+        "actor_id",
+        "device_id",
+        "profile_id",
+        "selected_hashes",
+        "access_revision"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "sync.guidance-lease-request.v1"
+        },
+        "request_id": {
+          "$ref": "#/$defs/UUIDv4"
+        },
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "device_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "selected_hashes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Sha256"
+          }
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "SignedGuidanceAccessLeaseV1": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "hud.guidance-access-lease.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "type": "object",
+          "required": [
+            "organization_id",
+            "actor_id",
+            "device_id",
+            "profile_id",
+            "allowed_bundle_hashes",
+            "policy_revision",
+            "access_revision",
+            "issued_at",
+            "not_after",
+            "read_only"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "actor_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "device_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "profile_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "allowed_bundle_hashes": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 256,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/Sha256"
+              }
+            },
+            "policy_revision": {
+              "$ref": "#/$defs/U64"
+            },
+            "access_revision": {
+              "$ref": "#/$defs/U64"
+            },
+            "issued_at": {
+              "$ref": "#/$defs/Utc"
+            },
+            "not_after": {
+              "$ref": "#/$defs/Utc"
+            },
+            "read_only": {
+              "const": true
+            }
+          }
+        },
+        "signature": {
+          "$ref": "#/$defs/Signature"
+        }
+      }
+    },
+    "SignedTrustKeysetV1": {
+      "$ref": "urn:oryn:schemas:contribution-sync:v1#/$defs/SignedTrustKeysetV1"
+    },
+    "GuidanceManifestPageV1": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "key_id",
+        "payload",
+        "signature"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_id": {
+          "const": "sync.guidance-manifest.v1"
+        },
+        "key_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "payload": {
+          "type": "object",
+          "required": [
+            "request_id",
+            "snapshot_id",
+            "organization_id",
+            "actor_id",
+            "device_id",
+            "profile_id",
+            "manifest_revision",
+            "control_epoch",
+            "control_sequence",
+            "access_revision",
+            "page_index",
+            "base_cursor",
+            "next_cursor",
+            "complete",
+            "upserts",
+            "tombstones",
+            "server_time",
+            "issued_at",
+            "not_after"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "$ref": "#/$defs/UUIDv4"
+            },
+            "snapshot_id": {
+              "$ref": "#/$defs/UUID"
+            },
+            "organization_id": {
+              "$ref": "#/$defs/OrganizationId"
+            },
+            "actor_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "device_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "profile_id": {
+              "$ref": "#/$defs/Identifier"
+            },
+            "manifest_revision": {
+              "$ref": "#/$defs/U64"
+            },
+            "control_epoch": {
+              "$ref": "#/$defs/UUID"
+            },
+            "control_sequence": {
+              "$ref": "#/$defs/U64"
+            },
+            "access_revision": {
+              "$ref": "#/$defs/U64"
+            },
+            "page_index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 15
+            },
+            "base_cursor": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Cursor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "next_cursor": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Cursor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "complete": {
+              "type": "boolean"
+            },
+            "upserts": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 256,
+              "items": {
+                "type": "object",
+                "required": [
+                  "bundle_id",
+                  "bundle_revision",
+                  "content_sha256",
+                  "playbook_id",
+                  "playbook_version",
+                  "byte_length",
+                  "published_at"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "bundle_id": {
+                    "$ref": "#/$defs/UUID"
+                  },
+                  "bundle_revision": {
+                    "$ref": "#/$defs/NonNegativeSafeInteger"
+                  },
+                  "content_sha256": {
+                    "$ref": "#/$defs/Sha256"
+                  },
+                  "playbook_id": {
+                    "$ref": "#/$defs/Identifier"
+                  },
+                  "playbook_version": {
+                    "$ref": "#/$defs/PlaybookVersion"
+                  },
+                  "byte_length": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1048576
+                  },
+                  "published_at": {
+                    "$ref": "#/$defs/Utc"
+                  }
+                }
+              }
+            },
+            "tombstones": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 256,
+              "items": {
+                "type": "object",
+                "required": [
+                  "bundle_id",
+                  "content_sha256",
+                  "reason"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "bundle_id": {
+                    "$ref": "#/$defs/UUID"
+                  },
+                  "content_sha256": {
+                    "$ref": "#/$defs/Sha256"
+                  },
+                  "reason": {
+                    "enum": [
+                      "revoked",
+                      "superseded",
+                      "audience_changed",
+                      "conflict"
+                    ]
+                  }
+                }
+              }
+            },
+            "server_time": {
+              "$ref": "#/$defs/Utc"
+            },
+            "issued_at": {
+              "$ref": "#/$defs/Utc"
+            },
+            "not_after": {
+              "$ref": "#/$defs/Utc"
+            }
+          }
+        },
+        "signature": {
+          "$ref": "#/$defs/Signature"
+        }
+      }
+    },
+    "BeginGuidanceGeneration": {
+      "type": "object",
+      "required": [
+        "organization_id",
+        "actor_id",
+        "device_id",
+        "profile_id",
+        "session_epoch",
+        "generation_id",
+        "manifest_revision",
+        "control_epoch",
+        "control_sequence",
+        "access_revision",
+        "manifest_sha256",
+        "objects",
+        "lease",
+        "keyset"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "organization_id": {
+          "$ref": "#/$defs/OrganizationId"
+        },
+        "actor_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "device_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "profile_id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "session_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "generation_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "manifest_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "control_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "control_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "objects": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "required": [
+              "transfer_id",
+              "content_sha256",
+              "byte_length"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "transfer_id": {
+                "$ref": "#/$defs/UUID"
+              },
+              "content_sha256": {
+                "$ref": "#/$defs/Sha256"
+              },
+              "byte_length": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1048576
+              }
+            }
+          }
+        },
+        "lease": {
+          "$ref": "#/$defs/SignedGuidanceAccessLeaseV1"
+        },
+        "keyset": {
+          "$ref": "#/$defs/SignedTrustKeysetV1"
+        }
+      }
+    },
+    "GuidanceBundleChunk": {
+      "type": "object",
+      "required": [
+        "session_epoch",
+        "generation_id",
+        "transfer_id",
+        "chunk_index",
+        "offset",
+        "decoded_length",
+        "bytes_base64url"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "session_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "generation_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "transfer_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "chunk_index": {
+          "$ref": "#/$defs/NonNegativeSafeInteger"
+        },
+        "offset": {
+          "$ref": "#/$defs/NonNegativeSafeInteger"
+        },
+        "decoded_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        },
+        "bytes_base64url": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      }
+    },
+    "GuidanceGenerationPrepared": {
+      "type": "object",
+      "required": [
+        "session_epoch",
+        "generation_id",
+        "manifest_sha256",
+        "bundle_count",
+        "compiled_bytes",
+        "control_epoch",
+        "control_sequence",
+        "access_revision"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "session_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "generation_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "bundle_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 256
+        },
+        "compiled_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "control_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "control_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "CommitGuidanceGeneration": {
+      "type": "object",
+      "required": [
+        "session_epoch",
+        "generation_id",
+        "manifest_sha256",
+        "control_epoch",
+        "control_sequence",
+        "access_revision"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "session_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "generation_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "control_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "control_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        }
+      }
+    },
+    "GuidanceGenerationCommitted": {
+      "type": "object",
+      "required": [
+        "session_epoch",
+        "generation_id",
+        "manifest_sha256",
+        "applied_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "session_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "generation_id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "applied_at": {
+          "$ref": "#/$defs/Utc"
+        }
+      }
+    },
+    "InvalidateGuidance": {
+      "type": "object",
+      "required": [
+        "session_epoch",
+        "control_epoch",
+        "through_sequence",
+        "access_revision",
+        "hashes",
+        "all",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "session_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "control_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "through_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "hashes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Sha256"
+          }
+        },
+        "all": {
+          "type": "boolean"
+        },
+        "reason": {
+          "enum": [
+            "revoked",
+            "conflict",
+            "access_revoked",
+            "key_revoked",
+            "lease_expired",
+            "session_changed"
+          ]
+        }
+      }
+    },
+    "GuidanceInvalidationApplied": {
+      "type": "object",
+      "required": [
+        "session_epoch",
+        "control_epoch",
+        "through_sequence",
+        "access_revision",
+        "affected_generation_ids"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "session_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "control_epoch": {
+          "$ref": "#/$defs/UUID"
+        },
+        "through_sequence": {
+          "$ref": "#/$defs/U64"
+        },
+        "access_revision": {
+          "$ref": "#/$defs/U64"
+        },
+        "affected_generation_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/UUID"
+          }
+        }
+      }
+    }
+  }
+}

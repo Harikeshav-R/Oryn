@@ -1,0 +1,215 @@
+{
+  "schema_id": "control-plane.fixture-set.v1",
+  "public_keys": [
+    {
+      "key_id": "key_policy_2026_01",
+      "purpose": "policy",
+      "public_key": "6WJM7ogska4um20HH5xxccFAmqlCEs07MDJm0fgmF18"
+    },
+    {
+      "key_id": "key_device_macbook_01",
+      "purpose": "device",
+      "public_key": "peReSTfaQQIb2gKXQTNpNseXUcamBHiP-mGoRDBgOFo"
+    },
+    {
+      "key_id": "key_receipt_transit_01",
+      "purpose": "receipt",
+      "public_key": "VTjW_SlNcOYvRbCKdQykRInkNBBMncTABuQ-9FTGoEA"
+    },
+    {
+      "key_id": "key_publisher_prod_01",
+      "purpose": "publisher",
+      "public_key": "ubCoaRrgHP0hX_O6EsraylCO3lSACfNjOalfMN4Eq10"
+    },
+    {
+      "key_id": "key_root_2026_01",
+      "purpose": "root",
+      "public_key": "Mh-W_X390GIYpXSIDTPiavhMO58juuYHKlLYZNCbHwA"
+    }
+  ],
+  "signed_envelope_examples": [],
+  "digest_vectors": [
+    {
+      "vector_id": "login_start_digest_01",
+      "target": "web_login_start",
+      "input": {
+        "schema_id": "control-plane.web-login-start.v1",
+        "request_id": "11111111-2222-4333-8444-555555555555",
+        "purpose": "login",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "return_path": "/dashboard"
+      },
+      "expected_sha256": "15978cb10a734811898e8df617a465e2936c7ae5c798fb05e5d6325b0a785225"
+    }
+  ],
+  "validation_cases": [
+    {
+      "case_id": "val_web_login_positive",
+      "schema_ref": "urn:oryn:schemas:control-plane:v1#/$defs/WebLoginStartV1",
+      "instance": {
+        "schema_id": "control-plane.web-login-start.v1",
+        "request_id": "11111111-2222-4333-8444-555555555555",
+        "purpose": "login",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "return_path": "/dashboard"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_web_login_negative_bad_return_path",
+      "schema_ref": "urn:oryn:schemas:control-plane:v1#/$defs/WebLoginStartV1",
+      "instance": {
+        "schema_id": "control-plane.web-login-start.v1",
+        "request_id": "11111111-2222-4333-8444-555555555555",
+        "purpose": "login",
+        "organization_id": null,
+        "return_path": "https://attacker.com/evil"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "val_web_session_positive",
+      "schema_ref": "urn:oryn:schemas:control-plane:v1#/$defs/WebSessionPresentationV1",
+      "instance": {
+        "schema_id": "control-plane.web-session.v1",
+        "request_id": "11111111-2222-4333-8444-555555555555",
+        "session_id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "actor_id": "usr_employee_01",
+        "state": "active",
+        "csrf_token": "csrf_token_secret_value_32_bytes_len_00",
+        "absolute_not_after": "2026-11-11T03:00:00Z",
+        "mfa_completed_at": "2026-11-10T15:00:00Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_problem_positive",
+      "schema_ref": "urn:oryn:schemas:control-plane:v1#/$defs/ControlPlaneProblemV1",
+      "instance": {
+        "schema_id": "control-plane.problem.v1",
+        "type": "urn:oryn:problem:session-locked",
+        "title": "Session Locked",
+        "status": 401,
+        "detail": "Session locked due to 30 minutes of human inactivity. Reauthentication required.",
+        "code": "CP_SESSION_LOCKED",
+        "request_id": "11111111-2222-4333-8444-555555555555",
+        "retry_safety": "status_only",
+        "retry_after_seconds": null,
+        "operation_id": null,
+        "instance": null
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_problem_negative_bad_code",
+      "schema_ref": "urn:oryn:schemas:control-plane:v1#/$defs/ControlPlaneProblemV1",
+      "instance": {
+        "schema_id": "control-plane.problem.v1",
+        "type": "urn:oryn:problem:unknown",
+        "title": "Bad Code",
+        "status": 500,
+        "detail": "Invalid error code literal",
+        "code": "UNKNOWN_ERROR_CODE",
+        "request_id": "11111111-2222-4333-8444-555555555555",
+        "retry_safety": "never"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "val_operation_positive",
+      "schema_ref": "urn:oryn:schemas:control-plane:v1#/$defs/OperationV1",
+      "instance": {
+        "schema_id": "control-plane.operation.v1",
+        "operation_id": "99999999-8888-4777-8666-555555555555",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "owning_module": "job_orchestrator",
+        "initiator": {
+          "kind": "actor",
+          "id": "usr_employee_01"
+        },
+        "resource_ref": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "resource_type": "job",
+          "resource_id": "job_invoice_audit_01"
+        },
+        "state": "running",
+        "created_at": "2026-11-10T15:00:00Z",
+        "updated_at": "2026-11-10T15:02:00Z",
+        "revision": "2",
+        "progress": {
+          "completed": 45,
+          "total": 100
+        },
+        "problem": null,
+        "result_ref": null,
+        "cancel_requested": false
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_domain_event_positive",
+      "schema_ref": "urn:oryn:schemas:control-plane:v1#/$defs/DomainEventV1",
+      "instance": {
+        "schema_id": "control-plane.domain-event.v1",
+        "event_id": "22222222-3333-4444-8555-666666666666",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "event_type": "job.completed",
+        "aggregate_type": "job",
+        "aggregate_id": "job_invoice_audit_01",
+        "aggregate_revision": "5",
+        "occurred_at": "2026-11-10T15:05:00Z",
+        "causation_id": "11111111-2222-4333-8444-555555555555",
+        "correlation_id": "99999999-8888-4777-8666-555555555555",
+        "schema_revision": "1",
+        "sensitivity": "operational_audit",
+        "payload": {
+          "resource_id": "job_invoice_audit_01",
+          "resource_version": "5",
+          "safe_state_label": "succeeded",
+          "summary": "Invoice audit job completed with approved disbursement."
+        }
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_change_page_positive",
+      "schema_ref": "urn:oryn:schemas:control-plane:v1#/$defs/ChangePageV1",
+      "instance": {
+        "schema_id": "control-plane.change-page.v1",
+        "epoch": "44444444-5555-4666-8777-888888888888",
+        "entries": [
+          {
+            "sequence": "101",
+            "resource_key": {
+              "organization_id": "00000000-0000-4000-8000-000000000001",
+              "resource_type": "policy",
+              "resource_id": "policy_v100"
+            },
+            "change_kind": "updated",
+            "revision": "100",
+            "occurred_at": "2026-11-10T15:00:00Z"
+          }
+        ],
+        "next_cursor": "cursor_next_page_token_signed_envelope",
+        "high_water_sequence": "101",
+        "has_more": false,
+        "server_time": "2026-11-10T15:00:25Z"
+      },
+      "expected_valid": true
+    }
+  ],
+  "binding_vectors": [],
+  "descriptive_cases": [
+    {
+      "case_id": "case_idempotent_mutation_replay",
+      "description": "Replaying duplicate command with identical UUIDv7 Idempotency-Key and RFC 8785 canonical hash returns original committed response within 7-day window without re-executing owner logic.",
+      "expected_behavior": "HTTP 200/201 with identical response body, no duplicate audit or outbox entries."
+    },
+    {
+      "case_id": "case_session_idle_lock",
+      "description": "After 30 minutes with no human activity recorded, privileged requests fail with CP_SESSION_LOCKED. Long polls do not reset inactivity timer.",
+      "expected_behavior": "HTTP 401 with CP_SESSION_LOCKED problem payload; re-authentication required."
+    }
+  ]
+}

@@ -140,7 +140,7 @@ One person may have multiple roles. Access is always the union of granted roles 
 - Employee desktop companion for Windows and macOS, including a visible capture status and employee pause controls.
 - Work-focused browser and supported desktop application observation with application/window exclusions.
 - Optional meeting audio transcription and commitment detection, subject to explicit per-meeting consent and organizational recording policy.
-- Private local activity history and strict privacy controls; sanitized sharing into organizational knowledge.
+- Private local activity history and strict privacy controls; local durable ownership of private captures combined with purpose-authorized transient cloud inference via an Oryn-managed LiteLLM gateway (no on-device model inference in v1.0); sanitized sharing into organizational knowledge.
 - Discovery of individual and cross-application workflow candidates from consenting employee demonstrations.
 - Structured workflows with goals, inputs, steps, decisions, exceptions, evidence, conditions, outcomes, and version history.
 - Organization-wide discovery, search, ownership, review, verification, and publication of approved playbooks.
@@ -173,12 +173,13 @@ One person may have multiple roles. Access is always the union of granted roles 
 - Native mobile apps; a responsive web view for permitted management functions is sufficient.
 - A public API product or universal software-to-API compiler as a separate customer feature.
 - A company-wide predictive digital twin with staffing or cash-flow forecasts.
+- On-device or local-only AI model inference (e.g. local LLMs, on-device Whisper, local embedding models); all v1.0 Oryn AI inference uses cloud-managed APIs through the governed LiteLLM gateway, with optional local inference explicitly slated for post-v1.0.
 
 ### 3.3 Application compatibility as a product promise
 
 Oryn may observe and guide work in applications where the employee has permitted observation and a useful visible interface is available. Automated execution is offered only when Oryn can reliably identify relevant controls, evaluate required conditions, and verify supported outcomes. Some workflows will remain guidance-only or supervised. For partially supported applications, Oryn must state exactly which features are available: **Observe**, **Guide**, **Assist**, **Run Supervised**, or **Run Autonomously**. It must never present an unsupported capability as available.
 
-For v1.0, the initial supported usage experience covers current supported Windows and macOS releases, the Chrome and Edge browser families, and approved desktop applications with accessible, consistently identifiable controls. Firefox, Safari, remote-desktop sessions, canvas-only applications, and visually ambiguous interfaces may be observed or used for guidance where permitted, but do not automatically qualify for agent execution. A customer-visible compatibility report specifies supported tasks per application and may mark an application as unsupported or unverified.
+For v1.0, the initial supported usage experience covers current supported Windows and macOS releases, the Chrome and Edge browser families, and approved desktop applications with accessible, consistently identifiable controls. Firefox, Safari, remote-desktop sessions, canvas-only applications, and visually ambiguous interfaces may be observed or used for guidance where permitted, but do not automatically qualify for agent execution. For browser applications in Chrome and Edge, observation and execution require exact packaged application profiles and explicit work context admission. Cross-origin frames, closed shadow roots, and dynamic web interfaces without proven native desktop geometry do not support coordinate highlights or automated actuation; they fall back to text-only guidance or report explicit validation gaps. Native visual snapshots of browser surfaces require certified platform validation and pre-transfer masking; pixel-to-document binding is verified defensively rather than assumed atomic. A customer-visible compatibility report specifies supported tasks per application and may mark an application as unsupported or unverified.
 
 ### 3.4 Supported automation scope
 
@@ -230,7 +231,7 @@ The initial customer demonstration pack must include three complete, customer-in
 2. Recording state is always visible on the desktop companion. The user can pause/resume with one action.
 3. An employee cannot disable mandatory personal-data exclusions or organization-level protections.
 4. Personal and excluded applications, URLs, and windows are blocked before capture. An excluded window must not appear in recorded frames, transcripts, search, or workflow examples.
-5. Raw employee screen and audio captures stay on that employee's device. Organization dashboards receive approved, sanitized procedural knowledge and outcomes, not full raw recordings.
+5. Raw employee screen and audio captures remain durably on that employee's device. When cloud inference is authorized for visual extraction, transcription, or commitment analysis, data processing occurs transiently through an Oryn-managed LiteLLM gateway with contractual zero content retention, no model training, and strict US-only processing. Organization dashboards and central databases receive approved, sanitized procedural knowledge and verified outcomes, not full raw recordings or central media archives. Transient processing by approved cloud subprocessors is strictly separated from manager access, cloud backup, and organizational publication.
 6. No manager or administrator can replay an employee's raw local capture remotely. An employee may explicitly share a redacted excerpt for one clearly named review purpose; that excerpt is a distinct shared artifact, not remote access to the original.
 7. No employee idle-time analytics, active-hours tracking, mouse movement scores, or attendance metrics exist in the product.
 8. Employees can see what Oryn learned from their activity, inspect candidate shared knowledge, flag a mistaken interpretation, and request removal of a shared contribution subject to retention and legal obligations.
@@ -334,6 +335,11 @@ A rule or outcome may be backed by: (1) organization-approved authoritative poli
 - An agent operator can approve actions only within an explicit delegated amount, record type, and team scope. Being able to start a job does not confer approval authority.
 - Removing a person's role immediately removes their ability to start new privileged actions and prevents them from giving future approvals; pending approval requests must be rerouted.
 - A suspended member cannot access workspaces or perform approvals; previously published organizational material remains available to authorized colleagues.
+- Membership is strictly organization-specific; membership in one organization grants zero rights or visibility into another organization.
+- Sessions and credential access are strictly time-bounded: web access lasts at most 12 hours with a 30-minute human inactivity lock, and desktop sessions last at most 7 days.
+- Consequential actions (Tier 3 approvals, agent releases, permission expansions, administrative policy changes) require independently verified MFA completed within the prior 5 minutes.
+- Enforcing enterprise SSO requires registering two customer-controlled emergency recovery administrator identities with independent MFA to prevent administrative lockout.
+- Disconnected desktop endpoints operate under bounded leases with an absolute 24-hour offline ceiling; remote revocations take effect upon reconnection or lease expiration.
 
 ### 6.3 Permission-matrix requirements
 
@@ -345,12 +351,12 @@ The user-facing permissions panel must allow administrators to separately grant 
 
 ### 7.1 Organization setup flow
 
-1. The creator names the organization and selects a business region and time zone for deadlines and reporting.
+1. The creator names the organization and selects a business region and time zone for deadlines and reporting. Initial organization setup utilizes managed external authentication with manual member invitation; automated directory provisioning (SCIM) and customer-hosted deployments are out of scope for v1.0.
 2. The organization admin acknowledges Oryn's capture, employee notice, and privacy model.
 3. The security admin selects permitted work applications, mandatory exclusions, retention defaults, meeting recording policy, and allowed workflow risk tiers.
 4. The admin creates or chooses a pilot team and assigns at least one workflow owner.
 5. The admin invites employees by email or enterprise login. Each invitation states the organization's name, expected product use, privacy boundaries, and any required workplace policies.
-6. Before capture can begin, each employee sees a clear notice covering what can be observed, what stays private, what may be shared, retention periods, and how to pause or withdraw participation.
+6. Before capture can begin, each employee sees a clear notice covering what can be observed, what stays private, how purpose-authorized cloud inference operates transiently with zero retention and US-only processing, what may be shared, retention periods, and how to pause or withdraw participation.
 7. Employees complete a personal setup checklist: choose allowed apps, confirm excluded apps, select capture mode, review meeting-capture settings, and run a capture test on permitted work content.
 8. Oryn displays a final readiness checklist and marks any missing permission or policy acknowledgement as **Action Required**.
 
@@ -366,6 +372,8 @@ The user-facing permissions panel must allow administrators to separately grant 
 
 On first successful enrollment, Oryn explains the four most important actions: start/pause observation; view private history; see what has been proposed for sharing; and ask for guidance on an active business task. It must demonstrate a sample workflow using synthetic content before requesting that the employee capture real work.
 
+Browser observation and assistance require an explicit initial pairing step between the employee's browser profile and Desktop Shell via a matching one-time comparison code. Pairing establishes trusted local communication only; it does not grant website origin permissions, employee capture consent, or action execution authority. Website access requires explicit origin grants, observation requires active category consent and unexpired permits, and automated actions require separate cryptographic authorization and human approval where required.
+
 ### 7.4 Pilot activation
 
 The pilot owner selects one to three named workflows to discover, defines their expected outcomes and the responsible SME, and confirms they are permitted to be recorded. Oryn may suggest other candidates later, but it must not automatically expand capture policy or deployment scope to pursue them.
@@ -375,17 +383,18 @@ The pilot owner selects one to three named workflows to discover, defines their 
 ## 8. Employee Observation and Personal Work History
 
 ### 8.1 Desktop companion requirements
+The companion has a persistent but non-obstructive status indicator provided through the OS system tray/menu-bar and a movable native capture badge whenever capture is active. States are **Not Configured**, **Observing Approved Work**, **Paused by You**, **Paused by Policy**, **In Excluded Application**, **Meeting Capture Active**, and **Attention Needed**. Hovering or opening the companion explains the state and presents independent Screen and Meeting status indicators. A clear pause/resume control is always accessible during observation. When an excluded window takes foreground focus while permitted business windows remain visible in the background, the headline displays **Observing Approved Work** with the explicit subline `Approved windows observed; foreground excluded`, continuing observation strictly for uncovered permitted background surfaces. If all visible surfaces are excluded, the companion displays **In Excluded Application**. When meeting capture is active, the headline displays **Meeting Capture Active**; the subline is `Online transcription active` in online mode and exactly `Recording only — offline` in offline mode. If a native observer worker terminates unexpectedly, the fault isolates to the native OS source; healthy browser extension observation and meeting audio capture continue operating with visible independent indicators, while the headline displays **Attention Needed** with the subline `Native observation stopped; other active sources shown below`.
 
-The companion has a persistent but non-obstructive status indicator. States are **Not Configured**, **Observing Approved Work**, **Paused by You**, **Paused by Policy**, **In Excluded Application**, **Meeting Capture Active**, and **Attention Needed**. Hovering or opening the companion explains the state. A clear pause/resume control is always accessible during observation.
-
-The companion must not hide recording state, simulate a different state, or resume capture automatically after a user-initiated pause. Following a system restart or sign-out, observation resumes only if prior employee consent remains valid and the employee's configured automatic-start preference permits it; the state must be visibly confirmed when the companion becomes active.
+The companion must not hide recording state, simulate a different state, or resume capture automatically after a user-initiated pause. A user-initiated screen-observation pause (`PauseScreenObservation`) immediately stops all screen capture streams across native and browser surfaces, pauses executing local browser actions at the nearest safe boundary, and prevents new action dispatch, while leaving independently authorized meeting capture active. A Pause All action (`PauseCapture`) immediately stops all observation streams, including screen and meeting audio. Generic resume is screen-only; meeting capture never resumes automatically. When the main window is closed, capture continues only if background observation is explicitly enabled and the native badge remains visible on an active desktop; otherwise closing the window transitions to **Paused by You**. Explicit application quit stops capture and persists a quit pause. On workstation lock or system sleep, all capture halts immediately; on unlock or wake, previously active screen observation may automatically restore only if permitted by valid policy, consent, and healthy visibility, whereas meeting audio recording never automatically resumes. Following an unexpected helper or badge crash, visibility loss, or application update, capture remains paused behind an explicit recovery blocker and requires intentional employee action to resume. Local capture requires a valid capture policy lease, which expires after an absolute maximum of 24 hours of disconnection; upon expiry, capture halts until connectivity is restored and the employee explicitly resumes. Unseen remote revocations take effect upon reconnection or lease expiry, while received restrictions are enforced immediately. An optional employee-configured global hotkey allows quick toggling of screen observation or executing Pause All, but cannot grant meeting audio consent or acknowledge disclosure notices.
 
 ### 8.2 Work observation scope
+For permitted work, Oryn may recognize application changes, relevant document and page context, visible form fields, navigation actions, task starts and endings, validation errors, decision branches, and observable results across all approved visible windows on all active displays. It prioritizes meaningful task transitions and must not expose raw typed passwords, secrets, or unrelated personal data as workflow content. Observation is restricted strictly to uncovered physical content: occluded regions of permitted windows are masked to opaque black before memory transfer, visual extraction, or cloud inference, and minimized, hidden, cloaked, or other-desktop/Space content is never acquired. While full approved-window rasters may transiently exist in isolated worker memory prior to masking, excluded surfaces remain strictly forbidden acquisition targets; post-capture cloud OCR cannot authorize capture of mandatory excluded content.
 
-For permitted work, Oryn may recognize application changes, relevant document and page context, visible form fields, navigation actions, task starts and endings, validation errors, decision branches, and observable results. It should prioritize meaningful task transitions and must not expose raw typed passwords, secrets, or unrelated personal data as workflow content.
+Observation categories operate independently:
+- **Contextual work-application recognition without visual work observation:** Grants permission to read approved application identity, safe titles, and settled accessibility hierarchies. Visual snapshots, screen recording APIs, and OCR are completely disabled.
+- **Visual work observation without contextual recognition:** Grants permission to capture event-triggered, privacy-gated snapshots and perform privacy-helper-governed visual extraction via the cloud inference gateway. Accessibility APIs are restricted to content-free geometry and protected-field bounding; no structured control labels, values, titles, or interaction streams are emitted.
 
 Observation is always contextual: the product's objective is to learn how work is performed, not when or how long an employee appears active. Any time measurement applies to the elapsed duration of a task instance and is displayed only in approved aggregate operational reporting, with an option to exclude wait time from process analysis.
-
 ### 8.3 Personal history
 
 Each enrolled employee can view a private timeline organized by task, date, and work application. Entries indicate whether Oryn merely recorded a task, suggested a candidate workflow, requested clarification, or prepared an approved shared contribution. The employee can search permitted local history, inspect the reason for each suggested insight, discard a candidate, and delete retained personal material subject to organizational legal holds and policy constraints.
@@ -405,8 +414,7 @@ Personal history is not available to managers as a detailed activity feed. A man
 ## 9. Meeting Intelligence and Commitments
 
 ### 9.1 Meeting capture is opt-in per meeting
-
-Meeting audio is off by default. Before each meeting recording, the employee must explicitly initiate capture and confirm that organizational policy and applicable participant-notice and consent conditions are satisfied. Oryn displays a distinct recording indicator throughout the session. An authorized employee can end capture at any time. The product must not silently record incoming calls, automatically join meetings, or treat calendar attendance as recording consent.
+Meeting audio is off by default. Before each meeting recording, the employee must explicitly initiate capture and confirm that organizational policy and applicable participant-notice and consent conditions are satisfied. Meeting speech transcription and commitment extraction utilize cloud-managed AI APIs through the Oryn LiteLLM gateway with contractual zero content retention, no model training, and strict US processing. If cloud service is unavailable or offline recording is intentionally selected, Oryn supports explicit offline recording, which acquires local audio without AI processing and requires fresh authorization before any subsequent upload. Oryn displays a distinct recording indicator throughout the session. An authorized employee can end capture at any time. The product must not silently record incoming calls, automatically join meetings, or treat calendar attendance as recording consent.
 
 ### 9.2 Extracted insights
 
@@ -421,8 +429,7 @@ Each suggested commitment includes the exact interpreted obligation; who appears
 When an employee opens an approved work context matching a confirmed unresolved commitment, Oryn may show one compact reminder. It can offer to draft a CRM note, open the relevant project, or prepare a follow-up. It never sends or posts that content without appropriate authorization and user confirmation. The employee may snooze or dismiss the reminder and view its source.
 
 ### 9.5 Privacy and sharing
-
-Private transcript excerpts and raw recordings remain private to the recording employee unless explicitly shared under the organization's rules. Organizational playbooks may use sanitized, reviewed business commitments and rules, but not unrestricted meeting transcripts or voice profiles. Where an audio segment must be excluded, it contributes no shared knowledge.
+Private transcript excerpts, candidate commitments, and raw recordings remain durably stored only on the recording employee's device unless explicitly shared under the organization's rules. Processing by cloud inference services is transient and bounded to the active session; no persistent cloud transcripts, voice profiles, or central recordings are maintained. Organizational playbooks may use sanitized, reviewed business commitments and rules, but not unrestricted meeting transcripts or voice profiles. Where an audio segment must be excluded, it contributes no shared knowledge.
 
 ---
 
@@ -432,30 +439,39 @@ Private transcript excerpts and raw recordings remain private to the recording e
 
 Oryn identifies repeated, semantically similar task executions, including reasonable differences in identifiers, customer names, document contents, and navigation details. A candidate is triggered by a recognizable business objective and relevant beginning and ending context, not merely by an identical sequence of mouse actions. Oryn must not combine separate workflows solely because they happen in the same application.
 
+Automatic candidate generation requires at least **three distinct observed-complete Task Instances** (`completion_basis = observed_complete`), which may originate from one or more employees. Multiple revisions and duplicate submissions for the same Task Instance count exactly once. Incomplete, unobserved, or self-reported completions can surface clarifying questions, but cannot satisfy the three-instance threshold. Alternatively, an authorized domain owner or delegate may author an explicit **manual candidate draft** with an assigned responsible team and audience expression, starting with zero automatic repetition claims.
+
 ### 10.2 Workflow candidate card
 
-Each candidate shows: suggested name; owning team if identifiable; number of observed completed examples; application sequence; task objective; likely inputs and outputs; significant decisions; known exceptions; estimated complexity; observed variation; missing evidence; likely value to operators; and current approval status. All inferred or ambiguous content is marked accordingly.
+Each candidate shows: suggested name; responsible team (mandatory; unassigned individuals display `Unassigned — Owner Required`); number of observed completed examples; application sequence; task objective; likely inputs and outputs; significant decisions; known exceptions; estimated complexity; observed variation; missing evidence; likely value to operators; and current approval status. All inferred or ambiguous content is marked accordingly.
+
+The card may report optional employee-reviewed task-level elapsed and wait durations where complete, monotonic task-boundary intervals were observed. Per-step speed metrics, keystroke intervals, active-hours tracking, and employee idle tracking are strictly prohibited.
 
 ### 10.3 Review and editing
 
-The reviewer can accept or revise the workflow's boundaries, rename it, correct its goal, group or split steps, identify variables, add missing prerequisites, remove unrelated captured actions, define business outcomes, and select an appropriate reviewer. The reviewer can reject the candidate as not reusable, duplicate, sensitive, or incorrectly inferred. Rejection reasons improve the quality of future suggestions but do not silently publish a new rule.
+The reviewer can accept or revise the workflow's boundaries, rename it, correct its goal, group or split steps, identify variables, add missing prerequisites, remove unrelated captured actions, define business outcomes, and select an appropriate reviewer. Reviewer edits apply complete replacement of the editable procedure subset under optimistic concurrency, producing immutable revision diffs. Incoming evidence generates a proposed diff rather than silently modifying an active review draft.
+
+The reviewer can reject the candidate as not reusable, duplicate, sensitive, or incorrectly inferred. Rejection activates an owner-reviewed suppression rule that permanently excludes equivalent automatic proposals. If material new evidence is subsequently established, an owner-gated reconsideration request is routed to the domain owner; the rejected revision itself never enters peer guidance caches.
 
 ### 10.4 Canonical workflow and legitimate variants
 
-Oryn can suggest a preferred path based on verified success, relevant exception rate, compliance with approved rules, and efficiency. It must not choose the fastest path if that path fails a required control or has unverified results. When multiple legitimate variants exist, Oryn stores explicit conditions for each; it must not force distinct business situations into one generic sequence.
+Oryn can suggest a preferred path based on verified success, relevant exception rate, compliance with approved rules, and efficiency. It must not choose the fastest path if that path fails a required control or has unverified results. When multiple legitimate variants exist, Oryn stores explicit conditions for each; it must not force distinct business situations into one generic sequence. Suggested variants reflect observed differences without owner endorsement; approved legitimate variants are explicitly validated by the domain owner as compliant with enterprise policy.
 
 ### 10.5 Completion and verification
 
-A human demonstration can be marked **Observed Complete** when its sequence visibly ends. It can be marked **Outcome Verified** only when an authorized outcome source or reviewer confirms the required postconditions. A workflow can be published for guidance with known limitations, but it cannot advance to automatic execution when business-critical verification is missing.
+A human demonstration can be marked **Observed Complete** when its sequence visibly ends without unhandled gaps. It can be marked **Outcome Verified** only when an authorized outcome source or reviewer confirms the required postconditions via independent system evidence or an authorized reviewer assessment (`DemonstrationVerificationV1`). A workflow can be published for guidance with known limitations, but it cannot advance to automatic execution when business-critical verification is missing.
 
 ### 10.6 Candidate states
 
-**Suggested → Under Review → Needs Evidence / Approved for Guidance / Rejected.** An approved playbook may later be **Under Revision**, **Superseded**, or **Archived**. Every state change has a reason, actor, and timestamp. Rejected candidates are not shown to other operators as reliable guidance.
+**Suggested → Under Review → Needs Evidence / Approved for Guidance / Rejected.** Every state change records reason, actor, and timestamp.
+
+Guidance publication follows a strict **two-step boundary**:
+1. **Approval for Guidance:** An authorized domain Workflow Owner approves the candidate, staging an immutable promotion proposal (`CandidatePromotionV1`) into the Operational Graph. Staging does NOT publish guidance or update HUD caches.
+2. **Explicit Publication:** The Operational Graph exclusively owns the publication command, revalidating current source eligibility, rule versions, and staged content hashes before creating an immutable published playbook.
 
 ### 10.7 Opportunity detection
 
-Oryn may identify high-volume repetitive workflows and suggest possible automation value. The opportunity card shows observed volume, time per verified case, exception frequency, degree of repeatability, known risks, and the quality of the sample. Potential hours saved are labeled estimates and must disclose the assumptions used. An opportunity is not an automatically approved agent.
-
+Oryn may identify high-volume repetitive workflows and suggest possible automation value. The opportunity card shows observed volume, time per verified case, exception frequency, degree of repeatability, known risks, and the quality of the sample. Potential hours saved are labeled estimates and must disclose the assumptions used (`OpportunityAssumptionsV1`). Aggregate metrics are suppressed if the contributor cohort size is below the organization's privacy threshold. An opportunity is not an automatically approved agent.
 ---
 
 ## 11. The Living Operational Graph
@@ -490,8 +506,7 @@ The search experience supports queries such as "How do we handle a duplicate ven
 
 ### 12.1 HUD principles
 
-The HUD remains quiet by default, appears only in approved work contexts, never steals keyboard focus without user action, and never covers critical application controls. The employee can snooze it for an hour, mute a suggestion category, or disable proactive suggestions while retaining manual search and guidance.
-
+The HUD remains quiet by default, appears only in approved work contexts, never steals keyboard focus without user action, and never covers critical application controls. Guidance cards and click-through target highlights are hosted by the desktop shell from structured models produced by the context helper. Transparent native highlights never obscure OS security prompts or browser permission controls, and expire automatically unless continuously refreshed. The employee can snooze it for an hour, mute a suggestion category, or disable proactive suggestions while retaining manual search and guidance. When offline, employees may continue reading locally cached playbooks under a signed guidance access lease capped at 24 hours; offline guidance promises a bounded, visibly reported working set (prioritizing the active guide, recent use, and relevant team playbooks within declared storage capacity), not an exhaustive mirror of all organizational playbooks. Executing new assisted or autonomous actions is strictly prohibited while offline.
 ### 12.2 Trigger categories
 
 1. **Relevant Commitment:** A confirmed unresolved work obligation matches the current approved business context.
@@ -506,16 +521,14 @@ Safety and verified policy warnings outrank other tips. After those, active erro
 
 ### 12.4 Guide experience
 
-On choosing **Guide Me**, the employee sees the workflow objective, prerequisites, expected result, and next step. Guidance can point to a relevant visible control where identification is reliable. The step advances only when the user confirms it or Oryn reliably observes the expected state. The employee can move backward, skip an optional step, ask why a step exists, report that the UI differs, or stop the guide. A failed or unrecognized step opens relevant troubleshooting guidance instead of silently proceeding.
-
+On choosing **Guide Me**, the employee sees the workflow objective, prerequisites, expected result, and next step. Oryn tracks at most one active guide per employee profile. Guidance points to a relevant visible control where identification is reliable. The step advances automatically only when Oryn reliably observes the declared expected state on fresh evidence; user confirmation records an acknowledgment, not verified business completion. Switching to unrelated work, encountering an observation gap, or window minimization suspends the active guide and clears highlights; returning to the task allows the employee to explicitly resume. New published playbook versions notify the employee without silently repinning the active guide; policy revocations or rule conflicts invalidate the guide immediately. The employee can move backward, skip an optional step, ask why a step exists, report that the UI differs, or stop the guide. A failed or unrecognized step opens relevant troubleshooting guidance instead of silently proceeding.
 ### 12.5 Peer-transfer experience
 
 When a known exception is matched, the card shows the error or situation, the applicable approved fix, required preconditions, the source workflow, and available actions (**Explain**, **Guide**, or **Run Allowed Fix**). References to peer expertise describe verified team knowledge, not employee productivity comparisons. If only an unverified peer suggestion exists, Oryn offers it as a draft for review rather than an executable fix.
 
-### 12.6 Assisted macros
+### 12.6 Assisted macros and assist plans
 
-A published playbook can offer **Fill/Prepare Steps** for low-risk, verified actions. Before execution, Oryn summarizes affected fields and the stopping point. Macros pause before any irreversible or higher-risk submission. If the application state differs from the approved path, the macro stops and asks for review. The employee always sees which actions were completed and which remain.
-
+A published playbook can offer an approved **Assist Plan** for bounded actions. Approval for guidance does not grant assist execution approval; Stage 3 assist plans require distinct evaluation and release governance approval. Before execution, Oryn reserves the target tab or application workspace, displays affected fields, and declares the stopping point. Assist plans enforce a strict preparation boundary that pauses before every consequential or higher-risk submission. Committing consequential actions requires an explicit, separate item-level **Review and Submit** action displaying parameter diffs. If the application state differs from the approved path, the assist session stops and requires employee review. The employee always sees which actions were completed and which remain.
 ---
 ## 13. Agent Factory: From Workflow to Executable Agent
 
@@ -608,11 +621,11 @@ The counts above are default **minimum eligibility requirements**, not a guarant
 
 ### 14.4 Stage promotion, demotion, and scope
 
-Promotion is always explicit, versioned, and limited to named workflows, application capabilities, action types, and target record populations. A passing evaluation does not automatically approve production use. An owner must confirm the intended scope and risk. A serious safety event, revoked permission, critical rule conflict, or unverifiable production behavior may immediately restrict or pause affected agent capabilities pending review. A noncritical test regression blocks promotion and creates an action item. Oryn must display the concrete reason for every demotion or restriction.
+Promotion is always explicit, versioned, and limited to named workflows, application capabilities, action types, and explicit named case cohorts (`ReleaseCohortV1`). A passing evaluation does not automatically approve production use. An owner must confirm the intended scope and risk. Ordinary material candidate replacements must earn fresh exact-behavior supervised history; the 20-case consecutive supervised streak resets to zero and cannot be inherited from prior versions merely because the source agent ID matches. When multiple eligible named cohorts match a case selection, an explicit cohort choice is required; automatic fallback routing or ambiguous matching is prohibited. A serious safety event, revoked permission, critical rule conflict, or unverifiable production behavior may immediately restrict or pause affected agent capabilities pending review. A noncritical test regression blocks promotion and creates an action item. Oryn must display the concrete reason for every demotion or restriction.
 
 ### 14.5 Stage 5 automatic repair release policy
 
-In v1.0, Oryn may automatically **propose and test** repair candidates for all eligible workflows. Fully automatic deployment of a repair is allowed only when all of the following hold: the agent is already Stage 5; the modification is limited to a non-policy, non-permission, low-risk interaction or data-format adaptation; the affected job is Tier 0 or Tier 1; the organization and workflow owner have separately enabled this change category in advance; all required tests pass; no new action type or destination is introduced; and a limited rollout and immediate stop capability are available. Every other repair requires explicit owner approval before release. Automatic changes create an immediately visible release event and remain reversible at the agent-version level.
+In v1.0, Oryn may automatically **propose and test** repair candidates for all eligible workflows. Fully automatic deployment of a repair is allowed only when all of the following hold: the agent is already Stage 5; the modification is strictly limited to non-policy, non-permission, low-risk patches belonging to two closed categories—`interaction_binding` (compatible application capability/profile references) and `string_format` (literal string modifications on `concat` transforms with deterministic transitive dataflow proof that the string reaches no decision facts, record keys, destinations, numeric values, verifier expectations, or model prompts); the affected job is Tier 0 or Tier 1; the organization and workflow owner have separately enabled this change category in advance via an active `ReleasePreauthorizationV1`; all required tests pass; no new action type or destination is introduced; and a limited rollout and immediate stop capability are available. A qualifying automated replacement preserves the established Stage 5 maintenance lineage under unchanged safety contracts. Every other repair requires explicit owner approval before release. Automatic changes create an immediately visible release event and remain reversible at the agent-version level.
 
 ---
 
@@ -713,7 +726,7 @@ The operator sees a live business-level log: item identifier or redacted label, 
 
 ### 16.6 Human approval drawer
 
-For Tier 3 consequential actions and other designated approval gates, Oryn presents a review drawer containing the affected records; proposed before/after values; evidence for those values; rule and authority checks; consequences of confirming; whether the action is reversible; and separate **Approve**, **Reject**, or **Request Changes** actions. Bulk approval is available only for explicitly permitted homogeneous actions and requires item-level visibility. Items with materially different risks or unresolved exceptions cannot be hidden inside a bulk approval.
+For Tier 3 consequential actions and other designated approval gates, Oryn presents a review drawer containing the affected records; proposed before/after values; evidence for those values; rule and authority checks; consequences of confirming; whether the action is reversible; and separate **Approve**, **Reject**, or **Request Changes** actions. Pending approval proposals expire after 24 hours without decision; once approved, human sign-off grants a 15-minute validity window for execution before requiring re-evaluation. Rejection or requesting changes closes the proposal; revisions require fresh review. Bulk approval is default-off, available only for explicitly permitted homogeneous actions (same workflow, application, operation, risk tier, and currency; max 100 visible items), commits all review decisions atomically, and maintains independent per-item dispatch. Items with materially different risks or unresolved exceptions cannot be hidden inside a bulk approval.
 
 ### 16.7 Commit boundaries and uncertain results
 
@@ -886,7 +899,7 @@ A proposed version is presented as a business-language change request. The revie
 
 ### 21.5 Rollout controls
 
-Every agent release specifies the target team(s), application context, eligible records, autonomy stage, approval conditions, initial exposure, success criteria, stop conditions, and person accountable for rollout. The default v1.0 deployment for material changes is a limited release to an explicitly chosen test group before organization-wide adoption. The owner can expand, pause, or end the rollout based on verified business results.
+Every agent release specifies the target team(s), application context, eligible records, autonomy stage, approval conditions, initial exposure, success criteria, stop conditions, and person accountable for rollout. Rollout progression is governed strictly by ordered phases of explicit named cohorts (`ReleaseCohortV1`) bound to specific connection environments, vendor accounts, and record types; synthetic percentage-based traffic routers are forbidden. If a case selection matches multiple active cohorts, an explicit named-cohort choice is required (`RELEASE_COHORT_AMBIGUOUS` otherwise). Rollout health is monitored via deterministic integer arithmetic (`RolloutHealthPolicyV1`); stale telemetry or safety breaches trigger synchronous fences (`ReleaseCohortFenceV1`). The default v1.0 deployment for material changes is a limited release to an explicitly chosen named cohort before organization-wide adoption. The owner can expand, pause, or end the rollout based on verified business results.
 
 ### 21.6 Rollback and restore behavior
 
@@ -958,7 +971,7 @@ Oryn measures business-process health and automation results, not employee atten
 | Metric | Definition | Reporting constraint |
 |---|---|---|
 | **Workflow frequency** | Number of recognized completed task instances for an approved process in a period | Aggregate only; exclude incomplete observation |
-| **Verified success rate** | Verified-complete cases divided by eligible cases with resolved outcomes | Show unknown outcomes separately |
+| **Verified success rate** | Verified-complete cases divided by all started cases ($C_{\text{verified}} / C_{\text{started}}$); cases cancelled before start are excluded from the denominator | Unknown/unresolved outcomes ($C_{\text{unknown}} / C_{\text{started}}$) shown separately as a distinct reliability metric |
 | **Exception rate** | Cases requiring exception handling divided by started cases | Separate expected escalations from failures |
 | **Autonomous completion rate** | Cases completed without per-case human correction and independently verified | Do not count merely submitted cases |
 | **Human escalation rate** | Cases escalated to a person divided by started cases | Break down cause categories |
@@ -966,7 +979,7 @@ Oryn measures business-process health and automation results, not employee atten
 | **Regression rate** | Previously passing test scenarios that fail under a new version | Show by agent version |
 | **Median case duration** | Median elapsed execution time of verified cases | Separate waiting for approval where possible |
 | **Approval workload** | Count of decisions requiring human review by workflow | Do not rank individual reviewers |
-| **Estimated time avoided** | Verified automated volume multiplied by a clearly disclosed baseline manual task duration less estimated review effort | Show assumptions, not a promise of realized labor savings |
+| **Estimated time avoided** | Sum of $(\text{BaselineDuration} - \text{ActiveExecutionDuration} - \text{HumanCorrectionDuration})$ across verified cases; verified no-op cases yield exactly $0\,\text{ms}$ avoidance; approval wait duration is excluded from active duration and does not penalize avoidance | Show assumptions, not a promise of realized labor savings |
 | **Estimated cost per completed case** | Applicable execution and review costs divided by verified-complete cases | If data unavailable, show unavailable |
 | **Operational backlog** | Eligible unresolved cases by process and status | Subject to authorized system visibility |
 | **Agent maintenance burden** | Count of incidents and manual repairs per agent and version | Measure operational reliability, not an employee's effort |
@@ -985,7 +998,7 @@ Oryn ranks improvement candidates using an explained combination of repeat volum
 
 ### 23.6 The 14-Day Operational X-Ray
 
-A customer can run a voluntary, time-bounded discovery pilot for one approved operational team. The pilot setup specifies start/end dates, applications, participating employees, permitted workflows, required privacy notices, owner, and intended output. Oryn reports progress without displaying employee surveillance indicators.
+A customer can run a voluntary, time-bounded discovery pilot for one approved operational team. The pilot setup specifies exact start/end local dates strictly spanning 14 calendar days (336 hours, or 335/337 hours across local Daylight Saving Time transitions), applications, at least 5 participating enrolled employees for team aggregations, permitted workflows, required privacy notices, owner, and intended output. Oryn reports progress without displaying employee surveillance indicators.
 
 The pilot report contains: scope and sample size; workflows discovered; common variants and exception patterns; process handoffs; known bottlenecks; reusable peer fixes; estimated automation opportunities; evidence quality; eligible agent candidates; risks and privacy limitations; and a recommended next-step shortlist. It may include a supervised demonstration of a validated candidate agent, but must not imply that a production-grade agent was automatically proven safe solely because two weeks elapsed.
 
@@ -1025,8 +1038,7 @@ Employees can configure digest frequency, quiet hours, preferred channels, remin
 ## 25. Privacy, Data Lifecycle, Security Policy, and Audit Experience
 
 ### 25.1 Capture categories and user-facing defaults
-
-At enrollment the employee sees independent controls for: visual work observation; contextual work-application recognition; personal-history retention; organizational sharing of sanitized workflow suggestions; meeting transcription; and meeting commitment extraction. Each control explains the purpose and consequences of turning it off. Meeting audio is off by default and needs an additional per-meeting opt-in. Organizational sharing cannot transmit raw media or bypass exclusions.
+At enrollment the employee sees independent controls for: visual work observation; contextual work-application recognition; personal-history retention; organizational sharing of sanitized workflow suggestions; meeting transcription; and meeting commitment extraction. Each control explains the purpose and consequences of turning it off. Screen observation categories govern distinct capture modalities: `contextual_work_application_recognition` permits safe application identity, window titles, and settled accessibility text without visual frame capture or OCR; `visual_work_observation` permits event-triggered, privacy-masked visual snapshots and privacy-helper-governed visual extraction via the cloud inference gateway without structured accessibility text. When both are enabled, both streams are captured with distinct provenance. When `personal_history_retention` is disabled, screen-derived visual inference operates ephemerally under separate cloud-processing consent with a strict 30-second volatile lifetime in memory; no inputs, intermediate representations, or model outputs are written to disk, and no deferred upload backlog is maintained. Meeting audio is off by default and needs an additional per-meeting opt-in. Organizational sharing cannot transmit raw media or bypass exclusions.
 
 ### 25.2 Mandatory exclusions
 
@@ -1038,21 +1050,24 @@ Passwords, tokens, account credentials, payment details, and other restricted da
 
 ### 25.4 Retention policy
 
-**v1.0 defaults:** Raw local screen and audio content is retained for seven days and automatically expires. An employee may choose a shorter period of one to six days; an organization may permit an employee to extend retention up to a maximum of 14 days for a documented workflow-research need, but cannot force local raw retention beyond the defined maximum. Sanitized organizational workflow history is retained until archived or deleted under the organization's policy, with a default 365-day retention period for unapproved candidates. Approved playbook/agent change histories and consequential action audit records use the organization's approved audit retention schedule, with a default of 24 months. Legal hold or contractual retention requirements must be explicitly disclosed rather than silently extending private raw-capture retention.
+**v1.0 defaults:** Raw local screen and audio content is retained for seven days and automatically expires. An employee may choose a shorter period of one to six days; an organization may permit an employee to extend retention up to a maximum of 14 days for a documented workflow-research need, but cannot force local raw retention beyond the defined maximum. Durable storage of private raw captures, audio, transcripts, and unshared commitments is strictly local to the employee device. Cloud model inference is strictly transient: the LiteLLM gateway enforces zero content retention after processing, disables prompt/completion logging and caching, and uses memory-backed temporary spooling that is wiped on completion or cancellation. Sanitized organizational workflow history is retained until archived or deleted under the organization's policy, with a default 365-day retention period for unapproved candidates. Approved playbook/agent change histories and consequential action audit records use the organization's approved audit retention schedule, with a default of 24 months. To prevent replay confusion and maintain transport idempotency, the system maintains a minimal replay ledger across the organization's lifetime (recording only organization ID, submission ID/revision, content digest, and terminal disposition; zero narratives, images, private evidence IDs, or employee activity history); this minimal ledger is preserved independently from content and audit retention schedules and is permanently erased only when the organization itself is deleted. Legal hold or contractual retention requirements must be explicitly disclosed rather than silently extending private raw-capture retention.
 
 When an employee deletes local content, Oryn explains whether already approved, anonymized organizational knowledge remains and offers the appropriate separate contribution-removal process. Discarded or expired private raw capture cannot be recovered from Oryn's organization dashboard.
 
+Supported client uninstallation presents an explicit data deletion warning, stops all observation and helper processes, verifies whether legal hold constraints apply, and permanently purges eligible local unheld private data, profile secrets, and local preferences, issuing a cryptographic purge receipt. If an active legal hold or unknown retention verdict is returned by local storage, uninstallation cleanup is aborted with an explanation directing the user to their administrator, leaving protected data intact rather than performing unauthorized deletion. Uninstallation never deletes previously published, anonymized organizational knowledge or centralized audit records.
+
 ### 25.5 Review before sharing
 
-Before a personal observation becomes a shared candidate playbook, the employee can inspect the proposed sanitized description, its referenced application context, included business variables, and any source excerpt intended for review. The employee can approve contribution, remove sensitive details, mark steps out of scope, or decline the share. An organization may limit publishing to approved work scopes but must not bypass this sharing review for individual recordings.
-
+Before a personal observation becomes a shared candidate playbook, the employee can inspect the proposed sanitized description, its referenced application context, included business variables, and any source excerpt intended for review. The employee can approve contribution, remove sensitive details, mark steps out of scope, or decline the share. Employee review binds immutable identity, purpose, and audience parameters; once approved, these bindings cannot be altered or broadened without a fresh employee review. When personal-history retention is disabled, screen-derived workflow contributions operate in an online-only mode: approved payloads exist only in volatile memory bounded by the source's 30-second lifetime and release fence, dispatching immediately without offline queueing or durable capsule storage. Shared excerpts are limited strictly to sanitized text narratives and purpose-bound redacted still images (maximum 1920×1080, maximum 1 MiB, at most four per contribution) subject to a signed organizational artifact policy that defines purpose, audience, and maximum artifact lifetime. An approved redacted still image is a distinct, metadata-stripped derivative, not raw media or remote manager access to the source; audio and video clips remain strictly prohibited from sharing. Processing private captures with an AI service through the governed gateway is not a shared contribution; an explicit review-before-sharing step is always required before any sanitized workflow excerpt or commitment becomes organizational knowledge. An organization may limit publishing to approved work scopes but must not bypass this sharing review for individual recordings.
 ### 25.6 Enterprise restrictions
 
 Security admins must be able to define: approved applications and excluded categories; which teams may use meeting intelligence; maximum raw-capture retention; organizational knowledge sharing audiences; allowed action risk tiers; special approval limits; which agent abilities can be enabled; export permission; and requirements for incident reporting. Every change shows affected users and workflows, effective timing, and who authorized it.
 
 ### 25.7 Consent changes
 
-When consent is withdrawn, Oryn immediately stops the affected capture category. Existing pending private observations are not newly shared. Already published authorized organizational procedures are treated under the contribution and retention policy with visible options to request correction or removal. A changed organization policy that materially affects employee capture requires a new employee notice and acknowledgment before that capture category resumes.
+When consent is withdrawn, Oryn immediately stops the affected capture category. Existing pending private observations are not newly shared. When an employee withdraws a previously shared contribution, unpublished candidate contributions are excluded immediately from discovery synthesis and dependent unpublished proposals are invalidated. Published organizational procedures and derivatives follow governed removal review by Workflow Owners, ensuring retention policies or legal holds cannot permit continued synthesis from withdrawn records. Truthful delivery and withdrawal states distinguish local source deletion (which cancels unreleased fences and marks ambiguous in-flight uploads as delivery unknown) from employee withdrawal of organizational knowledge. A changed organization policy that materially affects employee capture requires a new employee notice and acknowledgment before that capture category resumes.
+
+If observation stops due to capture-policy lease expiration during offline operation, receiving a renewed valid policy lease alone does not restart capture automatically; intentional employee resumption (and acknowledgment of any updated notice terms) is required.
 
 ### 25.8 Audit trail
 
@@ -1060,7 +1075,9 @@ Audit views record significant user-visible and agent actions: enrollment/consen
 
 ### 25.9 Data access, removal, and organization offboarding
 
-Authorized admins can export published organizational knowledge and the audit artifacts they are entitled to retain. They can remove team memberships, restrict access, archive playbooks, retire agents, and request data deletion according to policy. An organization offboarding flow must list current agents, scheduled jobs, pending approvals, retained audit records, shared knowledge, and the consequence of deactivation. No agent may continue initiating jobs once the organization is deactivated.
+Authorized admins can export published organizational knowledge and the audit artifacts they are entitled to retain. They can remove team memberships, restrict access, archive playbooks, retire agents, and request data deletion according to policy. An organization offboarding flow must list current agents, scheduled jobs, pending approvals, retained audit records, shared knowledge, and the consequence of deactivation.
+
+Deactivation immediately halts new capture authority and agent job dispatch without undoing past business effects or immediately deleting records subject to governed retention. Organization erasure disposes of eligible cloud evidence payloads and cloud decryption keys under approved retention schedules; immutable WORM audit records and sparse deduplication metadata remain intact until their statutory compliance locks expire. Erasure does not promise instantaneous physical media overwriting or retroactive retraction of external exports. If a catastrophic regional loss permanently destroys cloud evidence wrapping keys, the resulting evidence custody loss is disclosed honestly rather than falsely claiming successful payload recovery under ordinary recovery objectives. Employee-local private evidence remains strictly bounded to local endpoints, protected by the operator/employee-private boundary, and is never backed up to central cloud infrastructure. No agent may continue initiating jobs once the organization is deactivated.
 
 ### 25.10 Malicious or misleading content
 
@@ -1235,7 +1252,8 @@ These journeys are normative examples of v1.0 behavior. They are intentionally c
 - **A confidential value appears inside a permitted screen:** The shared workflow must use a redacted field or omit the value; if safe redaction cannot be established, sharing is blocked pending review.
 - **Audio consent is missing or withdrawn:** Meeting recording does not start or stops immediately; no transcript is generated for the unauthorized segment.
 - **A manager requests a specific employee's activity timeline:** The request is unavailable, with an explanation of the privacy boundary.
-- **The employee removes the desktop companion:** Future capture stops; shared approved playbooks remain subject to organizational policy, not live device access.
+- **The employee uninstalls the desktop companion:** Observation and helpers stop; eligible local private data, profile secrets, and local preferences are securely purged after an explicit deletion warning and confirmation that no legal holds apply; if an active legal hold or unknown retention verdict applies, uninstallation cleanup is aborted with protected data left intact; published organizational procedures and centralized audit history remain under organizational retention.
+- **The capture policy lease expires while disconnected:** Observation stops after an absolute maximum of 24 hours of disconnection (or shorter configured limit); reconnecting and receiving a renewed policy leaves capture paused until intentional employee resume.
 
 ### 28.2 Workflow-learning cases
 
@@ -1282,27 +1300,24 @@ This section makes defaults explicit where earlier feature descriptions describe
 
 ### 29.1 Workflow repetition trigger
 
-The personal companion may suggest a reusable workflow when it identifies at least three substantially similar completed task executions during a 30-minute window. It can also propose a workflow from a longer history of repeated observations when the evidence is adequate. The first such suggestion reads **Repeated work detected — review workflow candidate**. The suggestion does not claim that an agent is ready, does not launch a job, and must not interrupt a high-consequence active transaction. The employee can dismiss it for that workflow for 30 days or turn off repetition suggestions.
-
+The personal companion may suggest a reusable workflow when it identifies at least three substantially similar completed task executions during a 30-minute window. It can also propose a workflow from a longer history of repeated observations when the evidence is adequate. The first such suggestion reads **Repeated work detected — review workflow candidate**. The suggestion does not claim that an agent is ready, does not launch a job, and must not interrupt a high-consequence active transaction. The employee can dismiss it for that workflow for 30 days or turn off repetition suggestions. In retention-off mode (`personal_history_retention=false`), all supporting facts expire after 30 seconds; repetition suggestions are available only if three valid completed instances finish within that surviving 30-second window, and dismissal lasts only as long as the ephemeral session can be identified.
 ### 29.2 Friction and peer-fix trigger
 
-A contextual error suggestion may appear when a permitted business application presents a recognizable failure state with an approved matching resolution. As a secondary signal, Oryn may identify a likely need for help when an eligible workflow step remains unresolved for at least 35 seconds or when the user navigates back and forth between a work application and permitted help material at least four times in 60 seconds. These signals are processed for immediate contextual help only; they do not become individual productivity measurements, persistent employee stall histories, or manager-facing metrics. The HUD must not repeatedly offer help based on the same ignored friction signal during the same task.
-
+A contextual error suggestion may appear when a permitted business application presents a recognizable failure state with an approved matching resolution. As a secondary signal, Oryn may identify a likely need for help when an eligible workflow step remains unresolved for at least 35 seconds or when the user navigates back and forth between a work application and permitted help material at least four times in 60 seconds. In retention-off mode, the 35-second unresolved-step detector is unavailable because volatile observations expire after 30 seconds. These signals are processed for immediate contextual help only; they do not become individual productivity measurements, persistent employee stall histories, or manager-facing metrics. The HUD must not repeatedly offer help based on the same ignored friction signal during the same task.
 ### 29.3 Context matching and uncertainty
 
 A contextual recommendation must be associated with a known approved work context, a sufficiently specific business situation, and a permission-compatible action. If the context is ambiguous, Oryn may show a passive **Possible related guidance** result, but cannot offer a one-click mutation or assert that the suggested fix definitely applies. If multiple guides may be relevant, the employee chooses the correct workflow from clearly distinguished options.
 
 ### 29.4 HUD frequency and suppression
 
-At most one proactive expanded card appears at a time. No more than one noncritical proactive interruption should be generated for the same workflow instance unless a new material error, policy change, or confirmed commitment becomes relevant. Dismissing a card hides that suggestion for the current task; **Snooze 1 Hour** suppresses that category for one hour; **Mute Category** turns off the category until the employee changes the preference. Critical safety warnings affecting a pending operation are never suppressed by ordinary recommendation settings.
-
+At most one proactive expanded card appears at a time. No more than one noncritical proactive interruption should be generated for the same workflow instance unless a new material error, policy change, or confirmed commitment becomes relevant. Dismissing a card hides that suggestion for the current task; **Snooze 1 Hour** suppresses that category for one hour; **Mute Category** turns off the category until the employee changes the preference. Critical safety warnings affecting a pending operation are never suppressed by ordinary recommendation settings. When retention is off, observation-derived suppression states expire with their evidence after 30 seconds; explicit employee category preferences remain preserved in shell settings.
 ### 29.5 Meeting transcript review
 
-After a permitted meeting recording, the employee sees a private transcript and a suggested action-summary view. Speakers are initially identified as **You**, **Speaker 2**, **Speaker 3**, and so on when identifiable; no person is assigned a real-world identity solely from voice characteristics. The employee can assign names, correct transcript wording, split or merge incorrectly separated speaker turns, remove private segments, and delete the recording. Suggested commitments remain unconfirmed until accepted. Where audio is too unclear, Oryn displays **Unable to Transcribe Reliably** rather than inventing exact wording.
+After a permitted meeting recording, the employee sees a private transcript and a suggested action-summary view. Speakers are initially identified as **You**, **Speaker 2**, **Speaker 3**, and so on when identifiable; speaker labels are session-local turn attributions and no person is assigned a real-world identity or permanent voiceprint solely from acoustic characteristics. The employee can assign names, correct transcript wording, split or merge incorrectly separated speaker turns, remove private segments, and delete the recording. Suggested commitments remain unconfirmed until accepted. Where audio is too unclear, Oryn displays **Unable to Transcribe Reliably** rather than inventing exact wording.
 
 ### 29.6 Default reminders
 
-Confirmed commitments with an explicit deadline produce a reminder on the due date in the employee's selected working time zone, unless the employee has set an earlier reminder. Commitments with no due date remain in the unresolved commitment list but do not acquire an invented deadline. A contextual reminder may appear earlier when a relevant customer/project record is opened. Dismissal, snooze, completion, and cancellation are separate actions and states.
+Confirmed commitments with an explicit deadline produce a reminder defaulting to 09:00 on the due date in the employee's selected working time zone, unless the employee has set an earlier reminder or custom time. Commitments with no due date remain in the unresolved commitment list but do not acquire an invented deadline. A contextual reminder may appear earlier when a relevant customer/project record is opened. Dismissal, snooze, completion, and cancellation are separate actions and states.
 
 ### 29.7 Evaluation and approval defaults
 
@@ -1473,6 +1488,17 @@ The following are minimum end-to-end product acceptance checks. Each must be dem
 
 The release review must demonstrate the following uninterrupted journeys in a realistic customer-like environment: human workflow observation to approved playbook; playbook to agent candidate; agent to complete evaluation and supervised job; batch with mixed successful and exceptional cases; novel document-format failure to incident; expert correction to proposed rule and repair; regression testing; approval and limited rollout; version restore after a deliberately introduced regression; and employee pause/exclusion with confirmed privacy boundaries. Every journey must include at least one negative or failure branch, not only a success path.
 
+### 31.9 Cloud inference acceptance
+
+| ID | Acceptance criterion |
+|---|---|
+| ORY-071 | Every Oryn-owned v1.0 AI operation routes through the governed LiteLLM path; no local inference or direct-provider fallback executes. |
+| ORY-072 | Private capture inference requires purpose-bound organization authorization and employee cloud-processing notice; publication still requires separate review. |
+| ORY-073 | Unauthorized content persistence, training, body logging, caching, or unverified retention terms blocks the affected inference route. |
+| ORY-074 | Every operation pins an approved US-processing provider/model/route/policy binding; disallowed region or provider fallback is rejected. |
+| ORY-075 | Unsupported provider modalities, schemas, live transports, or diarization capabilities are reported unavailable rather than claimed or silently substituted. |
+| ORY-076 | Offline recording is explicit, uses no local AI, and cannot upload retained audio after reconnection without fresh authorization and current policy checks. |
+
 ---
 
 ## 32. Product Readiness and v1.0 Exit Criteria
@@ -1492,6 +1518,10 @@ Oryn v1.0 must not be declared ready if any of the following remain true:
 - The product can blindly retry an uncertain external submission and duplicate business effects.
 - There is no visible agent/version-to-job accountability or traceable audit for consequential actions.
 - The core end-to-end repair workflow requires hidden manual intervention that is presented to customers as fully automated.
+- Any Oryn-owned AI inference executes locally on-device or attempts direct-provider egress bypassing LiteLLM.
+- Private capture data is transmitted to an inference route lacking verified US processing or contractual zero content retention.
+- Offline-recorded meeting audio is automatically uploaded upon reconnection without explicit employee authorization.
+- An unsupported model modality, transport, schema, or diarization failure is silently disguised as complete or substituted.
 - The product has not passed the v1.0 acceptance cases listed in Section 31 for supported feature scopes.
 
 ### 32.2 Expected quality of a release candidate
@@ -1523,6 +1553,7 @@ These are promising later capabilities and should not be silently assumed to exi
 - Native mobile employee capture and execution.
 - Multilingual interface and independently validated support for all document languages.
 - Predictive staffing, revenue forecasting, or financial planning based solely on observed screen activity.
+- On-device and local-only AI inference (e.g. local Whisper speech models, on-device SLMs, embedded local vector databases); all v1.0 AI inference is cloud-managed via LiteLLM.
 
 Oryn may later expand into these areas, but the v1.0 product must be successful without any of them.
 

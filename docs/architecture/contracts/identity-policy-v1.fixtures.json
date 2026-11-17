@@ -1,0 +1,1369 @@
+{
+  "schema_id": "identity.fixture-set.v1",
+  "public_keys": [
+    {
+      "key_id": "key_policy_2026_01",
+      "purpose": "policy",
+      "public_key": "6WJM7ogska4um20HH5xxccFAmqlCEs07MDJm0fgmF18"
+    },
+    {
+      "key_id": "key_device_macbook_01",
+      "purpose": "device",
+      "public_key": "peReSTfaQQIb2gKXQTNpNseXUcamBHiP-mGoRDBgOFo"
+    },
+    {
+      "key_id": "key_receipt_transit_01",
+      "purpose": "receipt",
+      "public_key": "VTjW_SlNcOYvRbCKdQykRInkNBBMncTABuQ-9FTGoEA"
+    },
+    {
+      "key_id": "key_publisher_prod_01",
+      "purpose": "publisher",
+      "public_key": "ubCoaRrgHP0hX_O6EsraylCO3lSACfNjOalfMN4Eq10"
+    },
+    {
+      "key_id": "key_root_2026_01",
+      "purpose": "root",
+      "public_key": "Mh-W_X390GIYpXSIDTPiavhMO58juuYHKlLYZNCbHwA"
+    }
+  ],
+  "signed_envelope_examples": [
+    {
+      "schema_id": "identity.approval-proposal.v1",
+      "key_id": "key_policy_2026_01",
+      "payload": {
+        "proposal_id": "11111111-1111-4111-8111-111111111111",
+        "proposal_revision": "1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_audit_01",
+          "case_id": "case_inv_99882",
+          "agent_version": "2026.11.08.1"
+        },
+        "action_id": "act_approve_invoice_001",
+        "action_sha256": "sha256_15b72bca85a9ceff0f848dbe1519d51a6668d33200369cf06dd89145b66a60ed",
+        "action_category": "financial_disbursement",
+        "application_id": "app_erp_finance_01",
+        "record_key": "rec_inv_99882",
+        "parameter_diffs": [
+          {
+            "path": "status",
+            "before": "Pending Review",
+            "after": "Approved"
+          },
+          {
+            "path": "approved_amount",
+            "before": null,
+            "after": "1450.00"
+          }
+        ],
+        "evidence_refs": [
+          "ev_match_receipt_99882"
+        ],
+        "rule_checks": [
+          {
+            "rule_version": "rule_po_match_v2",
+            "result": "pass",
+            "evidence_ref": "ev_match_receipt_99882"
+          }
+        ],
+        "authority_checks": [
+          {
+            "kind": "risk",
+            "result": "pass",
+            "source_ref": null
+          },
+          {
+            "kind": "human_approval",
+            "result": "pending",
+            "source_ref": null
+          }
+        ],
+        "consequence_summary": "Disbursement of $1,450.00 to vendor Acme Supplies against PO-99882.",
+        "reversible": false,
+        "risk_tier": 3,
+        "policy_revision": "100",
+        "access_revision": "200",
+        "issued_at": "2026-11-10T15:00:00Z",
+        "not_after": "2026-11-11T15:00:00Z",
+        "proposal_digest": "sha256-f2b4c20444c756a1ea2cebf68d5e6bd4b1d44db8d252c849012cf0116c64213f"
+      },
+      "signature": "JDMoMlA2p4T4ERHEbXzZ8WC7zYvFkKXRcTfYWLkr8mHBI0flVVeuvmejmiOmTQZvOkXFlRv5zktr62LSGFHEBw"
+    },
+    {
+      "schema_id": "identity.action-authorization.v1",
+      "key_id": "key_policy_2026_01",
+      "payload": {
+        "authorization_id": "22222222-2222-4222-8222-222222222222",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "actor_id": "usr_employee_01",
+        "worker_id": "wrk_runner_finance_01",
+        "device_id": "dev_macbook_01",
+        "profile_id": "prf_default_01",
+        "audience": "execution",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_audit_01",
+          "case_id": "case_inv_99882",
+          "agent_version": "2026.11.08.1"
+        },
+        "action_id": "act_approve_invoice_001",
+        "action_sha256": "sha256_15b72bca85a9ceff0f848dbe1519d51a6668d33200369cf06dd89145b66a60ed",
+        "environment": "production",
+        "risk_tier": 3,
+        "policy_revision": "100",
+        "access_revision": "200",
+        "revocation_generation": "1",
+        "approval_id": "33333333-3333-4333-8333-333333333333",
+        "nonce": "N0nc3S3cr3tV4lu3B4s364Ur132Byt3s00000000000",
+        "issued_at": "2026-11-10T15:05:00Z",
+        "not_after": "2026-11-10T15:05:30Z"
+      },
+      "signature": "SPS2aVD8smGbNMBIMrAp8OTmebWNLuNDoTIgagAAFdDsFJgv_CAB3xaE-wYQtxKUHPvvRqpsM-rsVMoHBmE9BA"
+    },
+    {
+      "schema_id": "identity.action-approval.v1",
+      "key_id": "key_policy_2026_01",
+      "payload": {
+        "approval_id": "33333333-3333-4333-8333-333333333333",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "proposal_id": "11111111-1111-4111-8111-111111111111",
+        "proposal_revision": "1",
+        "proposal_digest": "sha256-f2b4c20444c756a1ea2cebf68d5e6bd4b1d44db8d252c849012cf0116c64213f",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_audit_01",
+          "case_id": "case_inv_99882",
+          "agent_version": "2026.11.08.1"
+        },
+        "action_id": "act_approve_invoice_001",
+        "action_sha256": "sha256_15b72bca85a9ceff0f848dbe1519d51a6668d33200369cf06dd89145b66a60ed",
+        "approver_actor_id": "usr_workflow_owner_01",
+        "decision": "approve",
+        "policy_revision": "100",
+        "access_revision": "200",
+        "decided_at": "2026-11-10T15:04:30Z",
+        "not_after": "2026-11-10T15:19:30Z"
+      },
+      "signature": "z1PDzmXtgSjFsbpE9C9DO2dT06Dbn3gfIGPJppAgyvZgOHzF2drcJhHa-LnPA4T8m6b52nvHyfflEXW9wuHEDQ"
+    },
+    {
+      "schema_id": "identity.action-admission.v1",
+      "key_id": "key_policy_2026_01",
+      "payload": {
+        "authorization_id": "22222222-2222-4222-8222-222222222222",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "attempt_id": "44444444-4444-4444-8444-444444444444",
+        "worker_id": "wrk_runner_finance_01",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_audit_01",
+          "case_id": "case_inv_99882",
+          "agent_version": "2026.11.08.1"
+        },
+        "action_id": "act_approve_invoice_001",
+        "action_sha256": "sha256_15b72bca85a9ceff0f848dbe1519d51a6668d33200369cf06dd89145b66a60ed",
+        "approval_id": "33333333-3333-4333-8333-333333333333",
+        "nonce": "N0nc3S3cr3tV4lu3B4s364Ur132Byt3s00000000000",
+        "policy_revision": "100",
+        "access_revision": "200",
+        "consumed_at": "2026-11-10T15:05:05Z",
+        "not_after": "2026-11-10T15:05:30Z"
+      },
+      "signature": "WbPEavMU_eQEctdE9HSNiOtuPhLu6WbHwv8dUCkLb8psEXYtSgNMfwuE9YsgV7FrRrOy2UPuCg-8wY8PIUKrAg"
+    },
+    {
+      "schema_id": "identity.governance-proposal.v1",
+      "key_id": "key_policy_2026_01",
+      "payload": {
+        "proposal_id": "55555555-5555-4555-8555-555555555555",
+        "proposal_revision": "1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "owning_component": "release_governance",
+        "subject_kind": "agent_release",
+        "object_id": "agent_candidate_invoice_v2",
+        "object_version": "2026.11.10.1",
+        "workflow_id": "wf_invoice_processing",
+        "object_digest": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "proposer_actor_id": "usr_builder_01",
+        "risk_tier": 3,
+        "required_remits": [
+          "workflow_owner"
+        ],
+        "rule_checks": [
+          {
+            "rule_version": "rule_regression_pass_v1",
+            "result": "pass",
+            "evidence_ref": "ev_sim_pass_001"
+          }
+        ],
+        "authority_checks": [
+          {
+            "kind": "release",
+            "result": "pass",
+            "source_ref": null
+          },
+          {
+            "kind": "human_approval",
+            "result": "pending",
+            "source_ref": null
+          }
+        ],
+        "change_summary": "Promotion of Invoice Processing Agent v2.0 to Tier 3 autonomy stage.",
+        "issued_at": "2026-11-10T14:00:00Z",
+        "not_after": "2026-11-11T14:00:00Z",
+        "proposal_digest": "sha256-29e42d94b0c39e9be6b0f9cbf863e91ab5130b14fe639bc7d40acbb06b989bf4"
+      },
+      "signature": "tyD6wLZGl_XjRLg0wdul0aAbbHl6i6vqv6JPRWu2Xccu-5xRJHOHWjAoPH9a4NIokyY0IN6Ei3W99bSO6Ek3DQ"
+    },
+    {
+      "schema_id": "privacy.authorization-context.v1",
+      "key_id": "key_device_macbook_01",
+      "payload": {
+        "request_id": "66666666-6666-4666-8666-666666666666",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "actor_id": "usr_employee_01",
+        "device_id": "dev_macbook_01",
+        "profile_id": "prf_default_01",
+        "purpose": "hud_context_interpretation",
+        "operation": "text.reason",
+        "consent_revision": "1",
+        "notice_revision": "1",
+        "input_scope_sha256": "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+        "input_manifest_sha256": "1234567812345678123456781234567812345678123456781234567812345678",
+        "input_revision": "1",
+        "deletion_generation": "1",
+        "issued_at": "2026-11-10T15:00:00Z",
+        "not_after": "2026-11-10T15:00:05Z"
+      },
+      "signature": "3abqiFlWD_GWxx27hXYezPb1LcNFPT99E04mbXkIQ5Ne7TXPx12guCoocIby0-ONF0ub5uGmFYY7vD9kgE_MDg"
+    },
+    {
+      "schema_id": "identity.authority-checkpoint.v1",
+      "key_id": "key_receipt_transit_01",
+      "payload": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "recovery_epoch": "77777777-7777-4777-8777-777777777777",
+        "through_sequence": "1050",
+        "entry_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+        "persisted_at": "2026-11-10T15:10:00Z",
+        "request_nonce": "R3qu3stN0nc3S3cr3tV4lu3B4s364Ur132Byt3s0000"
+      },
+      "signature": "HUYbEl5YE-ckP8y1ycMHoKsx37yuY98WR2i8q8t3yEPqBy5a-AgisFhxPmvrKn-jZeVkTl0_anVjkqavr8c4Bg"
+    },
+    {
+      "schema_id": "privacy.capture-policy.v1",
+      "key_id": "key_policy_2026_01",
+      "payload": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "actor_id": "usr_employee_01",
+        "device_id": "dev_macbook_01",
+        "profile_id": "prf_default_01",
+        "enrollment_id": "enr_macbook_01",
+        "policy_revision": "100",
+        "notice_revision": "10",
+        "permitted_categories": [
+          "screen",
+          "audio",
+          "accessibility_tree",
+          "browser_dom"
+        ],
+        "mandatory_exclusion_catalog_revision": "cat_excl_v2026_01",
+        "excluded_application_ids": [
+          "app_1password",
+          "app_keychain"
+        ],
+        "excluded_url_patterns": [
+          "*://bank.example.com/*",
+          "*://auth0.com/*"
+        ],
+        "max_raw_retention_days": 7,
+        "research_extension_permitted": false,
+        "max_offline_seconds": 86400,
+        "revocation_generation": "1",
+        "issued_at": "2026-11-10T08:00:00Z",
+        "not_after": "2026-11-11T08:00:00Z",
+        "incident_correction_audio_permitted": false
+      },
+      "signature": "36YhypOp2fOz_eA8o6Otc_X77KXYA66p8t528cdVLQgiywW5r6hrFtdi89PPzJSvLV2kCzHWjfvB_MAma7LkCA"
+    },
+    {
+      "schema_id": "privacy.retention-verdict.v1",
+      "key_id": "key_policy_2026_01",
+      "payload": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "actor_id": "usr_employee_01",
+        "device_id": "dev_macbook_01",
+        "profile_id": "prf_default_01",
+        "enrollment_id": "enr_macbook_01",
+        "verdict_revision": "5",
+        "scope_coverage": "complete",
+        "active_holds": [
+          {
+            "hold_id": "hld_litigation_2026_01",
+            "description": "Preservation order regarding Q3 supplier dispute.",
+            "from_utc": "2026-07-01T00:00:00Z",
+            "to_utc": null,
+            "affected_sources": [
+              "native_os",
+              "browser",
+              "meeting"
+            ]
+          }
+        ],
+        "preservation_conflict": false,
+        "issued_at": "2026-11-10T08:00:00Z",
+        "not_after": "2026-11-11T08:00:00Z"
+      },
+      "signature": "3Ay_z8NWb_3g3wiTE8nCoJ1e8_3BBTQcBf4BLJPFkZEPG2PED4uHI2L_ICq_mmTcJGLzPWcsgMApFISCnNkRBA"
+    },
+    {
+      "schema_id": "inference.authorization.v1",
+      "key_id": "key_policy_2026_01",
+      "payload": {
+        "authorization_id": "88888888-8888-4888-8888-888888888888",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "actor_id": "usr_employee_01",
+        "principal_kind": "employee",
+        "device_id": "dev_macbook_01",
+        "profile_id": "prf_default_01",
+        "workload_id": null,
+        "purpose": "hud_context_interpretation",
+        "operation": "text.reason",
+        "route_id": "route_claude_35_sonnet_us",
+        "route_revision": "1",
+        "budget_reservation_id": "99999999-9999-4999-8999-999999999999",
+        "deletion_generation": "1",
+        "input_revision": "1",
+        "audience": "inference-admission",
+        "issued_at": "2026-11-10T15:00:00Z",
+        "not_after": "2026-11-10T15:05:00Z",
+        "request_id": "66666666-6666-4666-8666-666666666666",
+        "policy_revision": "100",
+        "access_revision": "200",
+        "input_binding": {
+          "kind": "batch",
+          "input_scope_sha256": "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+          "input_manifest_sha256": "1234567812345678123456781234567812345678123456781234567812345678"
+        },
+        "privacy_context_sha256": "1111222233334444555566667777888811112222333344445555666677778888"
+      },
+      "signature": "cGrzlPR6i9you1-pv2fNJBZxvL5wlsfBEhKtFbvyQkNpa-oJWG2zy5VR056FdTQroKxoQFZIrtUhaDRnWo2lCA"
+    },
+    {
+      "schema_id": "hud.guidance-access-lease.v1",
+      "key_id": "key_policy_2026_01",
+      "payload": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "actor_id": "usr_employee_01",
+        "device_id": "dev_macbook_01",
+        "profile_id": "prf_default_01",
+        "allowed_bundle_hashes": [
+          "780ea94e79bc83bd44ebe2bcc04f67b194c012161b797373668a89a9c67c4bec"
+        ],
+        "policy_revision": "100",
+        "access_revision": "200",
+        "issued_at": "2026-11-10T08:00:00Z",
+        "not_after": "2026-11-11T08:00:00Z",
+        "read_only": true
+      },
+      "signature": "3BFCNT2JcXiR25BWxaA4hgoJQNg1wQZy5cKiCE4LRDqlsJ_stJFpczJCGffK6wUtEStOrMykhDj95wmRIXeSDA"
+    },
+    {
+      "schema_id": "sync.trust-keyset.v1",
+      "key_id": "key_root_2026_01",
+      "payload": {
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "keyset_generation": "1",
+        "keys": [
+          {
+            "key_id": "key_policy_2026_01",
+            "purpose": "policy",
+            "status": "active",
+            "key_type": "ed25519",
+            "public_key": "faJ9g2sQILOGCNi3YBckuPtSW3Q2NPDyyX_PrSDIyYQ",
+            "valid_from": "2026-11-01T00:00:00Z",
+            "not_after": "2026-12-01T00:00:00Z"
+          },
+          {
+            "key_id": "key_receipt_transit_01",
+            "purpose": "receipt",
+            "status": "active",
+            "key_type": "ed25519",
+            "public_key": "7m5Vf0JcpAf8yx2TGlxwuOhY9mRgfB7AsqBqNWT6byw",
+            "valid_from": "2026-11-01T00:00:00Z",
+            "not_after": "2026-12-01T00:00:00Z"
+          },
+          {
+            "key_id": "key_publisher_prod_01",
+            "purpose": "publisher",
+            "status": "active",
+            "key_type": "ed25519",
+            "public_key": "NtrSq_66ciqEUfECJoyLAKKoPCg4JeEQSGilUAY3S3o",
+            "valid_from": "2026-11-01T00:00:00Z",
+            "not_after": "2026-12-01T00:00:00Z"
+          }
+        ],
+        "issued_at": "2026-11-10T00:00:00Z",
+        "not_after": "2026-11-11T00:00:00Z"
+      },
+      "signature": "g8i-LZfDSLhltVJcxv-M4H23V9T2_p_4NfvBuagPjvPKvVMs-Kh5GrSDGDwd6OTMH2ZIdYusOeGmjojdRNhODQ"
+    }
+  ],
+  "digest_vectors": [
+    {
+      "vector_id": "vec_action_digest_01",
+      "kind": "action",
+      "source_object": {
+        "action_id": "act_approve_invoice_001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_audit_01",
+          "case_id": "case_inv_99882",
+          "agent_version": "2026.11.08.1"
+        },
+        "application_profile_id": "prof_app_finance_invoicing_v1",
+        "application_profile_version": "1.0.0",
+        "document": {
+          "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+          "browser_instance_id": "ins_12345678-abcd-ef01-2345-6789abcdef01",
+          "window_id": 1045,
+          "tab_id": 490,
+          "frame_id": 0,
+          "document_id": "doc_88776655-4433-2211-0099-aabbccddeeff",
+          "document_generation": "2"
+        },
+        "surface_generation": "2",
+        "target_key": "target_approve_button",
+        "record_key": "rec_inv_99882",
+        "expected_state": {
+          "record_revision": "12",
+          "fields": [
+            {
+              "field_key": "status",
+              "value": "Pending Review"
+            },
+            {
+              "field_key": "invoice_total",
+              "value": "1450.00"
+            }
+          ]
+        },
+        "environment": "production",
+        "operation": "click",
+        "argument": null
+      },
+      "expected_digest": "sha256_15b72bca85a9ceff0f848dbe1519d51a6668d33200369cf06dd89145b66a60ed"
+    },
+    {
+      "vector_id": "vec_proposal_digest_01",
+      "kind": "proposal",
+      "source_object": {
+        "proposal_id": "11111111-1111-4111-8111-111111111111",
+        "proposal_revision": "1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_audit_01",
+          "case_id": "case_inv_99882",
+          "agent_version": "2026.11.08.1"
+        },
+        "action_id": "act_approve_invoice_001",
+        "action_sha256": "sha256_15b72bca85a9ceff0f848dbe1519d51a6668d33200369cf06dd89145b66a60ed",
+        "action_category": "financial_disbursement",
+        "application_id": "app_erp_finance_01",
+        "record_key": "rec_inv_99882",
+        "parameter_diffs": [
+          {
+            "path": "status",
+            "before": "Pending Review",
+            "after": "Approved"
+          },
+          {
+            "path": "approved_amount",
+            "before": null,
+            "after": "1450.00"
+          }
+        ],
+        "evidence_refs": [
+          "ev_match_receipt_99882"
+        ],
+        "rule_checks": [
+          {
+            "rule_version": "rule_po_match_v2",
+            "result": "pass",
+            "evidence_ref": "ev_match_receipt_99882"
+          }
+        ],
+        "authority_checks": [
+          {
+            "kind": "risk",
+            "result": "pass",
+            "source_ref": null
+          },
+          {
+            "kind": "human_approval",
+            "result": "pending",
+            "source_ref": null
+          }
+        ],
+        "consequence_summary": "Disbursement of $1,450.00 to vendor Acme Supplies against PO-99882.",
+        "reversible": false,
+        "risk_tier": 3,
+        "policy_revision": "100",
+        "access_revision": "200",
+        "issued_at": "2026-11-10T15:00:00Z",
+        "not_after": "2026-11-11T15:00:00Z"
+      },
+      "expected_digest": "sha256-f2b4c20444c756a1ea2cebf68d5e6bd4b1d44db8d252c849012cf0116c64213f"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "case_01_out_of_tenant_lookup",
+      "description": "Cross-tenant resource query blocked by mandatory RLS and authorization snapshot validation.",
+      "input": {
+        "organization_id": "00000000-0000-4000-8000-000000000002",
+        "requested_action_id": "act_approve_invoice_001",
+        "target_record_organization_id": "00000000-0000-4000-8000-000000000001"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_ACCESS_DENIED",
+      "expected_state": "denied",
+      "expected_effects": [
+        "cross_tenant_access_blocked",
+        "security_audit_emitted"
+      ],
+      "criterion_refs": [
+        "ORY-028",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_02_union_minus_deny",
+      "description": "Actor with matching role grant denied when explicit capability restriction is in effect.",
+      "input": {
+        "actor_id": "usr_employee_01",
+        "granted_role": "workflow_owner",
+        "restriction": {
+          "capability": "release.approve",
+          "reason": "Restricted pending security review"
+        }
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_ACCESS_DENIED",
+      "expected_state": "denied",
+      "expected_effects": [
+        "explicit_deny_overrides_grant",
+        "release_approval_blocked"
+      ],
+      "criterion_refs": [
+        "ORY-001",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_03_no_job_start_as_approval",
+      "description": "Job initiator cannot approve staged consequential action without explicit delegation.",
+      "input": {
+        "initiator_actor_id": "usr_operator_01",
+        "approver_actor_id": "usr_operator_01",
+        "has_delegation": false,
+        "action_risk_tier": 3
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_SEPARATION_REQUIRED",
+      "expected_state": "awaiting_approval",
+      "expected_effects": [
+        "initiator_self_approval_blocked",
+        "delegation_required"
+      ],
+      "criterion_refs": [
+        "ORY-048",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_04_initial_delegation_authorized_remits",
+      "description": "Security Admin plus Workflow Owner establish initial delegation within approved policy ceiling without circular delegation dependency.",
+      "input": {
+        "establishing_actors": [
+          "usr_sec_admin_01",
+          "usr_workflow_owner_01"
+        ],
+        "delegation_amount": "500000",
+        "currency": "USD",
+        "policy_ceiling_amount": "1000000"
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "delegation_active",
+      "expected_effects": [
+        "approval_delegation_recorded",
+        "no_circular_prerequisite_needed"
+      ],
+      "criterion_refs": [
+        "ORY-001",
+        "ORY-048"
+      ]
+    },
+    {
+      "case_id": "case_05_delegated_initiator_approval",
+      "description": "Job initiator with explicit active delegation may approve own staged action.",
+      "input": {
+        "initiator_actor_id": "usr_operator_01",
+        "approver_actor_id": "usr_operator_01",
+        "has_delegation": true,
+        "delegation_ceiling": "200000",
+        "action_amount": "145000",
+        "currency": "USD"
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "approved",
+      "expected_effects": [
+        "delegated_self_approval_accepted",
+        "receipt_issued"
+      ],
+      "criterion_refs": [
+        "ORY-048",
+        "ORY-026"
+      ]
+    },
+    {
+      "case_id": "case_06_stricter_distinct_reviewer_denial",
+      "description": "Organization policy requiring distinct human blocks delegated self-approval.",
+      "input": {
+        "initiator_actor_id": "usr_operator_01",
+        "approver_actor_id": "usr_operator_01",
+        "has_delegation": true,
+        "policy_distinct_initiator_required": true
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_SEPARATION_REQUIRED",
+      "expected_state": "awaiting_approval",
+      "expected_effects": [
+        "distinct_reviewer_enforced"
+      ],
+      "criterion_refs": [
+        "ORY-048",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_07_missing_amount_currency",
+      "description": "Monetary action proposal missing explicit amount or currency rejected during preflight facts.",
+      "input": {
+        "action_id": "act_payment_01",
+        "amount_minor_units": null,
+        "currency": "USD",
+        "action_category": "payment_transfer"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_SCHEMA_INVALID",
+      "expected_state": "denied",
+      "expected_effects": [
+        "monetary_action_facts_incomplete",
+        "authorization_rejected"
+      ],
+      "criterion_refs": [
+        "ORY-026",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_08_tier4_despite_human_approval",
+      "description": "Tier 4 prohibited action (e.g. wire funds transfer) unconditionally denied despite human approval receipt.",
+      "input": {
+        "action_id": "act_wire_transfer_01",
+        "risk_tier": 4,
+        "approval_receipt": "signed_approval_dummy"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_TIER4_PROHIBITED",
+      "expected_state": "prohibited",
+      "expected_effects": [
+        "automated_execution_blocked",
+        "tier4_guard_unconditional"
+      ],
+      "criterion_refs": [
+        "ORY-027",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_09_tier3_exact_customer_message_send",
+      "description": "Tier 3 consequential action without valid approval returns RequireHumanApproval and signed proposal.",
+      "input": {
+        "action_id": "act_send_external_message_01",
+        "risk_tier": 3,
+        "approval_id": null
+      },
+      "expected_decision": "RequireHumanApproval",
+      "expected_reason_code": "IDENTITY_APPROVAL_REQUIRED",
+      "expected_state": "pending_approval",
+      "expected_effects": [
+        "signed_proposal_returned",
+        "execution_paused"
+      ],
+      "criterion_refs": [
+        "ORY-026",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_10_action_digest_mutation_rejected",
+      "description": "Tampered action argument produces changed action digest and fails preflight match.",
+      "input": {
+        "stored_digest": "sha256_15b72bca85a9ceff0f848dbe1519d51a6668d33200369cf06dd89145b66a60ed",
+        "tampered_action_body": {
+          "action_id": "act_approve_invoice_001",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_invoice_audit_01",
+            "case_id": "case_inv_99882",
+            "agent_version": "2026.11.08.1"
+          },
+          "application_profile_id": "prof_app_finance_invoicing_v1",
+          "application_profile_version": "1.0.0",
+          "document": {
+            "profile_id": "prf_550e8400-e29b-41d4-a716-446655440000",
+            "browser_instance_id": "ins_12345678-abcd-ef01-2345-6789abcdef01",
+            "window_id": 1045,
+            "tab_id": 490,
+            "frame_id": 0,
+            "document_id": "doc_88776655-4433-2211-0099-aabbccddeeff",
+            "document_generation": "2"
+          },
+          "surface_generation": "2",
+          "target_key": "target_approve_button",
+          "record_key": "rec_inv_99882",
+          "expected_state": {
+            "record_revision": "12",
+            "fields": [
+              {
+                "field_key": "status",
+                "value": "Pending Review"
+              },
+              {
+                "field_key": "invoice_total",
+                "value": "1450.00"
+              }
+            ]
+          },
+          "environment": "production",
+          "operation": "click",
+          "argument": "extra_argument"
+        }
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_CONTEXT_STALE",
+      "expected_state": "invalidated",
+      "expected_effects": [
+        "action_digest_mismatch",
+        "dispatch_blocked"
+      ],
+      "criterion_refs": [
+        "ORY-026",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_11_proposal_digest_mutation_rejected",
+      "description": "Tampered parameter diff in proposal changes proposal digest and invalidates human decision.",
+      "input": {
+        "stored_digest": "sha256-f2b4c20444c756a1ea2cebf68d5e6bd4b1d44db8d252c849012cf0116c64213f",
+        "tampered_proposal": {
+          "proposal_id": "11111111-1111-4111-8111-111111111111",
+          "proposal_revision": "1",
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "job_invoice_audit_01",
+            "case_id": "case_inv_99882",
+            "agent_version": "2026.11.08.1"
+          },
+          "action_id": "act_approve_invoice_001",
+          "action_sha256": "sha256_15b72bca85a9ceff0f848dbe1519d51a6668d33200369cf06dd89145b66a60ed",
+          "action_category": "financial_disbursement",
+          "application_id": "app_erp_finance_01",
+          "record_key": "rec_inv_99882",
+          "parameter_diffs": [
+            {
+              "path": "status",
+              "before": "Pending Review",
+              "after": "Approved"
+            },
+            {
+              "path": "approved_amount",
+              "before": null,
+              "after": "1450.00"
+            }
+          ],
+          "evidence_refs": [
+            "ev_match_receipt_99882"
+          ],
+          "rule_checks": [
+            {
+              "rule_version": "rule_po_match_v2",
+              "result": "pass",
+              "evidence_ref": "ev_match_receipt_99882"
+            }
+          ],
+          "authority_checks": [
+            {
+              "kind": "risk",
+              "result": "pass",
+              "source_ref": null
+            },
+            {
+              "kind": "human_approval",
+              "result": "pending",
+              "source_ref": null
+            }
+          ],
+          "consequence_summary": "Tampered summary.",
+          "reversible": false,
+          "risk_tier": 3,
+          "policy_revision": "100",
+          "access_revision": "200",
+          "issued_at": "2026-11-10T15:00:00Z",
+          "not_after": "2026-11-11T15:00:00Z"
+        }
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_CONTEXT_STALE",
+      "expected_state": "invalidated",
+      "expected_effects": [
+        "proposal_digest_mismatch",
+        "approval_rejected"
+      ],
+      "criterion_refs": [
+        "ORY-026",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_12_signature_tampering_rejected",
+      "description": "Corrupted signature bytes fail Ed25519 verification.",
+      "input": {
+        "signed_envelope": {
+          "schema_id": "identity.action-authorization.v1",
+          "key_id": "key_policy_2026_01",
+          "payload": {
+            "authorization_id": "22222222-2222-4222-8222-222222222222",
+            "organization_id": "00000000-0000-4000-8000-000000000001",
+            "actor_id": "usr_employee_01",
+            "worker_id": "wrk_runner_finance_01",
+            "device_id": "dev_macbook_01",
+            "profile_id": "prf_default_01",
+            "audience": "execution",
+            "execution_context": {
+              "kind": "job",
+              "job_id": "job_invoice_audit_01",
+              "case_id": "case_inv_99882",
+              "agent_version": "2026.11.08.1"
+            },
+            "action_id": "act_approve_invoice_001",
+            "action_sha256": "sha256_15b72bca85a9ceff0f848dbe1519d51a6668d33200369cf06dd89145b66a60ed",
+            "environment": "production",
+            "risk_tier": 3,
+            "policy_revision": "100",
+            "access_revision": "200",
+            "revocation_generation": "1",
+            "approval_id": "33333333-3333-4333-8333-333333333333",
+            "nonce": "N0nc3S3cr3tV4lu3B4s364Ur132Byt3s00000000000",
+            "issued_at": "2026-11-10T15:05:00Z",
+            "not_after": "2026-11-10T15:05:30Z"
+          },
+          "signature": "A5mgxLgGBOsMr0f0eJlcda6UXTOA-1_Z5MjgKFvcPaIyzMFt_eZd-iZVkZl32T6TaGhjOEN49fSbEs6F5pzNDQ"
+        }
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_ACCESS_DENIED",
+      "expected_state": "denied",
+      "expected_effects": [
+        "cryptographic_verification_failed"
+      ],
+      "criterion_refs": [
+        "ORY-026",
+        "ORY-070",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_13_stale_record_document_generation",
+      "description": "Live target document generation drift between approval and dispatch invalidates authorization.",
+      "input": {
+        "approved_document_generation": "2",
+        "live_document_generation": "3"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_CONTEXT_STALE",
+      "expected_state": "invalidated",
+      "expected_effects": [
+        "stale_generation_fenced",
+        "revised_proposal_required"
+      ],
+      "criterion_refs": [
+        "ORY-026",
+        "ORY-041",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_14_expired_mfa_request_approval_token",
+      "description": "MFA completed >5 minutes ago blocks Tier 3 approval decision with step-up required.",
+      "input": {
+        "mfa_completed_at": "2026-11-10T14:50:00Z",
+        "now": "2026-11-10T15:00:00Z"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_STEP_UP_REQUIRED",
+      "expected_state": "step_up_required",
+      "expected_effects": [
+        "broker_step_up_challenge_issued"
+      ],
+      "criterion_refs": [
+        "ORY-001",
+        "ORY-026"
+      ]
+    },
+    {
+      "case_id": "case_15_two_authorizations_racing_one_fence",
+      "description": "Two authorizations racing for the same logical action fence admit exactly one dispatch.",
+      "input": {
+        "fence_key": "00000000-0000-4000-8000-000000000001:hash:act_approve_invoice_001",
+        "attempt_1": "attempt_01",
+        "attempt_2": "attempt_02"
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "admitted",
+      "expected_effects": [
+        "winner_admitted",
+        "loser_denied_already_consumed"
+      ],
+      "criterion_refs": [
+        "ORY-026",
+        "ORY-045"
+      ]
+    },
+    {
+      "case_id": "case_16_revocation_before_consume_vs_consume_before_revocation",
+      "description": "Revocation committed before consume blocks dispatch; revocation after consume cannot recall external dispatch.",
+      "input": {
+        "scenario": "revocation_order_comparison"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_ACCESS_DENIED",
+      "expected_state": "revoked",
+      "expected_effects": [
+        "pre_consume_revocation_wins",
+        "post_consume_revocation_reports_in_flight"
+      ],
+      "criterion_refs": [
+        "ORY-001",
+        "ORY-068",
+        "Contract-11"
+      ]
+    },
+    {
+      "case_id": "case_17_lost_consume_reply_no_resend",
+      "description": "Lost consume response does not re-issue dispatch; status lookup reconciles existing attempt.",
+      "input": {
+        "authorization_id": "22222222-2222-4222-8222-222222222222",
+        "existing_attempt_id": "44444444-4444-4444-8444-444444444444"
+      },
+      "expected_decision": null,
+      "expected_reason_code": "IDENTITY_ACTION_CONSUMED",
+      "expected_state": "consumed",
+      "expected_effects": [
+        "status_returned_without_new_admission",
+        "no_duplicate_dispatch"
+      ],
+      "criterion_refs": [
+        "ORY-045",
+        "ORY-046"
+      ]
+    },
+    {
+      "case_id": "case_18_request_changes_requires_fresh_review",
+      "description": "Reviewer request_changes closes proposal; revised proposal requires new revision and digest.",
+      "input": {
+        "decision": "request_changes",
+        "reason": "Please adjust discount percentage."
+      },
+      "expected_decision": null,
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "changes_requested",
+      "expected_effects": [
+        "proposal_closed",
+        "new_revision_required"
+      ],
+      "criterion_refs": [
+        "ORY-026"
+      ]
+    },
+    {
+      "case_id": "case_19_homogeneous_bulk_approval_atomicity_and_dispatch",
+      "description": "Bulk review commits all homogeneous decisions atomically; dispatches remain independent.",
+      "input": {
+        "bulk_class": "wf_invoice:app_erp:approve:3:USD",
+        "item_count": 5
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "applied",
+      "expected_effects": [
+        "all_approvals_committed_atomically",
+        "per_item_independent_dispatch"
+      ],
+      "criterion_refs": [
+        "ORY-026"
+      ]
+    },
+    {
+      "case_id": "case_20_non_action_governance_release_rule_approval",
+      "description": "Governance proposal approved without fabricating execution context or action tokens.",
+      "input": {
+        "proposal_id": "55555555-5555-4555-8555-555555555555",
+        "remit": "workflow_owner",
+        "decision": "approve"
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "consumed",
+      "expected_effects": [
+        "domain_release_unlocked",
+        "no_action_token_issued"
+      ],
+      "criterion_refs": [
+        "ORY-029",
+        "ORY-030"
+      ]
+    },
+    {
+      "case_id": "case_21_scope_key_purpose_signature_mismatch",
+      "description": "Using publisher key to sign action authorization rejected for key purpose mismatch.",
+      "input": {
+        "key_purpose": "publisher",
+        "required_purpose": "policy"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_ACCESS_DENIED",
+      "expected_state": "denied",
+      "expected_effects": [
+        "key_purpose_mismatch_rejected"
+      ],
+      "criterion_refs": [
+        "ORY-028",
+        "ORY-070"
+      ]
+    },
+    {
+      "case_id": "case_22_replayed_key_enrollment_and_step_up",
+      "description": "Replaying single-use challenge nonce rejected with conflict.",
+      "input": {
+        "challenge_nonce": "N0nc3S3cr3tV4lu3B4s364Ur132Byt3s00000000000",
+        "replayed": true
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_IDEMPOTENCY_CONFLICT",
+      "expected_state": "rejected",
+      "expected_effects": [
+        "nonce_single_use_enforced"
+      ],
+      "criterion_refs": [
+        "ORY-001",
+        "ORY-070"
+      ]
+    },
+    {
+      "case_id": "case_23_ordinary_key_rotation_vs_compromise",
+      "description": "Rotated key in verify_only verifies historical records; compromised key rejected immediately.",
+      "input": {
+        "key_status": "verify_only",
+        "operation": "verify_historical"
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "verified",
+      "expected_effects": [
+        "historical_verification_succeeds",
+        "new_issuance_forbidden"
+      ],
+      "criterion_refs": [
+        "ORY-068",
+        "ORY-070"
+      ]
+    },
+    {
+      "case_id": "case_24_root_revision_clock_rollback",
+      "description": "Attempt to rollback keyset generation or trust root fails closed.",
+      "input": {
+        "current_generation": "5",
+        "received_generation": "4"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_TRUST_ROLLBACK",
+      "expected_state": "blocked",
+      "expected_effects": [
+        "high_water_mark_enforced",
+        "trust_rollback_prevented"
+      ],
+      "criterion_refs": [
+        "ORY-068",
+        "ORY-070"
+      ]
+    },
+    {
+      "case_id": "case_25_independent_journal_restore_and_gap_block",
+      "description": "PostgreSQL restored from backup with unverified journal gap blocks recovery with IDENTITY_RECOVERY_INCOMPLETE.",
+      "input": {
+        "journal_gap_detected": true
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_RECOVERY_INCOMPLETE",
+      "expected_state": "restricted",
+      "expected_effects": [
+        "privileged_traffic_blocked",
+        "recovery_incomplete_reported"
+      ],
+      "criterion_refs": [
+        "ORY-047",
+        "ORY-070"
+      ]
+    },
+    {
+      "case_id": "case_26_offline_expiry_without_automatic_resume",
+      "description": "Capture lease expired after 24 hours offline blocks observation until policy refresh.",
+      "input": {
+        "lease_not_after": "2026-11-10T08:00:00Z",
+        "now": "2026-11-10T08:00:01Z"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_POLICY_STALE",
+      "expected_state": "capture_stopped",
+      "expected_effects": [
+        "endpoint_observation_halted",
+        "reconnect_required"
+      ],
+      "criterion_refs": [
+        "ORY-003",
+        "ORY-068"
+      ]
+    },
+    {
+      "case_id": "case_27_capture_only_revocation_preserving_guidance",
+      "description": "Capture consent withdrawal does not revoke cached read-only guidance access lease.",
+      "input": {
+        "capture_consent_withdrawn": true,
+        "guidance_lease_valid": true
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "guidance_active",
+      "expected_effects": [
+        "capture_halted",
+        "guidance_playbooks_readable"
+      ],
+      "criterion_refs": [
+        "ORY-002",
+        "ORY-004"
+      ]
+    },
+    {
+      "case_id": "case_28_missing_hold_verdict",
+      "description": "Missing retention verdict blocks voluntary local data purge or client uninstallation.",
+      "input": {
+        "retention_verdict_present": false
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_POLICY_STALE",
+      "expected_state": "deletion_blocked",
+      "expected_effects": [
+        "voluntary_destruction_blocked",
+        "complete_coverage_required"
+      ],
+      "criterion_refs": [
+        "ORY-007",
+        "ORY-067"
+      ]
+    },
+    {
+      "case_id": "case_29_hold_unable_to_extend_raw_retention",
+      "description": "Legal hold cannot extend raw observation storage beyond statutory maximum 14 days.",
+      "input": {
+        "raw_observation_age_days": 15,
+        "active_hold": true
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_ACCESS_DENIED",
+      "expected_state": "expired_purged",
+      "expected_effects": [
+        "raw_evidence_purged_at_deadline",
+        "hold_cannot_extend_raw_bounds"
+      ],
+      "criterion_refs": [
+        "ORY-005",
+        "ORY-007"
+      ]
+    },
+    {
+      "case_id": "case_30_auth0_outage_without_fresh_assurance",
+      "description": "Auth0 outage allows current valid Oryn session but denies operations requiring fresh MFA.",
+      "input": {
+        "auth0_available": false,
+        "oryn_session_valid": true,
+        "operation_requires_fresh_mfa": true
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_STEP_UP_REQUIRED",
+      "expected_state": "step_up_unavailable",
+      "expected_effects": [
+        "fresh_mfa_blocked_by_broker_outage",
+        "session_not_extended"
+      ],
+      "criterion_refs": [
+        "ORY-001"
+      ]
+    },
+    {
+      "case_id": "case_31_narrow_emergency_recovery",
+      "description": "Registered emergency account repairs federation connection and appoints Organization Admin without business authority.",
+      "input": {
+        "actor_id": "usr_emergency_recovery_01",
+        "operation": "recover_identity",
+        "recovery_kind": "replace_last_admin"
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "admin_restored",
+      "expected_effects": [
+        "organization_admin_replaced",
+        "no_business_execution_privileges_granted"
+      ],
+      "criterion_refs": [
+        "ORY-001"
+      ]
+    },
+    {
+      "case_id": "case_32_inference_deletion_generation_and_workload_admission",
+      "description": "Inference request with stale deletion generation rejected; workload principal admitted without fake employee session.",
+      "input": {
+        "deletion_generation_current": "2",
+        "deletion_generation_presented": "1"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_POLICY_STALE",
+      "expected_state": "inference_denied",
+      "expected_effects": [
+        "stale_deletion_generation_blocked"
+      ],
+      "criterion_refs": [
+        "ORY-008",
+        "ORY-071",
+        "ORY-072"
+      ]
+    },
+    {
+      "case_id": "case_33_uncertified_route_budget_rejection",
+      "description": "Inference request targeting uncertified route or exceeding monthly budget rejected.",
+      "input": {
+        "route_id": "route_unapproved_model",
+        "certified": false
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_ACCESS_DENIED",
+      "expected_state": "route_rejected",
+      "expected_effects": [
+        "uncertified_route_blocked"
+      ],
+      "criterion_refs": [
+        "ORY-073",
+        "ORY-074"
+      ]
+    },
+    {
+      "case_id": "case_34_organization_deactivation_honest_outcome",
+      "description": "Deactivated organization halts all future execution; already-admitted external action reports honest in-flight status.",
+      "input": {
+        "organization_status": "deactivated",
+        "admitted_action_id": "act_approve_invoice_001"
+      },
+      "expected_decision": "Deny",
+      "expected_reason_code": "IDENTITY_ORGANIZATION_INACTIVE",
+      "expected_state": "deactivated",
+      "expected_effects": [
+        "future_jobs_actions_blocked",
+        "in_flight_action_reconciled_not_falsely_recalled"
+      ],
+      "criterion_refs": [
+        "ORY-069",
+        "ORY-046"
+      ]
+    },
+    {
+      "case_id": "case_35_payload_key_custody_changed_journal_fence",
+      "description": "Payload key custody change writes typed journal after-images for infrastructure_payload_key_fence and infrastructure_payload_custody_generation; two-phase destruction fences prevent resurrection.",
+      "input": {
+        "kind": "payload_key_custody_changed",
+        "table_name": "infrastructure_payload_key_fence",
+        "fence_state": "destroy_pending"
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "destroy_pending",
+      "expected_effects": [
+        "custody_fenced_reads_denied",
+        "destruction_barrier_committed"
+      ],
+      "criterion_refs": [
+        "ORY-069",
+        "ORY-070"
+      ]
+    },
+    {
+      "case_id": "case_36_signed_artifact_policy_version_invariants",
+      "description": "SignedArtifactPolicy enforces policy_version U64 binding; rejects deprecated policy_revision.",
+      "input": {
+        "policy_version": "5",
+        "policy_revision_attempted": false
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "active",
+      "expected_effects": [
+        "canonical_policy_version_bound",
+        "duplicate_definition_rejected"
+      ],
+      "criterion_refs": [
+        "ORY-008",
+        "ORY-068"
+      ]
+    },
+    {
+      "case_id": "case_37_authority_after_image_projection_omits_sensitive_proposals",
+      "description": "Authority journal after-image projection for identity_approval_proposal omits sensitive proposal_json and action token nonces from central WORM archives.",
+      "input": {
+        "table_name": "identity_approval_proposal",
+        "projected_columns": ["proposal_id", "organization_id", "execution_context", "action_sha256", "proposal_digest"],
+        "omitted_columns": ["proposal_json", "token_nonce"]
+      },
+      "expected_decision": "Allow",
+      "expected_reason_code": "IDENTITY_OK",
+      "expected_state": "projected",
+      "expected_effects": [
+        "sensitive_proposal_json_excluded_from_worm",
+        "token_nonce_excluded_from_worm",
+        "restoration_uses_overlay_blocked_state"
+      ],
+      "criterion_refs": [
+        "ORY-006",
+        "ORY-070"
+      ]
+    }
+  ]
+}

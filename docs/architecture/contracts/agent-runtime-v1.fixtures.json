@@ -1,0 +1,1149 @@
+{
+  "schema_id": "runtime.fixture-set.v1",
+  "validation_cases": [
+    {
+      "case_id": "val_assignment_valid_cloud",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeAssignmentV1",
+      "instance": {
+        "schema_id": "runtime.assignment.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "assignment_id": "22222222-2222-4222-8222-222222222222",
+        "assignment_epoch": "1",
+        "worker_id": "wrk_cloud_runner_01",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "environment": "production",
+        "agent_version_id": "33333333-3333-4333-8333-333333333333",
+        "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "host": {
+          "kind": "cloud",
+          "device_id": null,
+          "profile_id": null
+        },
+        "checkpoint_revision": "0",
+        "control_generation": "1",
+        "limits": {
+          "max_node_executions": 1000,
+          "max_active_ms": 900000,
+          "max_checkpoint_bytes": 262144,
+          "max_value_bytes": 262144,
+          "max_program_bytes": 8388608
+        },
+        "issued_at": "2026-11-15T16:00:00Z",
+        "lease_not_after": "2026-11-15T16:00:30Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_checkpoint_valid",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/ExecutionCheckpointV1",
+      "instance": {
+        "schema_id": "runtime.checkpoint.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "agent_version_id": "33333333-3333-4333-8333-333333333333",
+        "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": "1",
+        "control_generation": "1",
+        "region_id": "root_region",
+        "node_id": "node_read_input",
+        "phase": "ready",
+        "loop_frames": [],
+        "binding_refs": [
+          {
+            "value_execution_id": "11111111-1111-4111-8111-111111111111",
+            "binding_id": "bnd_input_doc",
+            "slot": {
+              "kind": "input",
+              "name": "invoice_doc"
+            },
+            "type_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "value_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "evidence": {
+              "origin": "approved_literal",
+              "source_refs": [],
+              "parent_binding_ids": [],
+              "verification": "verified",
+              "observed_at": "2026-11-15T16:00:00Z",
+              "valid_until": "2026-11-16T16:00:00Z"
+            },
+            "value_revision": "1",
+            "expires_at": "2026-11-16T16:00:00Z"
+          }
+        ],
+        "pending_effect": null,
+        "node_executions": "1",
+        "active_elapsed_ms": "120",
+        "wait": null,
+        "last_progress_at": "2026-11-15T16:00:01Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_progress_valid",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeProgressV1",
+      "instance": {
+        "schema_id": "runtime.progress.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "assignment_id": "22222222-2222-4222-8222-222222222222",
+        "checkpoint_revision": "1",
+        "control_generation": "1",
+        "node_id": "node_read_input",
+        "iteration_path": [],
+        "disposition": "continue",
+        "reason_code": "node_completed",
+        "action_ids": [],
+        "verification_refs": [],
+        "reporting_event": null,
+        "timestamp_utc": "2026-11-15T16:00:02Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_question_valid",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHumanQuestionV1",
+      "instance": {
+        "schema_id": "runtime.human-question.v1",
+        "question_id": "qst_clarify_po_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "agent_version_id": "33333333-3333-4333-8333-333333333333",
+        "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "node_id": "node_human_clarify",
+        "iteration_path": [],
+        "checkpoint_revision": "2",
+        "question_template": "Please provide the correct PO number for vendor ACME.",
+        "response_type": {
+          "kind": "string",
+          "max_length": 64
+        },
+        "responder_role": "agent_operator",
+        "issued_at": "2026-11-15T16:00:05Z",
+        "not_after": "2026-11-16T16:00:05Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_response_valid",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHumanResponseV1",
+      "instance": {
+        "schema_id": "runtime.human-response.v1",
+        "command_id": "44444444-4444-4444-8444-444444444444",
+        "question_id": "qst_clarify_po_01",
+        "expected_checkpoint_revision": "2",
+        "decision": "answer",
+        "value": "PO-998822"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_adapter_value_valid",
+      "schema_ref": "urn:oryn:schemas:application-adapters:v1#/$defs/AdapterOperationValueV1",
+      "instance": {
+        "schema_id": "adapter.operation-value.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "action_id": "act_read_vendor",
+        "receipt_id": "rcp_vendor_01",
+        "output_type": {
+          "kind": "string",
+          "max_length": 128
+        },
+        "value": "ACME Supplies Inc",
+        "value_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "evidence": {
+          "origin": "system_evidence",
+          "source_refs": [],
+          "parent_binding_ids": [],
+          "verification": "verified",
+          "observed_at": "2026-11-15T16:00:03Z",
+          "valid_until": "2026-11-16T16:00:03Z"
+        },
+        "expires_at": "2026-11-16T16:00:03Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_verification_request_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunRequestV1",
+      "instance": {
+        "schema_id": "verification.run-request.v1",
+        "request_id": "55555555-5555-4555-8555-555555555555",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "evaluation_target": {
+          "kind": "agent",
+          "agent_version": "33333333-3333-4333-8333-333333333333"
+        },
+        "scenario_expectation_ref": null,
+        "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "requirement_ids": [
+          "req_post_invoice_reconciled"
+        ],
+        "action_ids": [
+          "act_post_invoice_01"
+        ],
+        "checkpoint_revision": "3",
+        "environment": "production"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "val_verification_result_valid",
+      "schema_ref": "urn:oryn:schemas:outcome-verification:v1#/$defs/VerificationRunResultV1",
+      "instance": {
+        "schema_id": "verification.run-result.v1",
+        "request_id": "55555555-5555-4555-8555-555555555555",
+        "verification_id": "ver_run_01",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "requirement_results": [
+          {
+            "requirement_id": "req_post_invoice_reconciled",
+            "verdict": "verified",
+            "evidence_refs": [
+              "ev_journal_match_01"
+            ],
+            "limitations": []
+          }
+        ],
+        "verdict": "verified",
+        "evidence_refs": [
+          "ev_journal_match_01"
+        ],
+        "verified_at": "2026-11-15T16:00:10Z"
+      },
+      "expected_valid": true
+    },
+    {
+      "case_id": "neg_assignment_missing_limits",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeAssignmentV1",
+      "instance": {
+        "schema_id": "runtime.assignment.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "assignment_id": "22222222-2222-4222-8222-222222222222",
+        "assignment_epoch": "1",
+        "worker_id": "wrk_cloud_runner_01",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "environment": "production",
+        "agent_version_id": "33333333-3333-4333-8333-333333333333",
+        "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "host": {
+          "kind": "cloud",
+          "device_id": null,
+          "profile_id": null
+        },
+        "checkpoint_revision": "0",
+        "control_generation": "1",
+        "issued_at": "2026-11-15T16:00:00Z",
+        "lease_not_after": "2026-11-15T16:00:30Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "neg_assignment_extra_field",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeAssignmentV1",
+      "instance": {
+        "schema_id": "runtime.assignment.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "assignment_id": "22222222-2222-4222-8222-222222222222",
+        "assignment_epoch": "1",
+        "worker_id": "wrk_cloud_runner_01",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "environment": "production",
+        "agent_version_id": "33333333-3333-4333-8333-333333333333",
+        "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "host": {
+          "kind": "cloud",
+          "device_id": null,
+          "profile_id": null
+        },
+        "checkpoint_revision": "0",
+        "control_generation": "1",
+        "limits": {
+          "max_node_executions": 1000,
+          "max_active_ms": 900000,
+          "max_checkpoint_bytes": 262144,
+          "max_value_bytes": 262144,
+          "max_program_bytes": 8388608
+        },
+        "issued_at": "2026-11-15T16:00:00Z",
+        "lease_not_after": "2026-11-15T16:00:30Z",
+        "unauthorized_extra_flag": true
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "neg_assignment_assist_context",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeAssignmentV1",
+      "instance": {
+        "schema_id": "runtime.assignment.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "assignment_id": "22222222-2222-4222-8222-222222222222",
+        "assignment_epoch": "1",
+        "worker_id": "wrk_cloud_runner_01",
+        "execution_context": {
+          "kind": "assist",
+          "assist_session_id": "ast_session_123"
+        },
+        "environment": "production",
+        "agent_version_id": "33333333-3333-4333-8333-333333333333",
+        "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "host": {
+          "kind": "cloud",
+          "device_id": null,
+          "profile_id": null
+        },
+        "checkpoint_revision": "0",
+        "control_generation": "1",
+        "limits": {
+          "max_node_executions": 1000,
+          "max_active_ms": 900000,
+          "max_checkpoint_bytes": 262144,
+          "max_value_bytes": 262144,
+          "max_program_bytes": 8388608
+        },
+        "issued_at": "2026-11-15T16:00:00Z",
+        "lease_not_after": "2026-11-15T16:00:30Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "neg_assignment_invalid_host_pairing",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeAssignmentV1",
+      "instance": {
+        "schema_id": "runtime.assignment.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "assignment_id": "22222222-2222-4222-8222-222222222222",
+        "assignment_epoch": "1",
+        "worker_id": "wrk_cloud_runner_01",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "environment": "production",
+        "agent_version_id": "33333333-3333-4333-8333-333333333333",
+        "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "host": {
+          "kind": "cloud",
+          "device_id": "dev_laptop_01",
+          "profile_id": null
+        },
+        "checkpoint_revision": "0",
+        "control_generation": "1",
+        "limits": {
+          "max_node_executions": 1000,
+          "max_active_ms": 900000,
+          "max_checkpoint_bytes": 262144,
+          "max_value_bytes": 262144,
+          "max_program_bytes": 8388608
+        },
+        "issued_at": "2026-11-15T16:00:00Z",
+        "lease_not_after": "2026-11-15T16:00:30Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "neg_checkpoint_u64_invalid",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/ExecutionCheckpointV1",
+      "instance": {
+        "schema_id": "runtime.checkpoint.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "agent_version_id": "33333333-3333-4333-8333-333333333333",
+        "behavior_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": "not_a_valid_u64",
+        "control_generation": "1",
+        "region_id": "root_region",
+        "node_id": "node_read_input",
+        "phase": "ready",
+        "loop_frames": [],
+        "binding_refs": [],
+        "pending_effect": null,
+        "node_executions": "1",
+        "active_elapsed_ms": "120",
+        "wait": null,
+        "last_progress_at": "2026-11-15T16:00:01Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "neg_human_response_numeric_value",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHumanResponseV1",
+      "instance": {
+        "schema_id": "runtime.human-response.v1",
+        "command_id": "44444444-4444-4444-8444-444444444444",
+        "question_id": "qst_amount_01",
+        "expected_checkpoint_revision": "2",
+        "decision": "answer",
+        "value": 1500.5
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "neg_progress_overdepth_loop_path",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeProgressV1",
+      "instance": {
+        "schema_id": "runtime.progress.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "assignment_id": "22222222-2222-4222-8222-222222222222",
+        "checkpoint_revision": "1",
+        "control_generation": "1",
+        "node_id": "node_inner_action",
+        "iteration_path": [
+          {
+            "foreach_node_id": "loop_outer",
+            "index": 0
+          },
+          {
+            "foreach_node_id": "loop_mid",
+            "index": 1
+          },
+          {
+            "foreach_node_id": "loop_inner",
+            "index": 2
+          }
+        ],
+        "disposition": "continue",
+        "reason_code": "node_completed",
+        "action_ids": [],
+        "verification_refs": [],
+        "reporting_event": null,
+        "timestamp_utc": "2026-11-15T16:00:02Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "neg_assignment_malformed_sha256",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeAssignmentV1",
+      "instance": {
+        "schema_id": "runtime.assignment.v1",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "execution_id": "11111111-1111-4111-8111-111111111111",
+        "assignment_id": "22222222-2222-4222-8222-222222222222",
+        "assignment_epoch": "1",
+        "worker_id": "wrk_cloud_runner_01",
+        "execution_context": {
+          "kind": "job",
+          "job_id": "job_invoice_01",
+          "case_id": "case_inv_101",
+          "agent_version": "2026.11.15.1"
+        },
+        "environment": "production",
+        "agent_version_id": "33333333-3333-4333-8333-333333333333",
+        "behavior_sha256": "short_digest",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "host": {
+          "kind": "cloud",
+          "device_id": null,
+          "profile_id": null
+        },
+        "checkpoint_revision": "0",
+        "control_generation": "1",
+        "limits": {
+          "max_node_executions": 1000,
+          "max_active_ms": 900000,
+          "max_checkpoint_bytes": 262144,
+          "max_value_bytes": 262144,
+          "max_program_bytes": 8388608
+        },
+        "issued_at": "2026-11-15T16:00:00Z",
+        "lease_not_after": "2026-11-15T16:00:30Z"
+      },
+      "expected_valid": false
+    },
+    {
+      "case_id": "neg_human_response_reject_with_value",
+      "schema_ref": "urn:oryn:schemas:agent-runtime:v1#/$defs/RuntimeHumanResponseV1",
+      "instance": {
+        "schema_id": "runtime.human-response.v1",
+        "command_id": "44444444-4444-4444-8444-444444444444",
+        "question_id": "qst_clarify_po_01",
+        "expected_checkpoint_revision": "2",
+        "decision": "reject",
+        "value": "unexpected_answer_string"
+      },
+      "expected_valid": false
+    }
+  ],
+  "binding_vectors": [
+    {
+      "case_id": "vec_01_guard_match",
+      "kind": "guard",
+      "inputs": {
+        "canonical": {
+          "organization_id": "org_01",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "j1"
+          },
+          "worker_id": "w1",
+          "assignment_epoch": 1,
+          "control_generation": 1,
+          "effect_id": "eff_01",
+          "action_id": "act_01",
+          "argument_sha256": "arg_sha_01",
+          "model_binding_id": null,
+          "evidence_verification": "verified"
+        },
+        "received": {
+          "organization_id": "org_01",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "j1"
+          },
+          "worker_id": "w1",
+          "assignment_epoch": 1,
+          "control_generation": 1,
+          "effect_id": "eff_01",
+          "action_id": "act_01",
+          "argument_sha256": "arg_sha_01",
+          "model_binding_id": null,
+          "evidence_verification": "verified"
+        },
+        "now": 1000,
+        "lease_not_after": 2000
+      },
+      "expected": {
+        "accepted": true
+      }
+    },
+    {
+      "case_id": "vec_02_cas_success",
+      "kind": "cas",
+      "inputs": {
+        "revision": 3,
+        "expected_revision": 3,
+        "epoch": 1,
+        "expected_epoch": 1,
+        "control": 1,
+        "expected_control": 1,
+        "now": 1000,
+        "lease_not_after": 2000
+      },
+      "expected": {
+        "accepted": true,
+        "revision": 4
+      }
+    },
+    {
+      "case_id": "vec_03_action_identity_stable",
+      "kind": "action_identity",
+      "inputs": {
+        "before": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "execution_context": {
+            "agent_version": "2026.11.15.1",
+            "case_id": "case_101",
+            "job_id": "job_01",
+            "kind": "job"
+          },
+          "iteration_path": [],
+          "node_id": "node_post_invoice"
+        },
+        "after": {
+          "organization_id": "00000000-0000-4000-8000-000000000001",
+          "execution_context": {
+            "agent_version": "2026.11.15.1",
+            "case_id": "case_101",
+            "job_id": "job_01",
+            "kind": "job"
+          },
+          "iteration_path": [],
+          "node_id": "node_post_invoice"
+        }
+      },
+      "expected": {
+        "before": "act_a884ed2efc457ea6bfc6e20506a4eb6d02c125817b88034e2bebcf62923eab64",
+        "after": "act_a884ed2efc457ea6bfc6e20506a4eb6d02c125817b88034e2bebcf62923eab64",
+        "same": true
+      }
+    },
+    {
+      "case_id": "vec_04_recovery_before_consumption",
+      "kind": "recovery",
+      "inputs": {
+        "receipt": "none",
+        "verdict": "none",
+        "guard_valid": true,
+        "restore_gap": false,
+        "had_unknown": false,
+        "remaining_writes": true,
+        "inference_unresolved": false,
+        "consumed": false,
+        "same_worker": true,
+        "admission_valid": true,
+        "intent_committed": true,
+        "saved_cursor": "node_prepare_action",
+        "events": [
+          "intent"
+        ]
+      },
+      "expected": {
+        "state": "resume_prepared",
+        "cursor": "node_prepare_action",
+        "dispatches": 0
+      }
+    },
+    {
+      "case_id": "vec_05_recovery_consume_lost",
+      "kind": "recovery",
+      "inputs": {
+        "receipt": "none",
+        "verdict": "none",
+        "guard_valid": true,
+        "restore_gap": false,
+        "had_unknown": false,
+        "remaining_writes": true,
+        "inference_unresolved": false,
+        "consumed": true,
+        "same_worker": false,
+        "admission_valid": false,
+        "intent_committed": true,
+        "saved_cursor": "node_action_dispatch",
+        "events": [
+          "intent",
+          "consume",
+          "disconnect"
+        ]
+      },
+      "expected": {
+        "state": "authority_unknown",
+        "cursor": "node_action_dispatch",
+        "dispatches": 0
+      }
+    },
+    {
+      "case_id": "vec_06_recovery_dispatch_uncertain",
+      "kind": "recovery",
+      "inputs": {
+        "receipt": "dispatched",
+        "verdict": "unknown",
+        "guard_valid": true,
+        "restore_gap": false,
+        "had_unknown": false,
+        "remaining_writes": true,
+        "inference_unresolved": false,
+        "consumed": true,
+        "same_worker": true,
+        "admission_valid": true,
+        "intent_committed": true,
+        "saved_cursor": "node_action_dispatch",
+        "events": [
+          "intent",
+          "consume",
+          "dispatch",
+          "disconnect"
+        ]
+      },
+      "expected": {
+        "state": "submission_unknown",
+        "cursor": "node_action_dispatch",
+        "dispatches": 1
+      }
+    },
+    {
+      "case_id": "vec_07_recovery_receipt_durable",
+      "kind": "recovery",
+      "inputs": {
+        "receipt": "application_acknowledged",
+        "verdict": "none",
+        "guard_valid": true,
+        "restore_gap": false,
+        "had_unknown": false,
+        "remaining_writes": false,
+        "inference_unresolved": false,
+        "consumed": true,
+        "same_worker": true,
+        "admission_valid": true,
+        "intent_committed": true,
+        "saved_cursor": "node_action_dispatch",
+        "events": [
+          "intent",
+          "consume",
+          "dispatch",
+          "ack"
+        ]
+      },
+      "expected": {
+        "state": "awaiting_verification",
+        "cursor": "node_action_dispatch",
+        "dispatches": 1
+      }
+    },
+    {
+      "case_id": "vec_08_recovery_restore_gap_blocked",
+      "kind": "recovery",
+      "inputs": {
+        "receipt": "none",
+        "verdict": "none",
+        "guard_valid": true,
+        "restore_gap": true,
+        "had_unknown": false,
+        "remaining_writes": true,
+        "inference_unresolved": false,
+        "consumed": true,
+        "same_worker": false,
+        "admission_valid": false,
+        "intent_committed": true,
+        "saved_cursor": "node_action_dispatch",
+        "events": [
+          "intent",
+          "consume"
+        ]
+      },
+      "expected": {
+        "state": "blocked",
+        "cursor": "node_action_dispatch",
+        "dispatches": 0
+      }
+    },
+    {
+      "case_id": "vec_09_iteration_fail_third",
+      "kind": "iteration",
+      "inputs": {
+        "collection": [
+          "item1",
+          "item2",
+          "item3",
+          "item4"
+        ],
+        "max_items": 100,
+        "events": [
+          "commit",
+          "commit",
+          "fail"
+        ]
+      },
+      "expected": {
+        "state": "paused",
+        "next_index": 2,
+        "completed": 2,
+        "replay": false
+      }
+    },
+    {
+      "case_id": "vec_10_model_recovery_reused",
+      "kind": "model_recovery",
+      "inputs": {
+        "epoch_matches": true,
+        "control_matches": true,
+        "saved_value_present": true,
+        "pins_match": true,
+        "evidence_fresh": true,
+        "saved_input_sha256": "input_digest_abc",
+        "current_input_sha256": "input_digest_abc",
+        "inflight_without_result": false
+      },
+      "expected": {
+        "state": "reused",
+        "reuse": true,
+        "extra_inference_requests": 0
+      }
+    },
+    {
+      "case_id": "vec_11_human_response_wrong_role",
+      "kind": "human_response",
+      "inputs": {
+        "question_binding": {
+          "question_id": "q1",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "j1"
+          },
+          "agent_version_id": "33333333-3333-4333-8333-333333333333",
+          "node_id": "node_q",
+          "iteration_path": [],
+          "checkpoint_revision": "2"
+        },
+        "response_binding": {
+          "question_id": "q1",
+          "execution_context": {
+            "kind": "job",
+            "job_id": "j1"
+          },
+          "agent_version_id": "33333333-3333-4333-8333-333333333333",
+          "node_id": "node_q",
+          "iteration_path": [],
+          "checkpoint_revision": "2"
+        },
+        "role_allowed": false,
+        "type_valid": true,
+        "now": 1000,
+        "not_after": 2000
+      },
+      "expected": {
+        "accepted": false,
+        "state": "needs_clarification",
+        "grants_action_authority": false
+      }
+    },
+    {
+      "case_id": "vec_12_retention_unexpired",
+      "kind": "retention",
+      "inputs": {
+        "source_deadline": 5000000,
+        "last_progress": 1000000,
+        "terminal_at": 1050000,
+        "journal_deadline": null,
+        "restore_reconciled": true,
+        "invalidated": false,
+        "now": 1100000
+      },
+      "expected": {
+        "readable": true,
+        "deadline": 1654800,
+        "effect_exclusion_retained": true
+      }
+    },
+    {
+      "case_id": "vec_13_reservation_revoked_released",
+      "kind": "reservation",
+      "inputs": {
+        "owner": {
+          "device_id": "dev_1",
+          "assignment_id": "a1"
+        },
+        "request": {
+          "device_id": "dev_1",
+          "assignment_id": "a1"
+        },
+        "expired": false,
+        "revoked": true,
+        "primitive_stopped": true,
+        "executor_terminated": false
+      },
+      "expected": {
+        "allowed": false,
+        "state": "released"
+      }
+    },
+    {
+      "case_id": "vec_14_budget_tracking",
+      "kind": "budget",
+      "inputs": {
+        "initial_active_ms": 10000,
+        "intervals": [
+          {
+            "kind": "active",
+            "elapsed_ms": 5000
+          },
+          {
+            "kind": "wait",
+            "elapsed_ms": 60000
+          },
+          {
+            "kind": "crash",
+            "elapsed_ms": 30000
+          }
+        ],
+        "limit_ms": 900000,
+        "visits": 15,
+        "max_visits": 1000,
+        "recoveries_without_progress": 1
+      },
+      "expected": {
+        "active_elapsed_ms": 45000,
+        "hold": false
+      }
+    },
+    {
+      "case_id": "vec_15_verification_mismatch",
+      "kind": "verification",
+      "inputs": {
+        "required": [
+          "req_01",
+          "req_02"
+        ],
+        "results": [
+          {
+            "requirement_id": "req_01",
+            "verdict": "verified"
+          },
+          {
+            "requirement_id": "req_02",
+            "verdict": "mismatch"
+          }
+        ]
+      },
+      "expected": {
+        "verdict": "mismatch",
+        "further_mutation_allowed": false
+      }
+    },
+    {
+      "case_id": "vec_16_read_value_lookup",
+      "kind": "read_value",
+      "inputs": {
+        "authorized": true,
+        "expired": false,
+        "digest_matches": true,
+        "receipt_only": false,
+        "existing_vendor_reads": 1
+      },
+      "expected": {
+        "value_available": true,
+        "vendor_reads": 1
+      }
+    },
+    {
+      "case_id": "vec_17_dominance_check",
+      "kind": "dominance",
+      "inputs": {
+        "edges": [
+          [
+            "entry",
+            "branch_a"
+          ],
+          [
+            "entry",
+            "branch_b"
+          ],
+          [
+            "branch_a",
+            "join"
+          ],
+          [
+            "branch_b",
+            "join"
+          ]
+        ],
+        "entry": "entry",
+        "producer": "branch_a",
+        "consumer": "join"
+      },
+      "expected": {
+        "allowed": false
+      }
+    },
+    {
+      "case_id": "vec_18_environment_diagnostic",
+      "kind": "environment",
+      "inputs": {
+        "candidate_matches": true,
+        "input_matches": true,
+        "account_isolated": true,
+        "production_credentials": false,
+        "mode": "recorded_diagnostic"
+      },
+      "expected": {
+        "allowed": true,
+        "reasoning_release_coverage": false
+      }
+    },
+    {
+      "case_id": "vec_19_semantic_transition_add",
+      "kind": "semantic_transition",
+      "inputs": {
+        "left": "100.50",
+        "right": "25.25",
+        "operation": "add",
+        "claimed": "125.75",
+        "parents_verified": [
+          true,
+          true
+        ],
+        "claimed_verified": true
+      },
+      "expected": {
+        "accepted": true,
+        "verified": true
+      }
+    },
+    {
+      "case_id": "vec_20_dispatch_trace_verified",
+      "kind": "dispatch_trace",
+      "inputs": {
+        "events": [
+          "intent",
+          "consume",
+          "dispatch",
+          "ack",
+          "verify"
+        ]
+      },
+      "expected": {
+        "state": "Verified Complete",
+        "dispatches": 1
+      }
+    },
+    {
+      "case_id": "vec_21_eleven_case_batch",
+      "kind": "eleven_case_batch",
+      "inputs": {
+        "cases": [
+          {
+            "case_id": "inv_01",
+            "events": [
+              "intent",
+              "consume",
+              "dispatch",
+              "ack",
+              "verify"
+            ]
+          },
+          {
+            "case_id": "inv_02",
+            "events": [
+              "intent",
+              "consume",
+              "dispatch",
+              "ack",
+              "verify"
+            ]
+          },
+          {
+            "case_id": "inv_03",
+            "events": [
+              "intent",
+              "consume",
+              "dispatch",
+              "ack",
+              "verify"
+            ]
+          },
+          {
+            "case_id": "inv_04",
+            "events": [
+              "intent",
+              "consume",
+              "dispatch",
+              "ack",
+              "verify"
+            ]
+          },
+          {
+            "case_id": "inv_05",
+            "events": [
+              "intent",
+              "consume",
+              "dispatch",
+              "ack",
+              "verify"
+            ]
+          },
+          {
+            "case_id": "inv_06",
+            "events": [
+              "intent",
+              "consume",
+              "dispatch",
+              "ack",
+              "verify"
+            ]
+          },
+          {
+            "case_id": "inv_07",
+            "events": [
+              "intent",
+              "consume",
+              "dispatch",
+              "ack",
+              "verify"
+            ]
+          },
+          {
+            "case_id": "inv_08",
+            "events": [
+              "clarification"
+            ]
+          },
+          {
+            "case_id": "inv_09",
+            "events": [
+              "clarification"
+            ]
+          },
+          {
+            "case_id": "inv_10",
+            "events": [
+              "approval"
+            ]
+          },
+          {
+            "case_id": "inv_11",
+            "events": [
+              "intent",
+              "consume",
+              "dispatch",
+              "disconnect",
+              "reclaim",
+              "dispatch"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "counts": {
+          "Verified Complete": 7,
+          "Needs Clarification": 2,
+          "Awaiting Approval": 1,
+          "Outcome Unknown": 1
+        },
+        "unknown_dispatches": 1
+      }
+    }
+  ]
+}

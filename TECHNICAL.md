@@ -69,7 +69,7 @@ Terms **must/required** denote constraints inherited from the v1.0 product or es
 
 ### 0.4 Product baseline
 
-Oryn is a local-first enterprise platform that observes **consented and permitted work**, discovers repeatable business processes, creates reviewable procedures, compiles approved procedures into constrained agents, evaluates those agents against expected business outcomes, runs approved jobs, and learns from failures and authorized human corrections.
+Oryn is an enterprise platform combining local-first deterministic observation and privacy enforcement with purpose-authorized transient cloud inference through an Oryn-managed LiteLLM gateway. It observes **consented and permitted work**, discovers repeatable business processes, creates reviewable procedures, compiles approved procedures into constrained agents, evaluates those agents against expected business outcomes, runs approved jobs, and learns from failures and authorized human corrections. All Oryn-owned AI inference in v1.0 uses cloud-managed APIs through the LiteLLM gateway; local-only model inference is post-v1.0.
 
 Its continuous lifecycle is:
 
@@ -83,7 +83,7 @@ The key unit of value is a **verified operational capability**, not a screen rec
 - Meeting audio is a distinct, **per-meeting opt-in** feature.
 - Human guidance, supervised automations, and narrowly scoped autonomous automations are supported; capabilities are reported per application and workflow.
 - Three synthetic reference workflows: invoice/PO reconciliation, customer/order status reconciliation, support exception triage. At least one demonstrates the entire repair loop.
-- No Linux desktop, unrestricted arbitrary-app automation, universal software-to-API product, autonomous Tier 4 actions, blanket agent autonomy, or company-wide predictive digital twin in v1.0.
+- No Linux desktop, unrestricted arbitrary-app automation, universal software-to-API product, autonomous Tier 4 actions, blanket agent autonomy, on-device model inference, or company-wide predictive digital twin in v1.0.
 - No employee surveillance analytics or manager-accessible raw local activity playback.
 
 ---
@@ -94,7 +94,7 @@ These rules must hold regardless of how the underlying components are implemente
 
 | ID | Principle | System consequence |
 |---|---|---|
-| A-01 | **Local-first observation** | Raw employee screen/audio capture is stored on that employee's device; organizational services receive only permitted, reviewed, sanitized contributions and authorized business artifacts. |
+| A-01 | **Local-first observation & durable ownership** | Raw employee screen/audio capture is stored durably on that employee's device; transient cloud inference via the governed LiteLLM gateway is purpose-authorized with zero content retention; organizational services receive only permitted, reviewed, sanitized contributions and authorized business artifacts. |
 | A-02 | **Privacy before capture and before sharing** | Exclusions and consent are enforced at source; a separate review gate governs promotion of private observations into organizational knowledge. |
 | A-03 | **Business outcome over UI completion** | A click or success banner does not mark a case verified. Verification is a separately governed capability. |
 | A-04 | **Knowledge is not authority** | An observed human behavior or model inference does not create an approved business policy or authorize an action. |
@@ -123,8 +123,8 @@ Oryn spans several environments with different privacy and privilege levels.
 
 | Environment | Purpose | Primary responsibilities | Must not do |
 |---|---|---|---|
-| **Employee edge** | Understand permitted human work and assist locally | Desktop companion, OS observers, browser extension link, private media/evidence store, privacy gating, local task context, HUD, authorized local execution | Automatically transmit raw screen/audio or bypass employee capture controls |
-| **Organizational control plane** | Coordinate shared knowledge and governed automation | Identity, permissions, workflow discovery, graph, agent definitions, job lifecycle, approvals, incidents, repairs, releases, web management | Directly assume access to excluded raw employee activity or silently approve policy changes |
+| **Employee edge** | Understand permitted human work and assist locally | Desktop companion, OS observers, browser extension link, private media/evidence store, privacy gating, local task context, HUD, authorized local execution, edge `InferenceEgressClient` | Automatically transmit raw screen/audio, bypass employee capture controls, or invoke uncertified cloud routes |
+| **Organizational control plane** | Coordinate shared knowledge and governed automation | Identity, permissions, workflow discovery, graph, agent definitions, job lifecycle, approvals, incidents, repairs, releases, web management, `InferenceAdmission`, `InferenceSessionCoordinator` | Directly assume access to excluded raw employee activity, silently approve policy changes, or store private captures centrally |
 | **Production execution plane** | Carry out authorized business work | Scoped agent workers, application adapters, per-action checks, action results and evidence | Choose its own security scope or self-certify outcomes |
 | **Simulation execution plane** | Evaluate candidate behavior safely | Test environments, scenarios, isolated runs, failure injection, replay, result collection | Use production write authority or represent incomplete mocks as complete production fidelity |
 | **External business systems** | Authoritative business state | ERPs, CRMs, mail, document tools, support platforms, other approved applications | Be assumed transactional, reversible, or consistently automatable without qualification |
@@ -290,83 +290,80 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 4.1 Desktop Shell and User Experience Host
 
-**Responsibility:** The installed Windows/macOS application that exposes enrollment, visible capture state, employee controls, personal history, notifications, contextual help, and approved local execution interfaces.
+**Responsibility:** The installed Windows/macOS application that exposes enrollment, visible capture state, employee controls, personal history, notifications, contextual help, and approved local execution interfaces. Implemented using Tauri 2 (Rust native core + React/TypeScript UI in system WebView) with native platform status adapters (AppKit on macOS, Win32 on Windows) and an unprivileged child privacy helper communicating via four inherited byte channels (Channel 1 control/lifecycle, Channel 2 bounded queries, Channel 3 `shell-browser.v1`, Channel 4 `shell-meeting-audio.v1`, negotiated at `shell-privacy.v1` minor 2). Host native core also owns the restricted OS-local endpoint broker (`BrowserBridgeBroker`, version 1.1) and content-free `BrowserGeometryProbe` for connecting the browser extension native host (`oryn-browser-host`).
 
-**Owns:** Desktop-level session and UI lifecycle; the employee's visibility into local observation; user controls for starting/stopping capture; presentation of local assistance; local application configuration.
+**Owns:** Desktop-level session and UI lifecycle; native system tray and movable capture badge presentation; employee visibility into local observation across the 7 canonical states; user controls for starting/stopping capture; presentation host for guidance overlays, highlight geometries, notifications, and consequential approvals; local UI preferences and enrollment markers; ephemeral visibility lease renewals; restricted OS-local IPC broker for browser extension attachment; content-free window geometry and display layout tracking.
 
-**Consumes:** Local task state, permitted guidance, consent/exclusion settings, job/approval requests addressed to this employee, application-compatibility information.
+**Consumes:** Authoritative capture snapshots and exclusions from [local-privacy-storage](docs/components/local-privacy-storage.md), structured guidance presentation models from [local-context-hud](docs/components/local-context-hud.md), permitted guidance from [contribution-sync](docs/components/contribution-sync.md), job/approval requests from [control-plane](docs/components/control-plane.md), application-compatibility information from [os-observation](docs/components/os-observation.md), and authentication/policy state from [identity-policy](docs/components/identity-policy.md).
 
-**Produces:** User capture commands, contribution review decisions, guide interactions, supervised approvals or corrections, and local executor invocation requests.
+**Produces:** Validated employee capture commands (`PauseScreenObservation`, `PauseCapture`, `ResumeCapture`, `SetCaptureCategory`, `RecordCaptureConsent`, and Contract 19 `MeetingPort` commands), ephemeral visibility lease renewals (`RenewVisibilityLease`), session lifecycle transitions (`SetSessionState`), contribution review decisions (`ReviewContribution`), guide interactions (`GuidanceInteraction`), and supervised action approvals (`SubmitApproval`).
 
-**Does not own:** The authoritative organizational graph, workflow publication, organization-wide permissions, central agent versions, or final business verification.
+**Does not own:** The authoritative organizational graph, workflow publication, organization-wide permissions, central agent versions, final business verification, raw media retention/redaction (owned by local privacy storage), guidance matching/progression logic (owned by local context HUD), direct provider credentials, provider networking, or central authorization token issuance.
 
-**Boundary requirement:** Closing or disconnecting the UI must not silently change user consent or cause invisible capture. The detailed design must specify expected behavior for background operation, updates, crashes, and session restarts.
-
+**Boundary requirement:** Closing or disconnecting the UI must not silently change user consent or cause invisible capture. Closing the main window continues capture only if background observation is explicitly enabled and the native status badge remains visible on an active desktop; otherwise it halts capture (`Paused by You`). Explicit quit stops capture and persists a quit pause. Workstation lock/sleep halts capture; unlock/wake automatically restores previously active screen observation only, never meeting audio. User screen pause (`PauseScreenObservation`) stops screen capture and halts local browser actions at a safe boundary while preserving authorized meeting capture; Pause All (`PauseCapture`) immediately stops all capture. When meeting capture is active offline, the headline displays **Meeting Capture Active** with the subline `Recording only — offline`. Unexpected crashes, visibility loss, or updates fail closed within 500 ms and require explicit employee resume. Local capture requires a valid capture policy lease, capped at an absolute maximum of 24 hours of disconnection.
 ### 4.2 Native OS Observation Adapters
 
-**Responsibility:** Read permitted desktop context and relevant changes across approved Windows and macOS applications using supported platform facilities.
+**Responsibility:** Read permitted desktop context and relevant changes across approved Windows and macOS applications using supported platform facilities. Implemented via a dedicated unprivileged child worker (`oryn-observation-worker`) supervised by `oryn-privacy-helper` over private inherited byte channels and shared memory (see [detailed technical specification](docs/components/os-observation.md)). Downstream visual extraction and OCR are performed via the Privacy-Helper-governed `InferenceEgressClient` routing through the cloud LiteLLM gateway (`vision.extract`); no model inference or OCR runs within the native observation worker.
 
-**Owns:** OS-specific observation capabilities, their limitations, and a standardized stream of observations to the local privacy and task pipeline.
+**Owns:** OS-specific observation capabilities, window inventory, z-order occlusion calculation, settled accessibility tree extraction, event-triggered snapshots, pre-transfer black-pixel masking, fair multi-window scheduling, and a standardized stream of observations to the local privacy and task pipeline.
 
-**Consumes:** Capture consent, app/window exclusion policy, active observation scope, OS access grants.
+**Consumes:** Capture consent, app/window exclusion policy, active observation scope, reverse source permits (`GrantObservationPermit`, `RevokeObservationPermit`), frame slot releases, and OS access grants.
 
-**Produces:** Typed local observations such as application changes, relevant UI state, permitted interaction events, and capture references with confidence/availability labels.
+**Produces:** Typed local observations (`ObservationEvent`), masked shared-memory snapshots, explicit `ObservationGap` records, and capability declarations with confidence/availability labels.
 
-**Does not own:** Whether observations are safe to share, workflow intent inference, or business rule approval.
+**Does not own:** Whether observations are safe to share, workflow intent inference, business rule approval, model inference, or downstream retention.
 
-**Boundary requirement:** Supported capabilities must be declared per operating system and application; inaccessible controls and gaps are reported rather than guessed. The capture implementation may use different mechanisms per platform; those choices are deferred.
-
+**Boundary requirement:** Supported capabilities must be declared per operating system and application; inaccessible controls and gaps are reported rather than guessed. Multi-window observation covers all permitted visible windows across displays, acquiring uncovered-only regions with conservative occlusion subtraction. When an excluded window takes focus, safe background windows continue observation. A native worker crash isolates to the `native_os` source and fails closed, leaving healthy browser and meeting capture active while the companion shows Attention Needed. Certified native browser fallback is strictly limited to enterprise-managed profiles with verifiably disabled private browsing (effective `IncognitoModeAvailability=1` or `InPrivateModeAvailability=1` and empty URL exception allowlists). Detailed architecture and wire protocols are resolved in [docs/components/os-observation.md](docs/components/os-observation.md).
 ### 4.3 Browser Extension and Local Browser Bridge
 
-**Responsibility:** Obtain high-fidelity, permissioned browser context for supported Chrome/Edge business applications; enable context-aware guidance and approved browser actions where supported.
+**Responsibility:** Obtain high-fidelity, permissioned browser context for supported Chrome/Edge business applications; coordinate local browser bridge over native messaging and restricted shell broker; support offscreen audio-only meeting tab capture; enable context-aware guidance and approved browser actions where supported. Implemented in TypeScript under Manifest V3 and Rust native messaging host `oryn-browser-host` (see [detailed technical specification](docs/components/browser-extension.md)).
 
-**Owns:** Browser-side observation/interaction and communication with the desktop/local services. It reports current application and task-relevant context using a shared observation contract.
+**Owns:** TypeScript `BrowserCoordinator` in MV3 service worker, `DocumentObserver` content script, offscreen meeting audio capture module, `TargetResolver`, `DomExecutor`, packaged `ApplicationProfileRegistry`, native host `oryn-browser-host` (`com.oryn.browser_bridge`, bridge version 1.1), and tab-scoped navigation guard (`declarativeNetRequest`).
 
-**Consumes:** Allowed domains, capture settings, authenticated local desktop session, relevant published guide context, authorized assistance requests.
+**Consumes:** Authoritative browser permits, policy, exclusions, capture consent from [local-privacy-storage](docs/components/local-privacy-storage.md) via privacy helper over inherited channel 3 (`shell-browser.v1`) and meeting audio forwarding over channel 4 (`shell-meeting-audio.v1`), guidance target queries from [local-context-hud](docs/components/local-context-hud.md) via Contract 21, and authorized action commands from [agent-runtime](docs/components/agent-runtime.md) and [application-adapters](docs/components/application-adapters.md).
 
-**Produces:** Structured UI observations, permitted navigation/action evidence, element targets for guidance, authorized browser action results.
+**Produces:** Structured browser observations (`browser-observation.event.v1`), target presence/geometry (`BrowserTargetResult`), meeting audio chunks (`BrowserMeetingAudioChunk`), and action execution receipts (`BrowserActionResult`).
 
-**Does not own:** Organizational sharing policy, raw cloud upload, independent autonomous job scheduling, or permissions to act beyond a declared job.
+**Does not own:** Organizational sharing policy, direct cloud networking, speech-to-text processing, independent autonomous job scheduling, action authorization issuance, business outcome verification, or in-browser overlay rendering (shell hosts all presentation windows).
 
-**Boundary requirement:** Browser and OS observations must be deduplicated or correlated when describing the same action. The extension must pass observations through the same local privacy policy as other capture sources.
+**Boundary requirement:** Browser and OS observations are arbitrated per modality. When connected, the extension is authoritative for web semantics while native OS observation provides window geometry, lifecycle, and optional extension-bound masked snapshots. Downstream visual extraction routes through the governed cloud inference gateway; the extension maintains zero direct cloud connectivity. Tab audio capture is strictly audio-only (`video: false`) via an offscreen document, initiated by an explicit user toolbar gesture bound to a helper-issued challenge, and restores audible local playback. Native fallback requires certified enterprise-managed browser profiles with verified disabled private browsing. User screen-observation pause immediately stops local browser actions at a safe boundary. Local execution requires exclusive device-wide reservation via `LocalExecutionReservationBroker` across native and browser execution (negotiating `browser-bridge.v1` major 1, minor 5 with `execution_reservation_lease_v1` and `local_execution_reservation_v1`), action receipts binding `ExecutionContextV1`, and `declarativeNetRequest` session navigation guard.
 
 ### 4.4 Meeting and Audio Intelligence
 
-**Responsibility:** Support separately authorized meeting transcription, candidate commitments, and later contextual reminders.
+**Responsibility:** Support separately authorized meeting transcription, candidate commitments, and later contextual reminders (see [detailed technical specification](docs/components/meeting-intelligence.md) and [shared cloud inference contract](docs/architecture/cloud-inference.md)).
 
-**Owns:** Per-meeting capture session state, audio-derived private evidence, speaker/context uncertainty, candidate commitment extraction for employee review.
+**Owns:** `MeetingSessionCoordinator` (meeting/segment state, consent evidence, online/offline lifecycle), `MeetingCaptureSupervisor` (supervision of signed unprivileged `oryn-meeting-worker`), `NativeMeetingSource` (Core Audio process-tap on macOS, WASAPI application-loopback on Windows), `MeetingAudioCapture` (browser offscreen tab capture), `TranscriptAssembler` (text assembly and gap bookkeeping), and `CommitmentReviewCoordinator` (extraction validation, candidate review, saved commitments).
 
-**Consumes:** Organizational meeting policy, participant consent/notice status, employee per-meeting opt-in, local audio availability.
+**Consumes:** Organizational meeting policy, participant consent/notice evidence, employee per-meeting opt-in, cloud inference routes (`meeting.transcribe.*`, `meeting.extract_commitments`), and local audio availability.
 
-**Produces:** Private transcript-derived insights and employee-reviewed commitments; only separately approved sanitized contributions may become shared knowledge.
+**Produces:** Private transcript records, speaker labels, unconfirmed commitment candidates, confirmed commitment projections to HUD (Contract 23), and reviewed meeting handoff proposals to Operational Graph (Contract 24).
 
-**Does not own:** Default always-on audio capture, authority to send customer follow-ups, or organizational policy based solely on what somebody said.
+**Does not own:** Default always-on audio capture, direct speech provider networking (uses LiteLLM gateway), authority to perform business actions or update CRMs automatically, or central transcript storage.
 
-**Boundary requirement:** Screen observation consent does not imply meeting recording consent. If consent requirements are unmet or unclear, recording does not begin.
+**Boundary requirement:** Screen observation consent does not imply meeting recording consent. If consent requirements are unmet or unclear, recording does not begin. Offline recording mode acquires local audio without AI processing and requires fresh authorization before any deferred processing. All cloud inference enforces contractual zero content retention, no model training, and US processing.
 
 ### 4.5 Local Privacy Gate, Evidence Store, and Retention
 
-**Responsibility:** Enforce exclusions and data minimization at source; store private screen/audio evidence locally; govern its retention, export, and deliberate conversion into shareable procedural information.
+**Responsibility:** Enforce exclusions and data minimization at source; store private screen/audio evidence locally in bounded SQLCipher 4 partitions and encrypted media blobs; operate edge `InferenceEgressClient`; govern retention, export, and deliberate conversion into shareable procedural information; stream sanitized observation feeds to the local context HUD over Contract 25 (`privacy-context.v1`). Executes as unprivileged `oryn-privacy-helper`, supervising native observation and meeting workers and issuing unexpired source permits (100 ms renewal / 300 ms expiry).
 
-**Owns:** Consent state and exclusion enforcement on the device, private capture retention, sensitive-data classification/redaction, the employee's review-before-sharing workflow, local evidence deletion.
+**Owns:** Consent state and exclusion enforcement on the device, native worker and meeting worker supervision, source permits, private capture retention in bounded SQLCipher 4 partitions, private meeting records and saved commitment transactions in unified meeting databases, transcript edits and deletion propagation, `InferenceEgressClient` token attachment and transmission, volatile ephemeral pipelines when personal retention is off (strict 30-second TTL), employee review-before-sharing workflow with Ed25519-signed review attestations, redacted still-image excerpt derivation, crash-safe selective purge via independent key destruction and catalog generation commits, and local evidence deletion.
 
-**Consumes:** All observation streams, organization restrictions, employee preferences, explicit contribution approvals.
+**Consumes:** All observation streams over Contract 1 (`os-observation.v1`, `shell-browser.v1`, `shell-meeting-audio.v1`, native meeting audio pipes), signed capture policy leases, signed retention verdicts, and signed artifact policies from `identity-policy`, employee preferences and capture commands over Contract 19 (`shell-privacy.v1` minor 2), explicit contribution review decisions from desktop shell, ephemeral visibility lease renewals from desktop shell supervisor (100 ms lease / 500 ms cutoff), reverse demonstration proposals from local context HUD over Contract 25 (`privacy-context.v1`), and signed `InferenceAuthorization` tokens from `identity-policy`.
 
-**Produces:** Permitted private evidence for local use; sanitized candidate contributions after explicit review; privacy-status events without leaking excluded content.
+**Produces:** Permitted private evidence for local use; sanitized candidate contributions after explicit review (`ReviewedContributionV1`) delivered via `contribution-sync` over Contract 2; privacy-status events, authoritative `CaptureSnapshot` updates, and purge receipts over Contract 19; sanitized observation streams (`PermittedObservationV1`) to `local-context-hud` over Contract 25; and authorized `InferenceRequest` envelopes to the LiteLLM gateway over Contract 22 without leaking excluded content.
 
-**Does not own:** Automatically publishing a playbook, creating an agent from unreviewed raw capture, or providing managers remote playback.
+**Does not own:** Automatically publishing a playbook, creating an agent from unreviewed raw capture, central model routing (owned by control plane / LiteLLM), providing managers remote playback, network queue transport (owned by `contribution-sync`), or task segmentation/ranking in the HUD.
 
-**Boundary requirement:** Protected application categories must be excluded before capture wherever possible; mixed windows and accidental sensitive exposure require safe suppression. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`.
-
+**Boundary requirement:** Protected application categories must be excluded before capture at source; post-capture cloud OCR or vision extraction cannot authorize capture of mandatory excluded content. Mixed windows and accidental sensitive exposure require safe suppression. When `personal_history_retention=false`, live guidance operates ephemerally on volatile work buffers with a strict 30-second TTL without durable writes; if cloud inference is unavailable, AI features report unavailable without accumulating a deferred backlog. The default local raw retention is **7 days**, employee-selectable **1–6 days**, with explicitly permitted documented extension up to **14 days**, per `PRODUCT.md`. The capture gate consumes an ephemeral 100 ms visibility lease from the desktop shell supervisor and immediately revokes capture within 500 ms if unrenewed. Legal holds prevent voluntary deletion within existing retention deadlines but cannot extend raw retention past expiry or grant remote manager access. No central backup, recovery key, or recovery escrow exists for private evidence; device/key loss permanently loses private history.
 ### 4.6 Local Task Understanding, Context Matcher, and Knowledge Cache
 
-**Responsibility:** Interpret the employee's currently permitted activity into candidate task context and match it against approved guidance without continuously needing a central model call.
+**Responsibility:** Interpret the employee's currently permitted activity into candidate task context and match it against approved guidance without continuously needing a central model call. Implemented within `oryn-hud-helper` alongside guidance coordination behind one deterministic reducer.
 
 **Owns:** Local active-task hypotheses, recent permitted event correlations, unresolved observation gaps, locally available approved playbook signatures, contextual suggestion state.
 
-**Consumes:** Redacted local observations, authorized published playbooks and fixes, meeting commitments, current user context.
+**Consumes:** Redacted local observations (`PermittedObservationV1` via Contract 25), authorized published playbooks and fixes (`GuidanceBundleV1` via Contract 3), signed guidance access leases (`hud.guidance-access-lease.v1`), meeting commitments (`CommitmentReminderProjection` via Contract 23), current user context.
 
-**Produces:** Candidate tasks, friction/exception signals, contextual guide suggestions, local demonstration summaries for contribution review.
+**Produces:** Candidate tasks, friction/exception signals, contextual guide suggestions, local demonstration summaries for contribution review (`DemonstrationProposalV1`).
 
 **Does not own:** Approval of new company procedures, authoritative agent policy, or unilateral cloud sharing.
 
@@ -374,77 +371,80 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 4.7 HUD, Guided Assistance, and Local Executor
 
-**Responsibility:** Provide nonintrusive contextual guidance, approved peer fixes, commitment reminders, interactive guides, supervised macros, and authorized local actions.
+**Responsibility:** Provide nonintrusive contextual guidance, approved peer fixes, commitment reminders, interactive guides, supervised macros, and authorized local actions within the unified `oryn-hud-helper` process.
 
-**Owns:** Presentation and local interaction state; carrying out local assistance within a separately validated execution scope.
+**Owns:** Task segmentation hypotheses, active playbook matching, contextual suggestion ranking, guidance step progression tracking, and generating structured guidance models for presentation by the desktop shell.
 
-**Consumes:** Local context matches, published guide versions, permitted action plans, applicable policy and approval results, local application capability information.
+**Consumes:** Local context matches, published guide versions, permitted action plans, applicable policy and approval results, local application capability information, and employee guidance interactions from [desktop-shell](docs/components/desktop-shell.md).
 
-**Produces:** User acknowledgments, completed guidance steps, proposed corrections, action attempts/results, explicit escalation requests.
+**Produces:** Structured guidance cards and target highlight coordinates for [desktop-shell](docs/components/desktop-shell.md) over `shell-hud.v1` (Contract 20), proposed corrections, action attempts/results, explicit escalation requests.
 
-**Does not own:** User-independent scheduled work, agent generation, or permission escalation.
+**Does not own:** User-independent scheduled work, agent generation, permission escalation, or desktop window/overlay rendering (window hosting and highlight rendering are owned by [desktop-shell](docs/components/desktop-shell.md)).
 
-**Boundary requirement:** The HUD must avoid unsupported confidence claims and disruptive prompting; assisted actions obey the same action authorization principles as remote runners.
+**Boundary requirement:** The HUD must avoid unsupported confidence claims and disruptive prompting; assisted actions obey the same action authorization principles as remote runners, binding `ExecutionContextV1` (`assist`).
 
 ### 4.8 Contribution and Synchronization Gateway
 
-**Responsibility:** Mediate the boundary between private device knowledge and organization-shared knowledge; deliver approved playbooks/context back to the device.
+**Responsibility:** Mediate the boundary between private device knowledge and organization-shared knowledge; deliver approved playbooks/context back to the device. Fully specified in [detailed technical specification](docs/components/contribution-sync.md) and [ADR-0010](docs/adr/0010-contribution-delivery-and-guidance-sync.md).
 
-**Owns:** Eligibility of outgoing contributions, review status, synchronization receipts, connectivity state, and authorized retrieval of published guidance.
+**Owns:** Transport, encrypted queueing, and network delivery of employee-approved workflow contributions (`ReviewedContributionV1`) and reviewed meeting handoffs (`ReviewedMeetingHandoffProposal`) governed by wire schemas [`contribution-sync-v1.schema.json`](docs/architecture/contracts/contribution-sync-v1.schema.json) and [`guidance-sync-v1.schema.json`](docs/architecture/contracts/guidance-sync-v1.schema.json); central delivery receipts (`DeliveryReceiptV1`); connectivity state machines; minimal organization-lifetime replay identity; and authorized retrieval and caching of published guidance working sets.
 
-**Consumes:** Employee-approved sanitized contributions, centrally published organizational knowledge, access-policy changes, local connectivity state.
+**Consumes:** Employee-reviewed contributions with Ed25519 review attestations signed by [local-privacy-storage](docs/components/local-privacy-storage.md) over `privacy-sync.v1`, centrally published playbooks and guidance manifest deltas from [operational-graph](docs/components/operational-graph.md), access-policy changes, trust keysets, and signed guidance leases from [identity-policy](docs/components/identity-policy.md), and supervisor lifecycle events from [desktop-shell](docs/components/desktop-shell.md) over `shell-sync.v1`.
 
-**Produces:** Authenticated organizational contributions, delivery acknowledgments, guide cache updates, revocation/policy notifications.
+**Produces:** Authenticated organizational contributions to [workflow-discovery](docs/components/workflow-discovery.md), reviewed meeting handoffs to [operational-graph](docs/components/operational-graph.md), delivery acknowledgments, guidance working sets to [local-context-hud](docs/components/local-context-hud.md) via [desktop-shell](docs/components/desktop-shell.md) over Contract 20 rails, and revocation notifications.
 
-**Does not own:** Raw media uploads, automatic publication, or bypassing consent when offline.
+**Does not own:** Generating or signing employee review approvals (owned by [local-privacy-storage](docs/components/local-privacy-storage.md)), raw media uploads, index compilation (owned by HUD), or automatic publication.
 
-**Boundary requirement:** Offline behavior must preserve privacy and fail safely. Unreviewed observations must never be auto-uploaded when connectivity returns. Revoked access invalidates affected local guidance/execution abilities according to policy.
-
+**Boundary requirement:** Executes in a dedicated signed, unprivileged child process `oryn-sync-helper` supervised by Desktop Shell. Reconnection order must process policy and revocation updates before outgoing approved contributions. Unreviewed drafts never upload automatically. If underlying source evidence is deleted locally while queued, the privacy helper's authoritative release fence cancels the release, and the sync gateway drops the queued upload idempotently. Transmitted artifacts are limited strictly to sanitized text narratives and purpose-bound redacted still images (<= 1920x1080, <= 1 MiB, max 4 per contribution) under a valid artifact policy; no audio/video clips, raw screenshots, or full transcripts may cross the boundary. Central acceptance into PostgreSQL is atomic, committing destination intake rows, `bytea` artifacts, signed delivery receipts, and outbox events in a single transaction. Offline guidance reading is permitted under signed 24-hour access leases, but offline action execution is unconditionally blocked.
 ---
 
 ## 5. Organizational Control Plane and Knowledge Services
 
 ### 5.1 Control Plane API and Domain Coordination
 
-**Responsibility:** Provide a consistent organization-scoped entry point for web/desktop clients, background processing, notifications, and other approved services.
+**Detailed specification:** [docs/components/control-plane.md](docs/components/control-plane.md) | [ADR-0012](docs/adr/0012-control-plane-transport-durability-and-inference.md) | [Wire Schema](docs/architecture/contracts/control-plane-v1.schema.json) | [Inference Schema](docs/architecture/contracts/cloud-inference-v1.schema.json) | [OpenAPI](docs/architecture/contracts/control-plane-v1.openapi.json)
 
-**Owns:** API-level authentication context, request routing, domain-level validation, orchestration of state changes, and publication of domain events once committed.
+**Responsibility:** Provide a unified, secure organization-scoped entry point for web/desktop clients, background processing, change notifications, contribution synchronization, and transient cloud inference streaming.
 
-**Consumes:** Authenticated user/worker requests; central domain data and service results.
+**Owns:** HTTP/REST and WebSocket transport, confidential BFF web session cookies (`__Host-oryn_session`, CSRF validation, 30-minute idle locks) and physical secret digest storage; general command idempotency (UUIDv7, RFC 8785 hashing, 7-day replay, 24-month tombstones); multi-tenant transaction coordination (`TenantTransaction`) with PostgreSQL Row-Level Security (RLS); asynchronous operation tracking (`OperationV1`); PostgreSQL transactional outbox (`domain_outbox`), durable queues (`domain_delivery`), and inbox deduplication (`domain_inbox`); authorized cursor-based management change feeds (`ChangePageV1`) with bounded 25-second long polling; authoritative cloud sync intake endpoints (Contract 2/3); and transient cloud inference admission, budget reservation, and WebSocket streaming coordination (Contract 22).
 
-**Produces:** Scoped responses, durable domain commands, observable state transitions, emitted domain events.
+**Consumes:** Authenticated client requests from web management consoles, desktop shell companions, background workers, and external systems; verified principal contexts from [identity-policy](docs/components/identity-policy.md); domain mutations from authoritative domain owners.
 
-**Does not own:** Low-level browser or OS capture, direct execution of arbitrary agent suggestions, or implicit permission to access all tenant data.
+**Produces:** Scoped REST and WebSocket responses, committed transactional domain events, durable delivery queue rows, asynchronous operation progress projections, authorized metadata change pages, and ephemeral LiteLLM inference requests.
 
-**Boundary requirement:** The API is a gateway to domain owners, not an excuse to duplicate policy and state transitions across unrelated endpoints.
+**Does not own:** Identity policy evaluation or verified principal construction (owned by [identity-policy](docs/components/identity-policy.md)), business state transition validity (owned by domain owners), raw capture storage or media caching (zero raw content retention), or physical infrastructure management (owned by [infrastructure-security](docs/components/infrastructure-security.md)).
+
+**Boundary requirement:** The API is a structured gateway and transaction coordinator, not an arbitrary command endpoint or duplicate policy evaluator. Dedicated external brokers (Kafka/RabbitMQ) are rejected for pilot in favor of atomic PostgreSQL outbox/delivery tables. Public web clients never receive raw bearer tokens. Real-time inference operates ephemerally in memory without disk spooling, and socket disconnects terminate upstream model streams immediately without cross-pod resumption.
 
 ### 5.2 Identity, Organization, Access, and Approval Governance
 
-**Responsibility:** Govern organizations, teams, user and agent identities, membership, business-object access, role assignments, action policies, approved scopes, and formal decisions.
+**Detailed specification:** [docs/components/identity-policy.md](docs/components/identity-policy.md) | [ADR-0011](docs/adr/0011-identity-authority-and-approval-fencing.md) | [Wire Schema](docs/architecture/contracts/identity-policy-v1.schema.json)
 
-**Owns:** Authoritative permissions and roles; approval records; policy versions; consent policy distributed to clients; organization suspension/offboarding constraints.
+**Responsibility:** Govern organizations, memberships, teams, user and service identities, business-object access, role assignments, action risk tiers, approval policies, credential scoping, and formal human approval decisions across Oryn.
 
-**Consumes:** Identity assertions, administrative changes, proposed operations, approval requests, job/agent context, target scope.
+**Owns:** Authoritative permissions, memberships, and roles; pure typed Rust evaluator (`evaluate_authorization`); session admission and lifetime bounds; dual digests (`action_sha256` and `proposal_digest`); formal approval proposals and receipts; policy versions; signed endpoint policy leases (`SignedCapturePolicyLease`, `SignedRetentionVerdict`, `SignedGuidanceAccessLeaseV1`); signed inference authorizations (`InferenceAuthorization`); durable action execution fences (`identity_action_fence`); and authority recovery journal coordination.
 
-**Produces:** Authorization decisions and justifications, approval requirements, policy-change notifications, eligibility restrictions, auditable decisions.
+**Consumes:** External authentication assertions (Auth0 Universal Login), administrative commands, real-time action authorization requests, formal approval decisions, job/assist context (`ExecutionContextV1`), adapter policy facts (`ActionPolicyFactsV1`), and target scope.
 
-**Does not own:** Deciding whether the agent's business recommendation is *correct*. Authorization and business validation are separate.
+**Produces:** Authoritative authorization decisions (`Allow`, `Deny`, `RequireHumanApproval`), cryptographic action authorization tokens, formal approval proposals, signed admission receipts, policy-change/revocation events, and auditable decisions.
 
-**Boundary requirement:** A model may ask for authorization, but cannot issue it. Every consequential action is checked with a trusted enforcement mechanism at the execution boundary. Tier 3 requires a human approval before each consequential commit; Tier 4 is unavailable for v1 agent execution.
+**Does not own:** External identity authentication (Auth0), HTTP session cookie/BFF transport (Control Plane), native credential storage (Desktop SessionBroker), external action execution (Adapters/Browser Extension), or verifying whether an agent's business recommendation is *correct* (Outcome Verification).
+
+**Boundary requirement:** A model may request authorization, but cannot grant it. Inference authorization is strictly distinct from business action authorization. Every consequential action is intercepted and evaluated by the deterministic Rust policy engine at the execution boundary. Tier 3 requires an item-level human approval matching the canonical proposal digest before consequential commit; Tier 4 restricted actions are unconditionally blocked from automated execution across all v1.0 workloads.
 
 ### 5.3 Workflow Discovery and Procedure Synthesis
 
-**Responsibility:** Turn employee-approved task contributions into candidate repeatable workflows, variants, exceptions, confidence statements, and requests for clarification.
+**Responsibility:** Analyze employee-approved, sanitized task contributions across the organization, cluster similar demonstrations around verifiable business objectives using conservative hybrid retrieval and cluster-wide compatibility, synthesize structured directed acyclic graph procedures with explicit decision branches and acyclic repeat subgraphs, attribute comprehensive claim-level provenance, identify procedural variations and contradictions, generate structured clarifying questions for domain reviewers, calculate sample-based opportunity metrics under cohort privacy suppression, and stage approved candidates into the Operational Graph.
 
-**Owns:** Candidate grouping, procedure inference, workflow comparison, suggested canonical steps, discovery provenance, proposed opportunity metrics.
+**Owns:** Issuer attempt deduplication `(organization_id, actor_id, device_id, profile_id, demonstration_id)`, model-space embedding generation, pgvector exact nearest-neighbor search, cluster-wide compatibility evaluation across objectives/boundaries/outcomes, 30-second debounced clustering (maximum 128 members), procedure DAG synthesis, claim-level provenance attribution, clarification question lifecycle, immutable candidate review revisions (`CandidateRevisionV1`), sanitized suppression rules (`SuppressionRuleV1`), owner-gated reconsideration routing, sample-based opportunity projections with explicit owner financial assumptions, human demonstration verification assessments (`DemonstrationVerificationV1`), and guidance promotion staging (`CandidatePromotionV1`).
 
-**Consumes:** Sanitized approved demonstrations, existing knowledge, validated business outcomes where available, expert explanations.
+**Consumes:** Sanitized approved task contributions (`ReviewedContributionV1`) with Ed25519 review attestations from [contribution-sync](docs/components/contribution-sync.md) (Contract 2), published playbook summaries and approved enterprise rules from [operational-graph](docs/components/operational-graph.md) (Contract 4 read projection), evaluated audience permissions and owner remit decisions from [identity-policy](docs/components/identity-policy.md), governed cloud text inference (`text.embed`, `text.reason`) via LiteLLM under [cloud-inference](docs/architecture/cloud-inference.md) (Contract 22), and durable transactional outbox/inbox delivery from [control-plane](docs/components/control-plane.md).
 
-**Produces:** Workflow candidates, suggested branching conditions, missing-information questions, evidence references, review requests.
+**Produces:** Reviewable workflow candidate revisions (`workflow.candidate.v1`, `workflow.candidate-revision.v1`), immutable guidance staging proposals (`CandidatePromotionV1`) delivered to Operational Graph (Contract 4 `stage_candidate`), governed suppression rules (`SuppressionRuleV1`), owner-gated reconsideration proposals (`workflow.reconsideration.v1`), privacy-filtered opportunity projections (`OpportunityV1`), and transactional domain events over Contract 18.
 
-**Does not own:** Declaring observed practices to be approved policy, releasing agents, or changing a published workflow without approval.
+**Does not own:** Unilateral publication of candidate workflows as approved company playbooks or distribution into HUD caches (exclusively owned by [operational-graph](docs/components/operational-graph.md)), ingestion of raw unreviewed desktop media (strictly local to [local-privacy-storage](docs/components/local-privacy-storage.md)), autonomous action execution (owned by [job-orchestration](docs/components/job-orchestration.md) and [agent-runtime](docs/components/agent-runtime.md)), agent compilation (owned by [agent-factory-ir](docs/components/agent-factory-ir.md)), runtime postcondition verification (owned by [outcome-verification](docs/components/outcome-verification.md)), or policy risk floor modification.
 
-**Boundary requirement:** Discovery is asynchronous; ambiguous observations and contradictory examples are retained as uncertainty rather than silently normalized away.
+**Boundary requirement:** Discovery is asynchronous and transactionally fenced. A candidate can NEVER be automatically published as company guidance; domain owner approval is required to stage for guidance, and Operational Graph exclusively publishes. Automatic candidates require at least three distinct observed-complete Task Instances (`completion_basis = observed_complete`), which may originate from one or more employees. Grouping requires a non-empty conjunction of contributing source audiences evaluated through Identity Policy; empty conjunction blocks candidate creation without disclosing source existence. Text-only model processing: still images remain reviewer-facing verification evidence, never model inputs.
 
 ### 5.4 Living Operational Graph and Knowledge Governance
 
@@ -462,190 +462,195 @@ This is a **domain model**, not a prescription to use a dedicated graph database
 
 ### 5.5 Agent Factory and Operational Capability Compiler
 
-**Responsibility:** Transform a sufficiently specified, approved capability into an executable **agent candidate** and related evaluation requirements.
+**Responsibility:** Transform sufficiently specified, approved capabilities and published playbooks into executable **agent candidates** expressed in a structured, model-independent Intermediate Representation (`AgentIRV1`), register closed dependency closures with Operational Graph, and package publisher-signed evaluation bundles.
 
-**Owns:** Agent candidate generation, business-level execution representation, dependency resolution, action planning, declared inputs/outputs, exception handling, verification requirements, candidate revision history.
+**Implementation:** Modular pure Rust compiler inside the existing Axum/Tokio/SQLx Control Plane API and Durable Worker roles; persists state in PostgreSQL 18 with mandatory Row-Level Security. Wire schemas: [`agent-factory-v1.schema.json`](docs/architecture/contracts/agent-factory-v1.schema.json) (`$id: urn:oryn:schemas:agent-factory:v1`), [`application-capability-v1.schema.json`](docs/architecture/contracts/application-capability-v1.schema.json), and [`outcome-verification-v1.schema.json`](docs/architecture/contracts/outcome-verification-v1.schema.json).
 
-**Consumes:** Published workflow/capability versions, effective business rules, approved integration capabilities, application limits, ownership/risk scope, permitted model assistance.
+**Owns:** Agent candidate generation, closed 10-node DAG IR (`AgentIRV1`), deterministic 8-pass compilation, dataflow dominance and taint tracking, static 10,000 node-execution bounding, draft editing and materiality classification, manifest generation, Vault Ed25519 candidate attestation (`SignedCandidateAttestationV1`), and evaluation bundle packaging (`CandidateEvaluationBundleV1`).
 
-**Produces:** Immutable candidate agent versions, required tool/action contracts, unresolved prerequisites, suggested test coverage, reviewable generated behavior.
+**Consumes:** Approved capability versions (`knowledge.capability-version.v1`), published playbooks (`knowledge.playbook-version.v1`), and formal business rules (`knowledge.business-rule-version.v1`) from Operational Graph; adapter capability snapshots (`application.capability-snapshot.v1`) from Application Adapters; verification specification projections (`verification.spec-projection.v1`) from Outcome Verification; actor remits (`agent.edit`) from Identity Policy; governed AI proposals (`agent_candidate_synthesize`) via LiteLLM under Cloud Inference; repair specifications from Incident Correction.
 
-**Does not own:** Approval to run in production, production credential issuance, or declaring its own evaluation a pass.
+**Produces:** Immutable candidate agent versions (`AgentVersionV1`), canonical RFC 8785 behavior digests (`behavior_sha256`), signed candidate attestations (`SignedCandidateAttestationV1`), structural compilation reports (`CompileReportV1`), and sealed evaluation bundles (`CandidateEvaluationBundleV1`).
 
-**Boundary requirement:** Compile to a **model-independent operational representation**, not only an unconstrained natural-language prompt. Keep business goals, actions, policy, and postconditions conceptually separate. If required capabilities or evidence are missing, produce an explicit blocked/incomplete candidate.
+**Does not own:** Approving agents for production deployment or assigning runtime permissions (owned by [release-governance](docs/components/release-governance.md) and [identity-policy](docs/components/identity-policy.md)); production credential issuance or secret storage; running scenario test suites or populating passing evaluation verdicts (owned by [flight-simulator](docs/components/flight-simulator.md)).
 
+**Boundary requirement:** Compile to a **model-independent operational representation**, not an unconstrained natural-language prompt. Business goals, actions, policy, and postconditions remain conceptually separate. If required capabilities, formal rules, or verifiers are missing, produce an explicitly blocked candidate report. Candidate authenticity proves compiler origin only; it confers zero production write authority.
 ### 5.6 Application Capability Registry and Integration Management
 
 **Responsibility:** Describe which approved external applications and operations Oryn can observe, guide, assist, execute, and verify, and under which conditions.
 
-**Owns:** Per-application/per-operation eligibility, connection status, declared read/write/verify capabilities, known limitations, permitted execution modes, adapter compatibility versions.
+**Owns:** Immutable capability snapshots (`ApplicationCapabilitySnapshotV1`) and live statuses (`ApplicationCapabilityStatusV1`) via pure async `ApplicationCapabilityPort`, per-operation qualification definitions (`OperationQualificationDefinitionV1`) with 30-day renewable attestations, connection lifecycles, write guards (`write_guard`), declared side-effect semantics, and synchronization via `adapter_registry_guard`.
 
-**Consumes:** Customer-approved application connections, adapter declarations, validation evidence, policy restrictions, availability state.
+**Consumes:** Customer-approved application connections, signed first-party adapter packs (`adapter.pack.v1`), qualification evidence, policy restrictions, availability state.
 
-**Produces:** Capability discovery for the Agent Factory, preflight eligibility, runner action routing, simulator compatibility constraints, customer-visible compatibility status.
+**Produces:** Capability discovery for the Agent Factory, preflight eligibility, runner action routing, simulator compatibility constraints, customer-visible compatibility reports (`ApplicationCompatibilityReportV1`).
 
 **Does not own:** Grants of user authority, customer-wide policy decisions, or guarantees of support for all custom application configurations.
 
-**Boundary requirement:** Observe/Guide/Assist/Run Supervised/Run Autonomously are distinct advertised capabilities. An adapter may support one without supporting the others. Verification support is separate from action support.
+**Boundary requirement:** Observe/Guide/Assist/Run Supervised/Run Autonomously are distinct advertised capabilities. An adapter may support one without supporting the others. Verification support is separate from action support. Capability snapshots require ordered, 1:1 operation qualification references (`qualification_refs`), write guards, and operation statuses. Production and simulation connections remain strictly isolated by account and credential binding.
+
 
 ### 5.7 Command Center, Notifications, and Analytics
 
-**Responsibility:** Present organization-scoped operations, playbooks, agent catalog, simulations, jobs, incidents, changes, insights, and administration.
+**Responsibility:** Present organization-scoped operations, playbooks, agent catalog, simulations, jobs, incidents, changes, insights, and administration via interactive web interfaces and desktop alerts (resolved in [command-center-analytics specification](docs/components/command-center-analytics.md) and [ADR-0023](docs/adr/0023-command-center-reporting-privacy-and-delivery.md)).
 
-**Owns:** User-facing projection, navigation, dashboards, review interfaces, notification inbox/delivery, reporting queries, exports within permission bounds.
+**Owns:** Single-page web application (React 19, TypeScript, `@xyflow/react`, and `elkjs`), hierarchical navigation, role-scoped view projections, interactive DAG visualizations, central notification inbox and delivery tracking across desktop shell (`shell-sync.v1` 1.1) and email (AWS SES in `us-east-1`), operational analytics query engine, baseline human duration approvals and wage assumptions, 14-calendar-day evaluation pilot lifecycle and roster management, immutable report snapshots, and compliance export generation.
 
-**Consumes:** All relevant authorized domain records, aggregated process metrics, user assignments, alert priorities, identity and role context.
+**Consumes:** Operational reporting facts from all upstream subsystems (`HumanTaskReportingFactV1`, `WorkflowReportingFactV1`, `ApprovalReportingFactV1`, `RuntimeInterventionFactV1`, `CaseReportingFactV1`, `VerificationReportingFactV1`, `ScenarioReportingFactV1`, `ReliabilityReportingFactV1`, `ReleaseReportingFactV1`), user assignments, alert priorities, identity and capability context (`analytics.pilot.manage`, `analytics.assumptions.manage`).
 
-**Produces:** Human review actions, job requests, scoped management commands, exports, delivery acknowledgments, user preference changes.
+**Produces:** Human review actions, baseline approval submissions (`ApproveReportingBaselineV1`), pilot control commands (`PilotControlV1`), report snapshot generation requests, signed export bundles (`CreateExportV1`), delivery receipts, and user preference updates (`NotificationPreferencesV1`).
 
-**Does not own:** Authoritative business outcomes, private desktop media, employee surveillance indicators, or policy evaluation in the frontend.
+**Does not own:** Authoritative business outcomes, direct mutation of operational source tables, private desktop media, employee surveillance indicators, AI model inference, or authorization decisions.
 
-**Boundary requirement:** Analytics are workflow/organization-centric; no employee rankings, idle scoring, or individual desktop timelines. All reports disclose coverage and whether impact numbers are measured or estimated.
+**Boundary requirement:** Analytics are strictly workflow/organization-centric; no employee rankings, idle scoring, or individual desktop timelines. The 5-contributor privacy floor is strictly enforced on all human-attributable breakdowns, discovery opportunities, and baseline reviews. Weekly partitions seal 72 hours after ISO week close UTC and commit via `AnalyticsDisclosureCommitmentV1`. All reports disclose coverage, denominator start criteria, and whether numbers are measured or estimated. Zero AI inference is conducted in reporting.
 
 ---
 ## 6. Execution, Simulation, Verification, and Improvement Services
 
 ### 6.1 Job Orchestration and Scheduling
 
-**Responsibility:** Coordinate manually started and approved recurring agent jobs across cases, approvals, external actions, pauses, resumes, failures, and completion.
+**Responsibility:** Coordinate manually started and approved recurring agent jobs across cases, approvals, external actions, pauses, resumes, failures, and completion (resolved in [job-orchestration specification](docs/components/job-orchestration.md) and [ADR-0018](docs/adr/0018-job-orchestration-and-scheduling.md)).
 
-**Owns:** Durable job/case lifecycle; dispatch and scheduling; resource/concurrency limits; case dependencies; waiting for approvals; coordination of retries and escalation; job-level reporting.
+**Owns:** Durable job/case lifecycle; dispatch and scheduling; resource/concurrency limits; case dependencies; waiting for approvals; coordination of retries and escalation; job-level reporting; frozen population selection sealing; cross-job record exclusion reservations; action generation allocation; central encrypted value custody; and synchronous containment safety fences.
 
-**Consumes:** Authorized job requests, approved/pinned agent versions, eligible case populations, preflight results, runner progress, verification verdicts, release restrictions.
+**Consumes:** Authorized job requests, approved/pinned agent versions via `ReleaseJobAdmissionPort` (`JobReleaseEligibilityV1`), eligible case populations via `AdapterRecordSelectionPort` (`AdapterRecordSelectionPageV1`), preflight results, runner progress and checkpoints (`RuntimeCheckpointPort`), encrypted value uploads (`RuntimeValuePort`), verification verdicts, sponsor authority (`ScheduledExecutionAuthorityV1`), and release restrictions.
 
-**Produces:** Scoped work assignments, job/case status transitions, approval waits, completion events, incident signals, operational history.
+**Produces:** Scoped work assignments (`RuntimeAssignmentV1`), job/case status transitions, approval waits, completion events, incident signals, synchronous safety fences (`OrchestrationSafetyFenceV1`), operational history, and deterministic job/case projections.
 
 **Does not own:** Performing application actions itself, deciding approval authority, editing agent versions, or declaring an external state verified based solely on runner success.
 
-**Boundary requirement:** Job operations are durable and recoverable. A restart must not silently repeat non-idempotent external writes. Scheduling must respect organization policy, overlapping-job restrictions, budgets, and explicit stop controls.
+**Boundary requirement:** Job operations are durable and recoverable. A restart must not silently repeat non-idempotent external writes. Scheduling must respect organization policy, overlapping-job restrictions, budgets, and explicit stop controls. Relational state machines on PostgreSQL using row-level security and atomic CAS replace external workflow engines. Actions utilize monotonic cryptographic action generations to ensure strict single-use external dispatch. Uncertain outcomes hold to prevent duplicate real-world actions. Terminal status requires independent verification.
 
 ### 6.2 Production Agent Runtime and Scoped Workers
 
-**Responsibility:** Execute an approved, pinned agent version against eligible cases through validated application adapters.
+**Responsibility:** Execute an approved, pinned agent version against eligible cases through validated application adapters under strict external policy interception and sandboxed execution boundaries (resolved in [agent-runtime specification](docs/components/agent-runtime.md) and [ADR-0017](docs/adr/0017-agent-runtime-execution-and-recovery.md)).
 
-**Owns:** Execution of individual structured steps, model-assisted decisions only where permitted, tool/action invocation, action trace, local progress reports, and bounded failure escalation.
+**Owns:** Pure deterministic execution of individual structured steps via shared Rust core `oryn-runtime-core`, model-assisted decisions only where permitted via governed LiteLLM gateway, tool/action invocation requests, content-free execution trace, local progress reports, and bounded evaluation budgets.
 
-**Consumes:** Scoped job assignment, fixed agent/capability version references, effective authorization and action limits, short-lived access to approved application capabilities, permissible task context.
+**Consumes:** Scoped job assignments (`RuntimeAssignmentV1`, Contract 10), fixed agent version and behavior hashes, authoritative per-action authorization verdicts and one-use admission consumption (`SignedActionAdmissionV1`, Contract 11), short-lived access to approved application capabilities (`AdapterExecutionPort`, Contract 12), independent verification run results (`VerificationRunResultV1`, Contract 13), permissible task context.
 
-**Produces:** Proposed mutations, authorization requests, step results, external submission attempts, evidence needed for verification, failure signals.
+**Produces:** Proposed mutations, authorization requests, step results, external submission attempts, evidence needed for verification, checkpoint proposals (`RuntimeCheckpointProposalV1`), failure signals.
 
-**Does not own:** Defining company policy, approving its own action, altering its deployed version, marking itself business-correct, or gaining new tools without authorization.
+**Does not own:** Defining company policy, approving its own action, altering its deployed version, marking itself business-correct, durable checkpoint storage ownership (owned by Job Orchestration PostgreSQL tables), or gaining new tools without authorization.
 
-**Boundary requirement:** The runner is treated as **less trusted than the authorization and release authorities**. Even if a model is compromised or a document contains prompt injection, action and credential boundaries remain enforced outside model reasoning. Local and remote runners share conceptual action/policy/verification contracts even if execution mechanics differ.
+**Host placement and isolation:** Host placement is pinned permanently to cloud host (mandatory gVisor sandbox `runsc`, non-root UID 10001, dropped capabilities, 1 vCPU / 512 MiB limit) or employee workstation (signed `oryn-runtime-worker` supervised by Desktop Shell via `shell-runtime.v1`). In-flight interpreter state never migrates between machines.
+
+**Boundary requirement:** The runner is treated as **less trusted than the authorization and release authorities**. Even if a model is compromised or a document contains prompt injection, action and credential boundaries remain enforced outside model reasoning. Local, cloud, and simulation runners execute the identical pure Rust evaluation core. Checkpoints commit via PostgreSQL CAS; external mutations require durable fence consumption before dispatch. Ambiguous outcomes hold to prevent duplicate real-world actions.
 
 ### 6.3 Application Action Adapters and Credential Access
 
-**Responsibility:** Translate a declared business operation into a permitted application interaction and return structured observations/results.
+**Responsibility:** Translate a declared business operation into a permitted application interaction and return structured observations/results via signed first-party Rust workers (`oryn-adapter-worker`).
 
-**Owns:** Application-specific actuation and readback, declared side-effect semantics, capability limitations, adapter-level failure classification, safe use of scoped connections.
+**Owns:** Application-specific deterministic actuation and readback across bounded vendor packs (Gmail, Outlook, Google Sheets, Excel Web, Salesforce, HubSpot, NetSuite), preparation and state capture (`AdapterPreparation`), durable attempt claims in `AdapterSubmissionJournal`, and error classification under closed `AdapterErrorCodeV1`.
 
-**Consumes:** Validated operation with arguments and target identity, capability/adapter version, least-privileged connection, job authorization decision.
+**Consumes:** Validated operation requests (`AdapterPrepareRequestV1`, `AdapterExecuteRequestV1`), authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1|null, admission: SignedActionAdmissionV1}`, and opaque credential lease handles from `AdapterEgressBroker`.
 
-**Produces:** Submission receipt or failure, observed application state, readback data, evidence or uncertainty indicators.
+**Produces:** Bounded submission receipts (`AdapterSubmissionReceiptV1`) and signed independent readback evidence (`SignedAdapterReadbackEvidenceV1`) to outcome verification.
 
-**Does not own:** Policy approval, business objective interpretation, cross-job orchestration, or the assumption that a timeout means the action did not occur.
+**Does not own:** Policy approval, business objective interpretation, cross-job orchestration, direct vendor credential custody, or the assumption that a timeout means the action did not occur.
 
-**Execution modality preference:** Approved structured APIs/integrations first; validated browser automation when structured integrations are unavailable; native desktop accessibility actions where the specific workflow is supported. This is an architectural preference, not a mandate for any particular SDK or tool protocol.
+**Execution modality preference:** Approved structured APIs/integrations first with pinned transports; validated browser automation when structured integrations are unavailable; native desktop accessibility actions (Stage 3 semantic actuation only) where the specific workflow is supported. This is an architectural preference, not a mandate for any particular SDK or tool protocol.
 
-**Boundary requirement:** External credentials are not copied indiscriminately from employee sessions to remote runners. The design must keep connection authority scoped to the current job and application. Production and test connections are never interchangeable by default.
+**Boundary requirement:** Execution is restricted to signed first-party Rust binaries; third-party plugins and arbitrary scripts are blocked. Cloud worker isolation key is `(organization_id, connection_id, environment, credential_role)` with roles segregated into `actuation` and `readback`. Direct worker vendor networking is blocked; out-of-process `AdapterEgressBroker` injects Vault tokens and enforces registered origin, URL template, and HTTP method. At most one mutation attempt is journaled per action intent; ambiguous drops yield `submission_state="unknown"` and consumed fences remain consumed. Production and simulation connections are strictly separated.
+
 
 ### 6.4 Agent Flight Simulator and Evaluation Coordinator
 
-**Responsibility:** Evaluate fixed agent candidates and proposed repairs under controlled, representative business scenarios before release.
+**Responsibility:** Evaluate fixed agent candidates and proposed repairs under controlled, representative business scenarios before release, as fully specified in [flight-simulator](docs/components/flight-simulator.md) and [ADR-0019](docs/adr/0019-flight-simulator-isolation-and-evaluation-evidence.md).
 
-**Owns:** Test-suite lifecycle, scenario execution requests, test environment allocation, test-result aggregation, coverage assessment, failed-case replay and version comparison.
+**Owns:** Test-suite lifecycle, scenario execution requests, test environment allocation, test-result aggregation, coverage assessment, failed-case replay, version comparison, and signed evaluation reports (`SignedEvaluationReportV1`).
 
-**Consumes:** Immutable agent candidate, capability and rule versions, approved/sanitized scenarios, supported simulator environments, independent expected-result specifications.
+**Consumes:** Sealed `CandidateEvaluationBundleV1` or `AssistEvaluationBundleV1`, capability and rule versions, sealed scenario suites (`ScenarioSuiteVersionV1`), external environment bindings (`AdapterEnvironmentBindingV1`), and independent expected-result specifications.
 
-**Produces:** Per-scenario execution evidence, pass/fail/expected-safe-stop/inconclusive results, coverage gaps, version comparisons, release-readiness evidence.
+**Produces:** Per-scenario execution evidence, pass/fail/expected-safe-stop/inconclusive results, coverage matrices (`CoverageMatrixV1`), version comparisons (`EvaluationComparisonV1`), and release-readiness evidence signed with dedicated Vault evaluation keys.
 
 **Does not own:** Business policy authorship, production deployment approval, or an assertion that a mock environment perfectly reproduces every third-party production system.
 
-**Boundary requirement:** Tests execute using the **same behaviorally relevant agent definition** as production, but in distinct nonproduction authorization and data contexts. Every evaluation must identify its environment fidelity and coverage limitations.
+**Boundary requirement:** Tests execute using the **same behaviorally relevant candidate definition** as production (pure Rust core for agents via Orchestration/Runtime; deterministic local reducer for assist plans via HUD), running in an explicit non-production authorization context (`ExecutionContextV1::Evaluation`) under `SignedSimulationAdmissionV1`. Every evaluation must identify its environment fidelity and coverage limitations.
 
 ### 6.5 Scenario and Test Environment Management
 
-**Responsibility:** Provide isolated test cases and application state that exercise normal business behavior, known exceptions, and failures.
+**Responsibility:** Provide isolated test cases and application state exercising normal business behavior, known exceptions, and boundary failures under closed declarative schemas.
 
-**Owns:** Scenario definitions, starting state, test fixtures, simulated dependencies, reset lifecycle, controlled failure injection, test environment provenance.
+**Owns:** Scenario versions (`ScenarioVersionV1`), starting state, immutable test fixtures (`FixtureManifestV1`), simulated dependencies (`synthetic.erp`, `synthetic.crm`, `synthetic.support`), environment lease and reset lifecycle, controlled fault injection (`FaultPlanV1`), and test environment provenance.
 
-**Consumes:** Published rules, permitted historical patterns, synthetic data policies, approved reference workflows, known incidents and repairs.
+**Consumes:** Published rules, permitted historical patterns, synthetic data policies, approved reference workflows, known incidents, and versioned regression requirements (`SimulationRegressionRequirementV1`).
 
-**Produces:** Reproducible test inputs, environment handles, expected-state baselines, injected fault conditions, replay metadata.
+**Produces:** Reproducible test inputs, environment leases, expected-state baselines, injected fault conditions, replay metadata, and canonical semantic fingerprints (`semantic_sha256`).
 
 **Does not own:** Production business records, automatic import of raw private observations, or final grading of the agent under test.
 
-**Boundary requirement:** Tests cannot perform unintended real-world writes. For v1.0, realistic reference environments for the three required synthetic workflows are part of the coverage strategy; arbitrary customer production systems are not promised to be perfectly simulatable.
+**Boundary requirement:** Tests cannot perform unintended real-world writes. For v1.0, realistic reference environments for the three required synthetic workflows (invoice/PO reconciliation, customer order status reconciliation, support exception triage) are part of the coverage strategy; arbitrary customer production systems require qualified vendor sandboxes with independently verified reset proof. Each cloud attempt runs in a fresh, unshared gVisor sandbox; local scenarios run on dedicated enrolled lab devices (`identity_simulation_lab_device`), never ordinary employee workstations.
 
 ### 6.6 Independent Outcome Verification and Test Oracle
 
-**Responsibility:** Determine whether the **business effect** of an agent action/case matches its authorized postconditions, or whether the result is incomplete, incorrect, or unknown.
+**Responsibility:** Determine whether the **business effect** of an agent action/case matches its authorized postconditions, or whether the result is incomplete, incorrect, or unknown, via the pure deterministic library `oryn-verification-core`.
 
-**Owns:** Verification specifications and outcome-check execution, interpretation of independent evidence, verdicts and uncertainty classifications, evidence traceability.
+**Owns:** Verification specifications (`VerificationSpecProjectionV1`), outcome-check execution, interpretation of independent evidence, immutable tri-state verdicts (`verified`, `mismatch`, `unknown`), attributable human postcondition assessments (`SignedPostconditionAssessmentV1`), standalone Operational Graph handoff verifications, and tiered evidence lifecycle management.
 
-**Consumes:** Expected business outcome, applicable business rule versions, observed readback/authoritative business state, submitted action history, test expected state when in simulation.
+**Consumes:** Expected business postconditions, applicable business rule versions, observed readback/authoritative business state with certified freshness proofs (`ReadbackFreshnessProofV1`), submitted action history, signed reviewer observations, sealed scenario expectations (`ScenarioExpectationRefV1`) when in simulation.
 
-**Produces:** Verified-complete, correctly-escalated, business-incorrect, policy-attempt, or unverified outcomes; mismatch descriptions; evidence references.
+**Produces:** Immutable `VerificationRunResultV1` and detached Vault Ed25519 attestations (`SignedVerificationResultAttestationV1`); mismatch descriptions and incident facts; signed postcondition assessments; standalone handoff assessment results (`HandoffAssessmentResultV1`); advisory on-demand explanations (`VerificationExplanationV1`).
 
-**Does not own:** Choosing agent actions, authorizing side effects, or accepting agent narrative as sufficient proof.
+**Does not own:** Choosing agent actions, authorizing side effects, or accepting agent narrative as sufficient proof. Post-submit verification does not claim that an already-submitted external write cannot commit.
 
-**Boundary requirement:** An independent authoritative readback is preferred. An unconfirmable consequential write is **Outcome Unknown**, not success. The production verifier and simulation oracle share business semantics while independently evaluating their respective state sources.
+**Boundary requirement:** An independent authoritative readback is preferred. Readbacks execute under a dedicated non-actuating `verification_read` token purpose with single-use leases bound to prepared read targets. An unconfirmable consequential write is **Outcome Unknown**, not success. Explicit freshness proofs (`matching_commit_token`, `certified_monotonic_coverage`, `certified_read_after_write`) override heuristic delays; stale caches cannot verify. The production verifier and simulation oracle share pure business semantics while independently evaluating their respective state sources. Re-verification generates distinct request and result IDs without rewriting historical records. Sensitive evidence payloads are encrypted with AES-256-GCM and cryptographically destroyed at 7 days (terminal) or 30 days (no progress); content-free audit records persist for 24 months. Verification requests require explicit `evaluation_target: EvaluationTargetV1` across all callers.
 
 ### 6.7 Incident Detection, Classification, and Containment
 
-**Responsibility:** Convert safety failures, errors, abnormal outcomes, repeated exceptions, and uncertainty into governed incident records and immediate containment actions.
+**Responsibility:** Convert safety failures, errors, abnormal outcomes, repeated exceptions, and uncertainty into authoritative incident records and immediate, synchronous containment restrictions.
 
-**Owns:** Incident status, severity, correlation across jobs/agents/adapters, diagnostic hypotheses, affected-scope determination, request to pause/restrict activity.
+**Owns:** Incident status, severity, correlation group memberships, diagnostic hypotheses, affected-scope determination, request to pause/restrict activity via Job Orchestration and Identity.
 
-**Consumes:** Execution failures, verification mismatches, policy violations, simulator regressions where relevant, operator reports, application drift signals.
+**Consumes:** Execution failures, verification mismatches, policy violations, simulator regressions, operator reports, application drift signals.
 
-**Produces:** Incidents with observed evidence and labeled hypotheses; escalation and containment requests; expert questions; repair investigation triggers.
+**Produces:** Incidents with observed evidence references and labeled hypotheses; synchronous containment commands (`SetIncidentRestrictionCommandV1`); expert questions; repair investigation triggers.
 
 **Does not own:** Unilateral approval of a candidate fix, unrestricted access to private desktop evidence, or silent changes to an approved business policy.
 
-**Boundary requirement:** Stop/pause decisions must be able to affect one case, a batch, a worker, an adapter capability, or a released version according to actual blast radius. Security-critical restrictions are not merely UI notifications.
+**Boundary requirement:** Stop/pause decisions commit synchronously with sub-second durability and connected-worker safe-boundary acknowledgment within ≤ 2 seconds; connected workers without acknowledgment remain `acknowledgment_pending`, not falsely stopped. Containment executes across ten bounded targets (`case`, `job`, `schedule`, `agent_version`, `connection`, `operation`, `capability`, `rule`, `worker`, `organization`) via `orchestration_incident_restriction` and durable safety fences (`OrchestrationSafetyFenceV1`). Containment never depends on cloud AI inference, group correlation, or notification delivery. Security-critical restrictions are not merely UI notifications. Independent incidents remain distinct from heuristic correlation groups (`incident_group`).
 
 ### 6.8 Human Correction and Exception Intelligence
 
-**Responsibility:** Collect structured human knowledge when an observed procedure or agent fails to handle a case; turn explanations and demonstrations into reviewable learning candidates.
+**Responsibility:** Collect structured, attributable human knowledge when an observed procedure or agent fails to handle a case; turn explanations and demonstrations into reviewable learning candidates without converting individual explanations directly into policy.
 
-**Owns:** Correction requests, expert questions and responses, competing explanations, candidate exceptions and rule proposals, correction-to-incident linkage.
+**Owns:** Immutable correction records (`CorrectionV1`), expert questions and responses (`CorrectionQuestionV1`), competing explanations, candidate exceptions and rule proposals, correction-to-incident linkage.
 
-**Consumes:** Incident evidence the expert may access, failed-case context, published policies, expert-provided resolution or demonstration.
+**Consumes:** Permitted incident context, failed-case evidence references, published policies, expert-provided resolution or desktop dictation.
 
-**Produces:** Suggested workflow step/branch corrections, potential business rules, additional scenarios, repair inputs, unresolved knowledge conflicts.
+**Produces:** Attributable corrections, suggested workflow step/branch corrections, candidate business rules (`ProposeRuleCommandV1`), additional scenario specifications, repair inputs, reported knowledge conflicts (`ReportConflictCommandV1`).
 
-**Does not own:** Automatic promotion of an expert's individual response into authoritative company policy or release of repaired agents.
+**Does not own:** Automatic promotion of an expert's individual response into authoritative company policy or autonomous release of repaired agents.
 
-**Boundary requirement:** Classify interaction fixes, data-interpretation fixes, and policy/rule changes separately, because they have different approval paths. No answer or contradictory answers leave the exception unresolved and in a safe escalation state.
+**Boundary requirement:** Desktop-only online audio dictation uses Privacy Helper's `CorrectionMicrophoneSource` mode over binary `ORYC` v1 frames (16-kHz mono PCM, ≤ 3,200 bytes per 100 ms) under employee preference category `incident_correction_audio` and signed capture-policy lease (`incident_correction_audio_permitted: true`). Reviewed corrections wrap in `ReviewedContributionV1` (`reviewed_correction`) signed with device private keys. Contradictory credible explanations report material Graph conflicts (`ReportConflictCommandV1` / `KnowledgeConflictV1`) and restrict affected branches; resolution requires authoritative policy owner approval (`ApproveRuleCommandV1`). No majority vote or model chooses the winner.
 
 ### 6.9 Repair Proposal and Regression Engine
 
-**Responsibility:** Generate bounded, explainable modifications that address documented failures and submit them to evaluation and release governance.
+**Responsibility:** Generate bounded, explainable modifications that address documented failures within declared structural scopes and submit them to evaluation and release governance.
 
-**Owns:** Repair hypotheses, proposed behavioral diff, change scope, incident linkage, requested new regression scenarios, effect/impact analysis.
+**Owns:** Repair hypotheses, proposed behavioral diff, structural change scope (`RepairScopeV1`), incident linkage, requested new regression scenarios, prevention specifications (`PreventionSpecificationV1`), effect/impact analysis.
 
-**Consumes:** Incident diagnosis, accepted corrections, knowledge graph dependencies, immutable agent version, relevant test failures, policy restrictions.
+**Consumes:** Incident diagnosis (`DiagnosisV1`), accepted corrections (`CorrectionV1`), knowledge graph dependencies, immutable agent version, relevant test failures, policy restrictions.
 
-**Produces:** New draft agent/capability versions or adapter changes, reviewable repair proposals, new test requirements, re-evaluation requests.
+**Produces:** New draft agent/capability versions, adapter change proposals (`AdapterChangeProposalV1`), reviewable repair proposals (`RepairProposalV1`), stable regression requirements (`SimulationRegressionRequirementV1`), re-evaluation requests.
 
 **Does not own:** Editing the active version in place, granting broader permissions, bypassing required tests, or asserting release readiness on its own.
 
-**Boundary requirement:** Prefer narrow change sets. A changed UI target is not a reason to rewrite unrelated finance rules; a changed finance rule may require revalidation of many agents even when no UI behavior changed.
+**Boundary requirement:** Prefer narrow structural change sets. Enforce declared structural bounds (`RepairScopeV1`) and reject changes outside permitted node IDs/JSON pointers. Stable regression requirements (`SimulationRegressionRequirementV1`) eliminate creation cycles by removing `candidate_target`; candidate binding occurs at Factory compilation finalization time via `repair_bindings` on `CandidateEvaluationBundleV1`. Evaluation requires full applicable regression suites, original/prevention obligations, and at least 5 nearby variations. Release is rejected if the original failure is resolved but any known applicable case regresses (PRODUCT §28.4).
 
 ### 6.10 Release, Rollout, and Change Governance
 
-**Responsibility:** Decide which immutable version is allowed to serve which organization, workflow, case population, application configuration, and autonomy stage.
+**Responsibility:** Decide which immutable version is allowed to serve which organization, workflow, explicit named case cohort, and autonomy stage.
 
-**Owns:** Release requests, review and approval lineage, evaluation references, readiness gates, active version/rollout mapping, canary restrictions, pause/restore/revert operations, release audit.
+**Owns:** Release requests, review and approval lineage, evaluation references, readiness gates, active version/cohort mapping (`ReleaseCohortV1`), rollout health monitoring (`RolloutHealthPolicyV1`), canary restrictions, pause/restore/revert operations (`restore_named`), Stage 5 automated repair preauthorizations (`ReleasePreauthorizationV1`), signed assist release eligibility (`SignedAssistReleaseEligibilityV1`), and release audit.
 
-**Consumes:** Candidate version, complete required evaluation evidence, current organization policy, workflow owner approval, risk tier, rollout configuration, incident/safety state.
+**Consumes:** Candidate version, complete required evaluation evidence, current organization policy, workflow owner approval, risk tier, named rollout configuration, incident/safety state.
 
-**Produces:** Approved scoped release, denied/revision-required decision, rollout changes, stop instructions, version restoration and revalidation requirements.
+**Produces:** Approved scoped release, denied/revision-required decision, rollout changes, stop instructions (`ReleaseCohortFenceV1`), version restoration and revalidation requirements, and signed assist release eligibility attestations.
 
 **Does not own:** Generating agent behavior or substituting its own judgment for mandatory business policy approval.
 
-**Boundary requirement:** Automatic Stage 5 release is limited to the narrow low-risk conditions explicitly permitted by `PRODUCT.md`; higher-risk or policy-changing patches require human approval. Evaluation passing is necessary but not sufficient for production release.
+**Boundary requirement:** Traffic allocation is governed strictly by explicit named cohorts (`ReleaseCohortV1`); synthetic percentage routers are forbidden. Production release authorization defaults to the designated Workflow Owner; Security Officer approval is required only when permissions expand or policy explicitly demands stricter fencing. Ordinary material replacements reset the 20-case consecutive supervised streak to 0; no streak inheritance. Automatic Stage 5 release is strictly limited to narrow preauthorized Tier 0/1 patches (`interaction_binding` and `string_format` with proved transitive dataflow safety) under an active, dual-authorized `ReleasePreauthorizationV1`. Evaluation passing is necessary but not sufficient for production release; active 30-day operation qualifications under Contract 12 are strictly required. Version restoration (`restore_named`) re-establishes cohort admission for new jobs by pointing to a verified historical predecessor; running jobs remain pinned; external mutations already committed are never retroactively undone or recalled; synchronous safety fences act as forward dispatch barriers.
 
 ---
 
@@ -667,24 +672,31 @@ This is a coordination contract, **not** an endpoint list or wire schema.
 
 | Producer | Consumer | Information / command | Boundary rule |
 |---|---|---|---|
-| OS/browser/audio observers | Privacy + local evidence | Raw candidate observations | Filter at source; no direct cloud pathway |
-| Local privacy/contribution | Discovery | Employee-approved sanitized task contribution | Preserve consent receipt, provenance, sensitivity and scope |
-| Knowledge Governance | Edge context | Published, access-filtered playbook/peer fix | May be cached only for currently authorized scope |
-| Discovery | Knowledge Governance | Candidate workflow, observed variants, questions | Candidate cannot be auto-published |
-| Knowledge Governance | Agent Factory | Approved capability, rules, postconditions | Immutable/versioned references |
-| Capability Registry | Factory/Orchestrator/Runner | Supported actions, limitations and verification support | Unsupported ability cannot be inferred from model output |
-| Agent Factory | Simulator | Fixed candidate and required tests | Test cannot silently change the candidate under evaluation |
-| Simulator + Oracle | Release Governance | Evaluation results, coverage and gaps | Evaluation does not authorize deployment |
-| Release Governance | Orchestrator | Eligible active version and scope | Jobs must pin accepted version and obey emergency stops |
-| Orchestrator | Runner | Approved, bounded work assignment | Assignment alone does not grant unrestricted action rights |
-| Runner | Policy Engine | Specific action authorization request | Deny or require review when context/authority is insufficient |
-| Runner | External adapter | Authorized operation | Only defined application actions; narrow credentials |
-| Runner/adapters | Verifier | Submission and readback evidence | Runner success ≠ business completion |
-| Verifier | Orchestrator/Incident | Verdict and mismatch | Unknown outcome blocks dangerous retries |
-| Incident | Correction/Repair | Failure classification and evidence references | AI diagnosis labeled hypothesis until supported |
-| Correction | Knowledge/Repair | Accepted expert correction or candidate rule | Different owners approve procedures and policies |
-| Repair | Factory/Simulator | New candidate version and regression requirements | No in-place active version mutation |
-| Governance / domain owners | Command Center | Authorized read models, notifications, audit | Frontend is not an authorization authority |
+| OS/browser/meeting observers | Privacy + local evidence | Raw candidate observations and reverse source permits | Filter at source; reverse privacy-to-worker permits (`GrantObservationPermit`, `RevokeObservationPermit`, `GrantMeetingPermit`, `RevokeMeetingPermit`) and streaming over inherited channels (`os-observation.v1`, `shell-browser.v1`, and channel 4 `shell-meeting-audio.v1`); masked shared-memory frames; native meeting taps and offscreen tab capture; no direct cloud pathway |
+| Local privacy / Contribution sync | Discovery | Employee-approved sanitized task contribution (Contract 2) | Privacy helper generates and signs Ed25519 review attestation (`ReviewedContributionV1`); contribution-sync verifies attestations and manages encrypted queue and delivery receipts; sanitized text and purpose-bound redacted still images only under valid artifact policy; wire schema `contribution-sync-v1.schema.json`; no raw media or private evidence IDs cross boundary |
+| Operational Graph / Contribution sync | Local Context HUD | Published, access-filtered playbook / peer fix bundles (Contract 3) | Cached only within currently authorized employee session and scope; bundles are version-pinned by content SHA-256 (`hud.guidance-bundle.v1`); wire schema `guidance-sync-v1.schema.json`; offline reads governed by signed access lease (`hud.guidance-access-lease.v1`, max 24 hours); immediate eviction upon revocation |
+| Discovery | Knowledge Governance / Operational Graph | Candidate workflow, observed variants, clarifying questions (Contract 4) | Immutable staging proposal (`CandidatePromotionV1`); staged receipt (`GraphCandidateReceiptV1`); domain owner approval required; Operational Graph exclusively owns separate publication command (`POST /v1/knowledge/candidate-stages/{graph_draft_id}/publications`) and emits `workflow.published`; candidate cannot be auto-published; wire schema `workflow-discovery-v1.schema.json` |
+| Knowledge Governance | Agent Factory | Approved capability, rules, postconditions (Contract 5) | Immutable/versioned references (`knowledge.capability-version.v1` and `knowledge.business-rule-version.v1`); wire schema `operational-graph-v1.schema.json` |
+| Capability Registry / Application Adapters | Factory / Orchestrator / Runner | Supported actions, limitations, selection capabilities, and verification support (Contract 6) | Immutable capability snapshots (`application.capability-snapshot.v1`) with ordered `qualification_refs`, per-operation `write_guard`, qualified `selection` declarations (`RecordSelectionCapabilityV1`), and live statuses (`application.capability-status.v1`) with `operation_statuses`; record selection via `AdapterRecordSelectionPort::select` returning `AdapterRecordSelectionPageV1` with `ApplicationRecordRefV1`; wire schemas `application-capability-v1.schema.json` and `application-adapters-v1.schema.json`; unsupported operations cannot be inferred from model output |
+| Agent Factory / HUD | Simulator | Sealed candidate evaluation bundle, assist evaluation bundle, IR, and coverage requirements (Contract 7) | Sealed `CandidateEvaluationBundleV1` with Vault Ed25519 attestation, `AssistEvaluationBundleV1`, `DependencyManifestV1`, and `CompileReportV1`; wire schemas `agent-factory-v1.schema.json`, `guidance-sync-v1.schema.json`, and `flight-simulator-v1.schema.json`; simulator cannot mutate candidate |
+| Outcome Verification / Simulator | Release Governance | Verification spec projections, signed evaluation reports, coverage matrices, and oracle verdicts (Contract 7 & 8) | Immutable `VerificationSpecProjectionV1` (`system_evidence` vs `authorized_reviewer` closed union) for compilation, pure deterministic evaluation core, and `SignedEvaluationReportV1` (`simulation.evaluation-report.v1`) with `CoverageMatrixV1`; wire schemas `outcome-verification-v1.schema.json` and `flight-simulator-v1.schema.json`; independent system evidence required; behavioral pass separated from production qualification (active 30-day operation qualification under Contract 12 required); Stage 3 requires 5 verified human examples and 25 distinct scenarios (5 edge/negative); Stage 4 requires 100 scenarios (20 edge) and 20 consecutive independently system-evidenced supervised cases; Stage 5 requires complete regression suite, affected failures, and 5 nearby variations; no cross-evaluation readiness stitching |
+| Release Governance | Orchestrator | Eligible active version, named cohort, and scope (Contract 9) | `ReleaseJobAdmissionPort::resolve(&self, tx: &mut TenantTransaction, principal: &VerifiedPrincipal, request: &ReleaseJobAdmissionRequestV1)` returns `JobReleaseEligibilityV1` binding release ID, revision, behavior/manifest hashes, autonomy stage (3..5), allowed scope, and named `cohort_id` in `canary_bucket_id`; enforces two-stage population validation (`population_sha256 = SHA256(RFC8785(ordered_records))`); rejects ambiguous cohort matches (`RELEASE_COHORT_AMBIGUOUS`); jobs pin accepted release and obey emergency cohort fences (`ReleaseCohortFenceV1`); future versions never repin running jobs; wire schema `release-governance-v1.schema.json` |
+| Orchestrator | Runner | Approved, bounded work assignment, execution context, and value custody (Contract 10) | Bounded assignment (`RuntimeAssignmentV1`), `RuntimeExecutionContextV1` (enforcing `job -> production`, `evaluation -> simulation`), durable execution checkpoints (`ExecutionCheckpointV1`) via PostgreSQL CAS, value uploads (`RuntimeValueUploadV1`) and queries (`RuntimeValueQueryV1`) via `RuntimeValuePort`, and monotonic `action_generation` metadata; wire schema `agent-runtime-v1.schema.json`; assignment alone does not grant unrestricted action rights |
+| Runner / Local Context HUD / Orchestrator / Simulator / Release Governance | Identity Policy | Action authorization, simulation admission, governance proposals, schedule authority, and safety fences (Contract 11) | Deny or escalate to human review when authority or context is missing; binds `ExecutionContextV1` (`job`, `assist` with release bindings, `evaluation`), canonical proposal digest `action_sha256`, target key, record key, and document/surface generations. Formal human release decisions consume `SignedGovernanceProposalV1` via `consume_governance` within a 15-minute window with fresh MFA within 5 minutes, defaulting to Workflow Owner remit. Item-level approval for Tier 3; Tier 4 unconditionally denied. Issues `SignedSimulationAdmissionV1` (`identity.simulation-admission.v1`) under policy purpose; authenticates test-realm scripted actors. Evaluates `ScheduledExecutionAuthorityV1` for recurring jobs and `ExecutionLimitsPolicyV1` (`execution_limits.manage`). Dedicated Vault evaluation keys for suite seals and evaluation reports. Wire schema `identity-policy-v1.schema.json` |
+| Runner / Local Context HUD | External adapter / Browser Extension | Authorized external operation (Contract 12) | Limited strictly to defined application actions with narrow credentials; external environment bindings (`AdapterEnvironmentBindingV1`) with `production_equivalence_status`; browser actions execute over `browser-bridge.v1` (major 1, minor 6 with `evaluation_execution_v1` and `execution_reservation_lease_v1`) via `ExecuteBrowserAction` with full authority bundle `{authorization: SignedActionAuthorizationV1, approval: SignedActionApprovalV1|null, admission: SignedActionAdmissionV1}`; native actions execute over `shell-adapter.v1` (major 1, minor 2); wire schema `application-adapters-v1.schema.json` |
+| Runner / Application Adapters | Outcome Verification | Submission receipt, readback evidence, and run verdict (Contract 13) | Produces `AdapterSubmissionReceiptV1` (`submission_state`: `not_dispatched`, `dispatched`, `application_acknowledged`, `unknown`, `source_commit_token`), signed readback evidence (`SignedAdapterReadbackEvidenceV1`) with certified freshness proofs (`ReadbackFreshnessProofV1`), prepared reads (`AdapterReadPrepareRequestV1`), and independent verification run requests (`VerificationRunRequestV1` -> `VerificationRunResultV1`) requiring `evaluation_target: EvaluationTargetV1` and nullable sealed `scenario_expectation_ref`; dedicated non-actuating `verification_read` token purpose and single-use leases; wire schemas `application-adapters-v1.schema.json`, `flight-simulator-v1.schema.json`, and `outcome-verification-v1.schema.json`; post-submit verification does not claim that an already-submitted external write cannot commit; runner success ≠ business completion |
+| Verifier | Orchestrator / Incident / Simulator | Independent verdict, mismatch classification, and readback records (Contract 14) | Pure `oryn-verification-core` returns immutable `VerificationRunResultV1` (`verified`, `mismatch`, `unknown`) and detached attestation (`SignedVerificationResultAttestationV1`); attributable human postcondition assessments (`SignedPostconditionAssessmentV1`) and standalone Graph handoff verifications; unknown outcomes or mismatches pause case and block dangerous retries; independently resolves `scenario_expectation_ref` for simulation attempts; AES-256-GCM encrypted evidence with 7d/30d cryptographic destruction and 24-month audit retention; subsequent readback evaluations generate distinct verifier request and result IDs without rewriting earlier history |
+| Incident | Orchestration / Identity / Governance | Failure classification, synchronous containment restrictions, and resolution (Contract 15) | Wire schema `incident-correction-repair-v1.schema.json`. Governs `IncidentSignalV1`, `IncidentV1`, `IncidentGroupV1`, `IncidentContainmentTargetV1`, and 13 commands. Evaluates synchronous safety fences (`orchestration_incident_restriction`) and release cohort fences (`release_cohort`) via Orchestration/Identity without model dependencies. Closed dispositions: `recovery_confirmed` or `accepted_containment` |
+| Correction / Incident | Knowledge / Repair / Privacy Helper / Release Governance | Attributable expert corrections, diagnostic hypotheses, bounded proposals, and rollout observations (Contract 16) | Wire schema `incident-correction-repair-v1.schema.json`. Governs `CorrectionV1`, `ReviewedCorrectionV1`, `CorrectionQuestionV1`, `CorrectionTranscriptV1`, `DiagnosisV1`, `RepairProposalV1`, `RepairScopeV1`, `PreventionSpecificationV1`, and bounded `RepairReleaseObservationV1` binding `observation_ref`, `new_incident_count`, `incident_refs_complete`, and `incident_manifest_sha256`. Contradictory corrections report Graph conflicts (`ReportConflictCommandV1`); rule changes require owner `ApproveRuleCommandV1`; adapter proposals route through `AdapterChangeProposalV1` |
+| Incident / Repair | Factory / Simulator | New candidate repair draft and typed regression requirements (Contract 17) | `RepairCandidateCommandV1` binding `SimulationRegressionRequirementRefV1[]` (`simulation.regression-requirement.v1`) without `candidate_target`; produces immutable replacement candidate lineage with `repair_bindings` on `CandidateEvaluationBundleV1`; requires full regression suite + 5 nearby variations; wire schemas `agent-factory-v1.schema.json` and `flight-simulator-v1.schema.json` |
+| Control Plane / Upstream Services | Command Center | Authorized management read models, analytics reporting, notifications, and exports (Contract 18) | Role-scoped read models (`HomeViewV1`, `GlobalSearchPageV1`, `ReportingPageV1`, `PilotPageV1`, `ReportPageV1`, `NotificationPageV1`, `ExportViewV1`, `AuditQueryPageV1`), reporting marts with 5-contributor floor and 72h sealing, baseline approvals, 14-day evaluation pilots, multi-channel notifications (desktop shell and AWS SES in `us-east-1`), and compliance exports via REST and 25s bounded long polling; wire schema `command-center-analytics-v1.schema.json`, `control-plane-v1.openapi.json`, fixtures in `command-center-analytics-v1.fixtures.json`; defined in [command-center-analytics specification](docs/components/command-center-analytics.md) and [ADR-0023](docs/adr/0023-command-center-reporting-privacy-and-delivery.md) |
+| Desktop Shell | Local Privacy Storage | Capture control, visibility lease, and state subscription | Inherited byte-channel control; visibility loss or unrenewed lease immediately stops capture; raw media never crosses control channel; `shell-privacy.v1` minor 2 allocates channel 4 `shell-meeting-audio.v1`; distinct `PauseScreenObservation` and `PauseCapture` controls; typed `MeetingPort` commands |
+| Local Context HUD | Desktop Shell | Guidance cards, highlight targets, and user guidance interactions | Shell hosts all presentation and windows; HUD produces structured models and tracks guide progression; stale context invalidates highlights |
+| Local Context HUD | Browser Extension | Target presence and geometry query | HUD queries target resolution; extension resolves packaged deterministic locators against live DOM and returns desktop coordinates and affine transform; fallback to text-only guidance if geometry unproven |
+| All components / Privacy Helper / Simulator / Verifier | Control Plane / LiteLLM Gateway | Governed cloud inference request and authorization (Contract 22) | Signed `InferenceAuthorization` tokens scoped to tenant, purpose (including `simulation_scenario_generate` and advisory `verification_explanation`), operation (`text.reason`, `text.chat`, etc.), route, and deletion generation; strict US processing, contractual zero content retention, no model training, route pinning; wire schemas `identity-policy-v1.schema.json` and `cloud-inference.md` |
+| Local Privacy Storage / Meeting Intelligence | Local Context HUD / Desktop Shell | Confirmed personal commitment projections and review commands | Private-local records only; HUD receives only `open` + `confirmed` commitments; 09:00 default working-zone occurrence; source edits require reconfirmation and suspend reminders |
+| Meeting Intelligence / Contribution Sync | Operational Graph | Reviewed meeting handoff contribution (Contract 24) | Sanitized, employee-reviewed handoff proposal (`ReviewedMeetingHandoffProposal`); wire schemas `contribution-sync-v1.schema.json` and `operational-graph-v1.schema.json`; no raw audio, full transcript, or meeting session IDs upload; Operational Graph owns canonical shared status, deduplication, recipient authorization, and separately authorized summaries |
+| Local Privacy Storage | Local Context HUD | Sanitized observation feed and reverse demonstration proposals | Direct helper-to-helper socketpair/anonymous pipe link passed at launch; length-prefixed protocol `privacy-context.v1`; bounded 128-message / 8 MiB buffer; no raw media or DOM trees; reverse demonstration proposals validated before local storage or contribution review |
 
 ### 7.3 Shared metadata requirements
 
@@ -753,15 +765,17 @@ sequenceDiagram
     O->>P: Candidate observations
     P->>P: Exclude, minimize, retain privately
     P-->>U: Private candidate task summary
-    U->>C: Review and approve sanitized contribution
-    C->>D: Approved structured task evidence
+    U->>P: Review and approve sanitized contribution
+    P->>C: Enqueue signed ReviewedContributionV1 (privacy-sync.v1)
+    C->>D: HTTPS multipart submission with release permit (POST /v1/sync/submissions)
+    D-->>C: Atomic PostgreSQL intake + signed DeliveryReceiptV1
     D->>K: Candidate workflow + gaps
     K-->>W: Request verification
     W->>K: Approve steps, rules, outcomes and scope
     K-->>U: Published guide available (if authorized)
 ```
 
-**Guardrails:** No initial capture without consent. Excluded private material never becomes a shareable observation. Unreviewed local data never enters central discovery. Discovery cannot independently certify a procedure. Publishing does not generate production execution authority.
+**Guardrails:** No initial capture without consent. Excluded private material never becomes a shareable observation. Transient cloud inference via the governed LiteLLM gateway is purpose-authorized with zero retention and does not constitute publication or sharing. Unreviewed local data never enters central discovery. Discovery cannot independently certify a procedure. Publishing does not generate production execution authority.
 
 **Important states:** Private Observation → Shareable Candidate → Contributor Approved → Workflow Candidate → Owner Review → Published / Rejected / Needs Clarification.
 
@@ -791,7 +805,7 @@ sequenceDiagram
     G-->>F: Released version and effective scope
 ```
 
-**Guardrails:** A candidate with unresolved required steps cannot be silently deployed. Tests must cover expected safe rejections, not just happy paths. Releasing an agent is distinct from starting a job. Test and supervised-history minimums are those in `PRODUCT.md` §14.
+**Guardrails:** A candidate with unresolved required steps cannot be silently deployed. Tests must cover expected safe rejections, not just happy paths. Releasing an agent is distinct from starting a job. Test and supervised-history minimums are those in `PRODUCT.md` §14. Releases map to explicit named cohorts (`ReleaseCohortV1`); ordinary material replacements reset the 20-case supervised streak to zero with no inheritance; Stage 5 automated repairs are strictly confined to `interaction_binding` and `string_format` with proved transitive dataflow safety.
 
 ### 8.3 Flow C — Production job with a consequential approval
 
@@ -822,20 +836,20 @@ sequenceDiagram
     J-->>U: Case and job status with explanation
 ```
 
-**Guardrails:** Approval is for the specific proposed values, records, and scope, not a blanket authorization. Check for stale target state before committing. If the application may have committed but did not return confirmation, **stop potentially duplicative retries** pending reconciliation. Independent cases may continue only if shared safety is unaffected.
+**Guardrails:** Approval is for the specific proposed values, records, and scope, not a blanket authorization. Job admission executes via `ReleaseJobAdmissionPort::resolve` with two-stage population validation against explicit named cohorts (`ReleaseCohortV1`); ambiguous cohort matches fail preflight (`RELEASE_COHORT_AMBIGUOUS`). Check for stale target state before committing. If the application may have committed but did not return confirmation, **stop potentially duplicative retries** pending reconciliation. Independent cases may continue only if shared safety is unaffected. Cohort fences (`ReleaseCohortFenceV1`) synchronously halt new job starts and dispatches.
 
 ### 8.4 Flow D — Flight Simulator evaluation
 
-1. A fixed candidate agent version and its relevant rule/verification versions are selected.
-2. The evaluation coordinator selects the required suite and reports known coverage gaps.
-3. The scenario manager provisions known, isolated initial state for each case.
-4. The test runner executes the candidate using test-only capabilities and permissions.
-5. The oracle inspects expected versus observed state and permitted side effects.
-6. The simulator records outcomes: expected success, expected safe escalation/rejection, failure, or inconclusive.
-7. Evidence, replay, suite coverage, environment fidelity, and version comparison are generated.
-8. Release Governance determines whether test gates are met **and separately** whether approval is granted.
+1. A fixed candidate target (`EvaluationTargetV1`: agent or assist plan) and sealed suite (`ScenarioSuiteVersionV1`) are admitted via Identity-issued `SignedSimulationAdmissionV1` without fabricating production jobs or releases.
+2. The evaluation coordinator allocates isolated environments: fresh, non-reused gVisor sandboxes for cloud attempts; dedicated enrolled lab devices (`identity_simulation_lab_device`) for local device-bound attempts.
+3. The environment manager provisions and independently verifies baseline starting state from sealed fixtures (`FixtureManifestV1`).
+4. The test runner executes the candidate under explicit `evaluation` context (`ExecutionContextV1::Evaluation`) across prescribed trials (3 independent live trials for model-dependent cases with all-pass aggregation; 1 for deterministic).
+5. Outcome Verification acts as an independent oracle, evaluating observed external readback against sealed expectations (`ScenarioExpectationRefV1`).
+6. The simulator records deterministically mapped verdicts: passed, passed_expected_safe_escalation, failed_unsafe_action, failed_incorrect_outcome, failed_execution_error, or inconclusive.
+7. Coverage matrix (`CoverageMatrixV1`), first-divergence replay, and immutable signed report (`SignedEvaluationReportV1`) are generated and signed with dedicated Vault evaluation keys.
+8. Release Governance verifies report integrity, required evidence freshness, and separate production equivalence before granting release readiness.
 
-**Guardrails:** Tests do not mutate the live customer production system. Synthetic tests may demonstrate behavior but do not erase gaps in third-party application fidelity. Missing critical branches block relevant promotion.
+**Guardrails:** Tests do not mutate live customer production systems. Synthetic tests demonstrate behavioral compliance but do not erase gaps in third-party application fidelity. Missing critical branches, unverified resets, or unestablished production equivalence block production release.
 
 ### 8.5 Flow E — Incident to expert correction and controlled repair
 
@@ -843,41 +857,44 @@ sequenceDiagram
 sequenceDiagram
     participant V as Verifier / Runner
     participant I as Incident Engine
+    participant O as Job Orchestration / Identity
     participant H as Subject-Matter Expert
     participant K as Knowledge Governance
     participant R as Repair Engine
-    participant F as Agent Factory
     participant S as Flight Simulator
+    participant F as Agent Factory
     participant G as Release Governance
 
-    V->>I: Failure, mismatch or unknown outcome
-    I->>I: Classify and contain affected scope
+    V->>I: Failure, mismatch, or unknown outcome
+    I->>O: SetIncidentRestrictionCommandV1 (synchronous containment)
+    O-->>I: Sub-second restriction commitment ack
     I-->>H: Focused question + permitted evidence
-    H->>I: Corrected step or explanation
-    I->>K: Candidate new knowledge or exception
-    K-->>R: Accepted correction / rule decision
-    R->>F: Bounded repair proposal
-    F-->>S: New immutable agent candidate
-    S-->>G: Full regression + affected/new cases
-    G-->>H: Review when required
-    H->>G: Approve or request changes
-    G-->>I: Limited rollout and monitoring
-    I-->>G: Recovery evidence / regression signal
+    H->>I: Attributable correction (typed or ORYC v1 audio dictation)
+    I->>K: Candidate rule change or conflict report
+    K-->>R: Accepted correction / owner rule approval
+    R->>S: Prevention specs & stable regression requirements (no candidate cycle)
+    R->>F: Bounded repair proposal (EditableAgentPlanV1)
+    F->>F: Draft revision + AgentRepairContextV1
+    F-->>S: CandidateEvaluationBundleV1 (repair_bindings)
+    S-->>G: Evaluation report (full regression + original + 5 variations)
+    G-->>H: Human review when required
+    H->>G: Approve rollout policy
+    G-->>I: RepairReleaseObservationV1 progressive canary monitoring
+    I-->>G: Recovery confirmed or regression containment
 ```
 
-**Guardrails:** Human correction does not necessarily equal policy authorization. Required changes to organizational rules go through owner approval first. Patches cannot self-expand permissions. Automatic Stage 5 release is permitted only for the narrow preapproved low-risk change categories defined in `PRODUCT.md` §14.5; all other releases receive the required human review.
+**Guardrails:** Human correction does not equal policy authorization. Rule amendments require owner approval. Containment commits synchronously via Orchestration and Identity before model inference. Regression requirements do not depend on yet-to-be-created candidates; candidates bind requirements at Factory finalization time. Release Governance enforces regression rejection across all known applicable cases (PRODUCT §28.4); automatic Stage 5 release is off by default and restricted to preapproved Tier 0/1 categories.
 
 ### 8.6 Flow F — Real-time contextual guidance and peer intelligence
 
 1. Edge observation identifies a permitted application/task context or friction signal.
 2. Local matcher compares context against cached **published and authorized** playbook/exception signatures.
-3. If useful and within user interruption settings, the HUD offers a contextual hint, guide, or eligible supervised action.
-4. The employee accepts, dismisses, or snoozes; the guide follows available observable state and reports uncertain steps.
-5. Any proposed local action runs through normal capability and authorization checks.
-6. The local result may update **private** task history. New organizational knowledge still requires contribution review and owner approval.
+3. If useful and within user interruption settings, the HUD offers a contextual hint, guide, or eligible supervised assist plan.
+4. The employee accepts, dismisses, or snoozes; the guide tracks the active task, suspends upon switching tasks, and resumes only after explicit employee revalidation.
+5. Any proposed local assist action requires separately evaluated Stage 3 assist approval, binds `ExecutionContextV1` (`assist`), and enforces preparation stopping points before any consequential submission.
+6. The local result updates **private** task summaries and checkpoints in local screen partitions; new organizational knowledge still requires contribution review and owner approval.
 
-**Guardrails:** A suggestion is not execution; an observed error does not justify an autonomous fix. If local context is insufficient, the HUD should present a text-only explanation or no recommendation rather than hallucinating a precise UI target.
-
+**Guardrails:** A suggestion is not execution; an observed error does not justify an autonomous fix. Guidance approval does not grant action authorization. If local context is insufficient or unproven, the HUD presents text-only guidance rather than hallucinating UI targets. Consequential commits require item-level human review and submit.
 ### 8.7 Flow G — Meeting commitments and cross-team handoffs
 
 1. The employee explicitly authorizes meeting recording according to applicable organizational/participant consent requirements.
@@ -894,7 +911,7 @@ sequenceDiagram
 
 1. Employee or administrator changes relevant permission/consent state.
 2. The authoritative policy owner records the change and its effective scope.
-3. Local capture stops immediately for withdrawn capture categories; no queued private observations are newly shared.
+3. Local capture stops immediately for withdrawn capture categories; no queued private observations are newly shared. Pending egress releases and unreleased transport capsules are cancelled; unpublished accepted contributions are immediately excluded from discovery synthesis.
 4. Central eligibility is recalculated for affected guidance, jobs, agents, and scheduled execution.
 5. Affected runners are prevented from starting new privileged actions; ongoing cases are paused or contained where required.
 6. Cached data and credentials are invalidated/expired according to revocation semantics; auditable notifications explain restrictions.
@@ -917,8 +934,13 @@ Detailed transition tables belong in component design documents; the following *
 - Rejected or unresolved candidates cannot be represented as authoritative guidance.
 
 ### 9.2 Agent lifecycle and autonomy
+`Draft Candidate (Stage 1 Product State) → Compiled & Attested Candidate → Simulation Evaluation → Review Requested → Approved Release → Active in Limited Scope → Expanded / Paused / Restricted / Superseded / Retired`
 
-`Draft Candidate → Evaluation → Review Requested → Approved Release → Active in Limited Scope → Expanded / Paused / Restricted / Superseded / Retired`
+Under ADR-0015, candidate qualification, evaluation passage, and release approval are strictly decoupled:
+- **Candidate Qualification:** Proves structural integrity, typed bindings, and prerequisite presence; emits `CompileReportV1` and sealed `CandidateEvaluationBundleV1`.
+- **Evaluation Passage:** Flight Simulator proves empirical correctness across scenario matrices; compilation never self-populates evaluation grades.
+- **Release Approval:** Release Governance grants operational deployment authority. Candidate authenticity confers zero production write permission.
+- **Material Invalidation:** Any edit outside cosmetic `DisplayMetadataV1` increments the immutable version lineage and immediately invalidates downstream evaluation readiness.
 
 These **version lifecycle states** are distinct from the product's six **autonomy stages**:
 
@@ -931,7 +953,7 @@ These **version lifecycle states** are distinct from the product's six **autonom
 | 4 | Scoped Autopilot | Tested, verified, explicitly authorized autonomy for eligible Tier 1/2 cases |
 | 5 | Self-Maintaining Autopilot | Controlled repair creation/evaluation and narrowly allowed automatic low-risk releases |
 
-`PRODUCT.md` §14 controls specific gates: Stage 3 defaults include **5 verified demonstrations and 25 representative scenarios**; Stage 4 defaults include **20 consecutive verified supervised cases and 100 representative scenarios** plus other required criteria. These are **minimum gates**, not statistical guarantees, and must be configurable upward where organizational policy demands.
+`PRODUCT.md` §14 controls specific gates: Stage 3 requires **5 verified human examples and 25 distinct scenarios, including 5 edge or negative scenarios**; Stage 4 requires **20 consecutive outcome-verified supervised cases and 100 scenarios, including 20 edge, failure, or negative scenarios**. Stage 5 requires the complete regression suite, affected failures, and five nearby variations. Ordinary material replacements reset the 20-case consecutive supervised streak to zero; no streak inheritance. These are **minimum gates**, not statistical guarantees; other criteria remain mandatory. Autonomy progression advances through formal governance proposals (`SignedGovernanceProposalV1`), defaulting to Workflow Owner remit, requiring Security Officer approval only when permissions expand or policy explicitly demands stricter fencing. Narrow Stage 5 automated repairs (`ReleasePreauthorizationV1`) are strictly limited to `interaction_binding` and `string_format` patches with proved transitive dataflow safety, preserving maintenance lineage under unchanged safety contracts.
 
 ### 9.3 Action risk tiers
 
@@ -940,27 +962,68 @@ These **version lifecycle states** are distinct from the product's six **autonom
 | 0 | Informational/read-only | No business-state change; still subject to read permissions and privacy |
 | 1 | Low-risk reversible internal change | May be autonomous in approved scope |
 | 2 | Controlled reversible internal change | May be autonomous after stronger evidence and explicit scope authorization |
-| 3 | Consequential/external/monetary or irreversible action | Human approval for each consequential commit |
-| 4 | Restricted action | Not executable by v1.0 agents |
+| 3 | Consequential/external/monetary or irreversible action | Item-level human approval for each consequential commit bound to dual digests (`action_sha256` and `proposal_digest`) |
+| 4 | Restricted action | Unconditionally prohibited from v1.0 automated agent execution |
 
-Workflow risk is at least the maximum risk of any possible action; splitting an operation into smaller steps cannot reduce its risk classification.
+Workflow risk is at least the maximum risk of any possible action; splitting an operation into smaller steps cannot reduce its risk classification. Missing or indeterminate risk inputs evaluate to Deny.
 
 ### 9.4 Job and case lifecycle
 
-**Job states:** Draft, Queued, Preflight Check, Running, Waiting for Review, Partially Complete, Completed, Completed with Exceptions, Paused, Failed, Canceled.
+**Job states:** Draft (`draft`), Preflight Check (`preflight_check`), Queued (`queued`), Running (`running`), Waiting for Review (`waiting_for_review`), Partially Complete (`partially_complete`), Completed (`completed`), Completed with Exceptions (`completed_with_exceptions`), Paused (`paused`), Failed (`failed`), Canceled (`canceled`).
 
-**Case states:** Not Started, In Progress, Prepared, Awaiting Approval, Verified Complete, Expectedly Rejected, Needs Clarification, Blocked, Failed, Canceled, Outcome Unknown.
+**Case states:** Not Started (`not_started`), In Progress (`in_progress`), Prepared (`prepared`), Awaiting Approval (`awaiting_approval`), Verified Complete (`verified_complete`), Expectedly Rejected (`expectedly_rejected`), Needs Clarification (`needs_clarification`), Blocked (`blocked`), Failed (`failed`), Canceled (`canceled`), Outcome Unknown (`outcome_unknown`).
 
-The Orchestrator owns job/case state; the Verifier owns the correctness verdict used to justify terminal status. A case is not `Verified Complete` merely because the runner finished its steps.
+The Orchestrator owns job/case state; the Verifier owns the immutable correctness verdict (`VerificationRunResultV1`: `verified`, `mismatch`, `unknown`) used to justify terminal status. A case is not `Verified Complete` merely because the runner finished its steps:
+- A `verified` outcome permits—but does not itself perform—case completion to `Verified Complete` after the Orchestrator confirms required outputs and applicability.
+- A required `mismatch` outcome immediately pauses further mutation, transitions the case to `Failed`, and atomically emits an owner-scoped incident fact.
+- A required `unknown` outcome transitions the case to `Outcome Unknown`, halting automated execution.
+- Reconciliation reuses `JobOrchestrationPort::reconcile` with `reverify_only|continue_remaining|handoff`. A new reverify run creates a distinct request referencing original effects and frozen spec/version while preserving immutable history. Matching current unknown case may update to verified without another approval, but cannot auto-resume execution.
+
+**Deterministic Job State Aggregation Order:**
+Job status is strictly computed from current authoritative case records plus control/output fields in the following order:
+1. *Explicit pause fence:* -> `Paused`. Cancel request becomes `Canceled` only after workers reached safe boundaries or remaining effects were explicitly classified unknown; retains `has_unresolved_effects` and case states/reservations.
+2. *Shared admission failure:* Before dispatch -> `Preflight Check` with blockers; admitted but unstarted eligible work -> `Queued`.
+3. *Active work:* Any executing case, queued independently runnable case in a started job, or output finalization underway -> `Running`.
+4. *Review hold:* No runnable work and any `Awaiting Approval`, `Needs Clarification`, or human-owned clarification wait -> `Waiting for Review`.
+5. *Partial progress hold:* Any remaining unresolved case/output with at least one verified/resolved case -> `Partially Complete`; no resolved case -> `Paused` (awaiting remediation), except all cases failed -> `Failed`.
+6. *Successful termination:* All cases are `Verified Complete` and required output exists -> `Completed`. All cases are in approved terminal states, with at least one `Expectedly Rejected` or explicitly accepted exception handoff, and required outputs exist -> `Completed with Exceptions`.
+7. *Clean terminal disposition:* All cases safely canceled -> `Canceled`; all cases failed -> `Failed`. Mixed safe cancellation/failure with some success remains `Partially Complete` until an explicit owned disposition. Status counters count case states, not attempts or executions. Emits `job.completed` only on verified completed/completed-with-exceptions transition.
 
 ### 9.5 Version and release lifecycle
 
-Every material change produces a new immutable version. Release approval associates that version with a permitted scope and effective time. A rollback/revert normally means **restoring eligibility of an earlier authorized version**, not undoing external business mutations already performed by the newer version.
+Every material change produces a new immutable version. Release approval associates that version with an explicit named cohort (`ReleaseCohortV1`) and effective time. Version restoration (`restore_named`) halts the failing release across affected cohorts and updates the admission mapping to point to a fully re-verified historical predecessor definition; running jobs remain pinned to their existing execution version; external mutations committed by running or superseded versions are never retroactively undone or recalled; synchronous safety fences (`ReleaseCohortFenceV1`) act as forward admission and dispatch barriers. Rollout health is governed by deterministic integer arithmetic over disjoint case dispositions; missing or stale telemetry triggers synchronous fences. Narrow Stage 5 automated repairs (`ReleasePreauthorizationV1`) are strictly limited to `interaction_binding` and `string_format` patches. Assist plans require dual-signed attestations (`SignedAssistReleaseEligibilityV1`) validated by Desktop HUD before execution.
 
 ### 9.6 Incident and repair lifecycle
 
-An incident can be detected, triaged, contained, investigated, awaiting expert input, linked to a proposed repair, and eventually resolved/closed under an accepted disposition. A repair can be proposed, revised, evaluated, rejected, approved, released, monitored, or superseded. The exact state names and transition permissions are owned by their future component specs; the high-level separation must remain.
+#### Incident Lifecycle
+`detected → triaged → contained ↔ investigating ↔ awaiting_expert ↔ repairing ↔ resolved / dismissed ↔ reopened`
+- **Triage & Containment:** Establishes severity (`low`, `medium`, `high`, `critical`) and dispatches synchronous containment restrictions (`SetIncidentRestrictionCommandV1`) to Job Orchestration before any model inference.
+- **Investigation & Expert Micro-Interview:** Formulates unverified diagnostic hypotheses (`DiagnosisV1`) and posts at most one focused question (`CorrectionQuestionV1`) to assigned experts.
+- **Attributable Correction:** Captures attributable corrections (`CorrectionV1`) via web console or desktop-only audio dictation (`ORYC` v1). Contradictory explanations report Graph conflicts (`ReportConflictCommandV1`).
+- **Resolution:** Owner-only transition with closed disposition: `recovery_confirmed` (with authoritative rollout evidence) or `accepted_containment` (with documented residual restrictions and review deadlines; Critical additionally requires Security sign-off). Dismissal requires explicit justification and cannot hide unresolved restrictions. Reopening preserves full prior history.
 
+#### Repair Proposal Lifecycle
+`proposed → needs_input ↔ review_requested ↔ changes_requested → rejected / accepted_for_draft → evaluating → blocked / validated → released → monitoring → superseded / withdrawn`
+- **Bounded Proposal:** Bounded by `RepairScopeV1` (permitted node IDs and JSON pointers). Rejects changes outside declared structural bounds.
+- **Factory Draft & Async Compilation:** Factory validates base/head match and binds immutable `AgentRepairContextV1`. Guarded finalization commits candidate and `RepairCandidateBindingV1`.
+- **Simulator Evaluation:** Evaluates candidate against full regression suite, original/prevention obligations, and ≥ 5 nearby variations. Regression in any known applicable case blocks release.
+- **Release & Progressive Canary Monitoring:** Release Governance manages canary cohorts and restoration of prior versions. Populates `RepairReleaseObservationV1` from authoritative orchestrator/verifier telemetry. Critical regression immediately triggers containment and halts rollout.
+
+
+### 9.7 Guidance and assist session lifecycles
+
+#### Guidance Session Lifecycle
+`Idle → Offered → Active ↔ Suspended → Completed / Stopped / Invalidated`
+- An unrelated task switch, sequence gap, or source restart suspends the active guide and clears highlights without completing or invalidating it.
+- Resuming a suspended guide requires an explicit employee command and revalidation of current access, policy, and window context.
+- Access revocation, policy conflicts, or playbook deletion invalidates the active guide immediately.
+
+#### Assist Session Lifecycle
+`Preparing → Awaiting Start → Reserved → Running → Awaiting Approval ↔ Paused ↔ Outcome Unknown → Completed / Stopped / Failed`
+- Preparation validates preconditions and stopping points without executing business side effects.
+- Starts only upon explicit employee command, binding an exclusive local device reservation.
+- Tier 2 actions require confirmed plan preview; Tier 3 actions require separate item-level signed approval displaying exact parameters and diffs.
+- Unexpected errors or dispatch ambiguities transition to `Outcome Unknown`, halting progression and blocking automatic retries.
 ---
 
 ## 10. Data Architecture and Information Boundaries
@@ -976,6 +1039,7 @@ An incident can be detected, triaged, contained, investigated, awaiting expert i
 | **Agent and release definitions** | Control plane | Fixed agent versions, scopes, tests, approvals | Immutable lineage; auditable release history |
 | **Production execution records** | Control plane / bounded runner evidence | Jobs, actions, approval decisions, postconditions, incidents | Minimal necessary business audit, scoped access |
 | **Simulation artifacts** | Isolated test environment and permitted artifact store | Synthetic fixtures, test traces, expected outcomes, results | Separated from production; evidence sensitivity tracked |
+| **Transient inference processing** | Control plane / LiteLLM Gateway / Certified US Provider | Ephemeral audio chunks, vision frames, prompt/completion context | Zero content retention after processing; no durable cloud copies; memory-backed spooling only; strict US processing |
 | **Analytics and notifications** | Derived and scoped | Aggregates, issues, reminders, estimates | No forbidden individual activity/surveillance views |
 
 ### 10.2 Storage responsibilities, not vendor commitments
@@ -984,25 +1048,32 @@ Oryn will need the following logical storage capabilities:
 
 - **Local private structured store:** Task and UI-event indexes, permitted local context and metadata.
 - **Local private media store:** Screen/audio evidence subject to automatic expiration and deletion.
-- **Central transactional store:** Identities, memberships, workflow/agent versions, policies, jobs, approvals, outcomes, incidents, release state.
+- **Central transactional store:** RDS PostgreSQL 18 Multi-AZ DB Instance (synchronous standby + dedicated reporting read replica) in `us-east-1`, forced Row-Level Security (RLS), and canonical session GUC `oryn.organization_id`. Node failover target is ≤120 seconds; ordinary regional recovery targets RPO ≤15 minutes and RTO ≤4 hours.
+- **Independent append-only authority & audit journal:** Dual-region private S3 buckets (`us-east-1` and `us-east-2`) with Object Lock in Compliance Mode (24 months retention), coordinated by DynamoDB Multi-Region Strong Consistency (MRSC) global tables with witness in `us-west-2`.
+- **Split cryptographic key custody:** Two physically separated 3-voter Vault clusters on dedicated EC2 instances: Platform Vault (KMS multi-region auto-unseal, 5-minute encrypted Raft snapshots, 7-day retention) and Expiring Payload Vault (disposable per-immutable-value wrapping keys, strictly non-backed-up, subject to explicit regional evidence custody loss exception).
 - **Knowledge relationship/search layer:** Authoritative dependency links plus optional semantic retrieval.
 - **Approved artifact storage:** Sanitized exports, customer-authorized evidence, evaluation reports, synthetic fixture assets.
 - **Durable job state/history:** Long-running execution/approval coordination and replay-safe checkpoints.
 - **Audit/telemetry storage:** Authorized security and business transitions, not prohibited raw employee surveillance.
 
-A practical starting design may use a local embedded database, a central relational database with vector search, controlled object storage, and a durable orchestration system. Exact products, physical schemas, encryption methods, indexes, replication, and backup design are deferred.
-
 ### 10.3 Retention and deletion
 
-- **Private raw media:** product default 7 days; employee may select 1–6 days; explicitly permitted extension up to a 14-day maximum.
+- **Private raw media:** product default 7 days; employee may select 1–6 days; explicitly permitted extension up to a 14-day maximum. Retention deadlines are fixed at acquisition time; extensions apply future-only, whereas shortening restricts existing eligible evidence immediately.
+- **Encrypted storage architecture:** Stored locally in profile-bound SQLCipher 4 encrypted database partitions and independently encrypted media files (AES-256-GCM, 1 MiB chunking, 256-bit random keys). Governed by an encrypted key catalog anchored to an OS-protected master credential in macOS Keychain or Windows Credential Manager. No central backup, no recovery key, and no recovery escrow; key loss permanently loses private history.
 - **Unapproved sanitized organizational workflow candidates:** default retention 365 days, subject to organization policy.
 - **Approved change history and consequential business audit:** default 24 months subject to approved audit schedule and applicable obligations.
-- Deletion/revocation must distinguish **private original capture**, **already approved shared contribution**, **published organizational knowledge**, **execution evidence**, and **legal/audit obligations**.
-- A local deletion does not imply that independently approved organizational knowledge automatically disappears, and the interface must explain the distinction and provide the applicable removal/correction process.
-
+- **Analytics Source Facts:** 24 months (730 days) retention in reporting marts, after which facts are cold-archived.
+- **Sealed Report Snapshots:** 90 days retention, after which snapshots are purged automatically.
+- **Notifications & Delivery Receipts:** 90 days retention, after which alerts are purged automatically.
+- **Signed Compliance Export Artifacts:** 24 hours retention in S3 private buckets with automatic lifecycle expiration.
+- **Legal holds and compliance:** A valid, signed retention verdict blocks voluntary employee deletion of eligible records strictly within their existing retention deadline. Holds cannot authorize new capture, cannot provide manager or administrative browsing access to raw timelines, and cannot extend retention beyond the original raw retention deadline. Expired records are permanently purged regardless of hold status. Offline operation without a verified hold verdict blocks voluntary deletion.
+- **Deletion/revocation must distinguish:** **private original capture**, **already approved shared contribution**, **published organizational knowledge**, **execution evidence**, and **legal/audit obligations**.
+- **Source evidence expiry/deletion:** purges raw local media, source transcripts, and unconfirmed candidates; an independently saved commitment survives source deletion with `evidence_status = "unavailable"`, whereas explicit full personal data purge removes eligible saved commitments too. A transcript edit invalidates dependent candidates and marks saved commitments `needs_reconfirmation` in a single SQLite transaction.
+- **Selective deletion crash-safety:** Executed via control store deny fences, independent partition rebuilds under fresh encryption keys from surviving rows only, and an atomic OS credential update as the generation commit point.
+- **A local deletion does not imply:** that independently approved organizational knowledge automatically disappears, and the interface must explain the distinction and provide the applicable removal/correction process. Supported client uninstallation verifies legal holds, halts all capture, securely purges unheld private data, and emits a cryptographic purge receipt.
 ### 10.4 Model/data sensitivity
 
-Model requests are **data egress boundaries**, whether the model is local, customer-controlled, or hosted by an external provider. Each model-bound operation needs an allowlisted sensitivity level, data minimization, customer approval where required, and clear treatment of external provider processing. Model output is untrusted until validated and cannot independently approve policies or actions.
+Model requests are **data egress boundaries**, routed exclusively through the Oryn-managed LiteLLM gateway with contractual zero content retention (ZDR), no training on customer content, and strict United States geographic confinement (see [shared cloud inference contract](docs/architecture/cloud-inference.md)). Each model-bound operation needs an allowlisted sensitivity level, data minimization, customer approval where required, and clear treatment of external provider processing. No on-device model inference executes in v1.0. Model output is untrusted until validated and cannot independently approve policies or actions.
 
 ### 10.5 Cross-tenant separation
 
@@ -1032,28 +1103,43 @@ Email, PDF, browser, transcript, and business-record content are **untrusted tas
 
 ### 11.3 Approval integrity
 
-A human approval is bound to a **specific proposed operation**, target, scope, and material before/after values. If the target state changes substantially between proposal and execution, the request must be revalidated or returned for review. Approval cannot be silently repurposed to a different record, destination, amount, or agent version.
+A human approval is bound to a **specific proposed operation**, target, scope, and material before/after values via dual cryptographic digests: `action_sha256` (underscore prefix) covering the canonical execution projection, and `proposal_digest` (hyphen prefix) covering parameter diffs and consequence summaries over RFC 8785 canonical bytes. If the target state changes substantially between proposal and execution (such as document generation drift or record revision change), authorization preflight invalidates the token and requires a revised proposal. Approval cannot be silently repurposed to a different record, destination, amount, or agent version. Durable action fences (`identity_action_fence`) ensure an approved action token is consumed at most once.
 
 ### 11.4 Side effects and uncertain outcomes
 
-External application calls and UI submissions may not participate in a transaction controlled by Oryn. The runner must distinguish:
+External application calls and UI submissions may not participate in a transaction controlled by Oryn. The commit of `POST /v1/identity/actions/consume` is the irreversible authorization linearization point where logical authority is consumed and dispatch intent persisted before external transmission begins. At most one mutation attempt is claimed in `AdapterSubmissionJournal` before egress or OS dispatch. The runner and adapter distinguish:
 
-1. **Prepared** — proposed action not committed.
-2. **Submitted** — an action may have reached the external system.
-3. **Outcome Verified** — authoritative evidence confirms expected business effect.
-4. **Outcome Unknown** — the system cannot safely determine the external effect.
+1. **Prepared** (`not_dispatched`) — proposed action validated; zero external transmission.
+2. **Dispatched** (`dispatched`) — transient in-flight transmission state; broker/worker has sent bytes or UI primitive.
+3. **Application Acknowledged** (`application_acknowledged`) — external vendor HTTP 20x response received; submission receipt recorded.
+4. **Outcome Unknown** (`unknown`) — network dropped, timeout expired, response malformed, or worker crashed after dispatch.
 
-Retries must be safe under the actual application's idempotency and readback capabilities. An uncertain write must not automatically repeat just because a network timeout occurred. Compensating actions exist only where explicitly supported and authorized.
+Retries must be safe under the actual application's idempotency and readback capabilities. An uncertain write must not automatically repeat just because a network timeout occurred. Consumed action fences reject duplicate dispatch attempts; a consumed fence is never unconsumed. Zombie worker epochs are explicitly revoked. When external communication fails ambiguously, the runtime enters `submission_unknown` hold and halts the case (ORY-044); stored checkpoints preserve completed effects and exact remaining scope, preventing whole-case replay. Post-submit outcome verification assesses whether committed business effects match authorized postconditions, but does not claim that an already-submitted external write cannot commit. If an external submission receipt was recorded or transmission occurred, external systems may commit the write even if subsequent readback verification reports `unknown` or `mismatch`. Verification reads use dedicated non-actuating read authority (`verification_read` purpose, single-use leases) and explicit freshness proofs (`ReadbackFreshnessProofV1`), preventing stale cached reads from falsely declaring failure or success.
+
+Recovery requires out-of-band workflow reconciliation and a new action intent with a distinct action ID and fresh authorization. Action identity is derived from a single deterministic formula across all generations:
+```text
+action_id = "act_" + lowercase_hex(SHA256(RFC8785({
+  organization_id,
+  execution_context,
+  node_id,
+  iteration_path,
+  action_generation
+})))
+```
+Initial action uses generation zero. Monotonic action generations are tracked in `orchestration_action_intent`; incrementing generation requires owner-authorized reconciliation and fresh action authorization. Stop and pause commands establish synchronous containment fences (`OrchestrationSafetyFenceV1`) in PostgreSQL and Identity authority journals before acknowledging caller commands, preventing race conditions with in-flight worker dispatches. Compensating actions exist only where explicitly supported and authorized.
+
 
 ### 11.5 Offline/disconnect behavior
 
-- Desktop observation may continue **only within active consent and local policy**, with private local retention still enforced.
-- Local guidance can use permitted previously synced playbooks, visibly marked when stale where correctness matters.
+- Desktop observation may continue **only within active consent and local policy**, with private local retention still enforced. Local capture policy validity is capped at an absolute maximum of **24 hours** from issuance while disconnected; upon expiration, capture halts until connectivity is restored and the employee explicitly resumes.
+- **Trusted-time enforcement:** Boot-monotonic deadlines govern in-flight timeouts. Cross-boot retention requires signed trusted-time anchors and a persisted high-water mark. System clock rollback or uncertainty yields `untrusted_clock`, halting capture and denying history reads.
+- Local guidance can use permitted previously synced playbooks, visibly marked when stale where correctness matters. Offline guidance access is strictly read-only under a signed `SignedGuidanceAccessLeaseV1` (max 24 hours); executing new assisted or autonomous actions while offline is unconditionally blocked.
 - New shared contributions wait for the employee's explicit review; reconnection never turns drafts into automatic uploads.
+- **Deletion racing upload:** If an employee deletes private evidence while an approved contribution is in-flight or queued, an authoritative local release fence cancels queued unsent items immediately. Dispatched network uploads mark delivery state `delivery_unknown`, allow local purge to complete, and reconcile via ID without retransmitting deleted source data.
+- **Storage capacity limits:** When storage quota (10 GiB) or low disk floor (1 GiB) is reached, expired records are purged first. If space remains exhausted, affected capture sources halt cleanly and prompt user action; unexpired records are never evicted early, and capture never silently drops to unencrypted ephemeral mode.
 - Privileged execution requiring current central authorization pauses when authority cannot be established.
 - Running jobs retain durable state, and cannot assume an incomplete external action did not happen.
 - Revoked policies must stop new restricted behavior; detailed revocation latency/reconnection mechanics belong to component specs.
-
 ### 11.6 Failure ownership matrix
 
 | Failure | Detecting component | Owning response | Default safe behavior |
@@ -1113,6 +1199,9 @@ Scale each of these concerns independently as usage grows: desktop users and loc
 ### 12.5 Cost boundaries
 
 Model usage, simulation workload, browser/runtime resources, third-party API consumption, retained artifacts, and notification/exports may have materially different costs. Cost estimates and budget controls belong to job/simulation governance, with organization-level limits. The product must distinguish actual automation consumption from **estimated** labor time avoided.
+- **Egress & Broker Boundaries:** Outbound email notification dispatch operates exclusively through AWS Simple Email Service (SES) in AWS region `us-east-1` (pre-provisioned in recovery region `us-east-2`). Export artifact streaming utilizes private AWS S3 buckets with SSE-KMS, 256 MiB maximum part sizes, 5 GiB total export cap, 24-hour lifetime, and authenticated Range downloads via the internal Export Artifact Broker; pre-signed URLs are strictly prohibited. In declared disaster recovery, S3 exports activate pre-provisioned infrastructure in `us-east-2`. Security log delivery operates via an isolated Security Log Egress Broker emitting sanitized OTLP/HTTP JSON to customer SOC endpoints (`https://<host>:443/v1/logs`) with strict destination allowlisting, public IP validation, batch caps (128 records, 256 KiB), and failure quarantine.
+- **Database Connection Governance:** The global database connection ceiling is strictly 64 connections across primary and read replica: API 20, reporting reader 2, export reader 1, headroom 1, Workers 16 (Discovery capped at 4), Inference 8, and safety/LISTEN/recovery reserve 16 (never borrowable for reporting). Deployments enforce zero-surge rolling updates (`maxSurge: 0, maxUnavailable: 1`).
+- **Disaster Recovery Objectives & Fencing:** Ordinary regional recovery achieves RPO ≤ 15 minutes and RTO ≤ 4 hours; node-level failover target is ≤ 120 seconds. In catastrophic loss of `us-east-1`, declared disaster replaces the replica set with `us-east-2`/`us-west-2` under two-person approval. Irrecoverable quorum loss of the Expiring Payload Vault incurs an explicit evidence custody loss exception; content-free audit records and historical outcome verdicts remain unmutated.
 
 ### 12.6 Extensibility
 
@@ -1142,26 +1231,29 @@ This section distinguishes **decisions that should remain stable** from choices 
 | Human corrections create proposals and test cases, not instant policy changes | Supports learning without inventing business authority |
 | Compatibility is declared per application and ability | Avoids promising arbitrary software execution |
 | Logical modularity before premature service proliferation | Makes component ownership clear without needless deployment complexity |
+| Cloud-only v1.0 AI inference via LiteLLM gateway with ZDR and US processing | Ensures enterprise data protection, zero content retention, and auditability without maintaining uncertified local inference runtimes |
 
 ### 13.2 Deferred design decisions by subsystem
 
 | Future detailed design | Decisions to resolve | Must preserve |
 |---|---|---|
-| **Desktop Shell** | App framework, session lifecycle, installer/updater, accessibility UI, tray/status patterns, startup/shutdown semantics | Always-visible consent state and reliable local controls |
-| **Native Capture Engine** | Per-OS APIs, event normalization, sampling, OCR fallback, permission prompts, resource budgets | Exclusion-first private capture and honest capability reporting |
-| **Browser Extension / Bridge** | Extension architecture, browser permissions, DOM observation, communication with desktop, guidance rendering | Local privacy gate and authorization for actions |
-| **Meeting/Audio** | Capture pipeline, transcription/diarization, participant notice UX, local processing | Per-meeting authorization and private evidence |
-| **Local Storage and Privacy** | Local schema, encryption, redaction stages, retention cleanup, evidence references, offline behavior | Raw local-only and review-before-sharing |
+| **Desktop Shell** | Resolved in [detailed technical specification](docs/components/desktop-shell.md) (Tauri 2, Rust core, React views, AppKit/Win32 native status adapters, inherited IPC, ephemeral visibility lease, durable pause, bounded offline policy). | Always-visible consent state, movable status badge, and fail-closed capture controls |
+| **Native Capture Engine** | Resolved in [detailed technical specification](docs/components/os-observation.md) (Rust core + Swift/Win32 bridges, child worker supervised by privacy helper, inherited byte channels, 8 MiB shared-memory snapshots with pre-transfer masking, all-visible multi-window scope, source-specific crash containment, certified managed browser fallback). | Exclusion-first private capture, honest capability reporting, and zero unmasked pixel leakage |
+| **Browser Extension / Bridge** | Resolved in [detailed technical specification](docs/components/browser-extension.md) (Manifest V3, TypeScript service worker + isolated content scripts, Native Messaging host `oryn-browser-host`, shell broker endpoint, P-256 WebCrypto mutual authentication, `declarativeNetRequest` session navigation guard, deterministic multi-tier locators, safe action primitives, local-action pause). | Local privacy gate, explicit pairing, origin-specific grants, single-job reservation, and authorization for actions |
+| **Meeting/Audio** | Resolved in [detailed technical specification](docs/components/meeting-intelligence.md) and [shared cloud inference contract](docs/architecture/cloud-inference.md) (Core Audio/WASAPI taps, tabCapture, LiteLLM live/near-live STT, commitment review, reminders). | Per-meeting authorization, private evidence, and zero-retention US cloud inference |
+| **Local Storage and Privacy** | Resolved in [detailed technical specification](docs/components/local-privacy-storage.md) and [ADR-0007](docs/adr/0007-private-evidence-storage-and-retention.md) / [ADR-0008](docs/adr/0008-reviewed-still-image-sharing.md) (Rust `oryn-privacy-helper`, SQLCipher 4 partitioned stores, AES-256-GCM chunked media, generation catalog anchored in OS credential manager, crash-safe selective purge, 30s volatile memory ceiling when retention disabled, Contract 25 `privacy-context.v1`, signed review attestations, and bounded offline leases). | Raw local-only, review-before-sharing, and zero unconsented/held retention expansion |
+| **Contribution and Synchronization Gateway** | Resolved in [detailed technical specification](docs/components/contribution-sync.md) and [ADR-0010](docs/adr/0010-contribution-delivery-and-guidance-sync.md) (Dedicated Rust child `oryn-sync-helper`, `shell-sync.v1` and `privacy-sync.v1`, SQLCipher 4 + AES-256-GCM offline queue, atomic PostgreSQL domain intake with signed receipts, minimal organization-lifetime replay identity, wire schemas `contribution-sync-v1.schema.json` and `guidance-sync-v1.schema.json`, status-first recovery, signed guidance leases). | Honest review attestation gating, truthful deletion/upload race semantics, immediate unpublished withdrawal exclusion, bounded offline guidance lease, and minimal central replay identity |
 | **Local Context + HUD** | Task segmentation, signature matching, cache layout, suggestion ranking, overlay rendering | No inferred authority, nonintrusive guidance |
 | **Control Plane / APIs** | Language/framework, module boundaries, auth/session mechanisms, endpoints, internal protocols | Domain ownership, tenant scoping, consistent validation |
-| **Messaging + Durable Workflows** | Event contracts, broker, outbox, ordering, job engine, idempotency handling | Durable state and duplicate-safe business effects |
-| **Database + Search/Graph** | Schema, indexing, relational versus specialized graph, embeddings, partitioning, audit storage | Source-of-truth ownership, provenance, version lineage |
-| **Workflow Discovery** | Clustering, segmentation, evidence weighting, model roles, reviewer workflow | Suggestions never equal approved rules |
+| **Messaging + Durable Workflows** | Resolved in [detailed technical specification](docs/components/control-plane.md) and [ADR-0012](docs/adr/0012-control-plane-transport-durability-and-inference.md) (PostgreSQL transactional outbox `domain_outbox`, durable queues `domain_delivery`, inbox deduplication `domain_inbox`, FIFO per aggregate, 30s leases, 8-retry exponential backoff, aggregate quarantine, UUIDv7 idempotency with 7-day response replay, and 24-month tombstones). Dedicated message brokers (Kafka/RabbitMQ) rejected for pilot. | Durable state and duplicate-safe business effects |
+| **Database + Search/Graph** | Resolved in [detailed technical specification](docs/components/operational-graph.md) and [ADR-0014](docs/adr/0014-operational-graph-knowledge-and-rule-governance.md) (PostgreSQL 18 relational storage with recursive CTEs and pgvector cosine, strict 1:1 capability-to-workflow mapping, Playbook Version RFC 8785 body digest, deterministic three-valued logic and UNIQUE decision tables with pairwise disjointness solver proof, transactional guard serialization vs. asynchronous impact analysis, separate central publication vs. HUD qualification with Vault Ed25519 bundle signing, canonical handoff obligations with separately authorized summaries, wire schema `operational-graph-v1.schema.json`). | Source-of-truth ownership, provenance, version lineage, no separate graph/vector database |
+| **Workflow Discovery** | Resolved in [detailed technical specification](docs/components/workflow-discovery.md) and [ADR-0013](docs/adr/0013-workflow-discovery-evidence-and-review-boundaries.md) (Conservative hybrid clustering on PostgreSQL/pgvector, cluster-wide compatibility, audience conjunction, 3-instance threshold, task measurement proposals, immutable revision diffs, sanitized suppression rules, acyclic repetition guidance, separate guidance approval and publication staging, wire schema `workflow-discovery-v1.schema.json`). | Suggestions never equal approved rules; candidates cannot be auto-published |
 | **Operational IR + Agent Factory** | IR schema, compilation passes, validation, interpreter/compiler split, plan editing | Model-independent constrained behavior with explicit postconditions |
 | **Application Integrations** | API/MCP/browser/desktop adapter SDKs, capability declarations, connection lifecycle | Scope enforcement and separate observe/act/verify capabilities |
-| **Policy/Identity** | Authorization model, policy expression, approval semantics, credential issuance, revocation | Independent enforcement and product risk tiers |
-| **Agent Runtime** | Execution state machine, tool protocol, model gateway, sandbox, action tracing | Pinned versions, bounded side effects, external authorization |
-| **Flight Simulator** | Scenario language, environment reset, fixture format, fault injection, test scheduling | Isolation, fidelity disclosure, reproducibility |
+| **Policy/Identity** | Resolved in [detailed technical specification](docs/components/identity-policy.md) and [ADR-0011](docs/adr/0011-identity-authority-and-approval-fencing.md) (Embedded pure Rust typed evaluator, Auth0 Universal Login broker with PKCE loopback pool 49152–49183, Oryn opaque 256-bit session authority, software Ed25519 review keys in OS-protected storage, dual digests `action_sha256`/`proposal_digest`, HashiCorp Vault Transit signer, durable `identity_action_fence` linearization, independent authority recovery journal, wire schema `identity-policy-v1.schema.json`). | Independent deterministic PDP enforcement, mandatory Tier 4 execution prohibition, item-level human approval for Tier 3, and zero unlinearized dispatch duplicate risk |
+| **Job Orchestration and Scheduling** | Resolved in [detailed technical specification](docs/components/job-orchestration.md) and [ADR-0018](docs/adr/0018-job-orchestration-and-scheduling.md) (PostgreSQL relational state machines, frozen population sealing, sponsor-linked schedules, record exclusion reservations, central encrypted value custody, action generation ledger, and synchronous safety fences; wire schema `job-orchestration-v1.schema.json`). Temporal rejected for pilot. | Durable state, single-use action dispatch, frozen population boundaries, and independent outcome verification |
+| **Agent Runtime** | Resolved in [detailed technical specification](docs/components/agent-runtime.md) and [ADR-0017](docs/adr/0017-agent-runtime-execution-and-recovery.md) (Shared pure Rust interpreter `oryn-runtime-core`, signed host binary `oryn-runtime-worker`, mandatory gVisor cloud sandboxing with 1 vCPU / 512 MiB limits, PostgreSQL checkpoint ownership with revision CAS, pinned host placement, externally fenced one-shot dispatch, and AES-256-GCM encrypted value split with restore-replay retention fences; wire schema `agent-runtime-v1.schema.json`). | Pinned versions, bounded side effects, external authorization, and no blind replay |
+| **Flight Simulator** | Resolved in [detailed technical specification](docs/components/flight-simulator.md) and [ADR-0019](docs/adr/0019-flight-simulator-isolation-and-evaluation-evidence.md) (Closed declarative JSON scenarios, canonical semantic fingerprinting, deterministic synthetic packs, qualified vendor sandboxes, 3-attempt live model trials with all-pass aggregation, dual-engine runtime/HUD reducer reuse, fresh gVisor sandboxes and dedicated enrolled lab devices, explicit evaluation execution context and `SignedSimulationAdmissionV1`, separate behavioral pass from production equivalence, signed evaluation reports, 24-month report / 30-day replay retention; wire schema `flight-simulator-v1.schema.json`). | Isolation, fidelity disclosure, reproducibility, and independent oracle verification |
 | **Outcome Verification** | Oracle design, authoritative evidence adapters, confidence states, reconciliation | Agent self-report cannot establish business correctness |
 | **Incident / Correction / Repair** | Diagnosis methods, failure taxonomy, expert prompting, patch generation, impact analysis | Explicit uncertainty and reviewable versioned changes |
 | **Release Governance** | Gate evaluation, canary design, pause/rollback rules, affected-job semantics | No unauthorized promotion or policy/permission self-change |
