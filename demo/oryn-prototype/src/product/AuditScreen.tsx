@@ -1,5 +1,6 @@
 import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SUITE_SIZE } from '@/data/simulation'
 import { auditSlice, latestCompleteRun, latestRun, regressionPasses, runSummary } from '@/state'
 import { act, motionProgress } from './contract'
 import type { ProductProps } from './contract'
@@ -38,7 +39,7 @@ export function AuditScreen(props: ProductProps) {
       <table className="w-full table-fixed border-collapse text-left type-micro">
         <colgroup><col style={{ width: '16%' }} /><col style={{ width: '15%' }} /><col style={{ width: '19%' }} /><col style={{ width: '14%' }} /><col style={{ width: '36%' }} /></colgroup>
         <thead><tr style={{ height: 26 }}>{['Actor', 'Event', 'Object', 'Scope', 'Outcome'].map((label) => <th key={label} className="border-b px-1">{label}</th>)}</tr></thead>
-        <tbody>{evaluationSummary && <tr className="border-b" style={{ height: 32 }}><td className="px-1">Actor: not recorded</td><td className="px-1">Evaluation</td><td className="px-1">SIM-AP-RECON v0.2</td><td className="px-1">28 scenarios</td><td className="px-1">{evaluationSummary.passed} Passed · {evaluationSummary.safeEscalation} Passed — Expected Safe Escalation · {evaluationSummary.failed} Failed</td></tr>}{shown.map((event) => <tr key={event.id} className="border-b" style={{ height: 32 }}><td className="px-1"><Value value={event.actor} /></td><td className="px-1"><span className="sr-only">{event.id} </span>{event.action}</td><td className="px-1"><Value value={event.object} /></td><td className="px-1"><Value value={event.scope} /></td><td className="px-1"><Value value={event.outcome} /></td></tr>)}</tbody>
+        <tbody>{evaluationSummary && <tr className="border-b" style={{ height: 32 }}><td className="px-1">Actor: not recorded</td><td className="px-1">Evaluation</td><td className="px-1">SIM-AP-RECON v0.2</td><td className="px-1">{SUITE_SIZE} scenarios</td><td className="px-1">{evaluationSummary.passed} Passed · {evaluationSummary.safeEscalation} Passed — Expected Safe Escalation · {evaluationSummary.failed} Failed</td></tr>}{shown.map((event) => <tr key={event.id} className="border-b" style={{ height: 32 }}><td className="px-1"><Value value={event.actor} /></td><td className="px-1"><span className="sr-only">{event.id} </span>{event.action}</td><td className="px-1"><Value value={event.object} /></td><td className="px-1"><Value value={event.scope} /></td><td className="px-1"><Value value={event.outcome} /></td></tr>)}</tbody>
       </table>
       {events.length > shown.length && <p className="type-micro m-0">Showing the latest {shown.length} of {events.length} records</p>}
     </section>

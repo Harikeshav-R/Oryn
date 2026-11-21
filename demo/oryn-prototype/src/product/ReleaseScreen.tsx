@@ -1,7 +1,7 @@
 import { StatusGlyph } from '@/components/domain/status-glyphs'
 import { Button } from '@/components/ui/button'
 import { INCIDENT, REPAIR } from '@/data/incident'
-import { latestRun, regressionPasses, runSummary } from '@/state'
+import { REGRESSION_SIZE, latestRun, regressionPasses, runSummary } from '@/state'
 import { act, motionProgress } from './contract'
 import type { ProductProps } from './contract'
 import { refusal } from './discovery'
@@ -64,7 +64,7 @@ export function ReleaseScreen(props: ProductProps) {
       <Button {...anchored('approve-limited-release', R['approve-limited-release'], review)} disabled={!!approveReason} disabledReason={approveReason ?? undefined} className="transition-none" onClick={() => act(props, { type: 'LIMITED_RELEASE' })}>Approve limited release</Button>
       <section {...anchored('verified-three', R['verified-three'])} className="box-border rounded-lg border bg-surface p-6">
         <h2 className="type-card m-0">{review ? 'Regression evidence' : 'Watching verified outcomes'}</h2>
-        {review ? <div className="type-data mt-5 space-y-2"><p>34 scenarios</p>{summary ? <><p>{summary.passed} Passed</p><p>{summary.safeEscalation} Passed — Expected Safe Escalation</p><p>{summary.failed} Failed</p></> : <p>{approveReason}</p>}</div> : <><p className="type-data mt-4 font-semibold">First {count}/3 Verified Complete</p><p className="type-micro text-muted-foreground">Each outcome requires independent readback.</p></>}
+        {review ? <div className="type-data mt-5 space-y-2"><p>{REGRESSION_SIZE} scenarios</p>{summary ? <><p>{summary.passed} Passed</p><p>{summary.safeEscalation} Passed — Expected Safe Escalation</p><p>{summary.failed} Failed</p></> : <p>{approveReason}</p>}</div> : <><p className="type-data mt-4 font-semibold">First {count}/3 Verified Complete</p><p className="type-micro text-muted-foreground">Each outcome requires independent readback.</p></>}
       </section>
       {rowAnchors.map((anchor, index) => {
         const verified = state.release.cohort[index] === 'verified'
