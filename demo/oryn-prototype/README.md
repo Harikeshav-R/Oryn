@@ -380,3 +380,11 @@ Every product-side Part D gap (`GAP-SC-*`, `GAP-CMP-*`) was audited against its 
 - SC25's stored `Before approval` snapshot is an entry, not a swap: it is fully visible on its first frame; only the readback and the switch to the current snapshot fade over 150 ms.
 - SC24 carries the timeout evidence card and the separate `Business postcondition` card with a connector (`hk-h4f-job` f270-f299); its source link selects INV-48220 and opens the NetSuite tab, which already shows the held timeout.
 - `src/fonts/faces.test.ts` pins the real IBM Plex Mono 700 face (declared in `fonts.css` and `faces.ts`, digest equal to `public/fonts/PROVENANCE.md`, no font synthesis).
+
+## Numeric and continuity audit (BOB-13)
+
+`bun run scripts/audit-harvest.ts` seeks every frame of the 18 product timelines in the film-capture page (no screenshots) and writes what the DOM shows to `/tmp/bob13-frames.json`: viewer-visible text (screen-reader-only spans excluded), every element that draws arc cyan and whether an execution flag justifies it, the single-invoice rows, the visible named anchors with their text, and any caption element. `bun run scripts/audit-rules.ts` judges that dump (rules `CYAN-1..4`, `CAP-1`, `TXT-1`, `ID-1..3`, `NUM-1..4`, `ANC-1..3`, `CONT-1`) and exits 1 on any finding; `scripts/audit-rules.test.ts` proves each rule rejects the contradiction it exists for. The matrix, every finding and every fix are in `docs/video/bob-13-audit.md`.
+
+- The AP Exceptions Tracker states only what exists (`trackerRows`, `src/state/selectors.ts`): the two context rows (INV-48203, INV-48210) from the observation week on, the four exception rows (INV-48215, INV-48218, INV-48219, INV-48220) once the job has started; the pre-observation problem montage (ST01) keeps the full sheet. `hk-h4b-observe` f48-f59 and `lk-l5-observe` f60-f89 no longer show a JOB-0117 outcome on the D1 day.
+- `COMPLETE_REGRESSION` records audit event A11 for any completed regression (the event is `Completed`); a failed regression still blocks `LIMITED_RELEASE`.
+- SC28, SC30 and SC31 derive their suite sizes and counts from the scenario rows; the SC29 cohort rows name INV-48231, INV-48233 and INV-48236.

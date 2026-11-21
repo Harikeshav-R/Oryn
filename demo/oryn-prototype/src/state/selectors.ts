@@ -11,6 +11,7 @@ import { PEOPLE, TEAM, type Person, type PersonId } from '@/data/people'
 import { POLICY_IMPACT } from '@/data/policy-impact'
 import { REGRESSION_CASES, REGRESSION_SUITE_ID } from '@/data/regression'
 import { SCENARIOS } from '@/data/simulation'
+import { TRACKER_ROWS, type TrackerRow } from '@/data/tracker-rows'
 import { authorize } from './permissions'
 import { phaseIndex } from './states'
 import { COMMITMENT_SUPPLIER } from '@/data/work-records'
@@ -393,4 +394,18 @@ export function hudKind(state: State): HudKind | null {
   if (route === 'SC04') return ui.app.hud.dismissed.includes('peerFix') ? null : 'peerFix'
   const reminder = ui.app.erp === 'vendor' && ui.app.vendor === COMMITMENT_SUPPLIER && state.commitment.status === 'confirmed'
   return reminder && !ui.app.hud.dismissed.includes('commitment') ? 'commitment' : null
+}
+
+// -- APP-06 tracker ----------------------------------------------------------------------
+
+/**
+ * The tracker rows the sheet can state now. INV-48203 and INV-48210 are context rows. The four
+ * exception rows carry JOB-0117 outcome vocabulary (Escalated, Approval Required, Outcome Unknown),
+ * so once Oryn observes work (ST02 onward) they appear only after the job has started; the
+ * pre-observation problem montage (ST01) shows the sheet as the employee already had it. A
+ * Demonstration D1 day therefore never shows a later invoice.
+ */
+export function trackerRows(state: State): readonly TrackerRow[] {
+  const exceptionsExist = state.phase === 'ST01' || state.job.status !== 'notStarted'
+  return exceptionsExist ? TRACKER_ROWS : TRACKER_ROWS.filter((row) => row.status === null)
 }

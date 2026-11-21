@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { isValidElement, type KeyboardEvent, type ReactElement, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { Rect } from '@/film'
-import { createInitialState, type Action, type State, type TrackerColumn, type TrackerInvoice } from '@/state'
+import { createInitialState, reconstruct, type Action, type State, type TrackerColumn, type TrackerInvoice } from '@/state'
 import { act as run } from '@/state/test-helpers'
 import type { FilmContext, ProductProps } from '../contract'
 import { APP_TOP } from './frame'
@@ -136,6 +136,16 @@ describe('AP Exceptions Tracker rows', () => {
     const markup = html(focused('INV-48220', 'state'))
     expect(markup).not.toMatch(/Verified|Approved|data-glyph="verified"|data-status="verified"/)
     expect(markup).not.toMatch(/--arc|2fd8ff|\b(?:bg|text|border|ring|fill|stroke)-arc/i)
+  })
+
+  test('on the observation week (ST02) the sheet states only the context rows, never a later invoice', () => {
+    const observing = reconstruct('ST02')
+    const shown = dataRows({ state: observing })
+    expect(shown.map((row) => row.props['data-film-anchor'])).toEqual(['tracker-row-inv-48203', 'tracker-row-inv-48210'])
+    expect(shown.map(cellTexts)).toEqual(EXPECTED.slice(0, 2).map((row) => [...row]))
+    expect(html(observing)).not.toMatch(/INV-4821[5-9]|INV-48220|Outcome Unknown|Approval Required|Escalated/)
+    const started = reconstruct('ST10')
+    expect(dataRows({ state: started }).map(cellTexts)).toEqual(EXPECTED.map((row) => [...row]))
   })
 
   test('rows beyond the six are empty grid rows', () => {

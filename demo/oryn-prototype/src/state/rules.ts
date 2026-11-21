@@ -1029,7 +1029,7 @@ export const RULES: RuleMap = {
     },
     apply: (state, { results }) => {
       const settled = { ...settleRun(state, 'complete', results), running: { ...state.running, regression: false } }
-      return regressionPasses(latestRun(settled)) ? appendAudit(settled, 'A11') : settled
+      return appendAudit(settled, 'A11')
     },
   },
   LIMITED_RELEASE: {

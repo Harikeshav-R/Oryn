@@ -456,7 +456,7 @@ describe('ST14 regression and limited release', () => {
   test('a failed regression blocks limited release with its real reason, and can be rerun', () => {
     const failedRun = act(testing, { type: 'RUN_REGRESSION' }, { type: 'COMPLETE_REGRESSION', results: results({ 'SCN-022': 'failed' }) })
     expect(regressionVerdict(failedRun)).toBe('failed')
-    expect(failedRun.audit).not.toContain('A11')
+    expect(failedRun.audit).toContain('A11')
     const owner = act(failedRun, { type: 'SELECT_ACTOR', personId: 'marcus' })
     const rejection = expectRejected(owner, { type: 'LIMITED_RELEASE' }, 'regression')
     expect(rejection.reason).toContain('34 intended outcomes')

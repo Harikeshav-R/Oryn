@@ -1,3 +1,5 @@
+import { REGRESSION_PASS_RESULTS, REGRESSION_SUITE_ID } from './regression'
+
 /** DAT-09: a policy change and its impact, separate from the Kestrel fee correction. */
 export const POLICY_IMPACT = {
   ruleId: 'AP-RULE-009',
@@ -9,7 +11,7 @@ export const POLICY_IMPACT = {
   dependencies: [
     { kind: 'playbook', id: 'PB-AP-RECON', count: 1 },
     { kind: 'agent', id: 'Supplier Invoice Reconciler', count: 1 },
-    { kind: 'tests', id: 'SIM-AP-RECON-34', count: 34 },
+    { kind: 'tests', id: REGRESSION_SUITE_ID, count: REGRESSION_PASS_RESULTS.length },
   ],
   boundaryTests: [
     { position: 'below', threshold: '1.50%', status: 'Proposed' },

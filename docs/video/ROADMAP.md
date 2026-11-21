@@ -966,10 +966,12 @@ MOUNT: none. TRAPS: if a gap conflicts with an older screen spec, the resolved d
 ### BOB-13 · Numeric and continuity audit (H-063–H-132; L-045–L-160, 00:44–02:38)
 **Why / depends on:** BOB-12. Resolve fixture contradictions before recording.
 **Checklist**
-- [ ] Pre-flight: all DAT modules, product surfaces and 18 clip timelines.
+- [x] Pre-flight: all DAT modules, product surfaces and 18 clip timelines.
 - [ ] Run the prompt in IBM Bob from working dir `/Users/hari/Developer/Oryn-demo`.
-- [ ] Verify: exact case totals, 2.00% boundary, 34-test repair, pending approvals and source continuity.
-- [ ] Accept: audit covers all timelines; Bob fixes discrepancies and reports actual results.
+- [x] Verify: exact case totals, 2.00% boundary, 34-test repair, pending approvals and source continuity. The matrix, defects, frame ranges and remaining issues are in `docs/video/bob-13-audit.md`; `bun run scripts/audit-harvest.ts` then `bun run scripts/audit-rules.ts` re-run the 17 frame rules over all 7380 frames.
+- [x] Accept: audit covers all timelines; discrepancies fixed at their source and actual results reported.
+
+Run by a coding-agent session with three parallel audit sub-agents, not IBM Bob (the owner said to skip Bob): the Bob run and Bob review (SO-B5, SO-B7) stay unmet and must not be claimed. Fixed at source: the D1-day tracker rows (`hk-h4b-observe` f48-f59, `lk-l5-observe` f60-f89; BOB-12 owner decision 1), audit event A11 on a failed completed regression, the SC29 cohort case names (`hk-h4g-heal` f345-f419, `lk-l10-heal` f390-f554). All 16 kept clips were recaptured; sidecars are unchanged.
 **Prompt (paste into IBM Bob)**
 ```text
 Obey ROADMAP.md section 0.5 (SO-B1 to SO-B8).

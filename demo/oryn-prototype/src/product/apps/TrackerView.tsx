@@ -2,9 +2,9 @@ import { Search, Table2 } from 'lucide-react'
 import type { CSSProperties, KeyboardEvent } from 'react'
 import { StatusBadge } from '@/components/domain/status-badge'
 import { INVOICE_CASES } from '@/data/invoices'
-import { NOT_STATED, TRACKER_HEADERS, TRACKER_ROWS, trackerCellText, type TrackerRow } from '@/data/tracker-rows'
+import { NOT_STATED, TRACKER_HEADERS, trackerCellText, type TrackerRow } from '@/data/tracker-rows'
 import { cn } from '@/lib/utils'
-import { TRACKER_COLUMNS, TRACKER_INVOICES, type TrackerColumn } from '@/state'
+import { TRACKER_COLUMNS, TRACKER_INVOICES, trackerRows, type TrackerColumn } from '@/state'
 import { act, filmAnchor, motionProgress, type ProductProps } from '../contract'
 import { appTabMeta } from '../desktop-data'
 import { at, within } from '../geometry'
@@ -13,7 +13,7 @@ import {
   COLUMN_WIDTH,
   COLUMN_X,
   EMPTY_ROW_COUNT,
-  EMPTY_ROWS_TOP,
+  FIRST_ROW_TOP,
   FORMULA_BAR,
   GRID_RECT,
   GUTTER_WIDTH,
@@ -53,21 +53,22 @@ function rowNumberStyle(emphasised: boolean): CSSProperties {
   return { position: 'absolute', left: 0, top: 0, width: GUTTER_WIDTH, height: ROW_HEIGHT, fontWeight: emphasised ? 700 : undefined }
 }
 
-function EmptyRows() {
+function EmptyRows({ filled }: { filled: number }) {
+  const count = EMPTY_ROW_COUNT + (TRACKER_INVOICES.length - filled)
   return (
     <>
-      {Array.from({ length: EMPTY_ROW_COUNT }, (_, index) => {
-        const top = EMPTY_ROWS_TOP + index * ROW_HEIGHT
+      {Array.from({ length: count }, (_, index) => {
+        const top = FIRST_ROW_TOP + (filled + index) * ROW_HEIGHT
         return (
           <div
             key={index}
             role="row"
-            aria-rowindex={TRACKER_INVOICES.length + index + 2}
+            aria-rowindex={filled + index + 2}
             className="box-border border-b bg-surface"
             style={at(within(GRID_RECT, { x: 0, y: top, width: GRID_RECT.width, height: ROW_HEIGHT }))}
           >
-            <div role="rowheader" aria-label={`Row ${TRACKER_INVOICES.length + index + 1}, empty`} className="box-border flex items-center justify-center border-r bg-surface-2 font-mono text-[11px] leading-4 text-muted-foreground" style={rowNumberStyle(false)}>
-              {TRACKER_INVOICES.length + index + 1}
+            <div role="rowheader" aria-label={`Row ${filled + index + 1}, empty`} className="box-border flex items-center justify-center border-r bg-surface-2 font-mono text-[11px] leading-4 text-muted-foreground" style={rowNumberStyle(false)}>
+              {filled + index + 1}
             </div>
             {TRACKER_COLUMNS.map((column) => (
               <div key={column} role="gridcell" className="box-border border-r" style={{ position: 'absolute', left: COLUMN_X[column], top: 0, width: COLUMN_WIDTH[column], height: ROW_HEIGHT }} />
@@ -87,11 +88,12 @@ function CellContent({ row, column }: { row: TrackerRow; column: TrackerColumn }
 
 export function TrackerView(props: ProductProps) {
   const { state, film } = props
+  const rows = trackerRows(state)
   const focus = state.ui.app.trackerFocus
   const tabbable = focus ?? FIRST_CELL
   const progress = motionProgress(film, 'FOCUS_TRACKER_CELL')
   const outline = progress >= 1 ? 'var(--foreground)' : `color-mix(in srgb, var(--foreground) ${Math.round(progress * 100)}%, transparent)`
-  const focusedRow = focus === null ? undefined : TRACKER_ROWS.find((row) => row.invoice === focus.invoice)
+  const focusedRow = focus === null ? undefined : rows.find((row) => row.invoice === focus.invoice)
   const meta = appTabMeta('tracker')
 
   const onCellKeyDown = (cell: Cell) => (event: KeyboardEvent<HTMLElement>) => {
@@ -150,7 +152,7 @@ export function TrackerView(props: ProductProps) {
           ))}
         </div>
 
-        {TRACKER_ROWS.map((row, index) => {
+        {rows.map((row, index) => {
           const rowFocused = focus !== null && focus.invoice === row.invoice
           return (
             <div
@@ -198,7 +200,7 @@ export function TrackerView(props: ProductProps) {
             </div>
           )
         })}
-        <EmptyRows />
+        <EmptyRows filled={rows.length} />
       </div>
     </section>
   )

@@ -201,7 +201,7 @@ export function checkSidecar(sidecar: Sidecar, timeline: Timeline): void {
 // App build, server, browser
 // ---------------------------------------------------------------------------
 
-async function buildApp(publicDir: string): Promise<string> {
+export async function buildApp(publicDir: string): Promise<string> {
   const dist = await mkdtemp(path.join(tmpdir(), 'oryn-capture-'))
   try {
     await build({
@@ -218,7 +218,7 @@ async function buildApp(publicDir: string): Promise<string> {
   return dist
 }
 
-function serve(dist: string): Server<undefined> {
+export function serve(dist: string): Server<undefined> {
   return Bun.serve({
     hostname: '127.0.0.1',
     port: 0,
@@ -232,14 +232,14 @@ function serve(dist: string): Server<undefined> {
   })
 }
 
-interface Session {
+export interface Session {
   readonly browser: Browser
   readonly page: Page
   readonly blocked: string[]
   readonly pageErrors: string[]
 }
 
-async function openPage(chrome: string, origin: string): Promise<Session> {
+export async function openPage(chrome: string, origin: string): Promise<Session> {
   const browser = await puppeteer
     .launch({
       executablePath: chrome,
@@ -270,12 +270,12 @@ async function openPage(chrome: string, origin: string): Promise<Session> {
   return { browser, page, blocked, pageErrors }
 }
 
-function guard(session: Session): void {
+export function guard(session: Session): void {
   if (session.blocked.length > 0) throw new CaptureError('network', `The page requested a non-local URL, which is blocked: ${session.blocked[0]}. Captures never call external services.`)
   if (session.pageErrors.length > 0) throw new CaptureError('browser', `The page raised an error: ${session.pageErrors[0]}`)
 }
 
-async function waitForFontsAndApi(session: Session): Promise<void> {
+export async function waitForFontsAndApi(session: Session): Promise<void> {
   const { page } = session
   try {
     await page.waitForFunction(() => window.__ORYN_FONTS__ !== undefined && window.__ORYN_FONTS__.status !== 'loading', { timeout: 30_000 })
@@ -296,7 +296,7 @@ async function waitForFontsAndApi(session: Session): Promise<void> {
   }
 }
 
-async function loadInPage(session: Session, loaded: LoadedTimeline): Promise<void> {
+export async function loadInPage(session: Session, loaded: LoadedTimeline): Promise<void> {
   const report: LoadReport = await session.page.evaluate(async (raw) => {
     const api = window.__filmCapture
     if (!api) throw new Error('window.__filmCapture is missing')
@@ -308,7 +308,7 @@ async function loadInPage(session: Session, loaded: LoadedTimeline): Promise<voi
   throw new CaptureError(code, `${rel(loaded.file)}: ${report.message}`)
 }
 
-async function seekInPage(session: Session, frame: number): Promise<SeekReport> {
+export async function seekInPage(session: Session, frame: number): Promise<SeekReport> {
   const result: SeekResult = await session.page.evaluate(async (target) => {
     const api = window.__filmCapture
     if (!api) throw new Error('window.__filmCapture is missing')

@@ -30,7 +30,7 @@ export function RepairScreen(props: ProductProps) {
     <section {...anchored('repair-diff', R['repair-diff'])} className="box-border rounded-lg border bg-surface p-4">
       <h1 className="type-section m-0">{REPAIR.id} · {REPAIR.step}</h1>
       <p className="type-data mt-2">{REPAIR.scope} · v1.1 candidate</p>
-      {proposed && <div style={{ opacity: 0.65 + 0.35 * motionProgress(props.film, 'PROPOSE_REPAIR') }}><p className="type-data mb-1">Before</p><p className="type-data m-0">{REPAIR.before}</p><p className="type-data mb-1 mt-3">After</p><p className="type-data m-0">{REPAIR.after}</p><p className="type-data mt-3">6 new regression cases</p></div>}
+      {proposed && <div style={{ opacity: 0.65 + 0.35 * motionProgress(props.film, 'PROPOSE_REPAIR') }}><p className="type-data mb-1">Before</p><p className="type-data m-0">{REPAIR.before}</p><p className="type-data mb-1 mt-3">After</p><p className="type-data m-0">{REPAIR.after}</p><p className="type-data mt-3">{REGRESSION_CASES.length} new regression cases</p></div>}
     </section>
     <div {...anchored('repair-scope-panel', R['repair-scope-panel'], !proposed)} className="box-border rounded-lg border bg-surface-2 p-4">
       <h2 className="type-section m-0">Review bounded scope</h2><p className="type-data">{REPAIR.scope}</p><p className="type-data">Marcus Webb validates this scope before proposing the repair.</p>
@@ -39,7 +39,7 @@ export function RepairScreen(props: ProductProps) {
     <Button {...anchored('open-repair-diff', R['open-repair-diff'], !proposed)} aria-disabled={!!proposeBlock} title={proposeBlock ?? undefined} className="transition-none" onClick={() => !proposeBlock && act(props, { type: 'PROPOSE_REPAIR' })}>Open repair diff</Button>
     <div style={at({ x: 280, y: 574, width: 448, height: 48 })} className="type-micro">Correction is evidence, not new policy<br />Permissions unchanged · Policy unchanged</div>
     <section {...anchored('regression-results', R['regression-results'])} className="box-border rounded-lg border bg-surface p-4">
-      <h2 className="type-section m-0">34 scenarios</h2><p className="type-data mt-2">{proposed && !view.run ? 'Original failure + 5 nearby variants' : 'SIM-AP-RECON-34 · v1.1 candidate'}</p>
+      <h2 className="type-section m-0">{ids.length} scenarios</h2><p className="type-data mt-2">{proposed && !view.run ? 'Original failure + 5 nearby variants' : 'SIM-AP-RECON-34 · v1.1 candidate'}</p>
     </section>
     {REGRESSION_CASES.map((item, index) => {
       const name = `regression-case-${item.id.slice(-3)}` as RepairAnchor
@@ -56,7 +56,7 @@ export function RepairScreen(props: ProductProps) {
     {proposed && <div style={at({ x: 784, y: 355, width: 432, height: 150 })} className="type-data">
       <p>{view.summary.passed} Passed · {view.summary.safeEscalation} Passed — Expected Safe Escalation · {view.summary.failed} Failed · {view.summary.notRun} Not Run</p>
       <p>{state.running.regression ? `Running · ${view.executed} executed` : view.run?.status === 'cancelled' ? `Incomplete · ${view.executed} executed` : view.run?.status === 'complete' ? 'Completed' : 'Not Run'}</p>
-      {state.running.regression && <div className="h-1 bg-surface-2"><div className="h-1 bg-trace" style={{ width: `${view.position / 34 * 100}%` }} /></div>}
+      {state.running.regression && <div className="h-1 bg-surface-2"><div className="h-1 bg-trace" style={{ width: `${view.position / ids.length * 100}%` }} /></div>}
       {state.selectedScenario && <p>Evidence: {state.selectedScenario} · {SCENARIOS.find((scenario) => scenario.id === state.selectedScenario)?.name ?? REGRESSION_CASES.find((scenario) => scenario.id === state.selectedScenario)?.description}</p>}
       {releaseBlock && <p className="type-micro text-muted-foreground">{releaseBlock}</p>}
     </div>}
