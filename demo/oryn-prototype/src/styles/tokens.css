@@ -1,0 +1,68 @@
+/*
+ * CMP-01 design tokens. Source: docs/video/mock-build-inventory.md CMP-01 and
+ * docs/video/oryn-demo-design-and-build.md section 3.1. Named hex values win over
+ * rounded HSL conversions. Colours are plain hex (no alpha channel) because the
+ * product layer is flat; shadows carry their own alpha.
+ *
+ * Arc cyan (--arc) is execution-only: it appears while a simulator, job or
+ * regression run executes and disappears on stop. It is never a button fill,
+ * success colour or decoration.
+ */
+
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  --background: #f6f6f3;
+  --foreground: #0a0a0a;
+  --surface: #ffffff;
+  --surface-2: #efefeb;
+  --border: #dfdfd8;
+  --muted-foreground: #666666;
+  --trace: #77776e;
+  --signal: #333333;
+
+  --arc: #2fd8ff;
+  --arc-ink: #050505;
+  --arc-mark: #0b7d8e;
+
+  --success: #15803d;
+  --warning: #db7806;
+  --danger: #dc2828;
+
+  --shadow-sm: 0 1px 2px -1px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 10px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 24px -6px rgba(0, 0, 0, 0.14);
+
+  /* Unknown-status hatch: strokes reverse luminance in dark. */
+  --hatch-line-light: #77776e;
+  --hatch-bg-light: #efefeb;
+  --hatch-line-dark: #93938a;
+  --hatch-bg-dark: #212121;
+  --hatch-line-neutral: #848479;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --background: #0a0a0a;
+  --foreground: #f5f5f5;
+  --surface: #141414;
+  --surface-2: #212121;
+  --border: #333333;
+  --muted-foreground: #a3a3a3;
+  --trace: #93938a;
+  --signal: #b8b8b8;
+
+  --arc: #2fd8ff;
+  --arc-ink: #050505;
+  --arc-mark: #2fd8ff;
+
+  --success: #79d69a;
+  --warning: #f7be78;
+  --danger: #ff9191;
+
+  --shadow-sm: 0 1px 2px -1px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 4px 10px -2px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 10px 24px -6px rgba(0, 0, 0, 0.34);
+}

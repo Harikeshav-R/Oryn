@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background: var(--background);
+    /* Never synthesize a weight or style: only the ten bundled faces are used. */
+    font-synthesis: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply type-body;
+  }
+
+  /* Selection stays enabled with a legible neutral foreground/background pair. */
+  ::selection {
+    background: var(--foreground);
+    color: var(--background);
+  }
+
+  input,
+  textarea {
+    caret-color: var(--foreground);
+  }
+
+  /* Scrollbars hide visually while every scroller keeps scrolling. */
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Focus: 2px solid foreground, 2px offset, on every keyboard control. */
+  :focus-visible {
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+@layer components {
+  /*
+   * The anchor for later timelines. Film mode is the 1280x720 authored canvas;
+   * app mode is fluid. Stage chrome (dot grid, hard shadow, crop marks) is never
+   * applied here: product interiors stay flat.
+   */
+  #product-root {
+    position: relative;
+    background: var(--background);
+    color: var(--foreground);
+  }
+  #product-root[data-mode='app'] {
+    min-height: 100vh;
+  }
+  #product-root[data-mode='film'] {
+    width: 1280px;
+    height: 720px;
+    overflow: auto;
+  }
+  /* Capture never shows a font swap: content stays hidden until faces are verified. */
+  #product-root[data-mode='film'][data-fonts='loading'] > [data-fonts-content] {
+    visibility: hidden;
+  }
+
+  /*
+   * Unknown-status hatch: 45 degree, 1px strokes every 6px. A background only:
+   * the Hatch component has no children, so hatch can never sit behind text.
+   * `.hatch` follows the theme (lines reverse luminance in dark); the variants
+   * pin the pair regardless of theme.
+   */
+  /*
+   * Button press (CMP-03): 90 ms to scale .97. Interactive :active and the film
+   * `pressFrame` (inline --press-scale) share one scale. Reduced motion is static.
+   */
+  .oryn-press {
+    transform: scale(var(--press-scale, 1));
+    transition:
+      color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .oryn-press:active:not([aria-disabled='true']) {
+    --press-scale: 0.97;
+  }
+
+  /* Textareas resize only in interactive mode; film captures are fixed. */
+  textarea {
+    resize: none;
+  }
+  #product-root[data-mode='app'] textarea:not(:disabled):not([readonly]) {
+    resize: vertical;
+  }
+
+  .hatch {
+    --hatch-line: var(--trace);
+    --hatch-bg: var(--surface-2);
+    background:
+      repeating-linear-gradient(45deg, var(--hatch-line) 0 1px, transparent 1px 6px),
+      var(--hatch-bg);
+  }
+  .hatch-light {
+    --hatch-line: var(--hatch-line-light);
+    --hatch-bg: var(--hatch-bg-light);
+  }
+  .hatch-dark {
+    --hatch-line: var(--hatch-line-dark);
+    --hatch-bg: var(--hatch-bg-dark);
+  }
+  .hatch-neutral {
+    --hatch-line: var(--hatch-line-neutral);
+    --hatch-bg: transparent;
+  }
+}
+
+/* Theme is set at an explicit frame, never transitioned. */
+[data-theme-switching],
+[data-theme-switching] *,
+[data-theme-switching] *::before,
+[data-theme-switching] *::after {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oryn-press {
+    transform: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight;
+  }
+  .hatch {
+    --hatch-line: CanvasText;
+    --hatch-bg: Canvas;
+    forced-color-adjust: none;
+  }
+}

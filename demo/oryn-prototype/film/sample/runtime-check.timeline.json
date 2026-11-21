@@ -1,0 +1,37 @@
+{
+  "fps": 30,
+  "durationFrames": 480,
+  "seed": 20261119,
+  "cut": "sample",
+  "clipId": "runtime-check",
+  "scene": "runtime-check",
+  "filmStartFrame": 0,
+  "startAt": "ST03",
+  "anchors": {
+    "invoice-number": { "rect": { "x": 96, "y": 120, "width": 120, "height": 24 }, "selects": { "field": "selectedCase", "equals": "INV-48219" } },
+    "invoice-amount": { "rect": { "x": 96, "y": 160, "width": 104, "height": 24 } },
+    "deadline-field": { "rect": { "x": 96, "y": 260, "width": 240, "height": 32 } },
+    "confirm-button": { "rect": { "x": 96, "y": 320, "width": 96, "height": 36 } },
+    "intent-field": { "rect": { "x": 96, "y": 400, "width": 760, "height": 40 } },
+    "url-pill": { "rect": { "x": 96, "y": 480, "width": 480, "height": 40 } }
+  },
+  "events": [
+    { "frame": 10, "seq": 0, "entry": "FRT-01", "type": "cursor", "from": [40, 40], "c1": [40, 40], "c2": [40, 40], "to": [40, 40], "duration": 0, "click": false },
+    { "frame": 12, "seq": 0, "entry": "FRT-01", "type": "cursor", "from": [40, 40], "c1": [80, 70], "c2": [120, 120], "to": [150, 132], "duration": 18, "click": true, "target": "invoice-number" },
+    { "frame": 30, "seq": 0, "entry": "RT-03", "type": "action", "action": { "type": "SELECT_CASE", "caseId": "INV-48219" } },
+    { "frame": 45, "seq": 0, "entry": "FRT-01", "type": "cursor", "from": [150, 132], "c1": [150, 150], "c2": [140, 165], "to": [140, 172], "duration": 14, "click": true, "inert": true, "target": "invoice-amount" },
+    { "frame": 59, "seq": 0, "entry": "FRT-02", "type": "outline", "target": "invoice-amount", "mode": "selected" },
+    { "frame": 90, "seq": 0, "entry": "FRT-01", "type": "cursor", "from": [140, 172], "c1": [160, 200], "c2": [190, 250], "to": [200, 276], "duration": 20, "click": true, "inert": true, "target": "deadline-field" },
+    { "frame": 110, "seq": 0, "entry": "FRT-02", "type": "outline", "target": "deadline-field", "mode": "focus" },
+    { "frame": 116, "seq": 0, "entry": "FRT-03", "type": "type", "target": "deadline-field", "text": "Fri 12:00", "charsPerSecond": 31, "seed": 4242, "before": "Fri 17:00" },
+    { "frame": 150, "seq": 0, "entry": "RT-03", "type": "action", "action": { "type": "EDIT_COMMITMENT", "due": "Fri 12:00" } },
+    { "frame": 160, "seq": 0, "entry": "FRT-01", "type": "cursor", "from": [200, 276], "c1": [190, 300], "c2": [150, 330], "to": [140, 338], "duration": 16, "click": true, "target": "confirm-button" },
+    { "frame": 176, "seq": 0, "entry": "RT-03", "type": "action", "action": { "type": "CONFIRM_COMMITMENT" } },
+    { "frame": 176, "seq": 1, "entry": "FRT-02", "type": "outline", "target": null, "mode": "focus" },
+    { "frame": 186, "seq": 0, "entry": "FRT-01", "type": "cursor", "from": [140, 338], "c1": [170, 330], "c2": [230, 320], "to": [300, 300], "duration": 12, "click": false },
+    { "frame": 200, "seq": 0, "entry": "RT-03", "type": "camera", "from": [640, 360, 1], "to": [560, 330, 1.25], "duration": 24, "easing": "reveal" },
+    { "frame": 240, "seq": 0, "entry": "FRT-01", "type": "cursor", "from": [300, 300], "c1": [290, 260], "c2": [200, 200], "to": [186, 163], "duration": 14, "click": false, "target": "invoice-amount" },
+    { "frame": 270, "seq": 0, "entry": "FRT-03", "type": "type", "target": "intent-field", "text": "Reconcile supplier invoices against purchase orders and stage the result in the ERP.", "charsPerSecond": 30, "seed": 7 },
+    { "frame": 400, "seq": 0, "entry": "FRT-03", "type": "type", "target": "url-pill", "text": "https://github.com/Harikeshav-R/Oryn", "charsPerSecond": 32, "seed": 9 }
+  ]
+}
