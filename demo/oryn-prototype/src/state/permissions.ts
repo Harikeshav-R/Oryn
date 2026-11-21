@@ -172,6 +172,19 @@ export function exceedsThreshold(invoiceCents: number, poCents: number, threshol
   return Math.abs(invoiceCents - poCents) * 10_000 > thresholdHundredths * poCents
 }
 
+/**
+ * The comparator agent v0.1 shipped with, kept as the executable record of its defect (DAT-05 SCN-022): it treated a
+ * variance AT the threshold as over it (`>=`), so exactly 2.00% escalated. It is never used for a decision; v0.2 and
+ * every later version use `exceedsThreshold`.
+ */
+export function exceedsThresholdV01(invoiceCents: number, poCents: number, thresholdHundredths: number): boolean {
+  if (!Number.isInteger(invoiceCents) || !Number.isInteger(poCents) || !Number.isInteger(thresholdHundredths)) {
+    throw new Error('Threshold comparison requires integer cents and integer hundredths of a percent')
+  }
+  if (poCents <= 0) throw new Error('Threshold comparison requires a known, positive PO amount')
+  return Math.abs(invoiceCents - poCents) * 10_000 >= thresholdHundredths * poCents
+}
+
 /** `2.00%` to 200. Only the fixture format is accepted. */
 export function thresholdHundredths(threshold: string): number {
   const match = /^(\d+)\.(\d{2})%$/.exec(threshold)

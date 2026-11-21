@@ -6,6 +6,7 @@ export {
   DEFAULT_GRANTS,
   authorize,
   exceedsThreshold,
+  exceedsThresholdV01,
   thresholdHundredths,
 } from './permissions'
 export * from './selectors'

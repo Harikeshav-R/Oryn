@@ -6,6 +6,7 @@ import { INVOICE_CASES, JOB_ID } from '@/data/invoices'
 import { STATUS_META } from '@/data/status'
 import type { StatusId } from '@/data/status'
 import { cn } from '@/lib/utils'
+import type { Rect } from '@/film'
 import { jobCounts } from '@/state'
 import type { State } from '@/state'
 import { act } from './contract'
@@ -152,6 +153,27 @@ function StatusCell({ row, frame }: { readonly row: CaseRowView; readonly frame:
   )
 }
 
+/** Below the eleven-row table (y 584 to 688): the free band of the canvas. */
+const CASE_DETAIL: Rect = { x: 264, y: 584, width: 992, height: 104 }
+
+/**
+ * GAP-SC-H-escalation: each escalated row opens its own case. The panel states only what the case fixture states:
+ * its own invoice, supplier, amount, the absent purchase order and the exact reason. Two escalations are two panels
+ * (one at a time), never one aggregated incident, and the panel decides nothing.
+ */
+function CaseDetail({ row, frame }: { readonly row: CaseRowView; readonly frame: number }) {
+  return (
+    <section aria-label={`Case ${row.invoice}`} data-case-detail={row.invoice} style={at(CASE_DETAIL)} className="box-border flex flex-col justify-center gap-1 rounded-lg border bg-surface-2 px-4">
+      <p className="type-card m-0 flex items-center gap-2">
+        <RowGlyph kind={row.kind} frame={frame} />
+        <span>{`${row.invoice} \u00b7 ${row.label}`}</span>
+      </p>
+      <p className="type-data m-0">{`${row.supplier} \u00b7 ${row.amount} \u00b7 Purchase order ${row.po}`}</p>
+      <p className="type-micro m-0 text-muted-foreground">{`${JOB_ID} \u00b7 ${JOB_TEAM_LABEL} \u00b7 Stopped for a person; no purchase order amount is inferred.`}</p>
+    </section>
+  )
+}
+
 export function JobScreen(props: ProductProps) {
   const { state } = props
   const access = jobAccess(state)
@@ -169,6 +191,7 @@ export function JobScreen(props: ProductProps) {
   }
 
   const rows = caseRows(state)
+  const detail = rows.find((row) => row.kind === 'escalated' && row.invoice === state.selectedCase)
   const frame = glyphFrame(props)
   const approvalReason = drawerBlock(state, 'SC23')
   const unknownReason = drawerBlock(state, 'SC24')
@@ -263,6 +286,7 @@ export function JobScreen(props: ProductProps) {
           )
         })}
       </div>
+      {detail && <CaseDetail row={detail} frame={frame} />}
       <JobDrawers {...props} />
     </>
   )

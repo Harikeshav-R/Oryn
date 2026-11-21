@@ -2,9 +2,9 @@ import { describe, expect, test } from 'bun:test'
 import { APPROVAL_INVOICE, APPROVAL_PO_CENTS } from '@/data/approval'
 import { POLICY_IMPACT } from '@/data/policy-impact'
 import { REGRESSION_CASES, REGRESSION_PASS_RESULTS } from '@/data/regression'
-import { BOUNDARY_REPLAY, SCENARIOS, sampleRun, suiteTotals } from '@/data/simulation'
+import { BOUNDARY_INPUT, BOUNDARY_REPLAY, SCENARIOS, sampleRun, suiteTotals } from '@/data/simulation'
 import { VERSION_HISTORY } from '@/data/versions'
-import { exceedsThreshold, thresholdHundredths } from '@/state/permissions'
+import { exceedsThreshold, exceedsThresholdV01, thresholdHundredths } from '@/state/permissions'
 import { regressionPasses, runSummary, suiteVerdicts } from '@/state/selectors'
 import { createInitialState } from '@/state/initial'
 import type { EvaluationRun } from '@/state/types'
@@ -45,5 +45,22 @@ describe('simulator audit', () => {
     expect(exceedsThreshold(APPROVAL_INVOICE.amountCents, APPROVAL_PO_CENTS, 200)).toBe(true)
     expect(POLICY_IMPACT).toMatchObject({ previousThreshold: '2.00%', newThreshold: '1.50%', effective: 'Dec 1', status: 'Needs Revalidation' })
     expect(POLICY_IMPACT.dependencies.map(({ count }) => count)).toEqual([1, 1, 34])
+  })
+
+  test('the recorded SCN-022 verdicts are what the two comparators produce on the exact 2.00% input', () => {
+    const { invoiceCents, poCents, threshold } = BOUNDARY_INPUT
+    const hundredths = thresholdHundredths(threshold)
+    // The input is exactly 2.00%: 200 / 10,000.
+    expect(Math.abs(invoiceCents - poCents) * 10_000).toBe(hundredths * poCents)
+    const outcome = (over: boolean) => (over ? 'escalate' : 'accept')
+    const v01 = outcome(exceedsThresholdV01(invoiceCents, poCents, hundredths))
+    const v02 = outcome(exceedsThreshold(invoiceCents, poCents, hundredths))
+    expect(v01).toBe(BOUNDARY_REPLAY.actualV01)
+    expect(v02).toBe(BOUNDARY_REPLAY.expected)
+    const scenario = SCENARIOS.find(({ id }) => id === BOUNDARY_REPLAY.scenarioId)
+    expect(scenario?.v01).toBe(v01 === BOUNDARY_REPLAY.expected ? 'passed' : 'failed')
+    expect(scenario?.v02).toBe(v02 === BOUNDARY_REPLAY.expected ? 'passed' : 'failed')
+    // v0.1 differs only at equality: one cent either side agrees with v0.2.
+    for (const delta of [-1, 1]) expect(exceedsThresholdV01(poCents + 200 + delta, poCents, hundredths)).toBe(exceedsThreshold(poCents + 200 + delta, poCents, hundredths))
   })
 })

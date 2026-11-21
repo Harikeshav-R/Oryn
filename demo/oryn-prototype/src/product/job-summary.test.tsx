@@ -233,6 +233,15 @@ describe('SC25 film', () => {
     expect(opacityOf(html(verified), 'summary-verified')).toBe(1)
     expect(opacityOf(html(preApproval, filmAt(10)), 'summary-unknown')).toBe(1)
   })
+
+  test('in the clickable build the snapshot swap is a 150 ms CSS fade; a film never uses it', () => {
+    const FADE = 'animate-in fade-in duration-150 motion-reduce:animate-none'
+    for (const state of [preApproval, verified, earlier]) {
+      const live = html(state)
+      for (const name of [...CARDS, 'summary-snapshot']) expect(openingTag(live, name)).toContain(FADE)
+      expect(html(state, filmAt(10))).not.toContain('animate-in')
+    }
+  })
 })
 
 describe('SC25 access and layout', () => {

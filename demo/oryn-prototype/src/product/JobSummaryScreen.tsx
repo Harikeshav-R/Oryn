@@ -97,8 +97,12 @@ export function JobSummaryScreen(props: ProductProps) {
   }
 
   const cards = summaryCards(state)
-  const opacity = swapOpacity(props.film, historicalSnapshot(state))
+  const historical = historicalSnapshot(state)
+  const opacity = swapOpacity(props.film, historical)
   const swap = opacity < 1 ? { opacity } : {}
+  // Outside a film the same 150 ms replacement is a CSS fade: the snapshot is the element's key, so a swap remounts it and the fade runs once. No counter, no timer (decision 10).
+  const snapshotKey = historical ? 'earlier' : 'current'
+  const liveFade = props.film ? undefined : 'animate-in fade-in duration-150 motion-reduce:animate-none'
   const verified = state.readback.status === 'verified'
 
   const open = (filter: JobFilter, screen: 'SC22' | 'SC24') => {
@@ -113,7 +117,7 @@ export function JobSummaryScreen(props: ProductProps) {
       <h1 {...anchored('summary-status', SUMMARY_STATUS)} className="type-section m-0 flex items-center overflow-hidden whitespace-nowrap">
         {jobLabel(state)}
       </h1>
-      <p {...anchored('summary-snapshot', SUMMARY_SNAPSHOT)} style={{ ...at(SUMMARY_SNAPSHOT), ...swap }} className="m-0 flex items-center gap-2 overflow-hidden whitespace-nowrap" aria-live="polite">
+      <p key={`snapshot-${snapshotKey}`} {...anchored('summary-snapshot', SUMMARY_SNAPSHOT)} style={{ ...at(SUMMARY_SNAPSHOT), ...swap }} className={cn('m-0 flex items-center gap-2 overflow-hidden whitespace-nowrap', liveFade)} aria-live="polite">
         <span className="type-data">{snapshotLabel(state)}</span> <span className="type-micro truncate text-muted-foreground">{historicalSnapshot(state) ? EARLIER_SNAPSHOT : SNAPSHOT_CURRENT}</span>
       </p>
 
@@ -121,11 +125,11 @@ export function JobSummaryScreen(props: ProductProps) {
         const unknown = card.category === 'unknown'
         return (
           <button
-            key={card.category}
+            key={`${card.category}-${snapshotKey}`}
             type="button"
             {...anchored(ANCHOR_OF[card.category], summaryCard(index))}
             style={{ ...at(summaryCard(index)), ...swap }}
-            className={cn('box-border flex flex-col items-start overflow-hidden rounded-lg bg-surface text-left hover:bg-surface-2', unknown ? 'border-2 border-foreground p-[14px]' : 'border p-[15px]', flat, focusRing)}
+            className={cn('box-border flex flex-col items-start overflow-hidden rounded-lg bg-surface text-left hover:bg-surface-2', unknown ? 'border-2 border-foreground p-[14px]' : 'border p-[15px]', flat, focusRing, liveFade)}
             onClick={() => (unknown ? open('unknown', 'SC24') : open(card.category, 'SC22'))}
           >
             <span className="block font-sans text-[28px] font-bold leading-[34px] tabular-nums">{card.count}</span>{' '}

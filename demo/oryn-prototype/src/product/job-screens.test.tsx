@@ -112,6 +112,21 @@ test('each missing purchase order opens its own selected case', () => {
     expect(click(allEvaluated, (props) => props['aria-label'] === `Open case ${invoice}`)).toEqual([{ type: 'SELECT_CASE', caseId: invoice }])
   }
 })
+
+test('each escalated case shows its own detail panel; no other case and no aggregate', () => {
+  const detail = (state: State) => [...html(state).matchAll(/data-case-detail="([^"]+)"/g)].map((match) => match[1])
+  expect(detail(allEvaluated)).toEqual([])
+  for (const [invoice, supplier, amount] of [['INV-48215', 'Ironbark Fasteners', '$2,260.00'], ['INV-48218', 'Sable & Co. Logistics', '$4,415.00']] as const) {
+    const selected = run(allEvaluated, { type: 'SELECT_CASE', caseId: invoice })
+    expect(detail(selected)).toEqual([invoice])
+    const panel = text(html(selected))
+    expect(panel).toContain(`${invoice} \u00b7 Escalated: Missing Purchase Order`)
+    expect(panel).toContain(`${supplier} \u00b7 ${amount} \u00b7 Purchase order \u2014`)
+    expect(plain(html(selected))).not.toMatch(/Retry|Resubmit(?! unavailable)/)
+  }
+  // A case that is not escalated opens no panel here (its own drawer is SC23 or SC24).
+  expect(detail(run(allEvaluated, { type: 'SELECT_CASE', caseId: 'INV-48219' }))).toEqual([])
+})
 const stopped = reconstruct('ST11')
 const approved = run(as(stopped, 'daniel'), { type: 'APPROVE', invoice: 'INV-48219' })
 const verified = run(approved, { type: 'VERIFY_READBACK', invoice: 'INV-48219', result: 'verified' })

@@ -68,6 +68,12 @@ export const BOUNDARY_REPLAY = Object.freeze({
 } as const)
 
 /**
+ * The input of SCN-022, a variance of exactly 2.00% of the PO: 200 cents on a 10,000-cent PO. It exists only so both
+ * comparators can be executed against the boundary; it is never displayed (no invoice amount is invented for the film).
+ */
+export const BOUNDARY_INPUT = Object.freeze({ invoiceCents: 10_200, poCents: 10_000, threshold: '2.00%' } as const)
+
+/**
  * The six expected safe escalations by the short name the Flight Simulator lists (inventory SC19): `Missing Purchase
  * Order` twice (SCN-023 Ironbark, SCN-024 Sable), `Duplicate invoice`, `Over-threshold variance`, `ERP timeout`,
  * `Unreadable PDF`. Each is an intended pass: stopping is the correct outcome.
